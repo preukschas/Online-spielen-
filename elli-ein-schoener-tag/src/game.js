@@ -260,7 +260,7 @@
 
   function sceneFrame(icon,title,intro,body){
     return "<section class=\"scene\">" +
-      "<header class=\"scene-head\"><span class=\"scene-head-icon\" aria-hidden=\"true\">" + icon + "</span><div><h2>" + title + "</h2><p>" + intro + "</p></div></header>" +
+      "<header class=\"scene-head\"><span class=\"elli-mini\" aria-hidden=\"true\"></span><span class=\"scene-head-icon\" aria-hidden=\"true\">" + icon + "</span><div><h2>" + title + "</h2><p>" + intro + "</p></div></header>" +
       "<div class=\"scene-body\">" + body + "</div></section>";
   }
 
@@ -829,8 +829,10 @@
           "<h3>Räume zwei Reihen</h3>" +
           "<p>Die Steine fallen bewusst langsam. Es gibt kein Zeitlimit. Wenn der Stapel oben ankommt, wird das Brett einfach geleert – bereits geschaffte Reihen bleiben erhalten.</p>" +
           "<div class=\"tetris-progress\"><span>Reihen für diesen Weg</span><strong id=\"tetrisProgress\">" + Math.min(currentLines,BRIDGE_TARGET) + " / " + BRIDGE_TARGET + "</strong><div class=\"progress-track\"><i id=\"tetrisProgressBar\" style=\"width:" + (Math.min(currentLines,BRIDGE_TARGET)/BRIDGE_TARGET*100) + "%\"></i></div></div>" +
+          "<div class=\"next-piece-box\"><span>Nächster Stein</span><canvas id=\"nextCanvas\" width=\"106\" height=\"76\" aria-label=\"Vorschau des nächsten Tetris-Steins\"></canvas></div>" +
           "<div class=\"tetris-message\" id=\"tetrisMessage\">" + (alreadyDone ? "Dieser Weg ist bereits frei. Du kannst trotzdem noch eine entspannte Runde spielen." : "Baue in Ruhe. Zwei vollständige Reihen genügen.") + "</div>" +
           "<button id=\"pauseTetris\" class=\"soft-button tetris-pause\" type=\"button\">Pause</button>" +
+          "<div class=\"swipe-help\">Touch: wischen nach links/rechts bewegt · nach oben dreht · weit nach unten legt sofort ab · kurzes Tippen dreht.</div>" +
           "<div class=\"keyboard-help\">Tastatur: ← → bewegen · ↑ drehen · ↓ senken · Leertaste ablegen · P pausieren</div>" +
         "</aside>" +
       "</div>" +
@@ -843,6 +845,8 @@
 
     var canvas = document.getElementById("tetrisCanvas");
     var ctx = canvas.getContext("2d");
+    var nextCanvas = document.getElementById("nextCanvas");
+    var nextCtx = nextCanvas ? nextCanvas.getContext("2d") : null;
     var COLS = 10;
     var ROWS = 18;
     var CELL = 30;
@@ -854,6 +858,28 @@
     var piece = null;
     var nextShapeIndex = Math.floor(Math.random()*TETRIS_SHAPES.length);
 
+    function drawNextPiece(){
+      if(!nextCtx || !nextCanvas){ return; }
+      nextCtx.clearRect(0,0,nextCanvas.width,nextCanvas.height);
+      nextCtx.fillStyle = "#f4f1e8";
+      nextCtx.fillRect(0,0,nextCanvas.width,nextCanvas.height);
+      var matrix = TETRIS_SHAPES[nextShapeIndex];
+      var cell = 18;
+      var width = matrix[0].length * cell;
+      var height = matrix.length * cell;
+      var ox = Math.floor((nextCanvas.width-width)/2);
+      var oy = Math.floor((nextCanvas.height-height)/2);
+      for(var y=0;y<matrix.length;y++){
+        for(var x=0;x<matrix[y].length;x++){
+          if(!matrix[y][x]){ continue; }
+          nextCtx.fillStyle = TETRIS_COLORS[nextShapeIndex];
+          nextCtx.fillRect(ox+x*cell+1,oy+y*cell+1,cell-2,cell-2);
+          nextCtx.fillStyle = "rgba(255,255,255,.24)";
+          nextCtx.fillRect(ox+x*cell+4,oy+y*cell+4,cell-8,4);
+        }
+      }
+    }
+
     function newPiece(){
       var shapeIndex = nextShapeIndex;
       nextShapeIndex = Math.floor(Math.random()*TETRIS_SHAPES.length);
@@ -864,6 +890,7 @@
         y:0,
         colorIndex:shapeIndex
       };
+      drawNextPiece();
       if(collides(board,piece.matrix,piece.x,piece.y)){
         board = emptyBoard(ROWS,COLS);
         document.getElementById("tetrisMessage").textContent = "Das Brett war voll und wurde sanft geleert. Deine bereits geräumten Reihen bleiben erhalten.";
@@ -1023,32 +1050,42 @@
     var tetrisGesture = null;
     function onTetrisPointerDown(event){
       if(paused || stopped || (event.pointerType === "mouse" && event.button !== 0)){ return; }
-      tetrisGesture = {id:event.pointerId,x:event.clientX,y:event.clientY};
+      tetrisGesture = {id:event.pointerId,x:event.clientX,y:event.clientY,lastX:event.clientX,lastY:event.clientY,moved:false};
       try{ canvas.setPointerCapture(event.pointerId); }catch(error){}
       if(event.cancelable){ event.preventDefault(); }
     }
     function onTetrisPointerMove(event){
       if(!tetrisGesture || tetrisGesture.id !== event.pointerId){ return; }
+      var dx = event.clientX - tetrisGesture.lastX;
+      var dy = event.clientY - tetrisGesture.lastY;
+      if(Math.abs(dx) >= 34 && Math.abs(dx) > Math.abs(dy)){
+        move(dx < 0 ? -1 : 1);
+        tetrisGesture.lastX = event.clientX;
+        tetrisGesture.lastY = event.clientY;
+        tetrisGesture.moved = true;
+      }else if(dy >= 44 && Math.abs(dy) > Math.abs(dx)){
+        stepDown();
+        tetrisGesture.lastX = event.clientX;
+        tetrisGesture.lastY = event.clientY;
+        tetrisGesture.moved = true;
+      }
       if(event.cancelable){ event.preventDefault(); }
     }
     function onTetrisPointerUp(event){
       if(!tetrisGesture || tetrisGesture.id !== event.pointerId){ return; }
-      var dx = event.clientX - tetrisGesture.x;
-      var dy = event.clientY - tetrisGesture.y;
+      var gesture = tetrisGesture;
+      var dx = event.clientX - gesture.x;
+      var dy = event.clientY - gesture.y;
       var ax = Math.abs(dx), ay = Math.abs(dy);
       var threshold = 24;
       tetrisGesture = null;
       if(event.cancelable){ event.preventDefault(); }
 
-      if(ax < threshold && ay < threshold){
+      if(!gesture.moved && ax < threshold && ay < threshold){
         rotate();
-      }else if(ax > ay * 1.15){
-        var steps = Math.max(1,Math.min(3,Math.round(ax/55)));
-        for(var si=0;si<steps;si++){ move(dx < 0 ? -1 : 1); }
       }else if(ay > ax * 1.1){
-        if(dy < 0){ rotate(); }
-        else if(ay > 110){ hardDrop(); }
-        else{ stepDown(); }
+        if(dy < -threshold){ rotate(); }
+        else if(dy > 110){ hardDrop(); }
       }
     }
     function onTetrisPointerCancel(event){
