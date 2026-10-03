@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Planet unter Druck – Tower Defence v17</title>
+<title>Planet unter Druck – Tower Defence v18</title>
 <style>
 :root{
   --bg:#08141b;--panel:#11252f;--panel2:#17313c;--panel3:#1d3a45;--line:#315565;
@@ -363,9 +363,9 @@ body[data-phase="wave"] .kicker{font-size:10px}
     <div class="introHero">
       <div class="introPanel">
         <div>
-          <div class="introKicker">Release Candidate · Kompakt · Klar</div>
+          <div class="introKicker">V18 · Bossjagd · Ausbau</div>
           <h2 class="introTitle">PLANET <span class="small">unter Druck</span></h2>
-          <p class="introLead">Baue Lösungen, stoppe globale Krisen und meistere 12 Prestige-Stufen mit je 100 Runden.</p>
+          <p class="introLead">Baue Lösungen, stoppe globale Krisen und stelle dich alle 10 Runden einem neuen Weltboss.</p>
         </div>
         <div class="introStats">
           <div class="introStat"><b>5</b><span>Anlagen</span></div>
@@ -376,7 +376,7 @@ body[data-phase="wave"] .kicker{font-size:10px}
           <span class="introChip">⬆ Live-Upgrades</span>
           <span class="introChip">🏆 Highscores</span>
           <span class="introChip">💾 Autosave</span>
-          <span class="introChip">🌍 Krisen-Symbole</span><span class="introChip">🟢 7 Bauplätze bis R95</span>
+          <span class="introChip">👑 10 unterschiedliche Weltbosse</span><span class="introChip">🔒 4 Startplätze · neue bis R90</span><span class="introChip">🌀 Schrödingers Kompostkanone</span>
         </div>
         <div class="introActions">
           <button class="btn primary" id="playBtn">Spiel starten</button>
@@ -467,6 +467,7 @@ body[data-phase="wave"] .kicker{font-size:10px}
 </div>
 
 <script id="engine">
+
 class GameEngine {
   constructor(seed=7){
     this.seed=seed>>>0;
@@ -485,9 +486,9 @@ class GameEngine {
       nature:{name:'Naturzone',icon:'🌿',cost:66,range:150,damage:5,rate:.56,power:1,tempo:3,reach:4,
         ability:'Verlangsamung',desc:'Bremst getroffene Krisen deutlich und hält sie länger im Wirkungsbereich.',
         strong:['pollution','drought'],effective:{pollution:1.85,drought:1.35},slow:.64},
-      research:{name:'Forschungslabor',icon:'🔬',cost:102,range:165,damage:15,rate:.92,power:4,tempo:2,reach:5,
-        ability:'Anpassung',desc:'Große Reichweite, gegen jede Krise solide und gelegentlich kritischer Treffer.',
-        strong:['all'],effective:{drought:1.35,materials:1.35,energy:1.35,pollution:1.35,storm:1.35},crit:.22}
+      research:{name:'Schrödingers Kompostkanone',icon:'🌀',cost:220,range:188,damage:25,rate:1.40,power:5,tempo:1,reach:5,
+        ability:'Bossbrecher-Anomalie',desc:'Feuert instabile Kompost-Anomalien. Gegen normale Krisen langsam und teuer – gegen Weltbosse durchdringt sie deren Schutz und verursacht massiven Schaden.',
+        strong:['all'],effective:{drought:1.05,materials:1.05,energy:1.05,pollution:1.05,storm:1.05},crit:.18,bossBonus:3.25,bossPierce:true}
     };
     this.CRISES={
       drought:{name:'Dürre',icon:'🔥',shape:'diamond',hp:58,speed:43,damage:5,weak:'💧 Wasserwerk'},
@@ -503,7 +504,19 @@ class GameEngine {
       fragile:{icon:'💔',name:'Fragile Welt',desc:'Durchbrüche verursachen mehr Stabilitätsschaden.',mod:'damage'},
       boss:{icon:'👑',name:'Bossdruck',desc:'Boss-Krisen sind deutlich zäher und treten häufiger auf.',mod:'boss'}
     };
-    this.PAD_UNLOCK_ROUNDS=[0,0,0,0,0,0,0,0,0,0,0,10,20,35,50,65,80,95];
+    this.BOSS_PROFILES=[
+      {key:'colossus',name:'Basalt-Koloss',icon:'🗿',trait:'Panzerung: normale Treffer werden stark gedämpft.',hp:1.12,speed:.54,armor:.34},
+      {key:'brood',name:'Schwarm-Mutter',icon:'🪺',trait:'Ruft bei 70 % und 35 % Lebensenergie Verstärkung.',hp:1.00,speed:.62,armor:.58},
+      {key:'tempest',name:'Sturmkrone',icon:'🌩️',trait:'Beschleunigt sich zweimal während des Kampfes.',hp:.94,speed:.70,armor:.60},
+      {key:'regen',name:'Moos-Titan',icon:'🧬',trait:'Regeneriert laufend Lebenspunkte.',hp:1.06,speed:.58,armor:.56},
+      {key:'phase',name:'Phasen-Qualle',icon:'🪼',trait:'Schaltet regelmäßig einen starken Phasenschild ein.',hp:.96,speed:.64,armor:.60},
+      {key:'splitter',name:'Splitterkern',icon:'☄️',trait:'Setzt bei halber Lebensenergie Elite-Splitter frei.',hp:1.04,speed:.60,armor:.57},
+      {key:'gravity',name:'Gravitationskrake',icon:'🐙',trait:'Verlangsamt die Feuerrate aller Anlagen.',hp:1.02,speed:.58,armor:.55},
+      {key:'mirror',name:'Spiegelsturm',icon:'🪞',trait:'Ist in der ersten Hälfte extrem widerstandsfähig.',hp:.98,speed:.65,armor:.44},
+      {key:'chrono',name:'Zeitfresser',icon:'⏳',trait:'Macht bei 65 % und 30 % Lebensenergie Temposprünge.',hp:.95,speed:.68,armor:.58},
+      {key:'devourer',name:'Weltenfresser',icon:'🌑',trait:'Regeneration, Phasenschild und Raserei in einem.',hp:1.18,speed:.60,armor:.50}
+    ];
+    this.PAD_UNLOCK_ROUNDS=[0,0,0,0,3,6,9,12,16,20,25,30,40,50,60,70,80,90];
     this.reset();
   }
   startingBudget(prestige=1){
@@ -513,6 +526,7 @@ class GameEngine {
   maxTowerLevel(prestige=this.state?.prestige||1){return prestige>=9?6:prestige>=6?5:prestige>=3?4:3}
   unlockedPads(progress=this.state?.padProgressRound||0){return this.PAD_UNLOCK_ROUNDS.filter(req=>progress>=req).length}
   nextPadUnlock(progress=this.state?.padProgressRound||0){const req=this.PAD_UNLOCK_ROUNDS.find(x=>x>progress);return req??null}
+  bossProfile(round=this.state?.round||10){const tier=Math.max(1,Math.ceil(Math.max(1,round)/10));return this.BOSS_PROFILES[(tier-1)%this.BOSS_PROFILES.length]}
   challengeSeverity(prestige=this.state?.prestige||1){return Math.min(5,Math.max(1,Math.ceil((Math.max(1,prestige)-1)/2)))}
   activeChallenges(prestige=this.state?.prestige||1){
     const arr=[];
@@ -593,8 +607,8 @@ class GameEngine {
       arr.push({type:types[idx],boss:false});
     }
     if(bossRound){
-      const tier=Math.max(1,Math.floor(round/10));
-      arr.push({type:types[(tier+2+this.state.prestige)%unlocked],boss:true,worldBoss:true,bossTier:tier});
+      const tier=Math.max(1,Math.floor(round/10)),profile=this.bossProfile(round);
+      arr.push({type:types[(tier+2+this.state.prestige)%unlocked],boss:true,worldBoss:true,bossTier:tier,bossKind:profile.key,bossName:profile.name,bossIcon:profile.icon,bossTrait:profile.trait});
     }
     if(this.activeChallenges().includes('boss')&&round%5===0)arr.push({type:types[(round+this.state.prestige)%unlocked],boss:true});
     for(let j=0;j<diff.extraBosses;j++)if(round%10===0)arr.push({type:types[(round+j+this.state.prestige)%unlocked],boss:true});
@@ -650,16 +664,18 @@ class GameEngine {
     if(type==='water')utility=1.10;
     if(type==='recycle')utility=1.08;
     if(type==='nature')utility=1.22;
-    if(type==='research')utility=1.12;
+    if(type==='research')utility=.96;
     return d.damage*mult/d.rate*utility;
   }
   estimateDefenseChance(spec){
     if(!this.state.towers.length)return .01;
+    const profile=spec.worldBoss?this.bossProfile(this.state.round):null;
     let power=0;
-    for(const t of this.state.towers)power+=this.towerPowerAgainst(t.type,spec.type,t.level);
-    const diff=this.difficulty(),tier=spec.bossTier||Math.max(1,Math.floor(this.state.round/10)),bossFactor=spec.worldBoss?(5.8+tier*.28)*diff.bossHp:(spec.boss?2.5*diff.bossHp:1),hp=this.CRISES[spec.type].hp*this.roundHpMultiplier(this.state.round)*bossFactor*diff.hp;
+    for(const t of this.state.towers){let p=this.towerPowerAgainst(t.type,spec.type,t.level);if(spec.worldBoss)p*=t.type==='research'?(this.TOWERS.research.bossBonus||3.25):(profile?.armor||.58);power+=p;}
+    const diff=this.difficulty(),tier=spec.bossTier||Math.max(1,Math.floor(this.state.round/10)),bossFactor=spec.worldBoss?(5.8+tier*.28)*diff.bossHp*(profile?.hp||1):(spec.boss?2.5*diff.bossHp:1),hp=this.CRISES[spec.type].hp*this.roundHpMultiplier(this.state.round)*bossFactor*diff.hp;
     const crowd=Math.sqrt(Math.max(1,this.waveComposition(this.state.round).length/18));
-    const load=hp*(.62+.28*this.roundProgress(this.state.round))*Math.sqrt(diff.speed*this.roundSpeedMultiplier(this.state.round))*crowd;
+    let mechanicLoad=1;if(profile?.key==='regen')mechanicLoad=1.14;if(profile?.key==='phase')mechanicLoad=1.18;if(profile?.key==='gravity')mechanicLoad=1.16;if(profile?.key==='mirror')mechanicLoad=1.12;if(profile?.key==='devourer')mechanicLoad=1.28;
+    const load=hp*(.62+.28*this.roundProgress(this.state.round))*Math.sqrt(diff.speed*this.roundSpeedMultiplier(this.state.round))*crowd*mechanicLoad;
     const x=(this.state.prestige-1)/(this.MAX_PRESTIGE-1),efficiency=4.8-.55*x;
     let chance=1-Math.exp(-(power/load)*efficiency);
     if(this.state.towers.some(t=>t.type==='nature'))chance+=.025;
@@ -674,9 +690,11 @@ class GameEngine {
   }
 }
 if(typeof module!=='undefined'&&module.exports)module.exports=GameEngine;
+
 </script>
 
 <script>
+
 (() => {
 const engine=new GameEngine(17),state=engine.state;
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
@@ -744,7 +762,7 @@ function applyDeviceLayout(){
 
 const PATH=[{x:-28,y:302},{x:116,y:302},{x:116,y:132},{x:294,y:132},{x:294,y:394},{x:520,y:394},{x:520,y:190},{x:744,y:190},{x:744,y:350},{x:990,y:350}];
 const PADS=[{x:68,y:210},{x:190,y:218},{x:214,y:72},{x:375,y:218},{x:383,y:462},{x:594,y:302},{x:625,y:116},{x:816,y:255},{x:850,y:425},{x:495,y:88},{x:655,y:448},{x:62,y:420},{x:205,y:360},{x:366,y:82},{x:470,y:286},{x:690,y:302},{x:815,y:106},{x:915,y:244}];
-const COLORS={water:'#68caff',recycle:'#90e78d',solar:'#ffd761',nature:'#78dc89',research:'#c9a8ff'};
+const COLORS={water:'#68caff',recycle:'#90e78d',solar:'#ffd761',nature:'#78dc89',research:'#ff79d7'};
 const CRISIS_COLORS={drought:'#e8a15f',materials:'#c79c6d',energy:'#ffe06e',pollution:'#c790d6',storm:'#9ac9e8'};
 let selectedPad=null,selectedTower=null,enemies=[],shots=[],effects=[],spawnQueue=[],spawnTimer=0,paused=false,speed=1,finishing=false;
 let animTime=0,waveBanner=0,screenFlash=0,shake=0,threatBanner=0,newThreatText='',helpPauseRestore=null,scoresPauseRestore=null,logUnread=0,spawnPulse=0,uiSyncClock=0;
@@ -759,17 +777,18 @@ function addLog(msg){
 }
 function strongestText(type){
   const d=engine.TOWERS[type];
+  if(type==='research')return '👑 Bossbrecher: durchdringt Weltboss-Schutz und verursacht massiven Boss-Schaden';
   if(d.strong[0]==='all')return 'Stark gegen alle Krisen';
   return 'Stark: '+d.strong.map(k=>engine.CRISES[k].icon+' '+engine.CRISES[k].name).join(' · ');
 }
-function strongIcons(type){const d=engine.TOWERS[type];return d.strong[0]==='all'?'🔥 ⛏️ ⚡ ☣️ 🌪️':d.strong.map(k=>engine.CRISES[k].icon).join(' ')}
+function strongIcons(type){const d=engine.TOWERS[type];return type==='research'?'👑 🌀':d.strong[0]==='all'?'🔥 ⛏️ ⚡ ☣️ 🌪️':d.strong.map(k=>engine.CRISES[k].icon).join(' ')}
 function dots(n){return '●'.repeat(n)+'○'.repeat(5-n)}
 function specialAtLevel(t){
   if(t.type==='water')return `Spritzradius ${56+10*(t.level-1)} · Flächenschaden ${42+8*(t.level-1)} %`;
   if(t.type==='recycle')return `${t.level} Kettensprung${t.level>1?'e':''}`;
   if(t.type==='solar')return `Feuerrate +${Math.round(13*(t.level-1))} % durch Stufe`;
   if(t.type==='nature')return `Bremst auf ${Math.round(Math.max(.46,.64-.06*(t.level-1))*100)} % Tempo`;
-  if(t.type==='research')return `${Math.round((.22+.06*(t.level-1))*100)} % Krit-Chance`;
+  if(t.type==='research')return `Boss-Schaden ×${(engine.TOWERS.research.bossBonus+.18*(t.level-1)).toFixed(2)} · ${Math.round((.18+.05*(t.level-1))*100)} % Anomalie-Krit`;
   return '';
 }
 function renderTowerButtons(){
@@ -800,10 +819,11 @@ function renderForecast(){
   if(state.round>=engine.ROUNDS_PER_PRESTIGE&&state.phase!=='wave'){$('forecast').innerHTML=`<span class="forecastChip">⭐ Prestige ${state.prestige} abgeschlossen</span>`;return}
   const round=state.phase==='wave'?state.round:state.round+1;
   const counts=engine.forecast(round),entries=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-  const dominant=entries[0],label=state.phase==='wave'?'Diese Welle:':'Nächste Welle:';
-  $('forecast').innerHTML=`<span class="forecastChip"><b>${label}</b></span>`+(round%10===0?`<span class="forecastChip">👑 ENDBOSS · Checkpoint</span>`:'')+
+  const dominant=entries[0],label=state.phase==='wave'?'Diese Welle:':'Nächste Welle:',bossRound=round%10===0,boss=bossRound?engine.bossProfile(round):null;
+  $('forecast').innerHTML=`<span class="forecastChip"><b>${label}</b></span>`+
+    (boss?`<span class="forecastChip"><b>${boss.icon} ${boss.name}</b> · ${boss.trait}</span><span class="forecastAdvice">⚠️ Weltboss! <b>🌀 Schrödingers Kompostkanone</b> durchdringt seinen Schutz. Ohne sie wird diese Runde deutlich härter.</span>`:'')+
     entries.map(([k,n])=>`<span class="forecastChip" title="${engine.CRISES[k].name} · wirksam: ${engine.CRISES[k].weak}">${engine.CRISES[k].icon} ${engine.CRISES[k].name} ${n}×</span>`).join('')+
-    (dominant?`<span class="forecastAdvice">💡 Häufigste Krise: <b>${engine.CRISES[dominant[0]].icon} ${engine.CRISES[dominant[0]].name}</b> · besonders wirksam: <b>${engine.CRISES[dominant[0]].weak}</b></span>`:'');
+    (!boss&&dominant?`<span class="forecastAdvice">💡 Häufigste Krise: <b>${engine.CRISES[dominant[0]].icon} ${engine.CRISES[dominant[0]].name}</b> · besonders wirksam: <b>${engine.CRISES[dominant[0]].weak}</b></span>`:'');
 }
 function syncUI(){
   document.body.dataset.phase=state.phase;
@@ -871,52 +891,55 @@ function sellSelected(){
 function startWave(forceAfterReport=false){
   if(state.phase==='report'&&!forceAfterReport){continueReport(false);return}
   if(state.phase!=='build')return;
-  const r=engine.startRound();if(!r.ok){
-    if(state.phase==='report'){continueReport(false)}
-    return;
-  }
+  const r=engine.startRound();if(!r.ok){if(state.phase==='report')continueReport(false);return;}
   selectedPad=null;selectedTower=null;enemies=[];shots=[];spawnQueue=r.wave.slice();spawnTimer=.18;paused=false;finishing=false;waveBanner=reducedMotion?.7:1.8;
   const newly=[...new Set(r.wave.map(e=>e.type))].filter(k=>!seenCrisis.has(k));newly.forEach(k=>seenCrisis.add(k));
   if(newly.length){newThreatText=newly.map(k=>`${engine.CRISES[k].icon} ${engine.CRISES[k].name} → ${engine.CRISES[k].weak}`).join('   ·   ');threatBanner=reducedMotion?1.2:3.2;}
   addLog(`🚨 Runde ${state.round} startet mit ${spawnQueue.length} Krisen.`);saveGame('round-start',true);syncUI();
 }
 function spawnEnemy(spec){
-  const c=engine.CRISES[spec.type],scale=1+.115*(state.round-1),diff=engine.difficulty(),tier=spec.bossTier||Math.max(1,Math.floor(state.round/10));
-  const boss=spec.worldBoss?(5.8+tier*.28)*diff.bossHp:(spec.boss?2.5*diff.bossHp:1);
+  const c=engine.CRISES[spec.type],scale=1+.115*(state.round-1),diff=engine.difficulty(),tier=spec.bossTier||Math.max(1,Math.floor(state.round/10)),profile=spec.worldBoss?engine.bossProfile(state.round):null;
+  const boss=spec.worldBoss?(5.8+tier*.28)*diff.bossHp*(profile?.hp||1):(spec.boss?2.5*diff.bossHp:1);
   const hp=c.hp*scale*boss*diff.hp;
   spawnPulse=.5;effect('spawn',PATH[0].x+18,PATH[0].y,CRISIS_COLORS[spec.type]);
-  enemies.push({type:spec.type,boss:spec.boss,worldBoss:!!spec.worldBoss,bossTier:tier,enraged:false,hp,maxHp:hp,speed:c.speed*engine.roundSpeedMultiplier(state.round)*(spec.worldBoss?.58:(spec.boss?.74:1))*diff.speed,seg:0,progress:0,x:PATH[0].x,y:PATH[0].y,slow:1,hitPulse:0});
+  const bossSpeed=spec.worldBoss?(profile?.speed||.58):(spec.boss?.74:1);
+  enemies.push({type:spec.type,boss:spec.boss,worldBoss:!!spec.worldBoss,bossTier:tier,bossKind:spec.bossKind||profile?.key||null,bossName:spec.bossName||profile?.name||null,bossIcon:spec.bossIcon||profile?.icon||'👑',bossTrait:spec.bossTrait||profile?.trait||'',bossArmor:profile?.armor||.58,enraged:false,triggerA:false,triggerB:false,regenClock:0,phaseShield:false,hp,maxHp:hp,speed:c.speed*engine.roundSpeedMultiplier(state.round)*bossSpeed*diff.speed,seg:0,progress:0,x:PATH[0].x,y:PATH[0].y,slow:1,hitPulse:0});
+  if(spec.worldBoss)addLog(`👑 Weltboss: ${(profile?.icon||'👑')} ${(profile?.name||'Unbekannt')} – ${(profile?.trait||'extrem widerstandsfähig')}`);
 }
-function chooseTarget(p,range){
+function chooseTarget(p,range,preferBoss=false){
   let target=null,best=-1;
-  for(const e of enemies){if(e.hp<=0)continue;const d=dist(p,e);if(d<=range){const score=e.seg*1000+e.progress;if(score>best){best=score;target=e}}}
+  for(const e of enemies){if(e.hp<=0)continue;const d=dist(p,e);if(d<=range){const score=(preferBoss&&e.worldBoss?10000000:0)+e.seg*1000+e.progress;if(score>best){best=score;target=e}}}
   return target;
 }
-function damageEnemy(e,damage,color,label=''){
-  if(!e||e.hp<=0)return;if(e.worldBoss)damage*=.82;e.hp-=damage;e.hitPulse=.15;
+function damageEnemy(e,damage,color,label='',sourceType=''){
+  if(!e||e.hp<=0)return;
+  if(e.worldBoss&&sourceType!=='research'){let armor=e.bossArmor??.58;if((e.bossKind==='phase'||e.bossKind==='devourer')&&e.phaseShield)armor*=.32;damage*=armor;}
+  e.hp-=damage;e.hitPulse=.15;
   effect('hit',e.x,e.y,color);if(label){effect('float',e.x,e.y-18,color,label);sparkBurst(e.x,e.y,color,7);}
 }
 function attackTower(t){
-  const d=engine.TOWERS[t.type],p=PADS[t.pad],range=d.range*(1+.08*(t.level-1)),target=chooseTarget(p,range);if(!target)return;
+  const d=engine.TOWERS[t.type],p=PADS[t.pad],range=d.range*(1+.08*(t.level-1)),target=chooseTarget(p,range,t.type==='research');if(!target)return;
   const mult=(d.effective[target.type]||1)*(1+.42*(t.level-1));
-  let damage=d.damage*mult,crit=false;
-  if(t.type==='research'&&engine.rng()<(d.crit+.06*(t.level-1))){damage*=1.85;crit=true}
-  damageEnemy(target,damage,COLORS[t.type],crit?'KRIT!':'');
+  let damage=d.damage*mult,crit=false,label='';
+  if(t.type==='research'){if(target.worldBoss){damage*=d.bossBonus+.18*(t.level-1);label='ANOMALIE!';}if(engine.rng()<(d.crit+.05*(t.level-1))){damage*=1.70;crit=true;label=target.worldBoss?'ANOMALIE-KRIT!':'KRIT!';}}
+  damageEnemy(target,damage,COLORS[t.type],label,t.type);
   if(t.type==='water'){
     const splashRadius=56+10*(t.level-1),splashDamage=.42+.08*(t.level-1);
-    for(const e of enemies){if(e!==target&&e.hp>0&&dist(e,target)<splashRadius)damageEnemy(e,damage*splashDamage,COLORS[t.type]);}
+    for(const e of enemies){if(e!==target&&e.hp>0&&dist(e,target)<splashRadius)damageEnemy(e,damage*splashDamage,COLORS[t.type],'',t.type);}
   }
   if(t.type==='recycle'){
     let last=target,used=new Set([target]);
     for(let jump=0;jump<t.level;jump++){
       let next=null,sd=999;for(const e of enemies){if(!used.has(e)&&e.hp>0){const dd=dist(e,last);if(dd<92&&dd<sd){sd=dd;next=e}}}
-      if(!next)break;const chainDamage=damage*Math.max(.28,.52-jump*.10);damageEnemy(next,chainDamage,COLORS[t.type]);shots.push({kind:'chain',x:last.x,y:last.y,tx:next.x,ty:next.y,color:COLORS[t.type],life:.16,max:.16});used.add(next);last=next;
+      if(!next)break;const chainDamage=damage*Math.max(.28,.52-jump*.10);damageEnemy(next,chainDamage,COLORS[t.type],'',t.type);shots.push({kind:'chain',x:last.x,y:last.y,tx:next.x,ty:next.y,color:COLORS[t.type],life:.16,max:.16});used.add(next);last=next;
     }
   }
   if(t.type==='nature')target.slow=Math.min(target.slow,Math.max(.46,d.slow-.06*(t.level-1)));
   shots.push({kind:t.type,x:p.x,y:p.y,tx:target.x,ty:target.y,color:COLORS[t.type],life:.18,max:.18});
-  t.cooldown=d.rate/(1+.13*(t.level-1));
+  const gravityTax=enemies.some(e=>e.hp>0&&e.worldBoss&&(e.bossKind==='gravity'||e.bossKind==='devourer'))?1.35:1;
+  t.cooldown=d.rate/(1+.13*(t.level-1))*gravityTax;
 }
+function summonBossAdds(e,count,elite=false){const types=Object.keys(engine.CRISES);for(let i=0;i<count;i++){const type=types[(state.round+i+state.prestige)%types.length];spawnQueue.unshift({type,boss:elite});}addLog(`${e.bossIcon||'👑'} ${e.bossName||'Boss'} ruft ${count} ${elite?'Elite-':''}Krisen!`);}
 function update(dt){
   const realDt=dt;animTime+=dt;
   if(waveBanner>0)waveBanner-=dt;if(threatBanner>0)threatBanner-=dt;if(screenFlash>0)screenFlash-=dt;if(shake>0)shake-=dt;if(spawnPulse>0)spawnPulse-=dt;
@@ -929,7 +952,25 @@ function update(dt){
   for(const t of state.towers){t.cooldown=(t.cooldown||0)-dt;if(t.cooldown<=0)attackTower(t)}
   for(const e of enemies){
     if(e.hp<=0)continue;e.hitPulse=Math.max(0,e.hitPulse-dt);
-    if(e.worldBoss&&!e.enraged&&e.hp/e.maxHp<=.5){e.enraged=true;e.speed*=1.45;effect('burst',e.x,e.y,'#ff9e66');sparkBurst(e.x,e.y,'#ffd166',14);addLog(`🔥 Bossphase 2: ${engine.CRISES[e.type].name} wird schneller!`);}
+    if(e.worldBoss){
+      const ratio=Math.max(0,e.hp/e.maxHp),kind=e.bossKind;
+      e.phaseShield=(kind==='phase'||kind==='devourer')&&(Math.floor(animTime/2.4)%2===0);
+      if(kind==='regen'||kind==='devourer'){e.regenClock=(e.regenClock||0)+dt;if(e.regenClock>=1&&ratio<.98){const heal=e.maxHp*(kind==='devourer'?.008:.006);e.hp=Math.min(e.maxHp,e.hp+heal);e.regenClock=0;effect('float',e.x,e.y-32,'#9dffba',`+${Math.round(heal)} HP`);}}
+      if(kind==='colossus'&&!e.triggerA&&ratio<=.5){e.triggerA=true;e.bossArmor*=.78;effect('burst',e.x,e.y,'#d2b48c');addLog('🗿 Basalt-Koloss verhärtet seine Panzerung!');}
+      if(kind==='brood'&&!e.triggerA&&ratio<=.70){e.triggerA=true;summonBossAdds(e,3,false)}
+      if(kind==='brood'&&!e.triggerB&&ratio<=.35){e.triggerB=true;summonBossAdds(e,5,false)}
+      if(kind==='tempest'&&!e.triggerA&&ratio<=.65){e.triggerA=true;e.speed*=1.28;addLog('🌩️ Sturmkrone zündet den ersten Tempoboost!');}
+      if(kind==='tempest'&&!e.triggerB&&ratio<=.30){e.triggerB=true;e.speed*=1.24;addLog('🌩️ Sturmkrone rast in die Endphase!');}
+      if(kind==='regen'&&!e.triggerA&&ratio<=.5){e.triggerA=true;e.speed*=1.16;addLog('🧬 Moos-Titan beschleunigt seine Regenerationsoffensive!');}
+      if(kind==='phase'&&!e.triggerA&&ratio<=.5){e.triggerA=true;e.speed*=1.18;addLog('🪼 Phasen-Qualle flackert schneller zwischen ihren Schilden!');}
+      if(kind==='splitter'&&!e.triggerA&&ratio<=.5){e.triggerA=true;summonBossAdds(e,2,true);effect('burst',e.x,e.y,'#ffd18a');}
+      if(kind==='gravity'&&!e.triggerA&&ratio<=.5){e.triggerA=true;e.bossArmor*=.88;addLog('🐙 Gravitationskrake verstärkt das Schwerefeld – Anlagen feuern langsamer!');}
+      if(kind==='mirror'&&!e.triggerA&&ratio<=.5){e.triggerA=true;e.bossArmor=.82;e.speed*=1.32;addLog('🪞 Spiegelsturm zerbricht seinen Schutz und wird dafür deutlich schneller!');}
+      if(kind==='chrono'&&!e.triggerA&&ratio<=.65){e.triggerA=true;e.speed*=1.30;addLog('⏳ Zeitfresser springt nach vorn!');}
+      if(kind==='chrono'&&!e.triggerB&&ratio<=.30){e.triggerB=true;e.speed*=1.28;addLog('⏳ Zeitfresser startet den zweiten Zeitsprung!');}
+      if(kind==='devourer'&&!e.triggerA&&ratio<=.55){e.triggerA=true;e.speed*=1.25;addLog('🌑 Weltenfresser geht in die Raserei!');}
+      if(kind==='devourer'&&!e.triggerB&&ratio<=.25){e.triggerB=true;e.bossArmor*=.82;summonBossAdds(e,3,true);addLog('🌑 Weltenfresser öffnet seinen letzten Riss!');}
+    }
     let remain=e.speed*e.slow*dt;e.slow=1;
     while(remain>0&&e.seg<PATH.length-1){
       const b=PATH[e.seg+1],dd=dist(e,b);
@@ -976,7 +1017,7 @@ function resumeFromCheckpoint(){
 }
 function showReport(r){
   lastReport=r;saveGame('report',true);
-  $('reportTitle').textContent=state.round%10===0?`👑 Bossrunde ${state.round} geschafft`:`Runde ${state.round} geschafft`;
+  $('reportTitle').textContent=state.round%10===0?`👑 ${engine.bossProfile(state.round).name} besiegt · Runde ${state.round}`:`Runde ${state.round} geschafft`;
   $('reportBody').innerHTML=`<div class="card"><b>${r.kills}</b><br><small>Krisen gestoppt</small></div>
     <div class="card"><b>${r.leaks}</b><br><small>Durchgebrochen</small></div>
     <div class="card"><b>+💶 ${r.earned}</b><br><small>Belohnung fürs Stoppen</small></div>
@@ -997,9 +1038,10 @@ function continueReport(autoStart=false){
   selectedPad=null;selectedTower=null;finishing=false;
   if(r.end==='won'){recordScore('Prestige 12 geschafft');showEnd(true);return}
   if(r.end==='lost'){recordScore('Niederlage');showEnd(false);return}
-  if(r.end==='prestige'){recordScore(`Prestige ${state.prestige} geschafft`);showPrestige();return}  addLog(`🏗️ Runde ${state.round} abgeschlossen. Jetzt ist Bauphase: neue Gebäude kaufen oder vorhandene verbessern.`);
+  if(r.end==='prestige'){recordScore(`Prestige ${state.prestige} geschafft`);showPrestige();return}
+  addLog(`🏗️ Runde ${state.round} abgeschlossen. Jetzt ist Bauphase: neue Gebäude kaufen oder vorhandene verbessern.`);
   saveGame('build-phase',true);syncUI();
-  if(autoStart===true) setTimeout(()=>startWave(true),20);
+  if(autoStart===true)setTimeout(()=>startWave(true),20);
 }
 function showPrestige(){
   const next=Math.min(engine.MAX_PRESTIGE,state.prestige+1),nextBudget=engine.startingBudget(next),nextDiff=engine.difficulty(next),nowDiff=engine.difficulty(state.prestige);
@@ -1017,7 +1059,7 @@ function startPrestige(){
 function showEnd(win){
   const score=currentScore(),list=loadScores(),best=Math.max(score,...list.map(x=>Number(x.score)||0),0);
   $('endTitle').textContent=win?'🏆 Prestige 12 gemeistert':'💥 Stabilität zusammengebrochen';
-  $('endText').textContent=win?'Du hast alle 12 Prestige-Stufen mit je 100 Runden und damit 1.200 Runden gemeistert. Dieser Lauf ist in der lokalen Highscore-Liste gespeichert.':((bossCheckpoint&&bossCheckpoint.prestige===state.prestige)?`Niederlage. Du kannst vom Boss-Checkpoint nach Runde ${bossCheckpoint.round} weiterspielen. Türme, Budget und Stabilität werden auf diesen Stand zurückgesetzt.`:`Niederlage. Da in diesem Prestige noch kein Boss-Checkpoint erreicht wurde, startest du am Anfang von Prestige ${state.prestige}.`);
+  $('endText').textContent=win?'Du hast alle 12 Prestige-Stufen mit je 100 Runden und damit 1.200 Runden gemeistert. Dieser Lauf ist in der lokalen Highscore-Liste gespeichert.':((bossCheckpoint&&bossCheckpoint.prestige===state.prestige)?`Niederlage. Du kannst vom Boss-Checkpoint nach Runde ${bossCheckpoint.round} weiterspielen. Gebäude, Budget und Stabilität werden auf diesen Stand zurückgesetzt.`:`Niederlage. Da in diesem Prestige noch kein Boss-Checkpoint erreicht wurde, startest du am Anfang von Prestige ${state.prestige}.`);
   $('endStats').innerHTML=`<div class="card"><b>${score.toLocaleString('de-DE')}</b><br><small>Punkte</small></div><div class="card"><b>${best.toLocaleString('de-DE')}</b><br><small>Lokaler Bestwert</small></div><div class="card"><b>⭐ ${state.prestige}</b><br><small>Prestige</small></div><div class="card"><b>${engine.completedRounds()} / 1200</b><br><small>Runden</small></div><div class="card"><b>🛡️ ${Math.round(state.stability)}</b><br><small>Stabilität</small></div><div class="card"><b>${state.totalKills}</b><br><small>Krisen gestoppt</small></div>`;
   $('restartBtn').textContent=win?'Neuen Lauf starten':((bossCheckpoint&&bossCheckpoint.prestige===state.prestige)?`↩️ Weiter ab Runde ${bossCheckpoint.round+1}`:`↩️ Prestige ${state.prestige} neu starten`);$('newRunBtn').classList.toggle('hidden',win);$('endOverlay').classList.remove('hidden');saveGame(win?'won':'lost',true);syncUI();
 }
@@ -1028,57 +1070,59 @@ function drawPath(){
   ctx.setLineDash([10,20]);ctx.lineDashOffset=-animTime*40;ctx.strokeStyle='rgba(255,255,255,.17)';ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([]);ctx.lineDashOffset=0;
 }
 function drawBuildingArchitecture(type,level,color){
-  ctx.fillStyle='rgba(5,14,18,.34)';ctx.beginPath();ctx.ellipse(0,24,27,8,0,0,Math.PI*2);ctx.fill();
+  // platform and soft shadow
+  ctx.fillStyle='rgba(5,14,18,.34)';ctx.beginPath();ctx.ellipse(0,24,26,8,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='rgba(8,18,23,.95)';ctx.beginPath();ctx.roundRect(-24,12,48,12,4);ctx.fill();
   ctx.fillStyle='rgba(205,235,228,.10)';ctx.beginPath();ctx.roundRect(-20,8,40,7,4);ctx.fill();
   if(type==='water'){
-    const g=ctx.createLinearGradient(0,-24,0,14);g.addColorStop(0,'#c4f6ff');g.addColorStop(.35,'#69cce4');g.addColorStop(1,'#1f7f98');
-    ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(-16,12);ctx.quadraticCurveTo(-18,-3,-8,-8);ctx.quadraticCurveTo(0,-22,8,-9);ctx.quadraticCurveTo(16,-7,17,12);ctx.closePath();ctx.fill();
-    ctx.strokeStyle='rgba(210,248,255,.75)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-12,4);ctx.quadraticCurveTo(-2,-5,10,0);ctx.stroke();
-    ctx.fillStyle='rgba(226,250,255,.95)';ctx.beginPath();ctx.moveTo(0,-22);ctx.bezierCurveTo(7,-14,9,-8,0,-2);ctx.bezierCurveTo(-9,-8,-7,-14,0,-22);ctx.fill();
+    ctx.fillStyle='#68c4dd';ctx.beginPath();ctx.roundRect(-17,-10,34,23,8);ctx.fill();
+    ctx.fillStyle='rgba(222,248,255,.22)';ctx.beginPath();ctx.roundRect(-13,-6,10,15,4);ctx.fill();ctx.beginPath();ctx.roundRect(3,-6,10,15,4);ctx.fill();
+    ctx.strokeStyle='rgba(176,243,255,.8)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-15,-14);ctx.lineTo(15,-14);ctx.stroke();
+    ctx.fillStyle='rgba(220,250,255,.9)';ctx.beginPath();ctx.moveTo(0,-21);ctx.bezierCurveTo(7,-13,9,-9,0,-3);ctx.bezierCurveTo(-9,-9,-7,-13,0,-21);ctx.fill();
   }else if(type==='recycle'){
-    ctx.fillStyle='#876b48';ctx.beginPath();ctx.roundRect(-18,-4,36,18,5);ctx.fill();
-    ctx.fillStyle='#4f8e65';ctx.beginPath();ctx.arc(-10,-6,8,0,Math.PI*2);ctx.arc(10,-6,8,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#d9ffdf';ctx.font='bold 14px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('♻',0,3);
-    ctx.strokeStyle='rgba(225,231,189,.65)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-14,12);ctx.lineTo(14,12);ctx.stroke();
+    ctx.fillStyle='#6abd85';ctx.beginPath();ctx.roundRect(-18,-6,36,20,6);ctx.fill();
+    ctx.fillStyle='#4a7d58';ctx.beginPath();ctx.roundRect(-21,3,42,12,5);ctx.fill();
+    ctx.fillStyle='rgba(238,255,241,.88)';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('♻',0,3);
+    ctx.fillStyle='rgba(225,255,232,.22)';ctx.fillRect(-9,-3,18,7);
   }else if(type==='solar'){
-    const sun=ctx.createRadialGradient(0,-15,2,0,-15,15);sun.addColorStop(0,'#fff7bc');sun.addColorStop(.5,'#ffd761');sun.addColorStop(1,'rgba(255,174,44,.35)');
-    ctx.fillStyle=sun;ctx.beginPath();ctx.arc(0,-15,14,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#2d5f8a';ctx.beginPath();ctx.moveTo(-24,9);ctx.lineTo(-4,-2);ctx.lineTo(-4,12);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(24,9);ctx.lineTo(4,-2);ctx.lineTo(4,12);ctx.closePath();ctx.fill();
-    ctx.strokeStyle='rgba(186,231,255,.4)';ctx.lineWidth=1;    for(let y=-1;y<10;y+=4){ctx.beginPath();ctx.moveTo(-21,y+7);ctx.lineTo(-7,y);ctx.stroke();ctx.beginPath();ctx.moveTo(7,y);ctx.lineTo(21,y+7);ctx.stroke();}
-    ctx.strokeStyle='rgba(255,239,162,.85)';ctx.lineWidth=2;for(let a=0;a<6;a++){const ang=a*Math.PI/3;ctx.beginPath();ctx.moveTo(Math.cos(ang)*12,-15+Math.sin(ang)*12);ctx.lineTo(Math.cos(ang)*18,-15+Math.sin(ang)*18);ctx.stroke();}
+    ctx.fillStyle='#7abff7';ctx.beginPath();ctx.roundRect(-8,-12,16,28,5);ctx.fill();
+    ctx.fillStyle='#bce4ff';ctx.beginPath();ctx.arc(0,-15,6,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#2e5f88';ctx.beginPath();ctx.moveTo(-24,9);ctx.lineTo(-5,-2);ctx.lineTo(-5,11);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(24,9);ctx.lineTo(5,-2);ctx.lineTo(5,11);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(193,233,255,.4)';ctx.lineWidth=1;for(let y=-1;y<10;y+=4){ctx.beginPath();ctx.moveTo(-21,y+7);ctx.lineTo(-7,y);ctx.stroke();ctx.beginPath();ctx.moveTo(7,y);ctx.lineTo(21,y+7);ctx.stroke();}
+    ctx.strokeStyle='rgba(255,249,180,.75)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-24);ctx.lineTo(0,-29);ctx.stroke();
   }else if(type==='nature'){
-    ctx.fillStyle='#4fa66c';ctx.beginPath();ctx.roundRect(-16,-4,32,18,6);ctx.fill();
-    ctx.strokeStyle='rgba(203,251,217,.72)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-1,13,Math.PI,0);ctx.stroke();
-    ctx.fillStyle='rgba(193,245,202,.26)';ctx.beginPath();ctx.arc(0,-1,11,Math.PI,0);ctx.fill();
-    ctx.strokeStyle='#bff0bf';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-4,12);ctx.bezierCurveTo(-10,0,-7,-13,0,-18);ctx.bezierCurveTo(7,-11,9,-2,4,9);ctx.stroke();
-    ctx.fillStyle='#a7ecab';ctx.beginPath();ctx.moveTo(0,-18);ctx.quadraticCurveTo(8,-24,12,-14);ctx.quadraticCurveTo(5,-10,0,-18);ctx.fill();
+    ctx.fillStyle='#4fa66c';ctx.beginPath();ctx.roundRect(-16,-6,32,19,6);ctx.fill();
+    ctx.strokeStyle='rgba(203,251,217,.65)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-2,13,Math.PI,0);ctx.stroke();
+    ctx.fillStyle='rgba(193,245,202,.24)';ctx.beginPath();ctx.arc(0,-2,11,Math.PI,0);ctx.fill();
+    ctx.fillStyle='#98e59f';ctx.beginPath();ctx.moveTo(-4,-19);ctx.quadraticCurveTo(2,-25,7,-15);ctx.quadraticCurveTo(2,-11,-4,-19);ctx.fill();
+    ctx.strokeStyle='#c8f7c9';ctx.beginPath();ctx.moveTo(1,-18);ctx.lineTo(1,-9);ctx.stroke();
   }else if(type==='research'){
-    const g=ctx.createLinearGradient(0,-16,0,16);g.addColorStop(0,'#f1dbff');g.addColorStop(.4,'#be7ff7');g.addColorStop(1,'#6f3e95');
-    ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(0,-21);ctx.lineTo(16,-3);ctx.lineTo(10,16);ctx.lineTo(-10,16);ctx.lineTo(-16,-3);ctx.closePath();ctx.fill();
-    ctx.strokeStyle='rgba(250,236,255,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-8,2);ctx.lineTo(8,2);ctx.moveTo(0,-8);ctx.lineTo(0,12);ctx.stroke();
-    ctx.fillStyle='rgba(255,255,255,.3)';ctx.beginPath();ctx.arc(0,-4,6,0,Math.PI*2);ctx.fill();
+    // Schrödingers Kompostkanone: absichtlich seltsam, teuer und sofort als Bossbrecher erkennbar.
+    ctx.fillStyle='#6b275f';ctx.beginPath();ctx.roundRect(-16,2,32,15,6);ctx.fill();
+    ctx.strokeStyle='rgba(255,159,226,.85)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-12,6);ctx.lineTo(12,6);ctx.stroke();
+    ctx.save();ctx.rotate(animTime*1.15);ctx.strokeStyle='#ff79d7';ctx.lineWidth=3;for(let a=0;a<Math.PI*2;a+=Math.PI*2/3){ctx.beginPath();ctx.moveTo(Math.cos(a)*5,Math.sin(a)*5-8);ctx.lineTo(Math.cos(a)*18,Math.sin(a)*18-8);ctx.stroke();ctx.fillStyle='#bfffe8';ctx.beginPath();ctx.arc(Math.cos(a)*19,Math.sin(a)*19-8,3.2,0,Math.PI*2);ctx.fill();}ctx.restore();
+    const wobble=2+Math.sin(animTime*5)*1.4;ctx.fillStyle='rgba(255,235,136,.92)';ctx.beginPath();ctx.arc(0,-8,7+wobble,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ff79d7';ctx.beginPath();ctx.arc(0,-8,3.5,0,Math.PI*2);ctx.fill();
+    ctx.font='12px system-ui';ctx.textAlign='center';ctx.fillStyle='#d9fff1';ctx.fillText('♻️?',0,11);
   }
+  // level skyline lights
   const count=Math.min(6,level+1),step=7,start=-step*(count-1)/2;
   for(let j=0;j<count;j++){ctx.fillStyle=j<level?'#fff7c0':'rgba(120,146,156,.55)';ctx.beginPath();ctx.roundRect(start+j*step,18,4,7,2);ctx.fill();}
-  ctx.globalAlpha=.52;ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(0,0,31,animTime*.75,animTime*.75+1.15);ctx.stroke();ctx.globalAlpha=1;
+  // ambient orbit ring
+  ctx.globalAlpha=.48;ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(0,0,31,animTime*.75,animTime*.75+1.15);ctx.stroke();ctx.globalAlpha=1;
 }
 function drawTower(t,i){
   const p=PADS[t.pad],d=engine.TOWERS[t.type],selected=selectedTower===i;
   const range=d.range*(1+.08*(t.level-1));
-  if(selected){ctx.beginPath();ctx.arc(p.x,p.y,range,0,Math.PI*2);ctx.fillStyle='rgba(160,239,196,.055)';ctx.fill();ctx.strokeStyle='rgba(178,255,204,.30)';ctx.lineWidth=2;ctx.stroke();}
+  if(selected){
+    ctx.beginPath();ctx.arc(p.x,p.y,range,0,Math.PI*2);ctx.fillStyle='rgba(160,239,196,.055)';ctx.fill();ctx.strokeStyle='rgba(178,255,204,.30)';ctx.lineWidth=2;ctx.stroke();
+  }
   const pulse=1+Math.sin(animTime*2.6+i)*.025;
   ctx.save();ctx.translate(p.x,p.y);ctx.scale(pulse,pulse);
+  // city-platform consistent with the approved CI look
   const baseGrad=ctx.createLinearGradient(0,-28,0,28);baseGrad.addColorStop(0,'rgba(27,65,72,.98)');baseGrad.addColorStop(1,'rgba(12,30,37,.98)');
-  ctx.fillStyle=baseGrad;ctx.beginPath();ctx.arc(0,0,27,0,Math.PI*2);ctx.fill();ctx.strokeStyle=COLORS[t.type];ctx.lineWidth=2.6;ctx.stroke();
+  ctx.fillStyle=baseGrad;ctx.beginPath();ctx.arc(0,0,27,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=COLORS[t.type];ctx.lineWidth=2.6;ctx.stroke();
   ctx.fillStyle='rgba(255,255,255,.06)';ctx.beginPath();ctx.arc(0,-10,17,0,Math.PI*2);ctx.fill();
-  ctx.globalAlpha=.18;
-  if(t.type==='water'){ctx.fillStyle='#7edcff';ctx.beginPath();ctx.ellipse(0,-6,18,9+Math.sin(animTime*4+i)*2,0,0,Math.PI*2);ctx.fill();}
-  else if(t.type==='solar'){ctx.fillStyle='#ffd866';ctx.beginPath();ctx.arc(0,-12,12+Math.sin(animTime*5+i)*2,0,Math.PI*2);ctx.fill();}
-  else if(t.type==='nature'){ctx.fillStyle='#7fdb94';ctx.beginPath();ctx.arc(0,-5,14+Math.sin(animTime*3+i)*1.5,0,Math.PI*2);ctx.fill();}
-  else if(t.type==='research'){ctx.fillStyle='#c59dff';ctx.beginPath();ctx.arc(0,-8,13+Math.sin(animTime*4+i)*2,0,Math.PI*2);ctx.fill();}
-  else if(t.type==='recycle'){ctx.fillStyle='#a7d587';ctx.beginPath();ctx.arc(0,-3,13+Math.sin(animTime*3.5+i)*1.5,0,Math.PI*2);ctx.fill();}
-  ctx.globalAlpha=1;
   drawBuildingArchitecture(t.type,t.level,COLORS[t.type]);
   ctx.restore();
   if(selected){
@@ -1143,39 +1187,21 @@ function drawEnemy(e){
   crisisDetail(e.type,r,e);
   // icon badge and label ribbon
   ctx.fillStyle='rgba(8,18,24,.72)';ctx.fillRect(-r-2,r-1,r*2+4,13);
-  ctx.font='bold 8.5px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#ecf7f8';ctx.fillText((e.worldBoss?'BOSS · ':'')+c.name.toUpperCase(),0,r+6);
+  ctx.font='bold 8.5px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#ecf7f8';ctx.fillText((e.worldBoss?`BOSS · ${(e.bossName||c.name).toUpperCase()}`:c.name.toUpperCase()),0,r+6);
   ctx.font=`${e.worldBoss?28:(e.boss?23:18)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';
   if(e.type==='storm'){ctx.save();ctx.rotate(animTime*1.3);ctx.fillText(c.icon,0,1);ctx.restore()} else ctx.fillText(c.icon,0,1);
-  if(e.boss){ctx.font=e.worldBoss?'20px system-ui':'15px system-ui';ctx.fillText(e.worldBoss?'👑💀':'👑',0,e.worldBoss?-40:-30);ctx.beginPath();ctx.arc(0,0,r+8+Math.sin(animTime*4)*3,0,Math.PI*2);ctx.strokeStyle=e.worldBoss&&e.enraged?'rgba(255,108,88,.85)':'rgba(255,232,145,.65)';ctx.lineWidth=2;ctx.stroke()}
+  if(e.boss){ctx.font=e.worldBoss?'20px system-ui':'15px system-ui';ctx.fillText(e.worldBoss?(e.bossIcon||'👑'):'👑',0,e.worldBoss?-40:-30);ctx.beginPath();ctx.arc(0,0,r+8+Math.sin(animTime*4)*3,0,Math.PI*2);ctx.strokeStyle=e.worldBoss&&e.phaseShield?'rgba(255,121,215,.95)':e.worldBoss&&e.triggerA?'rgba(255,108,88,.85)':'rgba(255,232,145,.65)';ctx.lineWidth=2;ctx.stroke()}
   ctx.restore();
   const bw=e.worldBoss?72:(e.boss?54:42);ctx.fillStyle='rgba(28,11,15,.88)';ctx.fillRect(e.x-bw/2,e.y-r-17,bw,6);ctx.fillStyle='#9bea91';ctx.fillRect(e.x-bw/2,e.y-r-17,bw*Math.max(0,e.hp/e.maxHp),6);
-  ctx.fillStyle='rgba(7,16,20,.76)';ctx.fillRect(e.x-bw/2,e.y-r-28,bw,9);ctx.font='bold 8px system-ui';ctx.textAlign='center';ctx.fillStyle='#d5e6e6';ctx.fillText(c.weak,e.x,e.y-r-21.5);
+  ctx.fillStyle='rgba(7,16,20,.76)';ctx.fillRect(e.x-bw/2,e.y-r-28,bw,9);ctx.font='bold 8px system-ui';ctx.textAlign='center';ctx.fillStyle='#d5e6e6';ctx.fillText(e.worldBoss?'🌀 KOMPOSTKANONE':c.weak,e.x,e.y-r-21.5);
 }
 function drawShots(){
   for(const s of shots){
     const a=clamp(s.life/s.max,0,1);ctx.globalAlpha=a;
-    if(s.kind==='water'){
-      const g=ctx.createLinearGradient(s.x,s.y,s.tx,s.ty);g.addColorStop(0,'rgba(157,235,255,.2)');g.addColorStop(.4,'rgba(106,211,245,.95)');g.addColorStop(1,'rgba(221,249,255,.9)');
-      ctx.strokeStyle=g;ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.quadraticCurveTo((s.x+s.tx)/2,(s.y+s.ty)/2-26,s.tx,s.ty);ctx.stroke();
-      ctx.strokeStyle='rgba(227,252,255,.85)';ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.quadraticCurveTo((s.x+s.tx)/2,(s.y+s.ty)/2-18,s.tx,s.ty);ctx.stroke();
-      ctx.beginPath();ctx.arc(s.tx,s.ty,38*(1-a)+10,0,Math.PI*2);ctx.strokeStyle='rgba(115,224,255,.75)';ctx.stroke();
-    } else if(s.kind==='nature'){
-      ctx.strokeStyle='rgba(126,224,144,.95)';ctx.lineWidth=3.6;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.bezierCurveTo((s.x+s.tx)/2-18,s.y-18,(s.x+s.tx)/2+18,s.ty+18,s.tx,s.ty);ctx.stroke();ctx.setLineDash([]);
-      ctx.fillStyle='rgba(187,243,190,.95)';ctx.beginPath();ctx.moveTo(s.tx,s.ty);ctx.lineTo(s.tx-8,s.ty-4);ctx.lineTo(s.tx-2,s.ty-10);ctx.closePath();ctx.fill();
-    } else if(s.kind==='solar'){
-      ctx.strokeStyle='rgba(255,231,133,.98)';ctx.lineWidth=4.5;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.tx,s.ty);ctx.stroke();
-      ctx.strokeStyle='rgba(255,248,199,.8)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.tx,s.ty);ctx.stroke();
-      for(let i=0;i<3;i++){const px=s.x+(s.tx-s.x)*(i+1)/4, py=s.y+(s.ty-s.y)*(i+1)/4;ctx.beginPath();ctx.moveTo(px-4,py-2);ctx.lineTo(px+1,py-8);ctx.lineTo(px-1,py-1);ctx.lineTo(px+5,py-3);ctx.strokeStyle='rgba(255,216,99,.85)';ctx.lineWidth=1.2;ctx.stroke();}
-    } else if(s.kind==='recycle'){
-      ctx.strokeStyle='rgba(154,216,134,.92)';ctx.lineWidth=3.4;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.tx,s.ty);ctx.stroke();
-      ctx.strokeStyle='rgba(219,247,164,.8)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc((s.x+s.tx)/2,(s.y+s.ty)/2,6+3*(1-a),0,Math.PI*2);ctx.stroke();
-    } else if(s.kind==='chain'){
-      ctx.strokeStyle='rgba(187,245,170,.85)';ctx.lineWidth=2.2;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.tx,s.ty);ctx.stroke();ctx.setLineDash([]);
-    } else {
-      const g=ctx.createLinearGradient(s.x,s.y,s.tx,s.ty);g.addColorStop(0,'rgba(237,213,255,.35)');g.addColorStop(.55,'rgba(203,134,255,.95)');g.addColorStop(1,'rgba(252,237,255,.9)');
-      ctx.strokeStyle=g;ctx.lineWidth=4.6;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.tx,s.ty);ctx.stroke();
-      ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.tx,s.ty);ctx.stroke();
-    }
+    if(s.kind==='water'){ctx.strokeStyle=s.color;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.quadraticCurveTo((s.x+s.tx)/2,(s.y+s.ty)/2-22,s.tx,s.ty);ctx.stroke();ctx.beginPath();ctx.arc(s.tx,s.ty,35*(1-a)+8,0,Math.PI*2);ctx.stroke()}
+    else if(s.kind==='nature'){ctx.strokeStyle=s.color;ctx.lineWidth=3;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.tx,s.ty);ctx.stroke();ctx.setLineDash([])}
+    else if(s.kind==='research'){ctx.shadowBlur=12;ctx.shadowColor=s.color;ctx.strokeStyle=s.color;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.quadraticCurveTo((s.x+s.tx)/2+Math.sin(animTime*18)*18,(s.y+s.ty)/2-18,s.tx,s.ty);ctx.stroke();ctx.shadowBlur=0;ctx.beginPath();ctx.arc(s.tx,s.ty,7+(1-a)*16,0,Math.PI*2);ctx.stroke()}
+    else{ctx.strokeStyle=s.color;ctx.lineWidth=s.kind==='solar'?4:3;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.tx,s.ty);ctx.stroke()}
     ctx.globalAlpha=1;
   }
 }
@@ -1212,7 +1238,7 @@ function draw(){
   });
   state.towers.forEach(drawTower);enemies.forEach(drawEnemy);drawShots();drawEffects();
   ctx.fillStyle='rgba(0,0,0,.40)';ctx.fillRect(12,12,300,58);ctx.fillStyle='#fff';ctx.font='bold 15px system-ui';ctx.textAlign='left';const mapStatus=state.phase==='wave'?`P${state.prestige} · Runde ${state.round} · ${enemies.length+spawnQueue.length} Krisen übrig`:state.phase==='build'?`Prestige ${state.prestige} · Bauphase · Runde ${Math.min(engine.ROUNDS_PER_PRESTIGE,state.round+1)}`:state.phase==='report'?'Rundenbericht':state.phase==='prestige'?'Prestige geschafft!':state.phase==='won'?'Prestige 12 geschafft!':'Spiel beendet';ctx.fillText(mapStatus,24,35);ctx.font='12px system-ui';ctx.fillStyle='#cad9d8';ctx.fillText('Typen zeigen Schwäche, Namen und Umweltmotiv',24,55);
-  if(waveBanner>0){const a=Math.min(1,waveBanner/.28),chs=engine.activeChallenges();ctx.globalAlpha=clamp(a,0,1);ctx.fillStyle='rgba(7,15,19,.88)';ctx.fillRect(255,205,450,125);ctx.strokeStyle='rgba(143,224,175,.28)';ctx.strokeRect(255,205,450,125);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='bold 28px system-ui';ctx.fillText(`🚨 P${state.prestige} · RUNDE ${state.round}`,480,246);ctx.font='16px system-ui';ctx.fillStyle='#ffe59a';ctx.fillText('Krisenwelle beginnt',480,276);ctx.font='11px system-ui';ctx.fillStyle='#b9d7d9';ctx.fillText(chs.length?chs.map(k=>engine.CHALLENGES[k].icon+' '+engine.CHALLENGES[k].name).join(' · '):'Keine zusätzliche Herausforderung',480,303);ctx.globalAlpha=1}
+  if(waveBanner>0){const a=Math.min(1,waveBanner/.28),chs=engine.activeChallenges(),bp=state.round%10===0?engine.bossProfile(state.round):null;ctx.globalAlpha=clamp(a,0,1);ctx.fillStyle='rgba(7,15,19,.88)';ctx.fillRect(235,195,490,145);ctx.strokeStyle=bp?'rgba(255,121,215,.62)':'rgba(143,224,175,.28)';ctx.strokeRect(235,195,490,145);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='bold 28px system-ui';ctx.fillText(bp?`👑 BOSS-RUNDE ${state.round}`:`🚨 P${state.prestige} · RUNDE ${state.round}`,480,235);ctx.font='16px system-ui';ctx.fillStyle='#ffe59a';ctx.fillText(bp?`${bp.icon} ${bp.name}`:'Krisenwelle beginnt',480,266);ctx.font='11px system-ui';ctx.fillStyle='#b9d7d9';ctx.fillText(bp?bp.trait:(chs.length?chs.map(k=>engine.CHALLENGES[k].icon+' '+engine.CHALLENGES[k].name).join(' · '):'Keine zusätzliche Herausforderung'),480,293);if(bp){ctx.fillStyle='#ffb8eb';ctx.fillText('🌀 Kompostkanone empfohlen – normaler Beschuss wird stark gedämpft',480,316)}ctx.globalAlpha=1}
   if(threatBanner>0&&newThreatText){ctx.globalAlpha=Math.min(1,threatBanner/.35);ctx.fillStyle='rgba(14,35,42,.94)';ctx.fillRect(170,455,620,48);ctx.strokeStyle='#7fcfa5';ctx.lineWidth=1.5;ctx.strokeRect(170,455,620,48);ctx.textAlign='center';ctx.fillStyle='#9cf0ae';ctx.font='bold 11px system-ui';ctx.fillText('NEUE KRISE ERKANNT',480,472);ctx.fillStyle='#fff';ctx.font='12px system-ui';ctx.fillText(newThreatText,480,490);ctx.globalAlpha=1}
   if(paused&&state.phase==='wave') {ctx.fillStyle='rgba(4,10,14,.62)';ctx.fillRect(-10,-10,980,560);ctx.textAlign='center';ctx.fillStyle='#fff';ctx.font='bold 34px system-ui';ctx.fillText('⏸ PAUSE',480,250);ctx.font='14px system-ui';ctx.fillStyle='#d2e4e4';ctx.fillText('Mit „Weiter“ fortsetzen',480,280)}
   if(screenFlash>0){ctx.fillStyle=`rgba(255,70,70,${screenFlash*.45})`;ctx.fillRect(-10,-10,980,560)}
@@ -1310,8 +1336,9 @@ else {makeBaseCheckpoint();saveGame('initial-checkpoint',true);addLog('Spiel ber
 
 window.addEventListener('pagehide',()=>saveGame('pagehide',true));
 let last=performance.now();function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
-window.__gameDebug={version:17,engine,startWave,continueReport,buildTower,upgradeSelected,sellSelected,toggleDrawer,closeDrawer,saveGame,clearSave,get phase(){return state.phase},get paused(){return paused},get enemies(){return enemies.map(e=>({x:e.x,y:e.y,type:e.type,hp:e.hp,seg:e.seg}))},get queue(){return spawnQueue.length},get selectedPad(){return selectedPad},set selectedPad(v){selectedPad=v},set selectedTower(v){selectedTower=v},startPrestige,get score(){return currentScore()},get prestige(){return state.prestige},get openDrawer(){return openDrawerId}};
+window.__gameDebug={version:18,engine,startWave,continueReport,buildTower,upgradeSelected,sellSelected,toggleDrawer,closeDrawer,saveGame,clearSave,get phase(){return state.phase},get paused(){return paused},get enemies(){return enemies.map(e=>({x:e.x,y:e.y,type:e.type,hp:e.hp,seg:e.seg}))},get queue(){return spawnQueue.length},get selectedPad(){return selectedPad},set selectedPad(v){selectedPad=v},set selectedTower(v){selectedTower=v},startPrestige,get score(){return currentScore()},get prestige(){return state.prestige},get openDrawer(){return openDrawerId}};
 })();
+
 </script>
 </body>
 </html>
