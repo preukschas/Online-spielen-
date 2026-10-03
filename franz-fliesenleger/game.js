@@ -180,20 +180,139 @@
     }
   }
 
+  const conceptQuestions = [
+    {tag:'FUGENBILD',q:'Was ist für ein sauberes Fugenbild besonders wichtig?',a:'gleichmäßiger Abstand',opts:['gleichmäßiger Abstand','möglichst viel Kleber','zufälliger Versatz']},
+    {tag:'UNTERGRUND',q:'Was ist vor dem Fliesen besonders wichtig?',a:'tragfähiger ebener Untergrund',opts:['tragfähiger ebener Untergrund','möglichst staubiger Boden','nasse Kleberreste']},
+    {tag:'KLEBER',q:'Warum wird Kleber mit einer Zahnkelle aufgetragen?',a:'für gleichmäßige Kleberrippen',opts:['für gleichmäßige Kleberrippen','nur zur Dekoration','damit der Kleber schneller trocknet']},
+    {tag:'GEFÄLLE',q:'Eine Terrasse braucht Gefälle vom Haus weg. Wohin soll Wasser laufen?',a:'vom Gebäude weg',opts:['zum Gebäude','vom Gebäude weg','zur höchsten Stelle']},
+    {tag:'DEHNFUGE',q:'Was sollte man mit vorhandenen Bewegungsfugen im Untergrund machen?',a:'in den Belag übernehmen',opts:['in den Belag übernehmen','immer überfliesen','mit Hartkleber füllen']},
+    {tag:'DIAGONALE',q:'Bei diagonaler Verlegung entsteht meistens ...?',a:'mehr Verschnitt',opts:['mehr Verschnitt','gar kein Verschnitt','automatisch weniger Fugen']},
+    {tag:'FUGENPLAN',q:'Was hilft gegen sehr schmale Randstreifen?',a:'Verlegebild vorher ausmitteln',opts:['Verlegebild vorher ausmitteln','immer links mit ganzer Fliese starten','Fugenbreite zufällig ändern']},
+    {tag:'PRÜFUNG',q:'Womit kontrolliert man, ob eine Fläche eben ist?',a:'Richtlatte oder Wasserwaage',opts:['Richtlatte oder Wasserwaage','Zollstock allein','Fugenkreuz']},
+    {tag:'RECHTWINKEL',q:'Welche Seitenlängen bilden ein bekanntes rechtwinkliges Prüfdreieck?',a:'3-4-5',opts:['2-3-4','3-4-5','4-5-6']},
+    {tag:'MEISTERFRAGE',q:'Was ist bei einem schwierigen Raum besser als sofort loszufliesen?',a:'erst messen und Verlegeplan machen',opts:['erst messen und Verlegeplan machen','ohne Messen beginnen','nur nach Augenmaß schneiden']},
+    {tag:'AUSSENECKE',q:'Was hilft an einer Ecke für ein ruhiges Fugenbild?',a:'Fugen aufeinander abstimmen',opts:['Fugen aufeinander abstimmen','jede Wand anders beginnen','Abstände zufällig ändern']},
+    {tag:'GROSSFORMAT',q:'Warum wird bei großen Fliesen oft auch die Rückseite dünn mit Kleber bestrichen?',a:'für bessere Benetzung',opts:['für bessere Benetzung','für mehr Glanz','für breitere Fugen']}
+  ];
+
+  let recentCutQuestions = [];
+
+  function shuffleAnswers(arr){
+    const copy=arr.slice();
+    for(let i=copy.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      const t=copy[i]; copy[i]=copy[j]; copy[j]=t;
+    }
+    return copy;
+  }
+
+  function numQuestion(tag,q,answer,wrong1,wrong2,suffix){
+    const s=suffix||'';
+    const fmt=function(v){ return String(v).replace('.',',')+s; };
+    return {tag:tag,q:q,a:fmt(answer),opts:shuffleAnswers([fmt(answer),fmt(wrong1),fmt(wrong2)])};
+  }
+
+  function generateCutQuestion(){
+    const level=state.level;
+    const type=Math.floor(Math.random()*(level===0?6:level===1?9:level===2?12:15));
+
+    if(type===0){
+      const tile=[30,40,45,50,60,80,90][Math.floor(Math.random()*7)];
+      const cut=[5,8,10,12,15,18,20][Math.floor(Math.random()*7)];
+      const target=tile-cut;
+      return numQuestion('GERADER SCHNITT','Eine '+tile+'-cm-Fliese wird auf '+target+' cm gekürzt. Wie viel muss ab?',cut,Math.max(1,cut-3),cut+4,' cm');
+    }
+    if(type===1){
+      const per=[4,5,6,7,8,9][Math.floor(Math.random()*6)];
+      const rows=[2,3,4,5][Math.floor(Math.random()*4)];
+      const answer=per*rows;
+      return numQuestion('MENGE',rows+' Reihen brauchen jeweils '+per+' Fliesen. Wie viele Fliesen sind das?',answer,answer-per,answer+per,'');
+    }
+    if(type===2){
+      const tile=[20,25,30,40,50,60][Math.floor(Math.random()*6)];
+      const count=[3,4,5,6,7,8][Math.floor(Math.random()*6)];
+      const width=tile*count;
+      return numQuestion('EINTEILUNG','Die Wand ist '+width+' cm breit. Wie viele '+tile+'-cm-Fliesen passen ohne Fuge nebeneinander?',count,Math.max(1,count-1),count+1,'');
+    }
+    if(type===3){
+      const tile=[30,40,50,60,80,90][Math.floor(Math.random()*6)];
+      return numQuestion('HALBIEREN','Eine '+tile+'-cm-Fliese wird genau halbiert. Wie breit ist jedes Stück?',tile/2,tile/2-5,tile/2+5,' cm');
+    }
+    if(type===4){
+      const boxes=[2,3,4,5][Math.floor(Math.random()*4)];
+      const each=[8,10,12,15][Math.floor(Math.random()*4)];
+      const answer=boxes*each;
+      return numQuestion('KARTONS','In einem Karton liegen '+each+' Fliesen. Wie viele sind in '+boxes+' Kartons?',answer,answer-each,answer+each,'');
+    }
+    if(type===5){
+      const cm=[100,120,150,180,200,250,300][Math.floor(Math.random()*7)];
+      const answer=cm/100;
+      return numQuestion('MASS',cm+' cm entsprechen wie vielen Metern?',answer,Math.max(0.1,answer-0.5),answer+0.5,' m');
+    }
+    if(type===6){
+      const w=[2,2.5,3,3.5,4][Math.floor(Math.random()*5)];
+      const h=[2,2.5,3][Math.floor(Math.random()*3)];
+      const answer=w*h;
+      return numQuestion('FLÄCHE','Eine Fläche ist '+String(w).replace('.',',')+' m breit und '+String(h).replace('.',',')+' m hoch. Wie groß ist sie?',answer,Math.max(0.5,answer-1),answer+1,' m²');
+    }
+    if(type===7){
+      const need=[20,30,40,50,60][Math.floor(Math.random()*5)];
+      const pct=10;
+      const reserve=need*pct/100;
+      return numQuestion('RESERVE','Du brauchst '+need+' Fliesen und planst '+pct+' % Reserve. Wie viele Fliesen Reserve sind das?',reserve,Math.max(1,reserve-2),reserve+2,'');
+    }
+    if(type===8){
+      const per=[4,5,6][Math.floor(Math.random()*3)];
+      const area=[9,10,11,12,13,14,15,16,17,18][Math.floor(Math.random()*10)];
+      const answer=Math.ceil(area/per);
+      return numQuestion('KLEBER','Ein Sack Fliesenkleber reicht für '+per+' m². Wie viele Säcke braucht man mindestens für '+area+' m²?',answer,Math.max(1,answer-1),answer+1,'');
+    }
+    if(type===9){
+      const size=[20,25,50][Math.floor(Math.random()*3)];
+      const perSide=100/size;
+      const answer=perSide*perSide;
+      return numQuestion('FLIESENMENGE','Quadratische Fliesen messen '+size+' × '+size+' cm. Wie viele braucht man ohne Fuge für 1 m²?',answer,Math.max(1,answer-perSide),answer+perSide,'');
+    }
+    if(type===10){
+      const wall=[8,9,10,12][Math.floor(Math.random()*4)];
+      const opening=[1,1.5,2][Math.floor(Math.random()*3)];
+      const answer=wall-opening;
+      return numQuestion('ABZUG','Eine Wand hat '+String(wall).replace('.',',')+' m². Eine Öffnung mit '+String(opening).replace('.',',')+' m² wird nicht gefliest. Wie viel bleibt?',answer,Math.max(0.5,answer-1),answer+1,' m²');
+    }
+    if(type===11){
+      const tile=[40,50,60][Math.floor(Math.random()*3)];
+      const full=[3,4,5][Math.floor(Math.random()*3)];
+      const rest=[20,30,40][Math.floor(Math.random()*3)];
+      const wall=tile*full+rest;
+      const side=rest/2;
+      return numQuestion('MITTIG TEILEN','Eine '+wall+'-cm-Wand bekommt '+full+' ganze '+tile+'-cm-Fliesen. Der Rest wird mittig geteilt. Wie breit ist jedes Randstück?',side,Math.max(1,side-5),side+5,' cm');
+    }
+    if(type===12){
+      const area=[10,12,15,20][Math.floor(Math.random()*4)];
+      const pct=[10,15][Math.floor(Math.random()*2)];
+      const reserve=area*pct/100;
+      return numQuestion('VERSCHNITT',pct+' % Reserve auf '+area+' m² sind wie viel zusätzliche Fläche?',reserve,Math.max(0.5,reserve-0.5),reserve+0.5,' m²');
+    }
+    if(type===13){
+      const hours=[2,3,4][Math.floor(Math.random()*3)];
+      const rate=[2,3,4][Math.floor(Math.random()*3)];
+      const area=hours*rate;
+      return numQuestion('ZEIT','Franz schafft '+area+' m² in '+hours+' Stunden. Wie viele m² sind das durchschnittlich pro Stunde?',rate,Math.max(1,rate-1),rate+1,' m²');
+    }
+
+    const c=conceptQuestions[Math.floor(Math.random()*conceptQuestions.length)];
+    return {tag:c.tag,q:c.q,a:c.a,opts:shuffleAnswers(c.opts)};
+  }
+
   function makeCutQuestion(){
-    const jobs = [
-      {tag:'GERADER SCHNITT',q:'Eine 60-cm-Fliese muss in eine 45-cm-Nische. Wie viel muss ab?',a:'15 cm',opts:['10 cm','15 cm','20 cm']},
-      {tag:'FLÄCHE',q:'Zwei Reihen à 30 cm: Welche Gesamtbreite ergibt das ohne Fuge?',a:'60 cm',opts:['45 cm','60 cm','90 cm']},
-      {tag:'EINTEILUNG',q:'Die Wand ist 240 cm breit. Wie viele 60-cm-Fliesen passen nebeneinander?',a:'4',opts:['3','4','5']},
-      {tag:'HALBIEREN',q:'Eine 60-cm-Fliese wird halbiert. Wie breit ist jedes Stück?',a:'30 cm',opts:['20 cm','30 cm','40 cm']},
-      {tag:'MENGE',q:'Eine Reihe braucht 8 Fliesen. Zwei Reihen brauchen ...?',a:'16',opts:['12','16','18']},
-      {tag:'RESTSTÜCK',q:'Von 60 cm werden 12 cm abgeschnitten. Was bleibt?',a:'48 cm',opts:['42 cm','48 cm','52 cm']},
-      {tag:'ROHR-AUSSCHNITT',q:'Ein Rohr hat 10 cm Durchmesser. Wie groß muss die Öffnung mindestens sein?',a:'10 cm',opts:['5 cm','10 cm','20 cm']},
-      {tag:'DIAGONALSCHNITT',q:'Eine quadratische Fliese wird diagonal geteilt. Wie viele Dreiecke entstehen?',a:'2',opts:['2','3','4']},
-      {tag:'INNENECKE',q:'Für eine Ecke fehlen 18 cm bei einer 60-cm-Fliese. Welches Restmaß bleibt?',a:'42 cm',opts:['32 cm','42 cm','48 cm']},
-      {tag:'FUGENBILD',q:'Was ist wichtiger für ein sauberes Fugenbild?',a:'gleichmäßiger Abstand',opts:['gleichmäßiger Abstand','möglichst viel Kleber','zufälliger Versatz']}
-    ];
-    return jobs[Math.floor(Math.random()*jobs.length)];
+    let item=null;
+    for(let tries=0;tries<15;tries++){
+      item=generateCutQuestion();
+      if(recentCutQuestions.indexOf(item.q)===-1) break;
+    }
+    recentCutQuestions.push(item.q);
+    if(recentCutQuestions.length>12) recentCutQuestions.shift();
+    return item;
   }
 
   function showCutChallenge(){
