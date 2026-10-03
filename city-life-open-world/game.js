@@ -28,10 +28,10 @@ const roadsX=[650,1850,3070,4310,5550];
 const roadsY=[520,1570,2640,3690];
 
 const buildings=[
-  {id:'market',x:80,y:70,w:450,h:320,name:'FRISCHMARKT',type:'shop',wall:'#b86c53',door:[305,415],items:[['Getränk',4,'🥤'],['Snack',6,'🥪'],['Rucksack',45,'🎒'],['Tablet',250,'📱']]},
+  {id:'market',x:80,y:70,w:450,h:320,name:'FRISCHMARKT',type:'shop',wall:'#b86c53',door:[305,415],items:[['Getränk',4,'🥤',4],['Snack',6,'🥪',8],['Lebensmittel',25,'🛍️',0],['Rucksack',45,'🎒',0],['Tablet',250,'📱',0]]},
   {id:'home-a',x:790,y:60,w:760,h:330,name:'WOHNHAUS AM PARK',type:'home',wall:'#bb8b65',door:[1170,420]},
-  {id:'tech',x:2110,y:70,w:700,h:320,name:'TECH CENTER',type:'shop',wall:'#929da6',door:[2460,415],items:[['Kopfhörer',55,'🎧'],['Smartphone',320,'📱'],['Laptop',900,'💻']]},
-  {id:'cafe',x:3350,y:70,w:700,h:320,name:'CAFÉ CENTRAL',type:'cafe',wall:'#a96e52',door:[3700,415]},
+  {id:'tech',x:2110,y:70,w:700,h:320,name:'TECH CENTER',type:'shop',wall:'#929da6',door:[2460,415],items:[['Kopfhörer',55,'🎧',0],['Smartwatch',180,'⌚',0],['Smartphone',320,'📱',0],['Laptop',900,'💻',0]]},
+  {id:'cafe',x:3350,y:70,w:700,h:320,name:'CAFÉ CENTRAL',type:'cafe',wall:'#a96e52',door:[3700,415],items:[['Kaffee',4,'☕',6],['Kuchen',6,'🍰',8],['Sandwich',8,'🥪',12]]},
   {id:'premium',x:4590,y:60,w:900,h:330,name:'PREMIUM MOTORS',type:'dealer',wall:'#8b969e',vehiclePortal:true,entrance:[4680,420],exit:[5390,420],dealerSet:'premium'},
 
   {id:'logistics',x:80,y:720,w:450,h:560,name:'LOGISTIK',type:'job',wall:'#a9977a',door:[560,1000]},
@@ -40,9 +40,9 @@ const buildings=[
   {id:'parking',x:3350,y:720,w:700,h:560,name:'PARKHAUS',type:'parking',wall:'#777e83',vehiclePortal:true,entrance:[3440,1310],exit:[3960,1310]},
   {id:'garage',x:4590,y:720,w:900,h:560,name:'MOTORWERK',type:'garage',wall:'#85898b',door:[4560,1000]},
 
-  {id:'fashion',x:80,y:1780,w:450,h:500,name:'MODEHAUS',type:'shop',wall:'#c18c74',door:[560,2030],items:[['Jacke',80,'🧥'],['Sneaker',75,'👟'],['Uhr',120,'⌚']]},
+  {id:'fashion',x:80,y:1780,w:450,h:500,name:'MODEHAUS',type:'shop',wall:'#c18c74',door:[560,2030],items:[['T-Shirt',30,'👕',0],['Sneaker',75,'👟',0],['Jacke',80,'🧥',0],['Uhr',120,'⌚',0]]},
   {id:'home-b',x:790,y:1770,w:760,h:510,name:'WOHNQUARTIER',type:'home',wall:'#b87f60',door:[1170,2310]},
-  {id:'mall',x:2110,y:1780,w:700,h:500,name:'CITY MALL',type:'shop',wall:'#999ca0',door:[2460,2310],items:[['Konsole',450,'🎮'],['Kamera',350,'📷'],['Schmuck',600,'💎']]},
+  {id:'mall',x:2110,y:1780,w:700,h:500,name:'CITY MALL',type:'shop',wall:'#999ca0',door:[2460,2310],items:[['Kamera',350,'📷',0],['Konsole',450,'🎮',0],['Schmuck',600,'💎',0],['Fernseher',700,'📺',0]]},
   {id:'moto',x:3350,y:1780,w:700,h:500,name:'BIKE & MOTO',type:'dealer',wall:'#8b9196',vehiclePortal:true,entrance:[3440,2310],exit:[3960,2310],dealerSet:'moto'},
   {id:'home-c',x:4590,y:1770,w:900,h:510,name:'WOHNPARK',type:'home',wall:'#b9896b',door:[5040,2310]},
 
@@ -240,15 +240,25 @@ function panelButton(text,fn,primary=false){
 function buildingPanel(){
   const b=currentBuilding();if(!b)return;
   const row=panel(b.name);
-  if(b.type==='shop'){
-    for(const [name,price,icon] of b.items){
+  if(b.type==='shop'||b.type==='cafe'){
+    for(const [name,price,icon,heal=0] of b.items||[]){
       row.appendChild(panelButton('Kaufen '+icon+' '+name+' · '+price+' €',()=>{
         if(state.money<price)return toast('Zu wenig Geld.');
-        state.money-=price;state.inventory.push(icon+' '+name);log('✅ '+name+' gekauft.');hud();
-      }));
-      row.appendChild(panelButton('Klauen '+icon+' '+name,()=>{
-        state.inventory.push(icon+' '+name+' ⚠️');crime(12,'⚠️ '+name+' im Spiel gestohlen.');hud();
-      }));
+        state.money-=price;
+        if(heal>0){
+          state.hp=Math.min(100,state.hp+heal);
+          log('✅ '+name+' gekauft und benutzt: +'+heal+' Gesundheit.');
+        }else{
+          state.inventory.push(icon+' '+name);
+          log('✅ '+name+' gekauft und ins Inventar gelegt.');
+        }
+        hud();
+      },price<=10));
+      if(b.type==='shop'){
+        row.appendChild(panelButton('Klauen '+icon+' '+name,()=>{
+          state.inventory.push(icon+' '+name+' ⚠️');crime(12,'⚠️ '+name+' im Spiel gestohlen.');hud();
+        }));
+      }
     }
   }
   if(b.type==='home')row.appendChild(panelButton('🛏️ Ausruhen',()=>{state.hp=100;state.heat=Math.max(0,state.heat-10);log('🛏️ Ausgeruht.');hud();},true));
