@@ -42,7 +42,15 @@ const ui={
   pauseStamp:document.getElementById("pauseStamp"),
   bossHud:document.getElementById("bossHud"),
   bossFill:document.getElementById("bossFill"),
-  phaseLabel:document.getElementById("phaseLabel")
+  phaseLabel:document.getElementById("phaseLabel"),
+  missionLabel:document.getElementById("missionLabel"),
+  goalLabel:document.getElementById("goalLabel"),
+  goalFill:document.getElementById("goalFill"),
+  levelLabel:document.getElementById("levelLabel"),
+  xpLabel:document.getElementById("xpLabel"),
+  introBox:document.getElementById("introBox"),
+  resultBox:document.getElementById("resultBox"),
+  upgradeBox:document.getElementById("upgradeBox")
 };
 
 const safeStore={
@@ -50,11 +58,58 @@ const safeStore={
   set(k,v){try{localStorage.setItem(k,String(v))}catch(_){}}
 };
 
+const CAMPAIGN=[
+  {name:"Der erste Alarm",place:"Platz der Fontänen",target:4500,duration:60,bossAt:34,
+   story:"In Aqua City spielen die Reinigungsroboter verrückt. Sergey soll zuerst den Platz der Fontänen sichern und herausfinden, wer sie umprogrammiert hat.",
+   outro:"Zwischen den nassen Roboterspuren findet Sergey ein Symbol: ein Zahnrad mit einer schwarzen Welle. Die Spur führt zum alten Pumpwerk.",
+   colors:["#1b607d","#0a2b42"]},
+  {name:"Pumpwerk 7",place:"Altes Pumpwerk",target:6500,duration:60,bossAt:30,
+   story:"Im Pumpwerk laufen die Ventile rückwärts. Sergey muss die Roboter zurückdrängen, bevor der Wasserdruck die Leitungen sprengt.",
+   outro:"Der Mega-Bot sendet kurz vor dem Abschalten Koordinaten. Sie zeigen in den Nebelkanal unter der Stadt.",
+   colors:["#315d71","#162c43"]},
+  {name:"Der Nebelkanal",place:"Unter Aqua City",target:8500,duration:60,bossAt:27,
+   story:"Unter der Stadt wird es enger und schneller. Neue Bots bewachen einen geheimen Datenkanal. Sergey muss sich bis zur Quelle des Signals vorkämpfen.",
+   outro:"Die Daten verraten den Plan: Im Kern der alten Waschfabrik sitzt der Steuercomputer, der alle Bots kontrolliert.",
+   colors:["#37516b","#172538"]},
+  {name:"Das Wellen-Herz",place:"Alte Waschfabrik",target:11000,duration:60,bossAt:23,
+   story:"Finale! Sergey erreicht die Waschfabrik. Jetzt zählt alles: Ausweichen, Super Splash und die Upgrades aus den vorherigen Missionen.",
+   outro:"Mit einem letzten Super Splash verstummt das Wellen-Herz. Aqua City ist wieder sicher – und Sergey ist jetzt ihr offizieller Splash-Held.",
+   colors:["#604b70","#24233f"]}
+];
+
+function loadProfile(){
+  let p0={xp:0,unlocked:1,skillPoints:0,completed:[],upgrades:{blaster:0,speed:0,armor:0,super:0}};
+  try{
+    const raw=safeStore.get("sergeySplashProfile","");
+    if(raw){
+      const got=JSON.parse(raw);
+      p0=Object.assign(p0,got||{});
+      p0.upgrades=Object.assign({blaster:0,speed:0,armor:0,super:0},(got&&got.upgrades)||{});
+      p0.completed=Array.isArray(p0.completed)?p0.completed:[];
+    }
+  }catch(_){}
+  p0.unlocked=clamp(Number(p0.unlocked)||1,1,CAMPAIGN.length);
+  p0.skillPoints=Math.max(0,Number(p0.skillPoints)||0);
+  p0.xp=Math.max(0,Number(p0.xp)||0);
+  for(const k of ["blaster","speed","armor","super"])p0.upgrades[k]=clamp(Number(p0.upgrades[k])||0,0,3);
+  return p0;
+}
+function saveProfile(){safeStore.set("sergeySplashProfile",JSON.stringify(profile))}
+function levelFromXp(xp){return 1+Math.floor(xp/1200)}
+function xpIntoLevel(xp){return xp%1200}
+function currentMission(){return CAMPAIGN[missionIndex]}
+function superNeed(){return Math.max(70,100-profile.upgrades.super*10)}
+
 let best=Number(safeStore.get("sergeySplashBest",0))||0;
 ui.best.textContent=best;
+let profile=loadProfile();
+let missionIndex=clamp(profile.unlocked-1,0,CAMPAIGN.length-1);
+let pendingNextMission=null;
+let missionWon=false;
+let superLock=false;
 
 let running=false,paused=false,last=0,elapsed=0,countdown=0,spawnCd=0,score=0,combo=0;
-let bossSpawned=false,shootHeld=false,shake=0,flash=0,phaseKey="",killsSinceDrop=0,totalKills=0,rescueUsed=false;
+let bossSpawned=false,bossDefeated=false,shootHeld=false,shake=0,flash=0,phaseKey="",killsSinceDrop=0,totalKills=0,rescueUsed=false;
 let soundOn=safeStore.get("sergeySplashSound","1")!=="0";
 let audioCtx=null;
 
@@ -101,13 +156,16 @@ function sfx(kind){
 }
 
 function reset(){
-  elapsed=0;countdown=2.6;spawnCd=.45;score=0;combo=0;bossSpawned=false;shootHeld=false;shake=0;flash=0;
-  phaseKey="";killsSinceDrop=0;totalKills=0;rescueUsed=false;
+  const maxHp=5+profile.upgrades.armor;
+  const speed=292*(1+profile.upgrades.speed*.07);
+  elapsed=0;countdown=2.6;spawnCd=.45;score=0;combo=0;bossSpawned=false;bossDefeated=false;shootHeld=false;shake=0;flash=0;
+  phaseKey="";killsSinceDrop=0;totalKills=0;rescueUsed=false;missionWon=false;superLock=false;
   enemies.length=shots.length=enemyShots.length=particles.length=pickups.length=floaters.length=rings.length=0;
-  Object.assign(p,{x:W/2,y:H/2,hp:5,inv:0,fireCd:0,rapid:0,shield:0,mega:0,super:0});
+  Object.assign(p,{x:W/2,y:H/2,speed,maxHp,hp:maxHp,inv:0,fireCd:0,rapid:0,shield:0,mega:0,super:0});
   paused=false;ui.pauseStamp.classList.add("hidden");ui.pauseBtn.textContent="⏸";
   ui.bossHud.classList.add("hidden");
-  announce("BEREIT?", "#ffffff", 1.0);
+  ui.introBox.classList.add("hidden");ui.resultBox.classList.add("hidden");ui.upgradeBox.classList.add("hidden");
+  announce("MISSION "+(missionIndex+1), "#ffffff", 1.0);
   updateUI();
 }
 
@@ -120,8 +178,29 @@ function showStartError(err){
   ui.start.textContent="ERNEUT STARTEN";
   try{console.error("Sergey Splash Arena:",err)}catch(_){}
 }
+function showIntro(){
+  const m=currentMission();
+  ui.tag.textContent="STORY-MODUS · MISSION "+(missionIndex+1);
+  ui.title.textContent=m.name;
+  ui.text.textContent=m.story;
+  ui.introBox.classList.remove("hidden");
+  ui.resultBox.classList.add("hidden");
+  ui.upgradeBox.classList.add("hidden");
+  ui.start.disabled=false;
+  ui.start.textContent="MISSION "+(missionIndex+1)+" STARTEN";
+  ui.overlay.classList.remove("hidden");
+  updateUI();
+}
+
 function start(){
   try{
+    if(pendingNextMission!==null){
+      missionIndex=pendingNextMission;
+      pendingNextMission=null;
+      saveProfile();
+      showIntro();
+      return;
+    }
     ensureAudio();
     reset();
     running=true;
@@ -134,19 +213,85 @@ function start(){
   }
 }
 
+function refreshUpgradeBox(){
+  const buttons=[...document.querySelectorAll("[data-upgrade]")];
+  for(const b of buttons){
+    const key=b.dataset.upgrade;
+    const lvl=profile.upgrades[key]||0;
+    b.classList.toggle("maxed",lvl>=3);
+    b.disabled=lvl>=3||profile.skillPoints<=0;
+    b.title="Stufe "+lvl+" / 3";
+  }
+  ui.upgradeBox.querySelector("h3").textContent=profile.skillPoints>0
+    ?"Sergey wird stärker – wähle 1 Upgrade"
+    :"Upgrade gewählt · Sergey ist bereit";
+  ui.start.disabled=profile.skillPoints>0;
+}
+
+function chooseUpgrade(key){
+  if(!["blaster","speed","armor","super"].includes(key))return;
+  if(profile.skillPoints<=0||profile.upgrades[key]>=3)return;
+  profile.upgrades[key]++;
+  profile.skillPoints--;
+  saveProfile();
+  refreshUpgradeBox();
+  updateUI();
+}
+
 function finish(reason){
+  if(!running&&reason!=="test")return;
   running=false;shootHeld=false;
+  const m=currentMission();
+  const success=reason!=="hp";
   const previousBest=best;
   if(score>best){best=score;safeStore.set("sergeySplashBest",best);ui.best.textContent=best}
   const isNew=score>previousBest;
-  const rating=score>=14000?"★★★":score>=7000?"★★☆":"★☆☆";
-  ui.tag.textContent=isNew?"NEUER BESTWERT!":"RUNDE BEENDET";
-  ui.title.textContent=reason==="hp"?"Sergey macht eine Splash-Pause!":"60 Sekunden geschafft!";
-  ui.text.textContent="Punkte: "+score+" · Treffer-Serie: ×"+comboMult()+" · Wertung "+rating+". "+(isNew?"Das ist dein neuer Rekord!":"Noch eine Runde für den nächsten Rekord?");
-  ui.start.textContent="NOCHMAL SPIELEN";
-  ui.overlay.classList.remove("hidden");
+  const earnedXp=Math.max(150,Math.round(score/14)+(success?250:0));
+  profile.xp+=earnedXp;
+
+  if(success){
+    missionWon=true;
+    const first=!profile.completed.includes(missionIndex);
+    if(first){
+      profile.completed.push(missionIndex);
+      profile.skillPoints++;
+    }
+    if(missionIndex<CAMPAIGN.length-1){
+      profile.unlocked=Math.max(profile.unlocked,missionIndex+2);
+      pendingNextMission=missionIndex+1;
+    }else{
+      pendingNextMission=0;
+    }
+    saveProfile();
+  }else{
+    pendingNextMission=null;
+    saveProfile();
+  }
+
+  ui.introBox.classList.add("hidden");
+  ui.resultBox.classList.remove("hidden");
   ui.pauseStamp.classList.add("hidden");
   ui.bossHud.classList.add("hidden");
+
+  if(success){
+    ui.tag.textContent=missionIndex===CAMPAIGN.length-1?"KAMPAGNE GESCHAFFT!":"MISSION GESCHAFFT!";
+    ui.title.textContent=missionIndex===CAMPAIGN.length-1?"Aqua City ist gerettet!":m.name+" geschafft";
+    ui.text.textContent=m.outro;
+    ui.resultBox.innerHTML="<strong>"+score.toLocaleString("de-DE")+" Punkte</strong> · +"+earnedXp+" XP"+(isNew?" · Neuer Highscore!":"")+"<br>Weiter durch Zeit: "+Math.round(elapsed)+" Sek. · Gegner: "+totalKills;
+    ui.upgradeBox.classList.toggle("hidden",profile.skillPoints<=0);
+    refreshUpgradeBox();
+    ui.start.textContent=missionIndex===CAMPAIGN.length-1?"KAMPAGNE NOCHMAL":"WEITER ZU MISSION "+(missionIndex+2);
+  }else{
+    ui.tag.textContent="MISSION NOCH NICHT GESCHAFFT";
+    ui.title.textContent="Sergey braucht einen neuen Versuch";
+    ui.text.textContent="Die Bots waren diesmal schneller. Dein Fortschritt und deine Upgrades bleiben erhalten.";
+    ui.resultBox.innerHTML="<strong>"+score.toLocaleString("de-DE")+" Punkte</strong> · +"+earnedXp+" XP<br>Ziel: "+m.target.toLocaleString("de-DE")+" Punkte oder 60 Sekunden durchhalten.";
+    ui.upgradeBox.classList.add("hidden");
+    ui.start.disabled=false;
+    ui.start.textContent="MISSION "+(missionIndex+1)+" NOCHMAL";
+  }
+  updateUI();
+  ui.overlay.classList.remove("hidden");
 }
 
 function togglePause(force){
@@ -155,18 +300,29 @@ function togglePause(force){
   ui.pauseStamp.classList.toggle("hidden",!paused);
   ui.pauseBtn.textContent=paused?"▶":"⏸";
   if(!paused)last=performance.now();
+  updateUI();
 }
 
 function updateUI(){
+  const m=currentMission();
   ui.score.textContent=score;
-  ui.time.textContent=Math.max(0,Math.ceil(60-elapsed));
+  ui.time.textContent=Math.max(0,Math.ceil(m.duration-elapsed));
   ui.hp.textContent="★".repeat(Math.max(0,p.hp))+"☆".repeat(Math.max(0,p.maxHp-p.hp));
   ui.combo.textContent="×"+comboMult();
-  const pct=Math.round(p.super);
-  ui.power.textContent=pct+"%";
+  const need=superNeed();
+  const pct=clamp(Math.round((p.super/need)*100),0,100);
+  const ready=p.super>=need;
+  ui.power.textContent=ready?"BEREIT!":pct+"%";
   ui.superFill.style.width=pct+"%";
-  ui.superBtn.disabled=p.super<100||!running||paused||countdown>0;
-  const ph=nowPhase();ui.phaseLabel.textContent=ph.name;
+  ui.superBtn.disabled=!ready||!running||paused||countdown>0;
+  ui.superBtn.classList.toggle("ready",ready&&running&&!paused&&countdown<=0);
+  ui.missionLabel.textContent=(missionIndex+1)+" / "+CAMPAIGN.length;
+  ui.goalLabel.textContent="Ziel: "+m.target.toLocaleString("de-DE")+" + Boss oder "+m.duration+" Sek.";
+  ui.goalFill.style.width=clamp(Math.max(score/m.target,elapsed/m.duration)*100,0,100)+"%";
+  const lvl=levelFromXp(profile.xp);
+  ui.levelLabel.textContent="Level "+lvl;
+  ui.xpLabel.textContent=xpIntoLevel(profile.xp)+" / 1200";
+  const ph=nowPhase();ui.phaseLabel.textContent=m.place+" · "+ph.name;
   const boss=enemies.find(e=>e.type==="boss");
   if(boss){
     ui.bossHud.classList.remove("hidden");
@@ -184,7 +340,7 @@ function floater(x,y,text,color="#ffffff",size=19){
 function spawnEnemy(forceBoss=false){
   if(!forceBoss&&enemies.length>=nowPhase().cap)return false;
   let type="slime",r=18,hp=1,speed=rand(62,88),value=45;
-  if(forceBoss){type="boss";r=48;hp=24;speed=47;value=800}
+  if(forceBoss){type="boss";r=48;hp=24+missionIndex*5;speed=47+missionIndex*2;value=800+missionIndex*180}
   else{
     const roll=Math.random();
     if(elapsed>42&&roll<.15){type="tank";r=28;hp=4;speed=48;value=120}
@@ -197,6 +353,7 @@ function spawnEnemy(forceBoss=false){
   if(side===1){x=W+r+8;y=rand(45,H-45)}
   if(side===2){x=rand(45,W-45);y=-r-8}
   if(side===3){x=rand(45,W-45);y=H+r+8}
+  speed*=1+missionIndex*.045;
   enemies.push({x,y,r,hp,maxHp:hp,speed,type,value,wobble:rand(0,Math.PI*2),flash:0,stun:0,attackCd:rand(1.4,3.0)});
   return true;
 }
@@ -215,10 +372,11 @@ function shoot(){
   const t=nearestEnemy();let dx=1,dy=0;
   if(t){dx=t.x-p.x;dy=t.y-p.y;const d=Math.hypot(dx,dy)||1;dx/=d;dy/=d}
   const mega=p.mega>0;
+  const baseDamage=(mega?2:1)*(1+profile.upgrades.blaster*.28);
   shots.push({
-    x:p.x+dx*29,y:p.y+dy*29,r:mega?12:7,
+    x:p.x+dx*29,y:p.y+dy*29,r:(mega?12:7)+profile.upgrades.blaster,
     vx:dx*(mega?505:590),vy:dy*(mega?505:590),
-    life:1.25,dmg:mega?2:1,pierce:mega?2:0,trail:mega
+    life:1.25,dmg:baseDamage,pierce:mega?2:0,trail:mega
   });
   p.fireCd=p.rapid>0?.095:.205;
   burst(p.x+dx*28,p.y+dy*28,"#b7f6ff",mega?5:3,90);
@@ -226,21 +384,30 @@ function shoot(){
 }
 
 function useSuper(){
-  if(!running||paused||countdown>0||p.super<100)return;
-  p.super=0;shake=Math.max(shake,10);flash=.22;enemyShots.length=0;
-  rings.push({x:p.x,y:p.y,r:12,life:.55,max:.55});
+  const need=superNeed();
+  if(!running||paused||countdown>0||p.super<need||superLock)return false;
+  superLock=true;
+  p.super=0;
+  enemyShots.length=0;
+  shake=Math.max(shake,15);flash=.32;
+  rings.push({x:p.x,y:p.y,r:10,life:.9,max:.9});
+  rings.push({x:p.x,y:p.y,r:36,life:.65,max:.65});
   let hits=0;
+  const normalDamage=5+profile.upgrades.super*2;
+  const bossDamage=8+profile.upgrades.super*3;
   for(const e of enemies){
-    const damage=e.type==="boss"?5:4;
-    e.hp-=damage;e.flash=.28;hits++;
+    e.hp-=e.type==="boss"?bossDamage:normalDamage;
+    e.flash=.36;e.stun=Math.max(e.stun,1.0);hits++;
   }
   for(let i=enemies.length-1;i>=0;i--){
     if(enemies[i].hp<=0){killEnemy(enemies[i],true);enemies.splice(i,1)}
   }
-  burst(p.x,p.y,"#aef6ff",42,320);
-  floater(p.x,p.y-48,"SUPER SPLASH!","#ffe36c",28);
-  score+=hits*15;combo+=Math.min(4,hits);
-  sfx("super");vibrate(45);updateUI();
+  burst(p.x,p.y,"#d7fbff",70,390);
+  floater(p.x,p.y-55,"SUPER SPLASH!","#ffe36c",30);
+  score+=hits*25;combo+=Math.min(5,hits);
+  sfx("super");vibrate(60);updateUI();
+  setTimeout(()=>{superLock=false},220);
+  return true;
 }
 
 function shootBubble(e,count=1){
@@ -291,10 +458,11 @@ function killEnemy(e,fromSuper=false){
   const mult=comboMult();
   const gain=e.value*mult;
   score+=gain;if(!fromSuper)combo++;totalKills++;killsSinceDrop++;
-  if(!fromSuper)p.super=clamp(p.super+(e.type==="boss"?35:e.type==="tank"?11:7),0,100);
+  if(!fromSuper)p.super=clamp(p.super+(e.type==="boss"?35:e.type==="tank"?11:7),0,superNeed());
   burst(e.x,e.y,e.type==="boss"?"#ffe36c":"#78f2aa",e.type==="boss"?42:12,e.type==="boss"?270:155);
   floater(e.x,e.y-8,"+"+gain,e.type==="boss"?"#ffe36c":"#ffffff",e.type==="boss"?24:16);
   if(e.type==="boss"){
+    bossDefeated=true;
     dropPickup(e.x,e.y,true);dropPickup(e.x+34,e.y+12);score+=500;
     announce("BOSS GESPLASHT!","#ffe36c",1.45);shake=Math.max(shake,12);sfx("pickup");
   }else if(killsSinceDrop>=6||Math.random()<.17)dropPickup(e.x,e.y);
@@ -302,7 +470,7 @@ function killEnemy(e,fromSuper=false){
 }
 
 function collect(u){
-  if(u.type==="star"){score+=180;p.super=clamp(p.super+12,0,100);floater(u.x,u.y,"+180 ★","#ffe36c")}
+  if(u.type==="star"){score+=180;p.super=clamp(p.super+14,0,superNeed());floater(u.x,u.y,"+180 ★","#ffe36c")}
   if(u.type==="rapid"){p.rapid=Math.max(p.rapid,8);floater(u.x,u.y,"TURBO!","#ffb765")}
   if(u.type==="shield"){p.shield=Math.max(p.shield,9);if(p.hp<5)p.hp++;floater(u.x,u.y,"SCHILD!","#87efff")}
   if(u.type==="mega"){p.mega=Math.max(p.mega,7);floater(u.x,u.y,"MEGA!","#f8a2ff")}
@@ -336,7 +504,9 @@ function update(dt){
   }
 
   elapsed+=dt;
-  if(elapsed>=60){elapsed=60;updateUI();finish("time");return}
+  const m=currentMission();
+  if(score>=m.target&&bossDefeated){updateUI();finish("goal");return}
+  if(elapsed>=m.duration){elapsed=m.duration;updateUI();finish("time");return}
 
   const ph=nowPhase();
   if(ph.key!==phaseKey){
@@ -353,7 +523,7 @@ function update(dt){
   p.y=clamp(p.y+v.y*p.speed*dt,42,H-30);
   if(shootHeld||keys[" "]||keys.Spacebar)shoot();
 
-  if(!bossSpawned&&elapsed>=30){
+  if(!bossSpawned&&elapsed>=m.bossAt){
     bossSpawned=true;spawnEnemy(true);spawnCd=1.1;
     announce("MEGA-BOT!","#ffe36c",1.5);shake=7;sfx("boss");vibrate(35);
   }
@@ -465,8 +635,9 @@ function roundedPath(x,y,w,h,r){
 function roundedFill(x,y,w,h,r,fill){roundedPath(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill()}
 
 function drawArena(){
+  const m=currentMission();
   const g=ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,"#1b607d");g.addColorStop(.55,"#12445f");g.addColorStop(1,"#0a2b42");
+  g.addColorStop(0,m.colors[0]);g.addColorStop(.55,m.colors[0]);g.addColorStop(1,m.colors[1]);
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
 
   ctx.save();
@@ -506,6 +677,10 @@ function drawPlayer(){
   if(p.shield>0){
     ctx.strokeStyle="#83eeff";ctx.lineWidth=5;ctx.globalAlpha=.52+.22*Math.sin(performance.now()/100);
     ctx.beginPath();ctx.arc(0,0,36,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+  }
+  if(p.super>=superNeed()){
+    ctx.strokeStyle="#ffe36c";ctx.lineWidth=4;ctx.globalAlpha=.5+.3*Math.sin(performance.now()/90);
+    ctx.beginPath();ctx.arc(0,0,43,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
   }
 
   const t=nearestEnemy();let a=0;if(t)a=Math.atan2(t.y-p.y,t.x-p.x);ctx.rotate(a);
@@ -640,7 +815,9 @@ ui.fire.addEventListener("pointerdown",e=>{
 ["pointerup","pointercancel","lostpointercapture"].forEach(name=>ui.fire.addEventListener(name,e=>{
   e.preventDefault();shootHeld=false;ui.fire.classList.remove("active");
 }));
-ui.superBtn.addEventListener("click",useSuper);
+ui.superBtn.addEventListener("pointerdown",e=>{if(e.cancelable)e.preventDefault();useSuper()},{passive:false});
+ui.superBtn.addEventListener("click",e=>{if(e.detail===0)useSuper()});
+document.querySelectorAll("[data-upgrade]").forEach(b=>b.addEventListener("click",()=>chooseUpgrade(b.dataset.upgrade)));
 ui.start.addEventListener("click",start);
 ui.pauseBtn.addEventListener("click",()=>togglePause());
 ui.soundBtn.addEventListener("click",()=>{
@@ -682,13 +859,16 @@ canvas.addEventListener("contextmenu",e=>e.preventDefault());
 document.addEventListener("visibilitychange",()=>{clearMoveGesture();if(document.hidden&&running)togglePause(true)});
 
 window.__sergeySplashTest={
-  snapshot:()=>({running,paused,elapsed,score,combo,enemies:enemies.length,shots:shots.length,enemyShots:enemyShots.length,pickups:pickups.length,hp:p.hp,super:p.super,bossSpawned}),
+  snapshot:()=>({running,paused,elapsed,score,combo,enemies:enemies.length,shots:shots.length,enemyShots:enemyShots.length,pickups:pickups.length,hp:p.hp,super:p.super,superNeed:superNeed(),bossSpawned,bossDefeated,missionIndex,missionWon,profile:JSON.parse(JSON.stringify(profile))}),
   start,shoot,useSuper,togglePause,
   step:(seconds)=>{const steps=Math.ceil(seconds/0.016);for(let i=0;i<steps&&running&&!paused;i++)update(Math.min(.016,seconds/steps));render()},
-  setSuper:(v)=>{p.super=clamp(v,0,100);updateUI()},
+  setSuper:(v)=>{p.super=clamp(v,0,superNeed());updateUI()},
+  setScore:(v)=>{score=Math.max(0,v);updateUI()},
   spawnBoss:()=>spawnEnemy(true),
+  chooseUpgrade,
   move:(dir,on)=>{if(on)touch.add(dir);else touch.delete(dir)}
 };
 
-updateUI();render();
+showIntro();
+render();
 })();
