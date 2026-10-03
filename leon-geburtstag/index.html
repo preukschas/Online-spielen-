@@ -5,19 +5,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Leons Geschenk-Jagd</title>
   <style>
-    :root{color-scheme:dark;--bg:#121622;--panel:#1d2331;--card:#242c3d;--text:#f6f7fb;--muted:#b9c1d2;--border:#3a455c;--accent:#f4b73f}
+    :root{color-scheme:dark;--bg:#20344a;--panel:#263d57;--card:#314d68;--text:#f8fbff;--muted:#d6e3ef;--border:#5f7892;--accent:#ffd166}
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(circle at 50% 0,#283149 0,#121622 55%);color:var(--text);min-height:100svh}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(circle at 50% 0,#55779a 0,#2c4966 42%,#1c3148 100%);color:var(--text);min-height:100svh}
     main{width:min(100%,840px);margin:0 auto;padding:16px}
     h1{font-size:clamp(24px,5vw,38px);margin:2px 0 4px;text-align:center}
     .sub{text-align:center;color:var(--muted);margin:0 0 14px}
     .hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px}
     .pill{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-size:14px}
-    .stage{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:18px;background:#171c29}
+    .stage{position:relative;overflow:hidden;border:1px solid #7891aa;border-radius:18px;background:#365b7c;box-shadow:0 18px 50px rgba(5,17,30,.28)}
     canvas{display:block;width:100%;height:auto;touch-action:none}
     .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(7,9,14,.62)}
     .overlay[hidden]{display:none}
-    .dialog{width:min(100%,430px);padding:22px;border-radius:20px;background:rgba(29,35,49,.97);border:1px solid var(--border);text-align:center}
+    .dialog{width:min(100%,430px);padding:22px;border-radius:20px;background:rgba(35,55,78,.97);border:1px solid #7891aa;text-align:center}
     .emoji{font-size:44px}
     .controls{display:flex;gap:12px;justify-content:center;align-items:center;margin-top:12px}
     button{font:inherit;color:inherit;cursor:pointer}
@@ -26,6 +26,10 @@
     .secondary{padding:0 18px;background:var(--card)}
     .primary{width:100%;background:var(--accent);color:#17130a;border-color:#d69a21;padding:0 18px}
     .help{text-align:center;color:var(--muted);font-size:13px;margin:10px 0 0}
+    .scoreForm{display:grid;gap:10px;margin:16px 0 10px}
+    .scoreForm input{width:100%;min-height:50px;border-radius:12px;border:1px solid #8ca5be;background:#f8fbff;color:#183047;padding:0 14px;font:inherit;font-weight:800;text-align:center}
+    .scoreForm input:focus{outline:3px solid #ffd166;outline-offset:2px}
+    .recordLine{font-weight:900;color:#ffe08a}
     button:focus-visible{outline:3px solid #fff;outline-offset:3px}
     @media (max-width:480px){main{padding:10px}.controls{gap:8px}.move{min-width:68px}.secondary{padding:0 12px}}
   </style>
@@ -36,7 +40,8 @@
   <p class="sub">Das Geburtstagsspiel für Leon</p>
 
   <div class="hud" aria-label="Spielstand">
-    <div class="pill">🎁 Punkte: <strong id="score">0</strong></div>\n    <div class="pill">🏆 Highscore: <strong id="highscore">0</strong></div>
+    <div class="pill">🎁 Punkte: <strong id="score">0</strong></div>
+    <div class="pill">🏆 Highscore: <strong id="highscore">0</strong></div>
     <div class="pill">⏱️ Zeit: <strong id="time">45</strong>s</div>
     <div class="pill">❤️ Leben: <strong id="lives">3</strong></div>
     <div class="pill">Level <strong id="level">1</strong></div>
@@ -70,10 +75,28 @@
   const overlay=document.getElementById('overlay'),startBtn=document.getElementById('start'),pauseBtn=document.getElementById('pause'),status=document.getElementById('status');
   const leftBtn=document.getElementById('left'),rightBtn=document.getElementById('right');
   const W=720,H=460;
-  const HIGH_KEY='dmp.leonGeburtstag.highscore.v1';
-  let highscore=0;
-  try{highscore=Number(localStorage.getItem(HIGH_KEY)||0)||0}catch(e){}
-  highscoreEl.textContent=highscore;
+  const HIGH_KEY='dmp.leonGeburtstag.highscore.v2';
+  const LEGACY_HIGH_KEY='dmp.leonGeburtstag.highscore.v1';
+  let highscore=0,highscoreName='';
+  try{
+    const saved=JSON.parse(localStorage.getItem(HIGH_KEY)||'null');
+    if(saved&&Number.isFinite(Number(saved.score))){
+      highscore=Number(saved.score)||0;
+      highscoreName=String(saved.name||'').slice(0,18);
+    }else{
+      highscore=Number(localStorage.getItem(LEGACY_HIGH_KEY)||0)||0;
+    }
+  }catch(e){}
+  function renderHighscore(){
+    highscoreEl.textContent=highscore>0?(highscoreName?highscoreName+': '+highscore:String(highscore)):'0';
+  }
+  function saveHighscore(name){
+    highscore=score;
+    highscoreName=(String(name||'Leon').trim().slice(0,18)||'Leon');
+    renderHighscore();
+    try{localStorage.setItem(HIGH_KEY,JSON.stringify({score:highscore,name:highscoreName}))}catch(e){}
+  }
+  renderHighscore();
   const leonImg=new Image();leonImg.src='./leon-figur.webp?v=3';
   let running=false,paused=false,last=0,elapsed=0,spawnClock=0,score=0,lives=3,level=1,items=[],confetti=[],cakeSpawned=false,raf=0,left=false,right=false;
   const leon={x:W/2,y:H-86,w:66,h:78,speed:330};
@@ -86,8 +109,8 @@
     cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
   }
   function spawn(type){
-    const size=type==='bigcake'?58:type==='cloud'?42:36;
-    items.push({type,x:rand(28,W-28),y:-45,size,vy:type==='bigcake'?105:rand(105,150)+(level-1)*24,rot:rand(-.25,.25)});
+    const size=type==='bigcake'?76:type==='cloud'?54:type==='star'?52:48;
+    items.push({type,x:rand(38,W-38),y:-60,size,vy:type==='bigcake'?88:rand(88,122)+(level-1)*16,rot:rand(-.16,.16)});
   }
   function burst(x,y){
     const icons=['🎉','✨','🎊','⭐'];
@@ -107,32 +130,56 @@
     ctx.save();ctx.translate(x,y);ctx.fillStyle='#17233f';ctx.fillRect(-25,-24,50,46);ctx.restore();
   }
   function drawItem(it){
-    ctx.save();ctx.translate(it.x,it.y);ctx.rotate(it.rot);ctx.font=it.size+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.translate(it.x,it.y);ctx.rotate(it.rot);
+    const hazard=it.type==='cloud';
+    const radius=it.size*.62;
+    ctx.shadowColor=hazard?'rgba(135,35,35,.45)':'rgba(255,255,255,.45)';
+    ctx.shadowBlur=14;
+    ctx.fillStyle=hazard?'rgba(255,226,226,.90)':'rgba(255,255,255,.92)';
+    ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.strokeStyle=hazard?'rgba(185,50,50,.75)':'rgba(255,209,102,.9)';
+    ctx.lineWidth=3;ctx.stroke();
+    ctx.font=it.size+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
     const icon=it.type==='gift'?'🎁':it.type==='balloon'?'🎈':it.type==='cake'?'🍰':it.type==='star'?'⭐':it.type==='cloud'?'🌩️':'🎂';
-    ctx.fillText(icon,0,0);ctx.restore();
+    ctx.fillText(icon,0,1);ctx.restore();
   }
   function drawBg(){
     ctx.clearRect(0,0,W,H);
-    const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1b2130');g.addColorStop(1,'#111520');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='rgba(255,255,255,.08)';
-    for(let i=0;i<18;i++){ctx.beginPath();ctx.arc((i*83)%W,35+(i%4)*58,2+(i%3),0,Math.PI*2);ctx.fill()}
-    ctx.font='28px system-ui';ctx.textAlign='center';ctx.fillText('🎈',55,65);ctx.fillText('🎈',665,95);ctx.fillText('🎉',120,145);ctx.fillText('🎊',600,170);
-    ctx.fillStyle='rgba(255,255,255,.10)';ctx.fillRect(0,H-36,W,36);
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#79b6dc');g.addColorStop(.55,'#4f86b1');g.addColorStop(1,'#356487');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,255,255,.16)';
+    for(let i=0;i<10;i++){ctx.beginPath();ctx.arc((i*91+42)%W,45+(i%3)*92,3+(i%2),0,Math.PI*2);ctx.fill()}
+    ctx.fillStyle='rgba(255,255,255,.26)';ctx.fillRect(0,H-42,W,42);
+    ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(0,H-45,W,3);
   }
   function collide(it){return Math.abs(it.x-leon.x)<(it.size*.42+leon.w*.35)&&Math.abs(it.y-(leon.y-4))<(it.size*.42+leon.h*.38)}
-  function updateHighscore(){if(score>highscore){highscore=score;highscoreEl.textContent=highscore;try{localStorage.setItem(HIGH_KEY,String(highscore))}catch(e){}}}
   function reward(it){
     if(it.type==='cloud'){
       lives--;livesEl.textContent=lives;status.textContent='Autsch, Gewitterwolke!';
       if(lives<=0){finish(false);return}
     }else{
       const pts=it.type==='gift'?10:it.type==='balloon'?6:it.type==='cake'?18:it.type==='star'?25:60;
-      score+=pts;scoreEl.textContent=score;updateHighscore();burst(it.x,it.y);status.textContent=pts+' Punkte!';
+      score+=pts;scoreEl.textContent=score;burst(it.x,it.y);status.textContent=pts+' Punkte!';
     }
   }
   function finish(won){
-    running=false;cancelAnimationFrame(raf);updateHighscore();overlay.hidden=false;
-    overlay.innerHTML='<div class="dialog"><div class="emoji">'+(won?'🎂🏆':'🌩️')+'</div><h2>'+(won?'Happy Birthday, Leon!':'Fast geschafft!')+'</h2><p>Du hast <strong>'+score+' Punkte</strong> gesammelt. '+(score>=220?'Geburtstags-Profi! 🎉':score>=130?'Stark gespielt! 🎁':'Noch eine Runde? 🎈')+'</p><button class="primary" id="again" type="button">Noch einmal spielen</button></div>';
+    running=false;cancelAnimationFrame(raf);overlay.hidden=false;
+    const isNew=score>highscore;
+    const resultText=(score>=220?'Geburtstags-Profi! 🎉':score>=130?'Stark gespielt! 🎁':'Noch eine Runde? 🎈');
+    if(isNew){
+      overlay.innerHTML='<div class="dialog"><div class="emoji">🏆🎉</div><h2>Neuer Highscore!</h2><p class="recordLine">'+score+' Punkte</p><p>Trag deinen Namen ein, damit der Rekord gespeichert wird.</p><div class="scoreForm"><input id="recordName" maxlength="18" autocomplete="nickname" placeholder="Dein Name" aria-label="Name für den Highscore"><button class="primary" id="saveRecord" type="button">Highscore speichern</button></div><button class="secondary" id="again" type="button">Ohne Speichern weiterspielen</button></div>';
+      const input=document.getElementById('recordName');
+      const saveBtn=document.getElementById('saveRecord');
+      const save=()=>{saveHighscore(input.value);overlay.innerHTML='<div class="dialog"><div class="emoji">🏆✨</div><h2>Highscore gespeichert!</h2><p><strong>'+highscoreName+'</strong> · '+highscore+' Punkte</p><button class="primary" id="againSaved" type="button">Noch einmal spielen</button></div>';document.getElementById('againSaved').addEventListener('click',reset);};
+      saveBtn.addEventListener('click',save);
+      input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save();}});
+      document.getElementById('again').addEventListener('click',reset);
+      setTimeout(()=>input.focus(),80);
+      return;
+    }
+    overlay.innerHTML='<div class="dialog"><div class="emoji">'+(won?'🎂🏆':'🌩️')+'</div><h2>'+(won?'Happy Birthday, Leon!':'Fast geschafft!')+'</h2><p>Du hast <strong>'+score+' Punkte</strong> gesammelt. '+resultText+'</p><p>Aktueller Highscore: <strong>'+(highscoreName?highscoreName+' · ':'')+highscore+' Punkte</strong></p><button class="primary" id="again" type="button">Noch einmal spielen</button></div>';
     document.getElementById('again').addEventListener('click',reset);
   }
   function loop(t){
@@ -143,7 +190,7 @@
       timeEl.textContent=Math.max(0,Math.ceil(45-elapsed));
       const nl=elapsed<15?1:elapsed<30?2:3;if(nl!==level){level=nl;levelEl.textContent=level;burst(W/2,100)}
       if(left)leon.x-=leon.speed*dt;if(right)leon.x+=leon.speed*dt;leon.x=Math.max(38,Math.min(W-38,leon.x));
-      const interval=Math.max(.34,.72-(level-1)*.12);
+      const interval=Math.max(.54,.86-(level-1)*.12);
       if(spawnClock>interval){spawnClock=0;const r=Math.random();spawn(r<.10?'cloud':r<.25?'cake':r<.34?'star':r<.64?'balloon':'gift')}
       if(elapsed>37&&!cakeSpawned){cakeSpawned=true;spawn('bigcake')}
       for(let i=items.length-1;i>=0;i--){const it=items[i];it.y+=it.vy*dt;if(collide(it)){reward(it);items.splice(i,1);if(!running)return;continue}if(it.y>H+60)items.splice(i,1)}
