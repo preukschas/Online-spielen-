@@ -52,6 +52,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Spielewelt | Domi Run | `/domi-run/` | Entwickelte Standalone-Datei V0.2 |
 | Spielewelt | Micha auf'm Wasen | `/micha-wasen-run/` | `preukschas/DMP-Games` → `projects/micha-wasen-run/` (V0.1) |
 | Spielewelt | Ronja Race | `/ronja-race/` | `preukschas/DMP-Games` → `projects/ronja-race/` (V0.5.1 Touch-/Swipe-Hotfix) |
+| Spielewelt | City Life – Open World | `/city-life-open-world/` | `preukschas/DMP-Games` → `projects/city-life-open-world/` (V4.7) |
 | Spielewelt | Bett Battle | `/bett-battle/` | `preukschas/DMP-Games` → `projects/bett-battle/` (Final 1.0) |
 | Specials | Franz – Meister der Fuge | `/franz-fliesenleger/` | `preukschas/DMP-Games` → `projects/franz-fliesenleger/` (V1.0) |
 | Specials | Elli – Ein schöner Tag | `/elli-ein-schoener-tag/` | `preukschas/DMP-Games` → `projects/elli-ein-schoener-tag/` (Final 1.2) |
@@ -65,12 +66,13 @@ Einmaleins Space ist ein eigenständiges Lernspiel. Die Weltraum-Abwehr innerhal
 2. Dort bleibt der maßgebliche Quellstand.
 3. Erst ein geprüfter Stand wird hier in den passenden öffentlichen Unterordner kopiert.
 4. Spiele der Spielewelt laden beim Veröffentlichen den gemeinsamen `fun-access.js`-Schutz. Specials bleiben nach aktueller Entscheidung frei zugänglich.
-5. Dateien in diesem Repository werden nicht als eigenständige Spielvariante weiterentwickelt.\n6. Alle veröffentlichten Spiele laden den gemeinsamen `game-interaction-guard.css` bzw. erhalten bei Machine City denselben Schutz über den responsiven Wrapper. Damit wird versehentliches Textmarkieren/Long-Press auf Touch-Geräten verhindert, während Eingabefelder auswählbar bleiben.
+5. Dateien in diesem Repository werden nicht als eigenständige Spielvariante weiterentwickelt.
+6. Alle veröffentlichten Spiele laden den gemeinsamen `game-interaction-guard.css`; Machine City nutzt ihn seit V0.8 ebenfalls direkt in der Split-Fassung. Damit wird versehentliches Textmarkieren/Long-Press auf Touch-Geräten verhindert, während Eingabefelder auswählbar bleiben.
 
 ## Stand
 
-- Alle dreiundzwanzig vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
+- Alle vierundzwanzig vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
 - Lernwelt: vierzehn Spiele ohne Eltern-PIN.
-- Spielewelt: sechs Spiele mit gemeinsamer PIN-Prüfung auch beim direkten URL-Aufruf.
+- Spielewelt: sieben Spiele mit gemeinsamer PIN-Prüfung auch beim direkten URL-Aufruf.
 - Specials: Leons Geschenk-Jagd, Franz – Meister der Fuge und Elli – Ein schöner Tag frei zugänglich ohne PIN und ohne Zeitsperre.
 - Die Spielinhalte stammen aus den jeweiligen Entwicklungsfassungen; Spaß-Games tragen zusätzlich die zentrale PIN-Einbindung.
