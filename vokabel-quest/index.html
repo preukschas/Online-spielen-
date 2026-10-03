@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#182018">
+<title>Vokabel-Quest – spielbare Version</title>
+<style>:root{--bg:#f3f6ef;--panel:#ffffff;--text:#172019;--muted:#667268;--line:#dce4d8;--green:#3f6212;--lime:#84cc16;--orange:#f59e0b;--red:#dc2626;--soft:#eef4e8;--dark:#182018;--gold:#fbbf24}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,ui-rounded,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(160deg,#f6f8f2,#eef3e7 55%,#fff8e7);color:var(--text);min-height:100vh}
+button,input,select{font:inherit}
+button{min-height:44px;border:0;border-radius:14px;padding:12px 16px;font-weight:850;cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #bef264;outline-offset:2px}
+button:disabled{opacity:.48;cursor:not-allowed}
+.app{max-width:980px;margin:0 auto;padding:16px 14px 40px}
+.topbar{background:linear-gradient(135deg,#172019,#2e3b2a 62%,#4d651b);color:white;border-radius:24px;padding:18px;display:flex;justify-content:space-between;gap:16px;align-items:center;box-shadow:0 16px 38px rgba(24,32,24,.18)}
+.brand{display:flex;gap:12px;align-items:center}.logo{width:54px;height:54px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(145deg,#fbbf24,#f59e0b);font-size:30px}.topbar h1{font-size:clamp(25px,5vw,40px);margin:0;letter-spacing:-.03em}.topbar p{margin:5px 0 0;color:#e4eadf;font-size:14px;font-weight:650}
+.chips{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.chip{padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.18);font-size:13px;font-weight:850;white-space:nowrap}
+.panel{margin-top:14px;background:rgba(255,255,255,.96);border:1px solid #e1e7dd;border-radius:22px;padding:20px;box-shadow:0 12px 34px rgba(39,51,38,.08)}
+.hidden{display:none!important}
+.intro{display:grid;grid-template-columns:1.3fr .7fr;gap:14px}.mission{background:linear-gradient(135deg,#f8fbf5,#fff8e7);border:1px solid #dce7d5;border-radius:18px;padding:16px}.mission h2{margin:0 0 6px;font-size:25px}.mission p{margin:0;color:var(--muted);line-height:1.45}.buddy{border-radius:18px;background:linear-gradient(145deg,#182018,#33462c);color:white;display:flex;align-items:center;justify-content:center;position:relative;min-height:130px;overflow:hidden}.buddy .face{font-size:62px}.buddy .bubble{position:absolute;left:10px;right:10px;top:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:7px 9px;text-align:center;font-size:12px;font-weight:750}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.field label{display:block;font-size:13px;font-weight:800;margin-bottom:6px}.field select{width:100%;min-height:46px;border:1.5px solid var(--line);border-radius:12px;background:white;padding:0 12px;color:var(--text)}
+.primary{background:linear-gradient(135deg,#3f6212,#65a30d);color:white;box-shadow:0 7px 16px rgba(63,98,18,.22)}.secondary{background:#ecfccb;color:#365314;border:1px solid #bef264}.ghost{background:#f7f8f5;color:#344039;border:1px solid var(--line)}.danger{background:#fff1f2;color:#9f1239;border:1px solid #fecdd3}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}.stat{border:1px solid var(--line);border-radius:14px;background:#fafcf8;padding:10px;text-align:center}.stat b{display:block;font-size:20px}.stat span{display:block;font-size:11px;color:var(--muted);font-weight:750}
+.world{margin-top:12px}.worldtrack{height:10px;background:#e7ecdF;border-radius:999px;overflow:hidden}.worldfill{height:100%;width:0;background:linear-gradient(90deg,#65a30d,#84cc16,#f59e0b);transition:width .25s ease}.worldlabels{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);font-weight:750;margin-top:5px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.actions>*{flex:1 1 180px}
+.quizhead,.gamehead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}.statsline{display:flex;gap:9px;flex-wrap:wrap;color:var(--muted);font-size:13px;font-weight:800}.badge{padding:6px 9px;border-radius:999px;background:#f1f5ec;border:1px solid var(--line);color:#3b4a3c;font-size:12px;font-weight:900}.boss{background:#fff1f2;border-color:#fecdd3;color:#9f1239}
+.progress{height:10px;background:#e7ecdF;border-radius:999px;overflow:hidden;margin:12px 0 18px}.progress>div{height:100%;background:linear-gradient(90deg,#65a30d,#84cc16,#f59e0b);width:0;transition:width .2s ease}
+.promptbox{background:linear-gradient(145deg,#fff,#fafcf7);border:1px solid var(--line);border-radius:18px;padding:22px 14px;text-align:center}.prompt{font-size:clamp(30px,7vw,50px);font-weight:950;letter-spacing:-.03em;overflow-wrap:anywhere}.hint{margin-top:8px;color:var(--muted);min-height:22px}.answerrow{display:flex;gap:10px;margin-top:14px}.answerrow input{flex:1;min-width:0;min-height:48px;border:2px solid var(--line);border-radius:13px;padding:0 13px;font-size:16px}.feedback{margin-top:12px;padding:12px 14px;border-radius:14px;font-weight:800;line-height:1.4}.feedback.ok{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0}.feedback.bad{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.feedback.note{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+.result{text-align:center}.medal{font-size:62px}.result h2{margin:4px 0}.bigscore{font-size:24px;font-weight:950;color:#365314}
+.gamearea{position:relative;height:430px;border-radius:20px;overflow:hidden;margin-top:14px;border:2px solid #d7dfd1;user-select:none;touch-action:manipulation;background:linear-gradient(#fef3c7 0 62%,#d9f99d 62%)}.gamearea.space{background:radial-gradient(circle at 20% 15%,#475569 0 2px,transparent 3px),radial-gradient(circle at 70% 32%,#94a3b8 0 2px,transparent 3px),linear-gradient(#111827,#1f2937)}.gamearea.fishing{background:linear-gradient(#e8fff8 0 28%,#67e8f9 28% 44%,#0f766e 44%)}.gamearea.frog{background:linear-gradient(#f0fdf4 0 36%,#86efac 36% 62%,#4d7c0f 62%)}.gamearea.robot{background:linear-gradient(#f3f4f6 0 68%,#9ca3af 68%)}.gamearea.race{background:linear-gradient(#fefce8 0 28%,#78716c 28% 100%)}.gamearea.dungeon{background:linear-gradient(#292524,#44403c)}
+.actor{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font-size:50px;z-index:2;pointer-events:none}.actor.top{top:8px;bottom:auto}.targetword{position:absolute;min-width:94px;max-width:145px;padding:9px 10px;border-radius:16px;background:rgba(255,255,255,.95);border:2px solid rgba(255,255,255,.9);box-shadow:0 8px 18px rgba(0,0,0,.13);text-align:center;font-weight:900;cursor:pointer;z-index:3;transition:transform .12s ease,opacity .18s ease}.targetword .icon{display:block;font-size:25px;margin-bottom:4px}.targetword.hit{transform:scale(.2);opacity:0}.targetword.shake{animation:shake .25s ease}@keyframes shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+.timer{font-size:22px;font-weight:950;background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;border-radius:12px;padding:5px 9px}.combo{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:900}
+.surprise{margin-top:12px;padding:12px;border-radius:16px;background:linear-gradient(90deg,#fff7ed,#f7fee7);border:1px solid #fde68a}.surprisebar{height:9px;background:#ffedd5;border-radius:999px;overflow:hidden;margin-top:7px}.surprisebar>div{height:100%;width:0;background:linear-gradient(90deg,#f59e0b,#84cc16);transition:width .2s ease}
+.footer{text-align:center;color:#7a837b;font-size:12px;margin-top:16px}
+@media(max-width:760px){.topbar{align-items:flex-start;flex-direction:column}.chips{justify-content:flex-start}.intro{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}.summary{grid-template-columns:1fr 1fr}.answerrow{flex-direction:column}.answerrow button{width:100%}.gamearea{height:390px}}
+@media(max-width:420px){.app{padding:10px 8px 28px}.panel{padding:15px;border-radius:18px}.grid{grid-template-columns:1fr}.prompt{font-size:34px}.gamearea{height:360px}.targetword{min-width:88px;max-width:116px;font-size:13px}.actor{font-size:43px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main class="app" id="app">
+  <header class="topbar">
+    <div class="brand"><div class="logo">🚀</div><div><h1>Vokabel-Quest</h1><p>Lernen → Belohnung → Mini-Spiel</p></div></div>
+    <div class="chips"><span class="chip">⭐ <b id="stars">0</b></span><span class="chip">⚡ <b id="xp">0</b> XP</span><span class="chip">🏆 <b id="best">0%</b></span></div>
+  </header>
+
+  <section class="panel" id="setup">
+    <div class="intro">
+      <div class="mission"><h2>Mission starten</h2><p>Schaffe mindestens <b>80 %</b>, um ein Mini-Spiel freizuschalten. Bei <b>100 %</b> gibt es zwei Spielrunden. Fehler müssen verbessert werden; nach fünf Fehlversuchen darfst du weiter.</p></div>
+      <div class="buddy"><div class="bubble" id="buddyText">Ich merke mir, welche Wörter schon sitzen.</div><div class="face">🤖</div></div>
+    </div>
+    <div class="grid">
+      <div class="field"><label for="mode">Richtung</label><select id="mode"><option value="de-en">Deutsch → Englisch</option><option value="en-de">Englisch → Deutsch</option><option value="mix">Gemischt</option></select></div>
+      <div class="field"><label for="count">Aufgaben</label><select id="count"><option>10</option><option>15</option><option>20</option><option value="all">Alle</option></select></div>
+      <div class="field"><label for="scope">Wortschatz</label><select id="scope"><option value="core">Basis</option><option value="all">Alle Seiten</option></select></div>
+      <div class="field"><label for="gameChoice">Mini-Spiel</label><select id="gameChoice"><option value="random">🎲 Zufällig</option><option value="cannon">💥 Kanone</option><option value="fishing">🎣 Angeln</option><option value="frog">🐸 Frosch</option><option value="space">🚀 Weltraum</option><option value="robot">🤖 Roboter</option><option value="race">🏎️ Rennen</option><option value="dungeon">🏰 Dungeon</option></select></div>
+    </div>
+    <div class="summary"><div class="stat"><b id="due">0</b><span>heute fällig</span></div><div class="stat"><b id="weak">0</b><span>schwierig</span></div><div class="stat"><b id="secure">0</b><span>sicher</span></div><div class="stat"><b id="newCount">0</b><span>noch neu</span></div></div>
+    <div class="world"><div class="worldtrack"><div class="worldfill" id="worldFill"></div></div><div class="worldlabels"><span>🌍 Erde</span><span>🌿 Dschungel</span><span>🌊 Tiefsee</span><span>🚀 Weltraum</span><span>🤖 Stadt</span></div></div>
+    <div class="surprise"><b>🎁 Überraschungs-Meter</b><div class="surprisebar"><div id="surpriseFill"></div></div><div class="tiny" id="surpriseText">Noch 4 richtige Antworten bis zur nächsten Überraschung.</div></div>
+    <div class="actions"><button class="primary" id="startBtn" type="button">🎯 Abfrage starten</button><button class="ghost" id="resetBtn" type="button">Lernstand zurücksetzen</button></div>
+  </section>
+
+  <section class="panel hidden" id="quiz">
+    <div class="quizhead"><div class="statsline"><span id="qStat">Frage 1/10</span><span id="rightStat">0 richtig</span><span id="streakStat">🔥 0</span></div><span class="badge hidden" id="bossBadge">👾 Boss-Vokabel</span></div>
+    <div class="progress"><div id="quizProgress"></div></div>
+    <div class="promptbox"><div class="prompt" id="prompt">Fahrrad</div><div class="hint" id="hint">Schreibe die englische Übersetzung.</div></div>
+    <div class="answerrow"><input id="answer" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Antwort eingeben …"><button class="primary" id="checkBtn" type="button">Prüfen</button></div>
+    <div class="feedback hidden" id="feedback" aria-live="polite"></div>
+    <div class="actions"><button class="ghost" id="hintBtn" type="button">💡 Hinweis</button><button class="secondary hidden" id="nextBtn" type="button">Weiter →</button></div>
+  </section>
+
+  <section class="panel result hidden" id="result">
+    <div class="medal" id="medal">🏆</div><h2>Runde geschafft</h2><div class="bigscore" id="scoreText"></div><p id="scoreSub"></p>
+    <div class="actions"><button class="secondary" id="againBtn" type="button">🔁 Neue Lernrunde</button><button class="primary" id="playBtn" type="button">🎮 Mini-Spiel</button></div>
+  </section>
+
+  <section class="panel hidden" id="game">
+    <div class="gamehead"><div><b id="gameTitle">Mini-Spiel</b><div class="tiny" id="gameInstruction">Triff das richtige Wort.</div></div><div class="timer"><span id="time">25</span>s</div></div>
+    <div class="statsline" style="margin-top:8px"><span>Ziel: <b id="gameTarget">Fahrrad</b></span><span>Treffer: <b id="hits">0</b></span><span class="combo">Combo <b id="combo">0</b></span></div>
+    <div class="gamearea" id="gameArea"><div class="actor" id="actor">💥</div></div>
+    <div class="feedback hidden" id="gameMessage"></div>
+    <div class="actions"><button class="secondary hidden" id="secondGameBtn" type="button">🎮 Zweite Runde</button><button class="primary hidden" id="learnAgainBtn" type="button">📚 Wieder lernen</button></div>
+  </section>
+
+  <div class="footer">V10 spielbar • Lernstand wird nur im Browser gespeichert</div>
+</main>
+<script>
+const VOCAB = [
+
+  {en:"I'm from …",de:"ich komme aus …",a:["im from","i'm from"],core:1},{en:"from",de:"aus; von",a:["aus","von"],core:1},{en:"this",de:"das; dies",a:["das","dies"],core:1},{en:"my",de:"mein",core:1},{en:"bike",de:"Fahrrad",core:1},{en:"cool",de:"cool; super",a:["cool","super"],core:1},{en:"fan",de:"Fan",core:1},{en:"eleven",de:"elf",core:1},{en:"How old are you?",de:"Wie alt bist du?",core:1},{en:"that's",de:"das ist",a:["that is","that's"],core:1},{en:"England",de:"England",core:1},{en:"Where are you from?",de:"Woher kommst du?",core:1},{en:"pet",de:"Haustier",core:1},{en:"they're",de:"sie sind",a:["they are","they're"],core:1},{en:"nice",de:"nett; schön",a:["nett","schön","schoen"],core:1},{en:"twelve",de:"zwölf",a:["zwölf","zwoelf"],core:1},{en:"cat",de:"Katze",core:1},{en:"photo",de:"Foto",a:["foto"],core:1},{en:"Germany",de:"Deutschland",core:1},
+  {en:"dad",de:"Papa; Vater",a:["dad","father"],core:1},{en:"mum",de:"Mama; Mutter",a:["mum","mother"],core:1},{en:"parents",de:"Eltern",core:1},{en:"sister",de:"Schwester",core:1},{en:"brother",de:"Bruder",core:1},{en:"aunt",de:"Tante",core:1},{en:"uncle",de:"Onkel",core:1},{en:"grandmother",de:"Großmutter",a:["großmutter","grossmutter"],core:1},{en:"grandfather",de:"Großvater",a:["großvater","grossvater"],core:1},
+  {en:"in",de:"in; im",a:["in","im"]},{en:"a",de:"ein; eine",a:["ein","eine"]},{en:"park",de:"Park"},{en:"colour",de:"Farbe",a:["color","colour"]},{en:"activity",de:"Aktivität",a:["aktivität","aktivitaet"]},{en:"number",de:"Nummer; Zahl",a:["nummer","zahl"]},{en:"people",de:"Leute; Menschen",a:["leute","menschen"]},{en:"dog",de:"Hund"},{en:"tennis",de:"Tennis"},{en:"boy",de:"Junge"},{en:"something",de:"etwas"},{en:"it is",de:"es ist",a:["it is","it's"]},{en:"here",de:"hier"},{en:"bus",de:"Bus"},{en:"I can play football.",de:"Ich kann Fußball spielen.",a:["i can play football","i can play soccer"]},{en:"I can buy …",de:"Ich kann … kaufen."},
+  {en:"red",de:"rot"},{en:"green",de:"grün",a:["grün","gruen"]},{en:"blue",de:"blau"},{en:"yellow",de:"gelb"},{en:"black",de:"schwarz"},{en:"grey",de:"grau",a:["gray","grey"]},{en:"brown",de:"braun"},{en:"white",de:"weiß",a:["weiß","weiss"]},{en:"orange",de:"orange"},{en:"purple",de:"lila; violett",a:["lila","violett"]},{en:"pink",de:"rosa; pink",a:["rosa","pink"]},
+  {en:"welcome",de:"willkommen"},{en:"Hello.",de:"Hallo."},{en:"I'm",de:"ich bin",a:["i'm","i am"]},{en:"the",de:"der; die; das",a:["der","die","das"]},{en:"bat",de:"Fledermaus"},{en:"Nice to meet you.",de:"Nett, dich kennen zu lernen.",a:["nett dich kennen zu lernen","nett dich kennenzulernen"]},{en:"What's your name?",de:"Wie heißt du?",a:["wie heißt du","wie heisst du"]},
+  {en:"I like",de:"ich mag; gefällt mir",a:["ich mag","gefällt mir","gefaellt mir"]},{en:"English",de:"Englisch"},{en:"Hi!",de:"Hi!; Hallo!",a:["hi","hallo"]},{en:"My name is …",de:"Ich heiße …",a:["ich heiße","ich heisse"]},{en:"music",de:"Musik"},{en:"And you?",de:"Und du?"},{en:"sport",de:"Sport"},{en:"animal",de:"Tier"},{en:"computer",de:"Computer"},{en:"It's time to go.",de:"Es ist Zeit zu gehen."},{en:"See you!",de:"Tschüss!; Bis bald!",a:["tschüss","tschuess","bis bald"]},{en:"yes",de:"ja"},{en:"Bye!",de:"Tschüss!",a:["tschüss","tschuess"]},{en:"Goodbye!",de:"Auf Wiedersehen."},
+  {en:"shoe",de:"Schuh"},{en:"hat",de:"Hut; Mütze",a:["hut","mütze","muetze"]},{en:"shirt",de:"Hemd; Shirt",a:["hemd","shirt"]},{en:"dress",de:"Kleid"},{en:"come with me",de:"komm mit mir"},{en:"a colour mix",de:"eine Farbmischung"},{en:"you look so fine",de:"du siehst so schön aus",a:["du siehst so schön aus","du siehst so schoen aus"]},{en:"I like you",de:"ich mag dich"},{en:"Greenwich",de:"Greenwich"},{en:"hair",de:"Haare"},{en:"skirt",de:"Rock"},{en:"top",de:"Top"},{en:"cap",de:"Kappe; Mütze",a:["kappe","mütze","muetze"]},
+  {en:"zero",de:"null"},{en:"one",de:"eins"},{en:"two",de:"zwei"},{en:"three",de:"drei"},{en:"four",de:"vier"},{en:"five",de:"fünf",a:["fünf","fuenf"]},{en:"six",de:"sechs"},{en:"seven",de:"sieben"},{en:"eight",de:"acht"},{en:"nine",de:"neun"},{en:"ten",de:"zehn"}
+];
+const $ = s => document.querySelector(s);
+const DAY = 86400000;
+const LS = {stats:'vq10_stats',meta:'vq10_meta'};
+const intervals=[0,1,3,7,14,30,60,120];
+const themes={
+ cannon:{title:'💥 Kanonen-Schießen',instruction:'Tippe das richtige Wort an – die Kanone trifft.',actor:'🧨',icon:'🎈'},
+ fishing:{title:'🎣 Wörter-Angeln',instruction:'Angle den richtigen Fisch.',actor:'🎣',icon:'🐟'},
+ frog:{title:'🐸 Frosch-Jagd',instruction:'Fang das richtige Insekt.',actor:'🐸',icon:'🪰'},
+ space:{title:'🚀 Weltraum-Abwehr',instruction:'Zerstöre den Asteroiden mit dem richtigen Wort.',actor:'🚀',icon:'☄️'},
+ robot:{title:'🤖 Roboter-Werkstatt',instruction:'Montiere das richtige Bauteil.',actor:'🤖',icon:'⚙️'},
+ race:{title:'🏎️ Vokabel-Rennen',instruction:'Wähle die richtige Spur.',actor:'🏎️',icon:'🏁'},
+ dungeon:{title:'🏰 Dungeon-Schatzsuche',instruction:'Öffne die richtige Tür.',actor:'🧙',icon:'🚪'}
+};
+let stats={},meta={xp:0,stars:0,best:0,surprise:0};
+let session=[],index=0,correctFirst=0,streak=0,maxStreak=0,dir='de-en',wrongAttempts=0,firstAttemptOpen=true,gameCredits=0;
+let timerId=null,rafId=null,gameRunning=false,gameObjects=[],gameTheme='cannon',gameTarget=null,hits=0,combo=0,timeLeft=25;
+const volatileStore={};
+function storeGet(k){try{return localStorage.getItem(k)}catch{return Object.prototype.hasOwnProperty.call(volatileStore,k)?volatileStore[k]:null}}
+function storeSet(k,v){const s=String(v);try{localStorage.setItem(k,s)}catch{volatileStore[k]=s}}
+function storeRemove(k){try{localStorage.removeItem(k)}catch{delete volatileStore[k]}}
+function safeParse(s,fallback){try{return s?JSON.parse(s):fallback}catch{return fallback}}
+function load(){stats=safeParse(storeGet(LS.stats),{});meta={...meta,...safeParse(storeGet(LS.meta),{})};renderMeta();renderLearning();}
+function save(){storeSet(LS.stats,JSON.stringify(stats));storeSet(LS.meta,JSON.stringify(meta));}
+function normBase(s){return String(s??'').toLowerCase().trim().replace(/[’‘`´]/g,"'").replace(/['’]/g,'').replace(/[.!?,;:]/g,' ').replace(/\s+/g,' ').trim()}
+function normDe(s){return normBase(s).replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')}
+function variants(v,d){
+ if(d==='de-en'){const base=normBase(v.en);const out=new Set([base]);(v.a||[]).forEach(x=>out.add(normBase(x)));if(base==='colour')out.add('color');if(base==='grey')out.add('gray');if(base==='dad')out.add('father');if(base==='mum')out.add('mother');if(base==='i can play football')out.add('i can play soccer');return [...out]}
+ const out=new Set(String(v.de).split(';').map(normDe));(v.a||[]).forEach(x=>out.add(normDe(x)));return [...out]
+}
+function answerOk(v,d,val){const n=d==='de-en'?normBase(val):normDe(val);return n!==''&&variants(v,d).includes(n)}
+function expected(v,d){return d==='de-en'?v.en:String(v.de).split(';')[0].trim()}
+function key(v,d){return normBase(v.en)+'|'+d}
+function state(v,d){const k=key(v,d);if(!stats[k])stats[k]={reviews:0,correct:0,wrong:0,streak:0,level:0,due:0,mastery:0};return stats[k]}
+function mastery(s){if(!s.reviews)return 0;const acc=s.correct/s.reviews;return Math.max(0,Math.min(100,Math.round(acc*62+Math.min(s.streak,5)*5+Math.min(s.level,7)*3)))}
+function updateState(v,d,ok,attempts){const s=state(v,d);s.reviews++;if(ok){s.correct++;s.streak++;s.level=Math.min(7,s.level+1);s.due=Date.now()+intervals[s.level]*DAY;}else{s.wrong++;s.streak=0;s.level=0;s.due=Date.now();}s.lastAttempts=attempts;s.mastery=mastery(s);save();}
+function priority(v){const d=$('#mode').value==='en-de'?'en-de':'de-en';const s=state(v,d);if(!s.reviews)return 70+Math.random()*8;let p=100-s.mastery+(s.due<=Date.now()?50:0)+Math.min(30,s.wrong*5);return p+Math.random()*5}
+function renderMeta(){$('#xp').textContent=meta.xp;$('#stars').textContent=meta.stars;$('#best').textContent=meta.best+'%';const world=Math.min(100,meta.xp/9);$('#worldFill').style.width=world+'%';const pct=Math.min(100,(meta.surprise/4)*100);$('#surpriseFill').style.width=pct+'%';$('#surpriseText').textContent=meta.surprise>=4?'🎁 Überraschung bereit!':'Noch '+(4-meta.surprise)+' richtige Antworten bis zur nächsten Überraschung.'}
+function renderLearning(){let due=0,weak=0,secure=0,fresh=0;const pool=$('#scope').value==='core'?VOCAB.filter(v=>v.core):VOCAB;for(const v of pool){const ss=['de-en','en-de'].map(d=>state(v,d));if(ss.every(s=>!s.reviews)){fresh++;continue}if(ss.some(s=>s.reviews&&s.due<=Date.now()))due++;const avg=ss.filter(s=>s.reviews).reduce((a,s)=>a+s.mastery,0)/Math.max(1,ss.filter(s=>s.reviews).length);if(avg<55)weak++;if(avg>=85)secure++;}$('#due').textContent=due;$('#weak').textContent=weak;$('#secure').textContent=secure;$('#newCount').textContent=fresh}
+function chooseDir(v){const m=$('#mode').value;if(m!=='mix')return m;const a=state(v,'de-en'),b=state(v,'en-de');if(a.mastery===b.mastery)return Math.random()<.5?'de-en':'en-de';return a.mastery<b.mastery?'de-en':'en-de'}
+function buildSession(){const pool=$('#scope').value==='core'?VOCAB.filter(v=>v.core):VOCAB;const n=$('#count').value==='all'?pool.length:+$('#count').value;session=[...pool].sort((a,b)=>priority(b)-priority(a)).slice(0,Math.min(n,pool.length));index=0;correctFirst=0;streak=0;maxStreak=0;wrongAttempts=0;firstAttemptOpen=true;gameCredits=0}
+function showSection(id){['setup','quiz','result','game'].forEach(x=>$('#'+x).classList.toggle('hidden',x!==id))}
+function showQuestion(){if(index>=session.length){finish();return}const v=session[index];dir=chooseDir(v);wrongAttempts=0;firstAttemptOpen=true;$('#prompt').textContent=dir==='de-en'?v.de:v.en;$('#hint').textContent=dir==='de-en'?'Schreibe die englische Übersetzung.':'Schreibe die deutsche Übersetzung.';$('#answer').value='';$('#answer').focus();$('#feedback').className='feedback hidden';$('#nextBtn').classList.add('hidden');$('#checkBtn').disabled=false;$('#checkBtn').textContent='Prüfen';$('#qStat').textContent=`Frage ${index+1}/${session.length}`;$('#rightStat').textContent=`${correctFirst} richtig`;$('#streakStat').textContent=`🔥 ${streak}`;$('#quizProgress').style.width=(index/session.length*100)+'%';const boss=state(v,dir).wrong>=2&&state(v,dir).mastery<55;$('#bossBadge').classList.toggle('hidden',!boss)}
+function feedback(kind,html){const f=$('#feedback');f.className='feedback '+kind;f.innerHTML=html}
+function strongHint(v,d,n){const ans=(d==='de-en'?normBase(expected(v,d)):normDe(expected(v,d)));const letters=ans.replace(/ /g,'');if(n<=1)return `💡 Beginnt mit <b>${letters[0]?.toUpperCase()||''}</b> · ${letters.length} Buchstaben.`;if(n===2)return `💡 Beginnt mit <b>${letters[0]?.toUpperCase()||''}</b> und endet mit <b>${letters.at(-1)?.toUpperCase()||''}</b>.`;const masked=[...ans].map((c,i)=>c===' '?'  ':((i%2===0||i===0||i===ans.length-1)?c:'_')).join(' ');return `🧩 Starker Hinweis: <b>${masked}</b>`}
+function awardCorrect(){meta.xp+=3;meta.stars+=1;meta.surprise++;if(meta.surprise>=4){meta.xp+=7;meta.stars+=3;meta.surprise=0;$('#buddyText').textContent='🎁 Überraschung! +7 XP und +3 Sterne!';}else $('#buddyText').textContent='Stark! Noch ein Wort sitzt besser.';save();renderMeta()}
+function check(){const v=session[index],val=$('#answer').value;if(!val.trim())return $('#answer').focus();if(answerOk(v,dir,val)){if(firstAttemptOpen){correctFirst++;streak++;maxStreak=Math.max(maxStreak,streak);updateState(v,dir,true,1);awardCorrect();}else{$('#buddyText').textContent='Korrigiert – genau so lernt man.'}feedback('ok',firstAttemptOpen?'✅ Richtig!':'✅ Jetzt korrekt verbessert. Für die Wertung bleibt der erste Versuch falsch.');$('#rightStat').textContent=`${correctFirst} richtig`;$('#streakStat').textContent=`🔥 ${streak}`;$('#checkBtn').disabled=true;$('#nextBtn').classList.remove('hidden');firstAttemptOpen=false;return}
+ wrongAttempts++;if(firstAttemptOpen){firstAttemptOpen=false;streak=0;updateState(v,dir,false,wrongAttempts)}else{const s=state(v,dir);s.lastAttempts=wrongAttempts;s.wrong+=1;s.mastery=mastery(s);save()}if(wrongAttempts>=5){feedback('note',`🧩 Fünf Fehlversuche. <b>Richtig ist:</b> ${expected(v,dir)}<br>Du darfst weiter; die Vokabel kommt früher wieder.`);$('#hint').textContent='Lösung: '+expected(v,dir);$('#checkBtn').disabled=true;$('#nextBtn').classList.remove('hidden');}else{feedback('bad',`❌ Noch nicht. Versuch ${wrongAttempts}/5.<br>${strongHint(v,dir,wrongAttempts)}`);$('#checkBtn').textContent='Korrektur prüfen';$('#hint').innerHTML=strongHint(v,dir,wrongAttempts);$('#answer').select()}}
+function hint(){const v=session[index];$('#hint').innerHTML=strongHint(v,dir,Math.max(1,wrongAttempts||1))}
+function next(){index++;showQuestion()}
+function finish(){const total=session.length,pct=Math.round(correctFirst/total*100);gameCredits=correctFirst===total?2:(pct>=80?1:0);meta.best=Math.max(meta.best,pct);meta.xp+=Math.max(2,Math.round(pct/20));save();renderMeta();renderLearning();$('#medal').textContent=pct===100?'🏆':pct>=80?'🥇':pct>=60?'🥈':'💪';$('#scoreText').textContent=`${correctFirst} von ${total} richtig (${pct} %)`;$('#scoreSub').textContent=gameCredits===2?'Perfekt: zwei Mini-Spiel-Runden freigeschaltet.':gameCredits===1?'Geschafft: eine Mini-Spiel-Runde freigeschaltet.':'Unter 80 %: noch kein Mini-Spiel. Schwierige Wörter kommen bevorzugt wieder.';$('#playBtn').disabled=gameCredits===0;$('#playBtn').textContent=gameCredits===2?'🎮 2 Mini-Spiele frei':gameCredits===1?'🎮 Mini-Spiel starten':'🔒 Mini-Spiel ab 80 %';showSection('result')}
+function startQuiz(){buildSession();showSection('quiz');showQuestion()}
+function newRound(){clearGame();startQuiz()}
+function themePick(){const v=$('#gameChoice').value;if(v!=='random')return v;const keys=Object.keys(themes);return keys[Math.floor(Math.random()*keys.length)]}
+function gamePool(){return ($$('#scope').value==='core'?VOCAB.filter(v=>v.core):VOCAB).filter(v=>!v.en.includes('…')&&v.en.length<20)}
+function clearTargets(){gameObjects.forEach(o=>o.el.remove());gameObjects=[]}
+function spawn(){clearTargets();if(!gameRunning)return;const area=$('#gameArea'),W=area.clientWidth,H=area.clientHeight,pool=gamePool();gameTarget=pool[Math.floor(Math.random()*pool.length)];$('#gameTarget').textContent=gameTarget.de;let choices=[gameTarget,...pool.filter(v=>v!==gameTarget).sort(()=>Math.random()-.5).slice(0,2)].sort(()=>Math.random()-.5);const spots=[[.10,.18],[.58,.22],[.34,.52]];choices.forEach((v,i)=>{const el=document.createElement('button');el.type='button';el.className='targetword';el.innerHTML=`<span class="icon">${themes[gameTheme].icon}</span>${v.en}`;const w=Math.min(140,Math.max(94,70+v.en.length*4));el.style.width=w+'px';const [fx,fy]=spots[i];const x=Math.max(8,Math.min(W-w-8,W*fx));const y=Math.max(50,Math.min(H-110,H*fy));el.style.left=x+'px';el.style.top=y+'px';const obj={el,v,x,y,w,correct:v===gameTarget,vx:(Math.random()<.5?-1:1)*(18+Math.random()*16)};el.addEventListener('click',()=>hitTarget(obj));area.appendChild(el);gameObjects.push(obj)})}
+function gameLoop(){if(!gameRunning)return;const area=$('#gameArea'),W=area.clientWidth;for(const o of gameObjects){o.x+=o.vx/60;if(o.x<6||o.x>W-o.w-6)o.vx*=-1;o.el.style.left=o.x+'px'}rafId=requestAnimationFrame(gameLoop)}
+function hitTarget(o){if(!gameRunning)return;if(o.correct){hits++;combo++;meta.stars+=combo>=3?2:1;$('#hits').textContent=hits;$('#combo').textContent=combo;$('#stars').textContent=meta.stars;o.el.classList.add('hit');save();setTimeout(spawn,180)}else{combo=0;$('#combo').textContent=0;o.el.classList.add('shake');setTimeout(()=>o.el.classList.remove('shake'),280)}}
+function startGame(){if(gameCredits<=0)return;gameCredits--;gameTheme=themePick();const t=themes[gameTheme];$('#gameTitle').textContent=t.title;$('#gameInstruction').textContent=t.instruction;$('#actor').textContent=t.actor;$('#actor').className='actor'+(gameTheme==='fishing'?' top':'');$('#gameArea').className='gamearea '+gameTheme;hits=0;combo=0;timeLeft=25;$('#hits').textContent=0;$('#combo').textContent=0;$('#time').textContent=timeLeft;$('#gameMessage').className='feedback hidden';$('#secondGameBtn').classList.add('hidden');$('#learnAgainBtn').classList.add('hidden');showSection('game');gameRunning=true;spawn();cancelAnimationFrame(rafId);rafId=requestAnimationFrame(gameLoop);clearInterval(timerId);timerId=setInterval(()=>{timeLeft--;$('#time').textContent=timeLeft;if(timeLeft<=0)endGame()},1000)}
+function endGame(){if(!gameRunning)return;gameRunning=false;clearInterval(timerId);cancelAnimationFrame(rafId);const m=$('#gameMessage');m.className='feedback ok';m.innerHTML=`⏱️ Runde beendet: <b>${hits} Treffer</b>. ${gameCredits>0?'Du hast wegen 100 % noch eine zweite Spielrunde frei.':'Jetzt geht es zurück zum Lernen.'}`;$('#secondGameBtn').classList.toggle('hidden',gameCredits<=0);$('#learnAgainBtn').classList.remove('hidden')}
+function clearGame(){gameRunning=false;clearInterval(timerId);cancelAnimationFrame(rafId);clearTargets()}
+function reset(){if(!confirm('Wirklich Lernstand, XP und Highscore löschen?'))return;storeRemove(LS.stats);storeRemove(LS.meta);stats={};meta={xp:0,stars:0,best:0,surprise:0};save();renderMeta();renderLearning();$('#buddyText').textContent='Lernstand zurückgesetzt.'}
+function $$(s){return document.querySelector(s)}
+$('#startBtn').addEventListener('click',startQuiz);$('#checkBtn').addEventListener('click',check);$('#hintBtn').addEventListener('click',hint);$('#nextBtn').addEventListener('click',next);$('#againBtn').addEventListener('click',newRound);$('#playBtn').addEventListener('click',startGame);$('#secondGameBtn').addEventListener('click',startGame);$('#learnAgainBtn').addEventListener('click',newRound);$('#resetBtn').addEventListener('click',reset);$('#scope').addEventListener('change',renderLearning);$('#answer').addEventListener('keydown',e=>{if(e.key==='Enter'){if(!$('#checkBtn').disabled)check();else if(!$('#nextBtn').classList.contains('hidden'))next()}});
+load();
+</script>
+</body>
+</html>

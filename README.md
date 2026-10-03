@@ -34,12 +34,14 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Bereich | Spiel | Öffentlicher Pfad | Entwicklungsquelle |
 |---|---|---|---|
 | Lernwelt | Moe's English World | `/moes-english-world/` | `preukschas/Lernspiele--bei-DMP` → `projects/moes-english-world/` |
-| Lernwelt | Kokos-Vokabelspiel | `/kokos-vokabelspiel/` | `preukschas/Lernspiele--bei-DMP` → `projects/kokos-vokabelspiel/` |\n| Lernwelt | Moe – Machine City | `/moe-machine-city/` | `preukschas/Lernspiele--bei-DMP` → `projects/moe-machine-city-rpg/` |
-| Spielewelt | Planet unter Druck | `/planet-unter-druck/` | `preukschas/DMP-Games` → `projects/tower-defense/` |
+| Lernwelt | Kokos-Vokabelspiel | `/kokos-vokabelspiel/` | Entwickelte Grafikversion V3 |
+| Lernwelt | Moe – Machine City | `/moe-machine-city/` | Kapitel-1-Demo V0.7 mit Bildern |
+| Lernwelt | Vokabel Quest | `/vokabel-quest/` | `preukschas/Lernspiele--bei-DMP` → `vokabel-quest/index.html` (V10) |
+| Spielewelt | Planet unter Druck | `/planet-unter-druck/` | `preukschas/DMP-Games` → `projects/tower-defense/` (V18) |
+| Spielewelt | Domi Run | `/domi-run/` | Entwickelte Standalone-Datei V0.2 |
+| Spielewelt | Ronja Race | `/ronja-race/` | `preukschas/DMP-Games` → PR #3 (V0.3) |
 
-## Geplant
-
-- Spielewelt: Domi Run → später als eigener Unterordner und ebenfalls mit PIN-Prüfung
+Der separat besprochene Weltraum-Shooter hat derzeit keine eigene Spieldatei. Die bereits entwickelte Weltraum-Abwehr ist Teil von Vokabel Quest und dort über das Lernen erreichbar.
 
 ## Veröffentlichungsregel
 
@@ -51,7 +53,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 
 ## Stand
 
-- Planet unter Druck: öffentliche V18-Version in `planet-unter-druck/index.html`, mit zusätzlicher öffentlicher PIN-Schutzschicht
-- Moe's English World: aktueller geprüfter Stand in `moes-english-world/index.html`
-- Moe – Machine City: Lernwelt, frei zugänglich
-- Root-`index.html`: Weltenauswahl mit freier Lernwelt und PIN-geschützter Spielewelt
+- Alle sieben vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
+- Lernwelt: vier Spiele ohne Eltern-PIN.
+- Spielewelt: drei Spiele mit gemeinsamer PIN-Prüfung auch beim direkten URL-Aufruf.
+- Die Spielinhalte stammen aus bereits entwickelten Fassungen. Die beiden neuen Spaß-Games tragen nur die zentrale PIN-Einbindung zusätzlich.
