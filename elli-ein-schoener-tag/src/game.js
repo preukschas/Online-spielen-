@@ -2,6 +2,7 @@
   "use strict";
 
   var STORAGE_KEY = "dmp.elli-good-day.v2";
+  var ELLI_ART = "assets/elli-cartoon.webp?v=13";
   var OLD_STORAGE_KEY = "dmp.elli-good-day.v1";
   var CHAPTERS = ["garden","story","basket","craft","tea"];
   var BRIDGES = ["bridge1","bridge2","bridge3","bridge4"];
@@ -260,7 +261,7 @@
 
   function sceneFrame(icon,title,intro,body){
     return "<section class=\"scene\">" +
-      "<header class=\"scene-head\"><span class=\"elli-mini\" aria-hidden=\"true\"></span><span class=\"scene-head-icon\" aria-hidden=\"true\">" + icon + "</span><div><h2>" + title + "</h2><p>" + intro + "</p></div></header>" +
+      "<header class=\"scene-head\"><img class=\"elli-mini-img\" src=\"" + ELLI_ART + "\" alt=\"\" aria-hidden=\"true\"><span class=\"scene-head-icon\" aria-hidden=\"true\">" + icon + "</span><div><h2>" + title + "</h2><p>" + intro + "</p></div></header>" +
       "<div class=\"scene-body\">" + body + "</div></section>";
   }
 
@@ -740,7 +741,7 @@
     [[0,1,1],[1,1,0]],
     [[1,1,0],[0,1,1]]
   ];
-  var TETRIS_COLORS = ["#6f8f72","#5f7f9d","#d9aa55","#d7928f","#8b78a6","#73a4a0","#b98b67"];
+  var TETRIS_COLORS = ["#2f84ff","#ff4f7d","#ffd33d","#31c86b","#8e54e9","#22c5d9","#ff7b39"];
 
   function emptyBoard(rows,cols){
     var result = [];
