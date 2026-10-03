@@ -3,75 +3,74 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#eef4ec">
+  <meta name="theme-color" content="#f7d69b">
   <title>Elli – Ein schöner Tag · DMP Games</title>
-  <link rel="stylesheet" href="src/style.css">
-<link rel="stylesheet" href="../game-interaction-guard.css">\n</head>
+  <link rel="stylesheet" href="src/style.css?v=13">
+  <link rel="stylesheet" href="src/theme.css?v=13">
+  <link rel="stylesheet" href="../game-interaction-guard.css">
+</head>
 <body>
+  <div class="ci-sky" aria-hidden="true"></div>
   <div class="app-shell">
     <header class="topbar">
       <button class="icon-button" id="homeButton" type="button" aria-label="Zur Tagesübersicht" title="Zur Übersicht">⌂</button>
       <div class="brand">
-        <span class="brand-kicker">DMP Special · Mit Cartoon-Elli durch einen ruhigen Tag</span>
-        <strong>Elli – Ein schöner Tag</strong>
+        <span class="brand-kicker">DMP Special · Elli</span>
+        <strong>Ein schöner Tag</strong>
       </div>
-      <div class="heart-counter" id="heartCounter" aria-live="polite">♡ 0 / 5</div>
+      <div class="heart-counter" id="heartCounter" aria-live="polite">♡ 0/5 · 🧩 0/4</div>
     </header>
 
     <main id="app" class="app" tabindex="-1"></main>
 
     <footer class="footer">
-      <span>Kapitel · ruhiges Tetris · freies Gestalten · in deinem Tempo</span>
+      <span>Entspannt spielen ♥ kreativ sein ♥ einfach genießen</span>
       <button id="resetButton" class="text-button" type="button">Tag neu beginnen</button>
     </footer>
   </div>
 
   <template id="overviewTemplate">
     <section class="overview">
-      <div class="hero-card">
-        <figure class="elli-character-card" role="img" aria-label="Cartoon-Elli">
-          <span class="elli-character" aria-hidden="true"></span>
-          <figcaption>Cartoon-Elli</figcaption>
-        </figure>
-        <div class="hero-copy">
-          <p class="eyebrow">Heute muss niemand schnell sein.</p>
-          <h1>Ellis ruhiger Tag – Kapitel für Kapitel</h1>
-          <p>Fünf ruhige Kapitel werden durch vier entspannte Tetris-Wege verbunden. Kein Countdown, kein Zeitdruck – du gehst einfach Schritt für Schritt.</p>
+      <section class="hero-card ci-hero" aria-label="Elli – Ein schöner Tag">
+        <div class="hero-portrait">
+          <img src="assets/elli-cartoon.webp?v=13" alt="Cartoon-Elli mit Brille und blauem Schal">
+          <div class="welcome-bubble">Schön, dass du da bist! <span aria-hidden="true">♥</span></div>
         </div>
-      </div>
 
-      <div class="scene-grid" id="sceneGrid">
-        <button class="scene-card" type="button" data-scene="garden">
-          <span class="scene-icon" aria-hidden="true">🌷</span>
-          <span class="scene-copy"><strong>Gartenrunde</strong><small>Blumen versorgen und kurz draußen sein.</small></span>
-          <span class="scene-state" data-state-for="garden">Noch offen</span>
-        </button>
-        <button class="scene-card" type="button" data-scene="story">
-          <span class="scene-icon" aria-hidden="true">📖</span>
-          <span class="scene-copy"><strong>Leseecke</strong><small>Eine kleine Geschichte für heute auswählen.</small></span>
-          <span class="scene-state" data-state-for="story">Noch offen</span>
-        </button>
-        <button class="scene-card" type="button" data-scene="basket">
-          <span class="scene-icon" aria-hidden="true">🧺</span>
-          <span class="scene-copy"><strong>In Ruhe sortieren</strong><small>Sechs Dinge bekommen ihren Platz.</small></span>
-          <span class="scene-state" data-state-for="basket">Noch offen</span>
-        </button>
-        <button class="scene-card" type="button" data-scene="craft">
-          <span class="scene-icon" aria-hidden="true">🎨</span>
-          <span class="scene-copy"><strong>Basteltisch</strong><small>Ein kleines Bild ganz ohne Vorgaben gestalten.</small></span>
-          <span class="scene-state" data-state-for="craft">Noch offen</span>
-        </button>
-        <button class="scene-card" type="button" data-scene="tea">
-          <span class="scene-icon" aria-hidden="true">☕</span>
-          <span class="scene-copy"><strong>Kleine Pause</strong><small>Getränk und Lieblingsplatz für den Moment wählen.</small></span>
-          <span class="scene-state" data-state-for="tea">Noch offen</span>
-        </button>
-      </div>
+        <div class="hero-copy">
+          <div class="elli-logo" aria-label="Elli">
+            <span class="elli-logo-name">Elli</span>
+            <span class="elli-logo-heart" aria-hidden="true">♥</span>
+          </div>
+          <div class="wood-sign">Ein schöner Tag <span aria-hidden="true">♥</span></div>
+          <p class="hero-motto">Entspannt spielen <b>♥</b> Kreativ sein <b>♥</b> Einfach genießen</p>
+          <p class="hero-intro">Fünf gemütliche Kapitel und vier ruhige Tetris-Wege führen gemeinsam durch Ellis Tag. Nichts läuft gegen die Uhr.</p>
+        </div>
+
+        <aside class="hero-values" aria-label="Ellis Welt">
+          <span>KINDER</span>
+          <span>NATUR</span>
+          <span>BASTELN</span>
+          <span>LERNEN</span>
+          <span>GEMEINSAM</span>
+        </aside>
+      </section>
+
+      <section class="journey-shell" aria-labelledby="journeyTitle">
+        <div class="journey-heading">
+          <div>
+            <span class="eyebrow">Dein Tag</span>
+            <h2 id="journeyTitle">Kapitel für Kapitel</h2>
+          </div>
+          <span class="journey-hint">Seitlich wischen oder scrollen</span>
+        </div>
+        <div class="scene-grid journey-grid" id="sceneGrid"></div>
+      </section>
 
       <section class="day-note" id="dayNote" aria-live="polite"></section>
     </section>
   </template>
 
-  <script src="src/game.js"></script>
+  <script src="src/game.js?v=13"></script>
 </body>
 </html>
