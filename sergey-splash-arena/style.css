@@ -26,3 +26,23 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#0a2d47
 @keyframes pulse{from{filter:brightness(1)}to{filter:brightness(1.25) drop-shadow(0 0 9px #ffd75b)}}
 @media(max-width:700px){.shell{padding-left:7px;padding-right:7px}.topbar{margin-bottom:5px}.brand .eyebrow{font-size:8px}.brand h1{font-size:25px}.iconBtn{width:34px;height:34px;border-radius:10px}.best{min-width:68px;padding:4px 7px}.best strong{font-size:16px}.hud{gap:3px}.hud>div{padding:5px 3px;border-radius:9px}.hud small{font-size:7px}.hud strong{font-size:12px}.powerCell{column-gap:3px}.powerCell strong{font-size:9px}.dpad{grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,43px)}.move{font-size:18px}.fire{height:88px}.superBtn{width:74px;height:74px}.controls{gap:4px}.help{font-size:9px}.characterBadge{transform:scale(.9);transform-origin:top left}.bossHud{width:44%}}
 @media(orientation:landscape) and (max-height:560px){.shell{padding-top:4px}.topbar{display:none}.hud{margin-bottom:4px}.hud>div{padding:3px}.controls{position:fixed;left:0;right:0;bottom:max(4px,env(safe-area-inset-bottom));z-index:3;pointer-events:none}.dpad,.actionPad{pointer-events:auto;opacity:.82}.help{display:none}.gameWrap{border-radius:14px}}
+
+/* Story Mode 1.1 */
+.hidden{display:none!important}
+.campaignBar{display:grid;grid-template-columns:.72fr 2.2fr .82fr .92fr;gap:6px;margin:0 0 8px}
+.campaignBar>div{min-width:0;border-radius:12px;border:1px solid #ffffff14;background:linear-gradient(180deg,#123754,#0c263d);padding:6px 9px;text-align:center}
+.campaignBar small{display:block;color:var(--muted);font-size:8px;letter-spacing:.08em;text-transform:uppercase}
+.campaignBar strong{font-size:14px;color:#fff;white-space:nowrap}
+.goalCell{display:grid!important;grid-template-rows:auto 8px;gap:5px}.goalMeter{height:8px;background:#061423;border-radius:999px;overflow:hidden}.goalMeter i{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#43d6ff,#78f2aa,#ffd75b);transition:width .15s}
+.introBox{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:14px 0 16px;text-align:left}.introBox>div{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border-radius:13px;background:#0717299c;border:1px solid #ffffff15}.introBox b{white-space:nowrap;font-size:12px;color:#fff}.introBox span{font-size:11px;line-height:1.35;color:#c8d9e7}.introBox em{color:var(--gold);font-style:normal;font-weight:800}
+.resultBox{margin:12px 0;padding:11px;border-radius:14px;background:#071729c7;border:1px solid #ffffff18;color:#dceaf5;line-height:1.45;font-size:13px}.resultBox strong{color:var(--gold)}
+.upgradeBox{margin:12px 0 15px;padding:12px;border-radius:16px;background:#0b1b2cd9;border:1px solid #ffd75b55}.upgradeBox h3{font-size:14px;margin:0 0 9px;color:#ffe681}.upgradeGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.upgradeGrid button{border:1px solid #ffffff20;background:linear-gradient(180deg,#1b4663,#102d46);border-radius:13px;padding:9px;color:#fff;text-align:left;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:7px;cursor:pointer}.upgradeGrid button b{font-size:12px}.upgradeGrid button span{grid-column:2;color:#b9cddd;font-size:10px}.upgradeGrid button:active{transform:scale(.98)}.upgradeGrid button.maxed{opacity:.38;filter:grayscale(.6)}
+.superBtn.ready{animation:pulse .45s infinite alternate;outline:3px solid #fff2a1;box-shadow:0 0 0 5px #ffd75b44,0 7px 0 #8d5e12,0 0 30px #ffd75b}
+.superBtn.ready::after{content:"!";position:absolute}
+.superBtn{position:relative}
+@media(max-width:700px){
+  .campaignBar{grid-template-columns:.7fr 1.7fr .72fr .85fr;gap:3px}.campaignBar>div{padding:4px 3px}.campaignBar small{font-size:6px}.campaignBar strong{font-size:10px}
+  .introBox{grid-template-columns:1fr;gap:5px;margin:9px 0 11px}.introBox>div{padding:7px 8px}.introBox b{font-size:10px}.introBox span{font-size:9px}
+  .upgradeGrid{grid-template-columns:1fr 1fr}.upgradeGrid button{padding:7px}.resultBox{font-size:11px;padding:8px}
+}
+@media(orientation:landscape) and (max-height:560px){.campaignBar{margin-bottom:3px}.campaignBar>div{padding:3px}.card{padding:14px}.introBox{display:none}}
