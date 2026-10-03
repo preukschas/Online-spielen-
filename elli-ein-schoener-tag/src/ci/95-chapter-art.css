@@ -1,0 +1,32 @@
+/* Chapter-specific artwork: pure CSS so the cards never depend on remote images. */
+.journey-card[data-step-id="garden"]::before{
+  background:
+    radial-gradient(circle at 22% 74%,#ff6f9a 0 7px,transparent 8px),
+    radial-gradient(circle at 68% 66%,#ffd84f 0 9px,transparent 10px),
+    radial-gradient(circle at 84% 82%,#fff 0 5px,transparent 6px),
+    linear-gradient(180deg,#92d5f4 0 53%,#83bd59 54% 72%,#a46d38 73%);
+}
+.journey-card[data-step-id="story"]::before{
+  background:
+    linear-gradient(90deg,transparent 0 14%,#8b4d27 15% 18%,transparent 19% 39%,#a65c2e 40% 43%,transparent 44% 67%,#7d4625 68% 71%,transparent 72%),
+    linear-gradient(180deg,#e6b36e 0 18%,#8e512b 19% 23%,#e8c087 24% 49%,#8e512b 50% 54%,#d99b54 55%);
+}
+.journey-card[data-step-id="basket"]::before{
+  background:
+    radial-gradient(circle at 20% 70%,#ff785f 0 12px,transparent 13px),
+    radial-gradient(circle at 52% 55%,#2f84ff 0 13px,transparent 14px),
+    radial-gradient(circle at 78% 74%,#ffd33d 0 12px,transparent 13px),
+    linear-gradient(180deg,#f5c879,#eab16a);
+}
+.journey-card[data-step-id="craft"]::before{
+  background:
+    linear-gradient(35deg,transparent 0 38%,#f2557e 39% 48%,transparent 49%),
+    linear-gradient(-35deg,transparent 0 52%,#1676c5 53% 61%,transparent 62%),
+    radial-gradient(circle at 70% 28%,#ffd151 0 15px,transparent 16px),
+    #f6d69f;
+}
+.journey-card[data-step-id="tea"]::before{
+  background:
+    radial-gradient(circle at 74% 72%,#fff5d8 0 17px,#d59a55 18px 22px,transparent 23px),
+    linear-gradient(180deg,#f3a5a8 0 42%,#9272a9 43% 56%,#5f8b4c 57% 100%);
+}
