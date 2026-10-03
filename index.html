@@ -109,14 +109,14 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
 <main class="wrap">
   <div class="topline">
     <div class="brandSmall">DMP · Online</div>
-    <div class="badge">Lernwelt frei · Spielewelt & Specials mit Eltern-PIN</div>
+    <div class="badge">Lernwelt & Specials frei · Spielewelt mit Eltern-PIN</div>
   </div>
 
   <section id="worldSelect">
     <div class="hero">
       <div style="font-size:52px" aria-hidden="true">🌍</div>
       <h1>Wohin möchtest du?</h1>
-      <p>Wähle zuerst eine Welt. Lernen ist immer möglich. Spielewelt und Specials werden mit der Eltern-PIN geöffnet.</p>
+      <p>Wähle zuerst eine Welt. Lernwelt und Specials sind frei zugänglich. Nur die Spielewelt wird mit der Eltern-PIN geöffnet.</p>
     </div>
 
     <div class="worldChooser">
@@ -129,12 +129,11 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
       </button>
 
       <button class="worldButton special" id="openSpecials" type="button">
-        <div class="worldLabel">Eltern-Freigabe</div>
+        <div class="worldLabel">Frei zugänglich</div>
         <div class="worldEmoji" aria-hidden="true">🎉✨</div>
         <h2>Specials</h2>
-        <p>Geburtstage und besondere Anlässe. Für Specials ist die Eltern-PIN nötig.</p>
+        <p>Geburtstage und besondere Anlässe. Hier kannst du ohne PIN und ohne Zeitsperre loslegen.</p>
         <div class="worldCta">Specials öffnen →</div>
-        <div class="lockState" id="specialsStatus">🔒 Gesperrt</div>
       </button>
 
       <button class="worldButton fun" id="openFun" type="button">
@@ -207,12 +206,11 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
         <div class="worldHeaderIcon" aria-hidden="true">🎉</div>
         <div>
           <h1 id="specialsTitle">Specials</h1>
-          <p>Besondere Spiele für besondere Anlässe. Freigeschaltet für maximal 60 Minuten.</p>
+          <p>Besondere Spiele für besondere Anlässe. Frei zugänglich ohne PIN und ohne Zeitsperre.</p>
         </div>
       </div>
-      <div class="headerActions"><button class="controlBtn" type="button" data-back>← Weltenauswahl</button><button class="controlBtn gold" type="button" id="lockSpecialsBtn">Jetzt sperren</button></div>
+      <div class="headerActions"><button class="controlBtn" type="button" data-back>← Weltenauswahl</button></div>
     </div>
-    <div class="infoStrip" id="specialsUnlockInfo">🔓 Specials freigeschaltet.</div>
     <div class="grid">
       <article class="card">
         <div class="kicker">Geburtstag · Leon</div>
@@ -284,8 +282,6 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
   const fun=document.getElementById('funWorld');
   const specials=document.getElementById('specialsWorld');
   const status=document.getElementById('funStatus');
-  const specialsStatus=document.getElementById('specialsStatus');
-  const specialsInfo=document.getElementById('specialsUnlockInfo');
   const info=document.getElementById('unlockInfo');
 
   function hideWorlds(){
@@ -311,8 +307,6 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
     learning.classList.add('hidden');
     fun.classList.add('hidden');
     specials.classList.remove('hidden');
-    const m=DMPFunAccess.remainingUnlockMinutes();
-    specialsInfo.textContent='🔓 Specials freigeschaltet · noch ungefähr '+m+' Minute'+(m===1?'':'n')+'.';
     window.scrollTo({top:0,behavior:'smooth'});
   }
   function showFun(){
@@ -328,18 +322,14 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
     if(DMPFunAccess.isUnlocked()){
       const m=DMPFunAccess.remainingUnlockMinutes();
       status.textContent='🔓 Noch ca. '+m+' Min. freigeschaltet';
-      specialsStatus.textContent=status.textContent;
     }else{
       const s=DMPFunAccess.lockRemainingSeconds();
       status.textContent=s>0?'⏳ Nach Fehlversuchen '+s+' Sek. gesperrt':'🔒 PIN erforderlich';
-      specialsStatus.textContent=status.textContent;
     }
   }
 
   document.getElementById('openLearning').addEventListener('click',showLearning);
-  document.getElementById('openSpecials').addEventListener('click',()=>{
-    DMPFunAccess.requestAccess({onUnlock:()=>{updateStatus();showSpecials();}});
-  });
+  document.getElementById('openSpecials').addEventListener('click',showSpecials);
   document.getElementById('openFun').addEventListener('click',()=>{
     DMPFunAccess.requestAccess({onUnlock:()=>{updateStatus();showFun();}});
   });
@@ -349,10 +339,6 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
     showSelect();
   });
 
-  document.getElementById('lockSpecialsBtn').addEventListener('click',()=>{
-    DMPFunAccess.lockNow();
-    showSelect();
-  });
 
   updateStatus();
   setInterval(updateStatus,15000);
