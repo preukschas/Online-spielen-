@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const DEFAULT_PIN_HASH='70cc782d'; // Default PIN 7314, intentionally stored only as a hash.
+const DEFAULT_PIN_HASH='70cc782d';
 const PIN_KEY='dmpFunPinHashV1';
 const UNLOCK_KEY='dmpFunUnlockedUntilV1';
 const FAIL_KEY='dmpFunFailedAttemptsV1';
@@ -214,7 +214,6 @@ window.DMPFunAccess={
   changePin,
   resetToDefault,
   remainingUnlockMinutes,
-  lockRemainingSeconds,
-  defaultPinHint:'7314'
+  lockRemainingSeconds
 };
 })();
