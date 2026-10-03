@@ -3,56 +3,102 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101b22">
-<title>Moe – Machine City</title>
-<link rel="stylesheet" href="../game-interaction-guard.css">
-<style>
-html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden;background:#081319}
-#game{display:block;border:0;width:100%;height:100%;height:100dvh;background:#081319}
-</style>
+<meta name="theme-color" content="#06101a">
+<title>Moe – Machine City · Kapitel 1 · v0.8</title>
+<link rel="stylesheet" href="../game-interaction-guard.css">\n<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<iframe id="game" src="./game-original.html" title="Moe – Machine City" allow="autoplay; fullscreen"></iframe>
-<script>
-(function(){
-  const frame=document.getElementById('game');
-  frame.addEventListener('load',()=>{
-    try{
-      const d=frame.contentDocument;
-      if(!d) return;
-      if(!d.querySelector('meta[name="viewport"]')){
-        const m=d.createElement('meta');
-        m.name='viewport';
-        m.content='width=device-width,initial-scale=1,viewport-fit=cover';
-        d.head.appendChild(m);
-      }
-      const s=d.createElement('style');
-      s.textContent='html,body,body *{-webkit-user-select:none!important;user-select:none!important}html,body{-webkit-touch-callout:none!important}input,textarea,select,[contenteditable="true"],[contenteditable=""]{-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important}img,svg,canvas{-webkit-user-drag:none!important;user-drag:none!important}button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}.road{touch-action:pan-y!important}@media(max-width:420px){button,.choice,.small-btn,.door,.switch,.obj,.person{min-width:44px}}';
-      d.head.appendChild(s);
+<noscript><div style="position:fixed;inset:0;z-index:9999;background:#07111c;color:white;padding:30px;font:18px system-ui;display:grid;place-items:center;text-align:center"><div><b>JavaScript ist nicht aktiv.</b><br><br>Machine City braucht einen normalen Browser wie Safari, Chrome oder Edge. Öffne die Online-Version statt einer Datei-Vorschau.</div></div></noscript>
 
-      const enhance=()=>{
-        const road=d.querySelector('.road:not([data-dmp-swipe])');
-        if(road){
-          road.dataset.dmpSwipe='1';
-          let startX=null;
-          road.addEventListener('pointerdown',e=>{startX=e.clientX;try{road.setPointerCapture(e.pointerId)}catch(_){}});
-          road.addEventListener('pointercancel',()=>{startX=null});
-          road.addEventListener('pointerup',e=>{
-            if(startX===null)return;
-            const dx=e.clientX-startX;startX=null;
-            if(Math.abs(dx)<32)return;
-            const controls=[...road.parentElement.querySelectorAll('.grid.g3 button')];
-            if(dx<0&&controls[0])controls[0].click();
-            if(dx>0&&controls[2])controls[2].click();
-          });
-        }
-      };
-      enhance();
-      const observer=new MutationObserver(enhance);
-      observer.observe(d.body,{childList:true,subtree:true});
-    }catch(e){}
-  });
-})();
+<div id="boot">
+  <div class="boot-card">
+    <div class="logo">MOE<br><span>MACHINE CITY</span></div>
+    <div class="subtitle">Kapitel 1 · Spielbare v0.8</div>
+    <p class="boot-copy">Ein Abenteuer mit Bike, Fußball, 3D-Druck, Geheimwegen und kurzen Englisch-Momenten – jetzt mit robusteren Minispielen und weniger Durchklick-Abkürzungen. Die Geschichte bleibt überwiegend deutsch. Entscheidungen und Gegenstände verändern spätere Wege.</p>
+    <div class="boot-actions">
+      <button id="continueBtn" class="primary">Weiterspielen</button>
+      <button id="newBtn" class="secondary">Neues Spiel</button>
+    </div>
+    <div class="boot-meta">
+      <span class="boot-pill">8 Szenen</span>
+      <span class="boot-pill">offline spielbar</span>
+      <span class="boot-pill">lokaler Spielstand</span>
+      <span class="boot-pill">8 neue Szenenbilder</span><span class="boot-pill">keine externen Dateien</span>
+      <span id="runtimeStatus" class="boot-pill">Spielcode wird geprüft …</span>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">MOE · MACHINE CITY <span class="v">v0.7</span></div>
+    <div id="sceneTag" class="scene-tag"></div>
+    <div class="spacer"></div>
+    <button id="soundBtn" class="small-btn" type="button">🔊 Ton</button>
+    <button id="journalBtn" class="small-btn" type="button">Journal</button>
+    <button id="restartBtn" class="small-btn" type="button">Neustart</button>
+  </div>
+
+  <div class="layout">
+    <section class="stage">
+      <div id="world" class="world s1">
+        <div class="city-lines"></div>
+        <div id="chips" class="scenechips"></div>
+        <div id="robot" class="robot">
+          <div class="robot-head"></div><div class="robot-body"></div>
+        </div>
+        <div class="storybox">
+          <div id="kicker" class="kicker"></div>
+          <h1 id="title"></h1>
+          <p id="story" class="story"></p>
+          <div id="effect" class="effect" hidden></div>
+          <div id="english" class="english" hidden></div>
+        </div>
+      </div>
+
+      <div class="play">
+        <div class="playhead">
+          <h2 id="playTitle"></h2>
+          <div id="miniStatus" class="status"></div>
+        </div>
+        <div id="playArea"></div>
+        <div id="feedback" class="feedback"></div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="card"><h3>Aktuelle Mission</h3><div id="mission" class="mission"></div></div>
+      <div class="card"><h3>Inventar</h3><div id="inventory" class="inv"></div></div>
+      <div class="card"><h3>Kapitel-Fortschritt</h3><div class="progress"><i id="progress"></i></div><div id="progressText" class="muted" style="margin-top:6px"></div></div>
+      <div class="card"><h3>Entdeckungen</h3><div class="muted">Hinweise: <b id="clueCount">0</b><br>Wörter begegnet: <b id="wordCount">0</b><br>Spielaktionen: <b id="gameCount">0</b></div></div>
+      <div class="card"><h3>Letzte Ereignisse</h3><div id="events"></div></div>
+    </aside>
+  </div>
+</div>
+
+<div id="journalModal" class="modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div><b>Moes Journal</b><div class="muted">Hinweise, Inventar und Englisch-Spuren</div></div>
+      <button id="closeJournalBtn" class="small-btn">Schließen</button>
+    </div>
+    <div id="journalBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+window.__machineCityReady=false;
+window.addEventListener("error",function(e){
+  var el=document.getElementById("runtimeStatus");
+  if(el){el.textContent="Fehler im Spielcode: "+(e.message||"unbekannt");el.style.color="#ff9797";}
+});
+setTimeout(function(){
+  var el=document.getElementById("runtimeStatus");
+  if(el && !window.__machineCityReady){el.textContent="Spielcode konnte nicht starten";el.style.color="#ff9797";}
+},1800);
 </script>
+<script src="game.js"></script>
 </body>
 </html>
