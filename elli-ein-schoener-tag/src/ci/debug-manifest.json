@@ -1,0 +1,22 @@
+{
+  "version": "1.3-rc1",
+  "character": {
+    "asset": "assets/elli-cartoon.webp",
+    "mainSelector": "[data-debug-id=\"elli.character.main\"]",
+    "chapterSelector": "[data-debug-id=\"elli.character.chapter\"]"
+  },
+  "components": [
+    {"id":"elli.topbar","module":"src/ci/00-tokens-shell.css"},
+    {"id":"elli.hero","module":"src/ci/10-hero.css"},
+    {"id":"elli.journey","module":"src/ci/20-journey.css"},
+    {"id":"elli.scene.shell","module":"src/ci/30-scenes-craft.css"},
+    {"id":"elli.craft","module":"src/ci/30-scenes-craft.css"},
+    {"id":"elli.tetris","module":"src/ci/40-tetris.css"},
+    {"id":"elli.tetris.controls","module":"src/ci/40-tetris.css"},
+    {"id":"elli.status","module":"src/ci/50-chrome.css"}
+  ],
+  "supportModules": [
+    "src/ci/90-responsive.css",
+    "src/ci/95-chapter-art.css"
+  ]
+}
