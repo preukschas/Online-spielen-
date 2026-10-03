@@ -34,7 +34,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Bereich | Spiel | Öffentlicher Pfad | Entwicklungsquelle |
 |---|---|---|---|
 | Lernwelt | Moe's English World | `/moes-english-world/` | `preukschas/Lernspiele--bei-DMP` → `projects/moes-english-world/` |
-| Lernwelt | Moe – Machine City | `/moe-machine-city/` | `preukschas/Lernspiele--bei-DMP` → `projects/moe-machine-city-rpg/` |
+| Lernwelt | Kokos-Vokabelspiel | `/kokos-vokabelspiel/` | `preukschas/Lernspiele--bei-DMP` → `projects/kokos-vokabelspiel/` |\n| Lernwelt | Moe – Machine City | `/moe-machine-city/` | `preukschas/Lernspiele--bei-DMP` → `projects/moe-machine-city-rpg/` |
 | Spielewelt | Planet unter Druck | `/planet-unter-druck/` | `preukschas/DMP-Games` → `projects/tower-defense/` |
 
 ## Geplant
