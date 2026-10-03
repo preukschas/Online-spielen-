@@ -8,13 +8,13 @@
 <meta name="theme-color" content="#07192b">
 <meta name="description" content="Sergey Splash Arena – kinderfreundliche Wasser-Action mit Boss, Power-ups und Super Splash.">
 <title>Sergey Splash Arena</title>
-<link rel="stylesheet" href="style.css?v=1.0.2">
+<link rel="stylesheet" href="style.css?v=1.1.0">
 </head>
 <body>
 <main class="shell">
   <header class="topbar">
     <div class="brand">
-      <div class="eyebrow">DMP GAMES · KIDS ACTION · 1.0.2.1</div>
+      <div class="eyebrow">DMP GAMES · STORY MODE · 1.1</div>
       <h1>SERGEY <span>SPLASH ARENA</span></h1>
     </div>
     <div class="topActions">
@@ -30,6 +30,13 @@
     <div><small>Schutz</small><strong id="hp">★★★★★</strong></div>
     <div><small>Kombo</small><strong id="combo">×1</strong></div>
     <div class="powerCell"><small>Super Splash</small><div class="meter"><i id="superFill"></i></div><strong id="power">0%</strong></div>
+  </section>
+
+  <section class="campaignBar" aria-live="polite">
+    <div><small>Mission</small><strong id="missionLabel">1 / 4</strong></div>
+    <div class="goalCell"><small id="goalLabel">Ziel: 4.000 Punkte oder 60 Sek.</small><div class="goalMeter"><i id="goalFill"></i></div></div>
+    <div><small>Sergey</small><strong id="levelLabel">Level 1</strong></div>
+    <div><small>XP</small><strong id="xpLabel">0 / 1000</strong></div>
   </section>
 
   <section class="gameWrap">
@@ -50,11 +57,27 @@
       <div class="card">
         <span class="tag" id="tag">KINDERFREUNDLICHE ACTION</span>
         <h2 id="title">Sergey räumt auf!</h2>
-        <p id="text">Bewege Sergey durch die Arena. Der Wasserblaster zielt automatisch. Sammle Power-ups, baue Kombos auf und lade den SUPER SPLASH für den großen Rundum-Wasserstoß.</p>
-        <div class="featureRow" aria-hidden="true">
-          <span>💦 Auto-Aim</span><span>🛡️ Schutz</span><span>⚡ Turbo</span><span>🌊 Super</span>
+        <p id="text">Aqua City hat ein Problem: Reinigungsroboter sind außer Kontrolle geraten. Sergey zieht mit seinem Wasserblaster los, um vier Stadtteile zurückzuholen.</p>
+        <div id="introBox" class="introBox">
+          <div><b>🎯 Ziel</b><span>Erreiche das Punkteziel und besiege den Boss <em>oder</em> halte 60 Sekunden durch.</span></div>
+          <div><b>🕹️ Bewegen</b><span>Wischen/ziehen oder Pfeiltasten. Ausweichen lohnt sich.</span></div>
+          <div><b>💦 Splash</b><span>Gedrückt halten. Sergey zielt automatisch auf den nächsten Gegner.</span></div>
+          <div><b>🌊 Super</b><span>Treffer laden die Leiste. Wenn der SUPER-Button gold leuchtet: antippen!</span></div>
         </div>
-        <button class="primary" id="startBtn" type="button">SPIEL STARTEN</button>
+        <div id="resultBox" class="resultBox hidden"></div>
+        <div id="upgradeBox" class="upgradeBox hidden">
+          <h3>Sergey wird stärker – wähle 1 Upgrade</h3>
+          <div class="upgradeGrid">
+            <button type="button" data-upgrade="blaster">💦 <b>Blaster</b><span>mehr Splash-Schaden</span></button>
+            <button type="button" data-upgrade="speed">👟 <b>Tempo</b><span>schneller ausweichen</span></button>
+            <button type="button" data-upgrade="armor">🛡️ <b>Schutz</b><span>+1 Schutzstern</span></button>
+            <button type="button" data-upgrade="super">🌊 <b>Super</b><span>schneller laden + stärker</span></button>
+          </div>
+        </div>
+        <div class="featureRow" aria-hidden="true">
+          <span>💦 Auto-Aim</span><span>🛡️ Upgrades</span><span>🤖 4 Missionen</span><span>🌊 Super Splash</span>
+        </div>
+        <button class="primary" id="startBtn" type="button">MISSION 1 STARTEN</button>
       </div>
     </div>
   </section>
@@ -74,6 +97,6 @@
 
   <p class="help"><b>Mobil:</b> im Spielfeld wischen/ziehen = bewegen · <b>Tastatur:</b> WASD / Pfeile bewegen · Leertaste Splash · E oder Enter Super · P Pause</p>
 </main>
-<script src="game.js?v=1.0.2" defer></script>
+<script src="game.js?v=1.1.0" defer></script>
 </body>
 </html>
