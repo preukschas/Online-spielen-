@@ -1016,6 +1016,49 @@
     document.getElementById("pauseTetris").addEventListener("click",togglePause);
     window.addEventListener("keydown",onKey,{passive:false});
 
+    // Touch/iPad: Gesten ergänzen die klassischen Tetris-Tasten.
+    canvas.style.touchAction = "none";
+    canvas.style.userSelect = "none";
+    canvas.style.webkitUserSelect = "none";
+    var tetrisGesture = null;
+    function onTetrisPointerDown(event){
+      if(paused || stopped || (event.pointerType === "mouse" && event.button !== 0)){ return; }
+      tetrisGesture = {id:event.pointerId,x:event.clientX,y:event.clientY};
+      try{ canvas.setPointerCapture(event.pointerId); }catch(error){}
+      if(event.cancelable){ event.preventDefault(); }
+    }
+    function onTetrisPointerMove(event){
+      if(!tetrisGesture || tetrisGesture.id !== event.pointerId){ return; }
+      if(event.cancelable){ event.preventDefault(); }
+    }
+    function onTetrisPointerUp(event){
+      if(!tetrisGesture || tetrisGesture.id !== event.pointerId){ return; }
+      var dx = event.clientX - tetrisGesture.x;
+      var dy = event.clientY - tetrisGesture.y;
+      var ax = Math.abs(dx), ay = Math.abs(dy);
+      var threshold = 24;
+      tetrisGesture = null;
+      if(event.cancelable){ event.preventDefault(); }
+
+      if(ax < threshold && ay < threshold){
+        rotate();
+      }else if(ax > ay * 1.15){
+        var steps = Math.max(1,Math.min(3,Math.round(ax/55)));
+        for(var si=0;si<steps;si++){ move(dx < 0 ? -1 : 1); }
+      }else if(ay > ax * 1.1){
+        if(dy < 0){ rotate(); }
+        else if(ay > 110){ hardDrop(); }
+        else{ stepDown(); }
+      }
+    }
+    function onTetrisPointerCancel(event){
+      if(tetrisGesture && tetrisGesture.id === event.pointerId){ tetrisGesture = null; }
+    }
+    canvas.addEventListener("pointerdown",onTetrisPointerDown,{passive:false});
+    canvas.addEventListener("pointermove",onTetrisPointerMove,{passive:false});
+    canvas.addEventListener("pointerup",onTetrisPointerUp,{passive:false});
+    canvas.addEventListener("pointercancel",onTetrisPointerCancel,{passive:false});
+
     newPiece();
     draw();
     intervalId = window.setInterval(stepDown,1200);
@@ -1024,6 +1067,10 @@
       stopped = true;
       if(intervalId){ window.clearInterval(intervalId); }
       window.removeEventListener("keydown",onKey);
+      canvas.removeEventListener("pointerdown",onTetrisPointerDown);
+      canvas.removeEventListener("pointermove",onTetrisPointerMove);
+      canvas.removeEventListener("pointerup",onTetrisPointerUp);
+      canvas.removeEventListener("pointercancel",onTetrisPointerCancel);
     };
     focusApp();
   }
