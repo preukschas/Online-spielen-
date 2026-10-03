@@ -37,7 +37,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Lernwelt | Moe's English World | `/moes-english-world/` | `preukschas/Lernspiele--bei-DMP` → `projects/moes-english-world/` |
 | Lernwelt | Europa-Express | `/europa-express/` | `preukschas/Lernspiele--bei-DMP` → `projects/europa-express/` |
 | Lernwelt | Kokos-Vokabelspiel | `/kokos-vokabelspiel/` | Entwickelte Grafikversion V3 |
-| Lernwelt | Moe – Machine City | `/moe-machine-city/` | `preukschas/Lernspiele--bei-DMP` → `projects/moe-machine-city/` (Quellzeiger auf V0.7-Blob) |
+| Lernwelt | Moe – Machine City | `/moe-machine-city/` | `preukschas/Lernspiele--bei-DMP` → `projects/moe-machine-city/` (V0.8, 8 externe Szenen-Assets) |
 | Lernwelt | Vokabel Quest | `/vokabel-quest/` | `preukschas/Lernspiele--bei-DMP` → `vokabel-quest/index.html` (V10) |
 | Lernwelt | Einmaleins Space | `/einmaleins-space/` | `preukschas/Lernspiele--bei-DMP` → `projects/einmaleins-space/` (V1.0) |
 | Lernwelt | Mario – Malermeister auf Tour | `/mario-maler/` | `preukschas/Lernspiele--bei-DMP` → `projects/mario-maler/` (V0.1) |
