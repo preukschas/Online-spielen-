@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="de">
+<head>
+<script src="../fun-access.js"></script>
+<script>window.DMPFunAccess.requireAccess({backHref:"../"});</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#07192b">
+<meta name="description" content="Sergey Splash Arena – kinderfreundliche Wasser-Action mit Boss, Power-ups und Super Splash.">
+<title>Sergey Splash Arena</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="eyebrow">DMP GAMES · KIDS ACTION · 1.0</div>
+      <h1>SERGEY <span>SPLASH ARENA</span></h1>
+    </div>
+    <div class="topActions">
+      <button id="soundBtn" class="iconBtn" type="button" aria-label="Ton an oder aus">🔊</button>
+      <button id="pauseBtn" class="iconBtn" type="button" aria-label="Spiel pausieren">⏸</button>
+      <div class="best"><small>BEST</small><strong id="best">0</strong></div>
+    </div>
+  </header>
+
+  <section class="hud" aria-live="polite">
+    <div><small>Punkte</small><strong id="score">0</strong></div>
+    <div><small>Zeit</small><strong id="time">60</strong></div>
+    <div><small>Schutz</small><strong id="hp">★★★★★</strong></div>
+    <div><small>Kombo</small><strong id="combo">×1</strong></div>
+    <div class="powerCell"><small>Super Splash</small><div class="meter"><i id="superFill"></i></div><strong id="power">0%</strong></div>
+  </section>
+
+  <section class="gameWrap">
+    <canvas id="game" width="960" height="540" aria-label="Sergey Splash Arena Spielfeld"></canvas>
+
+    <div class="characterBadge" aria-hidden="true">
+      <div class="face">S</div>
+      <div><b>SERGEY</b><small id="phaseLabel">Warm-up</small></div>
+    </div>
+
+    <div id="bossHud" class="bossHud hidden" aria-hidden="true">
+      <span>MEGA-BOT</span><div><i id="bossFill"></i></div>
+    </div>
+
+    <div id="pauseStamp" class="pauseStamp hidden">PAUSE</div>
+
+    <div class="overlay" id="overlay">
+      <div class="card">
+        <span class="tag" id="tag">KINDERFREUNDLICHE ACTION</span>
+        <h2 id="title">Sergey räumt auf!</h2>
+        <p id="text">Bewege Sergey durch die Arena. Der Wasserblaster zielt automatisch. Sammle Power-ups, baue Kombos auf und lade den SUPER SPLASH für den großen Rundum-Wasserstoß.</p>
+        <div class="featureRow" aria-hidden="true">
+          <span>💦 Auto-Aim</span><span>🛡️ Schutz</span><span>⚡ Turbo</span><span>🌊 Super</span>
+        </div>
+        <button class="primary" id="startBtn" type="button">SPIEL STARTEN</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="controls" aria-label="Touch-Steuerung">
+    <div class="dpad">
+      <button class="move up" data-dir="up" type="button" aria-label="Nach oben">▲</button>
+      <button class="move left" data-dir="left" type="button" aria-label="Nach links">◀</button>
+      <button class="move down" data-dir="down" type="button" aria-label="Nach unten">▼</button>
+      <button class="move right" data-dir="right" type="button" aria-label="Nach rechts">▶</button>
+    </div>
+    <div class="actionPad">
+      <button class="fire" id="fireBtn" type="button">💦<span>SPLASH!</span></button>
+      <button class="superBtn" id="superBtn" type="button" disabled>🌊<span>SUPER</span></button>
+    </div>
+  </section>
+
+  <p class="help"><b>Tastatur:</b> WASD / Pfeile bewegen · Leertaste Splash · E oder Enter Super · P Pause</p>
+</main>
+<script src="game.js" defer></script>
+</body>
+</html>
