@@ -30,6 +30,11 @@
     .scoreForm input{width:100%;min-height:50px;border-radius:12px;border:1px solid #8ca5be;background:#f8fbff;color:#183047;padding:0 14px;font:inherit;font-weight:800;text-align:center}
     .scoreForm input:focus{outline:3px solid #ffd166;outline-offset:2px}
     .recordLine{font-weight:900;color:#ffe08a}
+    .missionBar{margin:0 0 10px;padding:11px 14px;border-radius:14px;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.22);text-align:center;font-size:14px}
+    .leaderboardPanel{margin-top:14px;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid var(--border)}
+    .leaderboardPanel h2{font-size:16px;margin:0 0 8px;text-align:center}
+    .leaderboardPanel ol{margin:0;padding-left:28px;display:grid;gap:4px;color:var(--muted);font-size:14px}
+    .leaderboardPanel li:first-child{color:#ffe08a;font-weight:900}
     button:focus-visible{outline:3px solid #fff;outline-offset:3px}
     @media (max-width:480px){main{padding:10px}.controls{gap:8px}.move{min-width:68px}.secondary{padding:0 12px}}
   </style>
@@ -42,18 +47,21 @@
   <div class="hud" aria-label="Spielstand">
     <div class="pill">🎁 Punkte: <strong id="score">0</strong></div>
     <div class="pill">🏆 Highscore: <strong id="highscore">0</strong></div>
+    <div class="pill">🔥 Combo: <strong id="combo">×1</strong></div>
     <div class="pill">⏱️ Zeit: <strong id="time">60</strong>s</div>
     <div class="pill">❤️ Leben: <strong id="lives">3</strong></div>
+    <div class="pill">⚡ Power: <strong id="power">–</strong></div>
     <div class="pill">Level <strong id="level">1</strong></div>
   </div>
 
+  <div class="missionBar" aria-live="polite">🎯 <strong>Auftrag:</strong> <span id="mission">Fange 3 Ballons (0/3)</span></div>
   <section class="stage">
     <canvas id="canvas" width="720" height="460" aria-label="Leons Geburtstagsspiel"></canvas>
     <div class="overlay" id="overlay">
       <div class="dialog">
         <div class="emoji">🎂🎈🎁</div>
         <h2>Alles Gute, Leon!</h2>
-        <p>Fange Geschenke, Ballons, Sterne und Kuchen. Weiche Gewitterwolken aus. Kurz vor Schluss kommt die große Geburtstagstorte.</p>
+        <p>Fange Geschenke, Ballons, Sterne und Kuchen, baue Combos auf und nutze Power-ups. Erfülle Mini-Aufträge und schnapp dir im Party-Finale die große Geburtstagstorte.</p>
         <button class="primary" id="start" type="button">Spiel starten</button>
       </div>
     </div>
@@ -65,142 +73,316 @@
     <button class="move" id="right" type="button" aria-label="Nach rechts">▶</button>
   </div>
   <p class="help">iPhone/iPad: Pfeile gedrückt halten · Tastatur: ← → oder A/D</p>
+  <section class="leaderboardPanel" aria-label="Lokale Bestenliste">
+    <h2>🏆 Top 5</h2>
+    <ol id="leaderboardList"></ol>
+  </section>
   <div id="status" aria-live="polite" style="position:absolute;left:-9999px"></div>
 </main>
 
 <script>
 (()=>{
   const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
-  const scoreEl=document.getElementById('score'),highscoreEl=document.getElementById('highscore'),timeEl=document.getElementById('time'),livesEl=document.getElementById('lives'),levelEl=document.getElementById('level');
+  const scoreEl=document.getElementById('score'),highscoreEl=document.getElementById('highscore'),comboEl=document.getElementById('combo'),timeEl=document.getElementById('time'),livesEl=document.getElementById('lives'),powerEl=document.getElementById('power'),levelEl=document.getElementById('level'),missionEl=document.getElementById('mission');
+  const leaderboardList=document.getElementById('leaderboardList');
   const overlay=document.getElementById('overlay'),startBtn=document.getElementById('start'),pauseBtn=document.getElementById('pause'),status=document.getElementById('status');
   const leftBtn=document.getElementById('left'),rightBtn=document.getElementById('right');
-  const W=720,H=460;
-  const HIGH_KEY='dmp.leonGeburtstag.highscore.v2';
-  const LEGACY_HIGH_KEY='dmp.leonGeburtstag.highscore.v1';
-  let highscore=0,highscoreName='';
-  try{
-    const saved=JSON.parse(localStorage.getItem(HIGH_KEY)||'null');
-    if(saved&&Number.isFinite(Number(saved.score))){
-      highscore=Number(saved.score)||0;
-      highscoreName=String(saved.name||'').slice(0,18);
-    }else{
-      highscore=Number(localStorage.getItem(LEGACY_HIGH_KEY)||0)||0;
-    }
-  }catch(e){}
-  function renderHighscore(){
-    highscoreEl.textContent=highscore>0?(highscoreName?highscoreName+': '+highscore:String(highscore)):'0';
-  }
-  function saveHighscore(name){
-    highscore=score;
-    highscoreName=(String(name||'Leon').trim().slice(0,18)||'Leon');
-    renderHighscore();
-    try{localStorage.setItem(HIGH_KEY,JSON.stringify({score:highscore,name:highscoreName}))}catch(e){}
-  }
-  renderHighscore();
-  const leonImg=new Image();leonImg.src='./leon-figur.webp?v=3';
-  let running=false,paused=false,last=0,elapsed=0,spawnClock=0,score=0,lives=3,level=1,items=[],confetti=[],cakeSpawned=false,raf=0,left=false,right=false;
+  const W=720,H=460,BASE_DURATION=60;
+  const TOP_KEY='dmp.leonGeburtstag.top5.v1';
+  const LEGACY_KEY='dmp.leonGeburtstag.highscore.v2';
+  const OLD_KEY='dmp.leonGeburtstag.highscore.v1';
+  const LAST_NAME_KEY='dmp.leonGeburtstag.lastName.v1';
+
+  let scores=[];
+  let running=false,paused=false,last=0,elapsed=0,timeBonus=0,spawnClock=0,score=0,lives=3,level=1,items=[],confetti=[],cakeSpawned=false,finaleStarted=false,raf=0,left=false,right=false;
+  let combo=0,magnetUntil=0,shield=0,toast={text:'',until:0},missionIndex=0,mission=null;
   const leon={x:W/2,y:H-86,w:66,h:78,speed:330};
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const leonImg=new Image();leonImg.src='./leon-figur.webp?v=3';
+
+  const missionDefs=[
+    {id:'balloons',label:'Fange 3 Ballons',target:3,bonus:60,type:'balloon'},
+    {id:'stars',label:'Fange 2 Sterne ohne Wolkentreffer',target:2,bonus:80,type:'star',resetOnCloud:true},
+    {id:'combo',label:'Schaffe eine 6er-Combo',target:6,bonus:100,combo:true},
+    {id:'gifts',label:'Sammle 4 Geschenke',target:4,bonus:70,type:'gift'}
+  ];
+
+  function safeJson(raw){try{return JSON.parse(raw)}catch(e){return null}}
+  function loadScores(){
+    let loaded=[];
+    try{
+      const saved=safeJson(localStorage.getItem(TOP_KEY)||'null');
+      if(Array.isArray(saved)) loaded=saved.filter(x=>x&&Number.isFinite(Number(x.score))&&Number(x.score)>0).map(x=>({name:String(x.name||'Gast').slice(0,18),score:Number(x.score)}));
+      if(!loaded.length){
+        const legacy=safeJson(localStorage.getItem(LEGACY_KEY)||'null');
+        if(legacy&&Number(legacy.score)>0) loaded.push({name:String(legacy.name||'Leon').slice(0,18),score:Number(legacy.score)});
+        else{
+          const old=Number(localStorage.getItem(OLD_KEY)||0)||0;
+          if(old>0) loaded.push({name:'Leon',score:old});
+        }
+      }
+    }catch(e){}
+    return loaded.sort((a,b)=>b.score-a.score).slice(0,5);
+  }
+  function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function renderScores(){
+    scores=scores.sort((a,b)=>b.score-a.score).slice(0,5);
+    highscoreEl.textContent=scores.length?(scores[0].name+': '+scores[0].score):'0';
+    leaderboardList.innerHTML=scores.length?scores.map(x=>'<li><strong>'+esc(x.name)+'</strong> · '+x.score+' Punkte</li>').join(''):'<li>Noch kein Eintrag – hol dir Platz 1!</li>';
+  }
+  function qualifiesTop5(value){return value>0&&(scores.length<5||value>scores[scores.length-1].score)}
+  function saveScore(name){
+    const clean=(String(name||'Leon').trim().slice(0,18)||'Leon');
+    scores.push({name:clean,score});
+    scores=scores.sort((a,b)=>b.score-a.score).slice(0,5);
+    try{
+      localStorage.setItem(TOP_KEY,JSON.stringify(scores));
+      localStorage.setItem(LAST_NAME_KEY,clean);
+    }catch(e){}
+    renderScores();
+    return clean;
+  }
+  function lastName(){try{return String(localStorage.getItem(LAST_NAME_KEY)||'').slice(0,18)}catch(e){return ''}}
 
   function rand(a,b){return a+Math.random()*(b-a)}
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+  function remaining(){return Math.max(0,BASE_DURATION+timeBonus-elapsed)}
+  function multiplier(){return combo>=10?3:combo>=5?2:1}
+  function setCombo(v){
+    combo=Math.max(0,v);
+    comboEl.textContent='×'+multiplier()+(combo?' · '+combo:'');
+    if(mission&&mission.combo){
+      mission.progress=Math.min(mission.target,combo);
+      renderMission();
+      if(mission.progress>=mission.target) completeMission();
+    }
+  }
+  function powerText(){
+    const parts=[];
+    if(shield>0)parts.push('🛡️'+(shield>1?'×'+shield:''));
+    const mag=Math.ceil(Math.max(0,magnetUntil-elapsed));
+    if(mag>0)parts.push('🧲 '+mag+'s');
+    powerEl.textContent=parts.length?parts.join(' · '):'–';
+  }
+  function announce(text,seconds=1.8){toast={text,until:elapsed+seconds};status.textContent=text}
+  function startMission(){
+    const d=missionDefs[missionIndex%missionDefs.length];
+    mission={...d,progress:0};
+    renderMission();
+  }
+  function renderMission(){
+    if(!mission)return;
+    missionEl.textContent=mission.label+' ('+mission.progress+'/'+mission.target+') · +'+mission.bonus;
+  }
+  function completeMission(){
+    const bonus=mission.bonus;
+    score+=bonus;scoreEl.textContent=score;
+    burst(W/2,90);announce('🎯 Auftrag geschafft! +'+bonus,2);
+    missionIndex=(missionIndex+1)%missionDefs.length;
+    startMission();
+  }
+  function missionCollect(type){
+    if(!mission||mission.combo||mission.type!==type)return;
+    mission.progress++;
+    renderMission();
+    if(mission.progress>=mission.target)completeMission();
+  }
+  function missionCloudHit(){
+    if(mission&&mission.resetOnCloud&&mission.progress>0){
+      mission.progress=0;renderMission();announce('Auftrag zurückgesetzt',1.3);
+    }
+  }
+
   function reset(){
-    running=true;paused=false;last=performance.now();elapsed=0;spawnClock=0;score=0;lives=3;level=1;items=[];confetti=[];cakeSpawned=false;leon.x=W/2;
+    running=true;paused=false;last=performance.now();elapsed=0;timeBonus=0;spawnClock=0;score=0;lives=3;level=1;items=[];confetti=[];cakeSpawned=false;finaleStarted=false;leon.x=W/2;magnetUntil=0;shield=0;missionIndex=0;
     scoreEl.textContent='0';timeEl.textContent='60';livesEl.textContent='3';levelEl.textContent='1';pauseBtn.textContent='Pause';overlay.hidden=true;
+    setCombo(0);powerText();startMission();
     cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
   }
+
   function spawn(type){
-    const size=type==='bigcake'?76:type==='cloud'?54:type==='star'?52:48;
-    items.push({type,x:rand(38,W-38),y:-60,size,vy:type==='bigcake'?88:rand(88,122)+(level-1)*16,rot:rand(-.16,.16)});
+    const size=type==='bigcake'?80:type==='cloud'?54:type==='star'?52:type==='gold'?54:type==='magnet'||type==='shield'||type==='clock'?50:48;
+    const obj={type,x:rand(42,W-42),y:-65,size,vy:type==='bigcake'?92:rand(88,120)+(level-1)*14,rot:rand(-.14,.14),vx:0,phase:rand(0,Math.PI*2)};
+    if(type==='balloon')obj.vx=rand(-36,36);
+    items.push(obj);
   }
+  function spawnRandom(){
+    const r=Math.random();
+    if(finaleStarted){
+      if(r<.10)return spawn('cloud');
+      if(r<.20)return spawn(['magnet','shield','clock'][Math.floor(Math.random()*3)]);
+      if(r<.38)return spawn('gold');
+      if(r<.55)return spawn('star');
+      if(r<.70)return spawn('cake');
+      if(r<.84)return spawn('balloon');
+      return spawn('gift');
+    }
+    if(level===1){
+      if(r<.12)return spawn('cake');
+      if(r<.24)return spawn('star');
+      if(r<.54)return spawn('balloon');
+      return spawn('gift');
+    }
+    if(level===2){
+      if(r<.10)return spawn('cloud');
+      if(r<.14)return spawn('magnet');
+      if(r<.18)return spawn('shield');
+      if(r<.22)return spawn('clock');
+      if(r<.27)return spawn('gold');
+      if(r<.39)return spawn('star');
+      if(r<.52)return spawn('cake');
+      if(r<.74)return spawn('balloon');
+      return spawn('gift');
+    }
+    if(r<.13)return spawn('cloud');
+    if(r<.17)return spawn('magnet');
+    if(r<.21)return spawn('shield');
+    if(r<.25)return spawn('clock');
+    if(r<.34)return spawn('gold');
+    if(r<.49)return spawn('star');
+    if(r<.62)return spawn('cake');
+    if(r<.79)return spawn('balloon');
+    return spawn('gift');
+  }
+
   function burst(x,y){
     const icons=['🎉','✨','🎊','⭐'];
-    for(let i=0;i<(reduced?4:12);i++) confetti.push({x,y,vx:rand(-100,100),vy:rand(-170,-60),life:rand(.5,1.1),icon:icons[i%icons.length]});
+    for(let i=0;i<(reduced?4:12);i++)confetti.push({x,y,vx:rand(-100,100),vy:rand(-170,-60),life:rand(.5,1.1),icon:icons[i%icons.length]});
   }
   function drawLeon(){
     const x=leon.x,y=leon.y;
-    if(leonImg.complete && leonImg.naturalWidth){
-      const h=132;
-      const w=h*(leonImg.naturalWidth/leonImg.naturalHeight);
-      ctx.save();
-      ctx.translate(x,y+43);
-      ctx.drawImage(leonImg,-w/2,-h,w,h);
-      ctx.restore();
-      return;
+    if(leonImg.complete&&leonImg.naturalWidth){
+      const h=132,w=h*(leonImg.naturalWidth/leonImg.naturalHeight);
+      ctx.save();ctx.translate(x,y+43);ctx.drawImage(leonImg,-w/2,-h,w,h);ctx.restore();return;
     }
     ctx.save();ctx.translate(x,y);ctx.fillStyle='#17233f';ctx.fillRect(-25,-24,50,46);ctx.restore();
   }
   function drawItem(it){
     ctx.save();ctx.translate(it.x,it.y);ctx.rotate(it.rot);
     const hazard=it.type==='cloud';
-    const radius=it.size*.62;
-    ctx.shadowColor=hazard?'rgba(135,35,35,.45)':'rgba(255,255,255,.45)';
-    ctx.shadowBlur=14;
-    ctx.fillStyle=hazard?'rgba(255,226,226,.90)':'rgba(255,255,255,.92)';
+    const power=['magnet','shield','clock'].includes(it.type);
+    const gold=it.type==='gold'||it.type==='bigcake';
+    const radius=it.size*.63;
+    ctx.shadowColor=hazard?'rgba(135,35,35,.45)':gold?'rgba(255,201,55,.8)':'rgba(255,255,255,.5)';
+    ctx.shadowBlur=gold?20:14;
+    ctx.fillStyle=hazard?'rgba(255,226,226,.92)':power?'rgba(224,255,246,.95)':gold?'rgba(255,244,187,.97)':'rgba(255,255,255,.94)';
     ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.fill();
     ctx.shadowBlur=0;
-    ctx.strokeStyle=hazard?'rgba(185,50,50,.75)':'rgba(255,209,102,.9)';
-    ctx.lineWidth=3;ctx.stroke();
+    ctx.strokeStyle=hazard?'rgba(185,50,50,.78)':gold?'rgba(224,164,0,.95)':power?'rgba(40,154,126,.9)':'rgba(255,209,102,.9)';
+    ctx.lineWidth=gold?4:3;ctx.stroke();
     ctx.font=it.size+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
-    const icon=it.type==='gift'?'🎁':it.type==='balloon'?'🎈':it.type==='cake'?'🍰':it.type==='star'?'⭐':it.type==='cloud'?'🌩️':'🎂';
-    ctx.fillText(icon,0,1);ctx.restore();
+    const icon={gift:'🎁',balloon:'🎈',cake:'🍰',star:'⭐',cloud:'🌩️',bigcake:'🎂',gold:'🎁',magnet:'🧲',shield:'🛡️',clock:'⏱️'}[it.type]||'🎁';
+    ctx.fillText(icon,0,1);
+    if(it.type==='gold'){ctx.font='900 12px system-ui';ctx.fillStyle='#815d00';ctx.fillText('GOLD',0,radius+13)}
+    ctx.restore();
   }
   function drawBg(){
     ctx.clearRect(0,0,W,H);
-    const g=ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#79b6dc');g.addColorStop(.55,'#4f86b1');g.addColorStop(1,'#356487');
-    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#79b6dc');g.addColorStop(.55,'#4f86b1');g.addColorStop(1,'#356487');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
     ctx.fillStyle='rgba(255,255,255,.16)';
     for(let i=0;i<10;i++){ctx.beginPath();ctx.arc((i*91+42)%W,45+(i%3)*92,3+(i%2),0,Math.PI*2);ctx.fill()}
     ctx.fillStyle='rgba(255,255,255,.26)';ctx.fillRect(0,H-42,W,42);
     ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(0,H-45,W,3);
+    if(finaleStarted){ctx.fillStyle='rgba(255,214,87,.12)';ctx.fillRect(0,0,W,H)}
   }
-  function collide(it){return Math.abs(it.x-leon.x)<(it.size*.42+leon.w*.35)&&Math.abs(it.y-(leon.y-4))<(it.size*.42+leon.h*.38)}
-  function reward(it){
+  function drawToast(){
+    if(!toast.text||elapsed>toast.until)return;
+    ctx.save();ctx.font='900 26px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    const width=Math.min(620,ctx.measureText(toast.text).width+44);
+    ctx.fillStyle='rgba(17,43,64,.86)';ctx.fillRect(W/2-width/2,24,width,48);
+    ctx.fillStyle='#fff4b8';ctx.fillText(toast.text,W/2,49);ctx.restore();
+  }
+
+  function collide(it){return Math.abs(it.x-leon.x)<(it.size*.44+leon.w*.35)&&Math.abs(it.y-(leon.y-4))<(it.size*.44+leon.h*.38)}
+  function missBreaksCombo(type){return ['gift','balloon','cake','star','gold','bigcake'].includes(type)}
+  function collect(it){
     if(it.type==='cloud'){
-      lives--;livesEl.textContent=lives;status.textContent='Autsch, Gewitterwolke!';
-      if(lives<=0){finish(false);return}
-    }else{
-      const pts=it.type==='gift'?10:it.type==='balloon'?6:it.type==='cake'?18:it.type==='star'?25:60;
-      score+=pts;scoreEl.textContent=score;burst(it.x,it.y);status.textContent=pts+' Punkte!';
+      if(shield>0){shield--;powerText();announce('🛡️ Schild hält die Wolke ab!',1.5);burst(it.x,it.y);return}
+      lives--;livesEl.textContent=lives;setCombo(0);missionCloudHit();announce('🌩️ Treffer! Ein Leben weg.',1.4);
+      if(lives<=0){finish(false)}return;
     }
+
+    if(it.type==='magnet'){magnetUntil=Math.max(magnetUntil,elapsed)+5;score+=10;scoreEl.textContent=score;setCombo(combo+1);powerText();announce('🧲 Magnet für 5 Sekunden!',1.5);missionCollect(it.type);return}
+    if(it.type==='shield'){shield=Math.min(2,shield+1);score+=10;scoreEl.textContent=score;setCombo(combo+1);powerText();announce('🛡️ Schutzschild!',1.5);missionCollect(it.type);return}
+    if(it.type==='clock'){timeBonus=Math.min(15,timeBonus+5);score+=10;scoreEl.textContent=score;setCombo(combo+1);announce('⏱️ +5 Sekunden!',1.5);missionCollect(it.type);return}
+
+    setCombo(combo+1);
+    const base={gift:10,balloon:8,cake:20,star:30,gold:50,bigcake:100}[it.type]||10;
+    const pts=base*multiplier();
+    score+=pts;scoreEl.textContent=score;burst(it.x,it.y);
+    if(it.type==='cake'&&lives<3){lives++;livesEl.textContent=lives;announce('🍰 +'+pts+' & ein Leben!',1.4)}
+    else if(it.type==='bigcake')announce('🎂 FINALE! +'+pts+' Punkte!',2);
+    else if(it.type==='gold')announce('✨ Goldgeschenk! +'+pts,1.4);
+    else status.textContent=pts+' Punkte!';
+    missionCollect(it.type);
   }
+
+  function leaderboardHtml(){return '<ol>'+scores.map(x=>'<li><strong>'+esc(x.name)+'</strong> · '+x.score+'</li>').join('')+'</ol>'}
   function finish(won){
     running=false;cancelAnimationFrame(raf);overlay.hidden=false;
-    const isNew=score>highscore;
-    const resultText=(score>=220?'Geburtstags-Profi! 🎉':score>=130?'Stark gespielt! 🎁':'Noch eine Runde? 🎈');
-    if(isNew){
-      overlay.innerHTML='<div class="dialog"><div class="emoji">🏆🎉</div><h2>Neuer Highscore!</h2><p class="recordLine">'+score+' Punkte</p><p>Trag deinen Namen ein, damit der Rekord gespeichert wird.</p><div class="scoreForm"><input id="recordName" maxlength="18" autocomplete="nickname" placeholder="Dein Name" aria-label="Name für den Highscore"><button class="primary" id="saveRecord" type="button">Highscore speichern</button></div><button class="secondary" id="again" type="button">Ohne Speichern weiterspielen</button></div>';
+    const qualifies=qualifiesTop5(score);
+    if(qualifies){
+      const prefill=esc(lastName());
+      overlay.innerHTML='<div class="dialog"><div class="emoji">🏆🎉</div><h2>Top-5-Ergebnis!</h2><p class="recordLine">'+score+' Punkte</p><p>Trag deinen Namen ein und sichere dir deinen Platz.</p><div class="scoreForm"><input id="recordName" maxlength="18" autocomplete="nickname" value="'+prefill+'" placeholder="Dein Name" aria-label="Name für die Bestenliste"><button class="primary" id="saveRecord" type="button">In Top 5 speichern</button></div><button class="secondary" id="again" type="button">Ohne Speichern weiterspielen</button></div>';
       const input=document.getElementById('recordName');
-      const saveBtn=document.getElementById('saveRecord');
-      const save=()=>{saveHighscore(input.value);overlay.innerHTML='<div class="dialog"><div class="emoji">🏆✨</div><h2>Highscore gespeichert!</h2><p><strong>'+highscoreName+'</strong> · '+highscore+' Punkte</p><button class="primary" id="againSaved" type="button">Noch einmal spielen</button></div>';document.getElementById('againSaved').addEventListener('click',reset);};
-      saveBtn.addEventListener('click',save);
-      input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save();}});
+      const save=()=>{
+        const name=saveScore(input.value);
+        overlay.innerHTML='<div class="dialog"><div class="emoji">🏆✨</div><h2>Gespeichert!</h2><p><strong>'+esc(name)+'</strong> · '+score+' Punkte</p><div class="miniBoard">'+leaderboardHtml()+'</div><button class="primary" id="againSaved" type="button">Noch einmal spielen</button></div>';
+        document.getElementById('againSaved').addEventListener('click',reset);
+      };
+      document.getElementById('saveRecord').addEventListener('click',save);
+      input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save()}});
       document.getElementById('again').addEventListener('click',reset);
-      setTimeout(()=>input.focus(),80);
-      return;
+      setTimeout(()=>input.focus(),80);return;
     }
-    overlay.innerHTML='<div class="dialog"><div class="emoji">'+(won?'🎂🏆':'🌩️')+'</div><h2>'+(won?'Happy Birthday, Leon!':'Fast geschafft!')+'</h2><p>Du hast <strong>'+score+' Punkte</strong> gesammelt. '+resultText+'</p><p>Aktueller Highscore: <strong>'+(highscoreName?highscoreName+' · ':'')+highscore+' Punkte</strong></p><button class="primary" id="again" type="button">Noch einmal spielen</button></div>';
+    overlay.innerHTML='<div class="dialog"><div class="emoji">'+(won?'🎂🏁':'🌩️')+'</div><h2>'+(won?'Party geschafft!':'Fast geschafft!')+'</h2><p>Du hast <strong>'+score+' Punkte</strong> gesammelt.</p><div class="miniBoard">'+leaderboardHtml()+'</div><button class="primary" id="again" type="button">Noch einmal spielen</button></div>';
     document.getElementById('again').addEventListener('click',reset);
   }
+
+  function updateItem(it,dt){
+    it.y+=it.vy*dt;
+    if(it.type==='balloon'){
+      it.x+=it.vx*dt;
+      if(it.x<35||it.x>W-35){it.vx*=-1;it.x=clamp(it.x,35,W-35)}
+    }else if(it.type==='star'){
+      it.x+=Math.sin(elapsed*5+it.phase)*58*dt;
+      it.x=clamp(it.x,35,W-35);
+    }
+    if(elapsed<magnetUntil&&it.type!=='cloud'){
+      const dx=leon.x-it.x;
+      it.x+=dx*Math.min(1,dt*3.3);
+    }
+  }
+
   function loop(t){
     if(!running)return;
     const dt=Math.min((t-last)/1000,.033);last=t;
     if(!paused){
       elapsed+=dt;spawnClock+=dt;
-      timeEl.textContent=Math.max(0,Math.ceil(60-elapsed));
-      const nl=elapsed<20?1:elapsed<40?2:3;if(nl!==level){level=nl;levelEl.textContent=level;burst(W/2,100)}
-      if(left)leon.x-=leon.speed*dt;if(right)leon.x+=leon.speed*dt;leon.x=Math.max(38,Math.min(W-38,leon.x));
-      const interval=Math.max(.54,.86-(level-1)*.12);
-      if(spawnClock>interval){spawnClock=0;const r=Math.random();spawn(r<.10?'cloud':r<.25?'cake':r<.34?'star':r<.64?'balloon':'gift')}
-      if(elapsed>52&&!cakeSpawned){cakeSpawned=true;spawn('bigcake')}
-      for(let i=items.length-1;i>=0;i--){const it=items[i];it.y+=it.vy*dt;if(collide(it)){reward(it);items.splice(i,1);if(!running)return;continue}if(it.y>H+60)items.splice(i,1)}
+      const rem=remaining();timeEl.textContent=Math.ceil(rem);
+      const nl=elapsed<20?1:elapsed<40?2:3;
+      if(nl!==level){level=nl;levelEl.textContent=level;burst(W/2,100);announce('🎉 Level '+level+'!',1.5)}
+      if(!finaleStarted&&rem<=8){finaleStarted=true;burst(W/2,80);announce('🎂 PARTY-FINALE!',2.4)}
+      if(!cakeSpawned&&rem<=4){cakeSpawned=true;spawn('bigcake');announce('🎂 DIE TORTE KOMMT!',2.2)}
+
+      if(left)leon.x-=leon.speed*dt;if(right)leon.x+=leon.speed*dt;leon.x=clamp(leon.x,42,W-42);
+      const interval=finaleStarted?.46:level===1?.90:level===2?.72:.60;
+      if(spawnClock>interval){spawnClock=0;spawnRandom()}
+
+      for(let i=items.length-1;i>=0;i--){
+        const it=items[i];updateItem(it,dt);
+        if(collide(it)){collect(it);items.splice(i,1);if(!running)return;continue}
+        if(it.y>H+70){if(missBreaksCombo(it.type))setCombo(0);items.splice(i,1)}
+      }
       for(let i=confetti.length-1;i>=0;i--){const c=confetti[i];c.x+=c.vx*dt;c.y+=c.vy*dt;c.vy+=260*dt;c.life-=dt;if(c.life<=0)confetti.splice(i,1)}
-      if(elapsed>=60){finish(true);return}
+      powerText();
+      if(rem<=0){finish(true);return}
     }
-    drawBg();items.forEach(drawItem);drawLeon();ctx.font='20px system-ui';ctx.textAlign='center';for(const c of confetti)ctx.fillText(c.icon,c.x,c.y);
+    drawBg();items.forEach(drawItem);drawLeon();ctx.font='20px system-ui';ctx.textAlign='center';for(const c of confetti)ctx.fillText(c.icon,c.x,c.y);drawToast();
     if(paused){ctx.fillStyle='rgba(0,0,0,.42)';ctx.fillRect(0,0,W,H);ctx.fillStyle='white';ctx.font='700 34px system-ui';ctx.textAlign='center';ctx.fillText('Pause',W/2,H/2)}
     raf=requestAnimationFrame(loop);
   }
+
   function setMove(dir,val){if(dir==='left')left=val;else right=val}
   for(const [ev,val] of [['pointerdown',true],['pointerup',false],['pointercancel',false],['pointerleave',false]]){
     leftBtn.addEventListener(ev,e=>{setMove('left',val);if(val&&leftBtn.setPointerCapture)leftBtn.setPointerCapture(e.pointerId)});
@@ -213,7 +395,8 @@
   document.addEventListener('keyup',e=>{if(['ArrowLeft','a','A'].includes(e.key))left=false;if(['ArrowRight','d','D'].includes(e.key))right=false});
   startBtn.addEventListener('click',reset);
   pauseBtn.addEventListener('click',()=>{if(!running)return;paused=!paused;pauseBtn.textContent=paused?'Weiter':'Pause';last=performance.now()});
-  drawBg();drawLeon();
+
+  scores=loadScores();renderScores();startMission();setCombo(0);powerText();drawBg();drawLeon();
 })();
 </script>
 </body>
