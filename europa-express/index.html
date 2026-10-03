@@ -26,7 +26,12 @@
     @media(max-width:800px){.dashboard,.below{grid-template-columns:1fr}.control{min-height:370px}.map-wrap{margin:0 8px 8px}.shell{padding-bottom:22px}svg{aspect-ratio:1000/650}.rail{padding:12px}.map-caption{font-size:11px}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;scroll-behavior:auto!important}}
   </style>
-<link rel="stylesheet" href="../game-interaction-guard.css">\n</head>
+<link rel="stylesheet" href="../game-interaction-guard.css">\n<style id="mobile-learning-polish">
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button,[role="button"],a,.choice,.cmd,.slot,.targetword{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button,[role="button"],.choice,.cmd,.slot,.targetword,[data-control],.joystick,.gamearea,.arena,.controls,.series,canvas{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+</style></head>
 <body>
 <div class="shell">
   <header class="top"><span class="brand">DMP · LERNWELT</span><a href="https://preukschas.github.io/Online-spielen-/">← Zur Spielzentrale</a></header>
