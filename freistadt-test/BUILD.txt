@@ -1,0 +1,3 @@
+FREISTADT v0.4 test build
+Source commit: 4bbdf46a7017c65cd7e30ef3b784fdcfcd5873d4
+Built: 2026-10-03T20:31:47Z
