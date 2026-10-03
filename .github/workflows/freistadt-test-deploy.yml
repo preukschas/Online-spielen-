@@ -51,17 +51,22 @@ jobs:
           path.write_text(html, encoding="utf-8")
           PY
 
-      - name: Replace public test build
+      - name: Prepare public test build
         run: |
-          rm -rf freistadt-test
-          mkdir -p freistadt-test
-          cp -R freistadt-test-src/dist/. freistadt-test/
-          printf 'FREISTADT v0.4 test build\nSource commit: %s\nBuilt: %s\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > freistadt-test/BUILD.txt
+          rm -rf /tmp/freistadt-test-build
+          mkdir -p /tmp/freistadt-test-build
+          cp -R freistadt-test-src/dist/. /tmp/freistadt-test-build/
+          printf 'FREISTADT v0.4 test build\nSource commit: %s\nBuilt: %s\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /tmp/freistadt-test-build/BUILD.txt
 
       - name: Commit test build
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --hard origin/main
+          rm -rf freistadt-test
+          mkdir -p freistadt-test
+          cp -R /tmp/freistadt-test-build/. freistadt-test/
           git add freistadt-test
           if git diff --cached --quiet; then
             echo "No build changes."
