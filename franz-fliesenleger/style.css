@@ -25,7 +25,7 @@ h1 span{font-weight:600;color:#b9ccd2}
 .best strong{display:block;color:var(--accent);font-size:1.35rem;letter-spacing:0}
 .hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
 .hud span{background:linear-gradient(180deg,#223844,#172932);border:1px solid #35505b;border-radius:12px;padding:10px 8px;text-align:center;font-weight:850;font-size:.86rem}
-.gameCard{background:linear-gradient(180deg,#182a33,#111e25);border:1px solid #36525f;border-radius:22px;padding:10px;box-shadow:0 26px 70px #0007}
+.gameCard{position:relative;background:linear-gradient(180deg,#182a33,#111e25);border:1px solid #36525f;border-radius:22px;padding:10px;box-shadow:0 26px 70px #0007}
 canvas{width:100%;height:auto;display:block;border-radius:16px;background:#d9d5c9;touch-action:manipulation}
 .meterPanel{padding:12px 6px 4px}
 .meterTitle{display:flex;justify-content:space-between;color:var(--muted);font-size:.86rem;margin-bottom:8px}
@@ -64,4 +64,29 @@ canvas{width:100%;height:auto;display:block;border-radius:16px;background:#d9d5c
   .hud{grid-template-columns:repeat(2,1fr)}
   .legend{grid-template-columns:repeat(2,1fr)}
   .panel{padding:19px}
+}
+
+.franzCharacter{
+  position:absolute;
+  z-index:4;
+  left:10px;
+  top:92px;
+  width:min(20%,190px);
+  min-width:145px;
+  height:auto;
+  max-height:58%;
+  object-fit:contain;
+  object-position:left bottom;
+  pointer-events:none;
+  filter:drop-shadow(0 12px 10px rgba(0,0,0,.34));
+}
+@media(max-width:700px){
+  .franzCharacter{
+    left:2px;
+    top:82px;
+    width:34%;
+    min-width:112px;
+    max-width:145px;
+    max-height:52%;
+  }
 }
