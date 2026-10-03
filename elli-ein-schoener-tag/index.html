@@ -12,7 +12,7 @@
 <body>
   <div class="ci-sky" aria-hidden="true"></div>
   <div class="app-shell">
-    <header class="topbar">
+    <header class="topbar" data-debug-id="elli.topbar">
       <button class="icon-button" id="homeButton" type="button" aria-label="Zur Tagesübersicht" title="Zur Übersicht">⌂</button>
       <div class="brand">
         <span class="brand-kicker">DMP Special · Elli</span>
@@ -31,9 +31,9 @@
 
   <template id="overviewTemplate">
     <section class="overview">
-      <section class="hero-card ci-hero" aria-label="Elli – Ein schöner Tag">
+      <section class="hero-card ci-hero" data-debug-id="elli.hero" aria-label="Elli – Ein schöner Tag">
         <div class="hero-portrait">
-          <img src="assets/elli-cartoon.webp?v=13" alt="Cartoon-Elli mit Brille und blauem Schal">
+          <img data-debug-id="elli.character.main" src="assets/elli-cartoon.webp?v=13" alt="Cartoon-Elli mit Brille und blauem Schal">
           <div class="welcome-bubble">Schön, dass du da bist! <span aria-hidden="true">♥</span></div>
         </div>
 
@@ -56,7 +56,7 @@
         </aside>
       </section>
 
-      <section class="journey-shell" aria-labelledby="journeyTitle">
+      <section class="journey-shell" data-debug-id="elli.journey" aria-labelledby="journeyTitle">
         <div class="journey-heading">
           <div>
             <span class="eyebrow">Dein Tag</span>
@@ -67,7 +67,7 @@
         <div class="scene-grid journey-grid" id="sceneGrid"></div>
       </section>
 
-      <section class="day-note" id="dayNote" aria-live="polite"></section>
+      <section class="day-note" data-debug-id="elli.status" id="dayNote" aria-live="polite"></section>
     </section>
   </template>
 
