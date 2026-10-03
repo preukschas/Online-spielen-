@@ -36,6 +36,6 @@ Die Startseite trennt bewusst zwischen zwei Bereichen:
 
 ## Stand
 
-- Planet unter Druck: öffentliche V17-Version in `planet-unter-druck/index.html`
+- Planet unter Druck: öffentliche V18-Version in `planet-unter-druck/index.html`
 - Moe's English World: aktueller geprüfter Stand in `moes-english-world/index.html`
 - Root-`index.html`: öffentliche Spielzentrale mit klarer Trennung zwischen Lernspielen und Spaß-Games
