@@ -8,6 +8,7 @@ const LOCK_KEY='dmpFunLockedUntilV1';
 const UNLOCK_MS=60*60*1000;
 const LOCK_MS=60*1000;
 const MAX_FAILS=3;
+let expiryTimer=null;
 
 function storage(){
   for(const candidate of [window.localStorage,window.sessionStorage]){
@@ -122,6 +123,16 @@ function removeGate(){
   if(g)g.remove();
   document.documentElement.classList.remove('dmp-fun-locked');
 }
+function armExpiry(options){
+  if(expiryTimer)clearTimeout(expiryTimer);
+  if(!store)return;
+  const ms=num(UNLOCK_KEY)-now();
+  if(ms<=0){
+    showGate(options||{});
+    return;
+  }
+  expiryTimer=setTimeout(()=>showGate(options||{}),ms+50);
+}
 function showGate(options){
   options=options||{};
   addGateStyle();
@@ -177,6 +188,7 @@ function showGate(options){
       if(result.ok){
         if(timer)clearTimeout(timer);
         removeGate();
+        if(options.relockOnExpiry)armExpiry(options);
         if(typeof options.onUnlock==='function')options.onUnlock();
       }else if(result.locked){
         refreshLock();
@@ -190,9 +202,10 @@ function showGate(options){
   if(document.body)render(); else document.addEventListener('DOMContentLoaded',render,{once:true});
 }
 function requireAccess(options){
-  options=options||{};
+  options=Object.assign({},options||{},{relockOnExpiry:true});
   if(isUnlocked()){
     document.documentElement.classList.remove('dmp-fun-locked');
+    armExpiry(options);
     return true;
   }
   document.documentElement.classList.add('dmp-fun-locked');
