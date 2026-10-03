@@ -41,7 +41,7 @@ let bossSpawned=false,shootHeld=false,shake=0,flash=0,phaseKey="",killsSinceDrop
 let soundOn=safeStore.get("sergeySplashSound","1")!=="0";
 let audioCtx=null;
 
-const keys={},touch=new Set(),enemies=[],shots=[],enemyShots=[],particles=[],pickups=[],floaters=[],rings=[];
+const keys={},touch=new Set(),gestureTouch=new Set(),enemies=[],shots=[],enemyShots=[],particles=[],pickups=[],floaters=[],rings=[];
 const p={x:W/2,y:H/2,r:22,speed:292,hp:5,maxHp:5,inv:0,fireCd:0,rapid:0,shield:0,mega:0,super:0};
 
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
@@ -277,10 +277,10 @@ function collect(u){
 
 function inputVector(){
   let x=0,y=0;
-  if(keys.ArrowLeft||keys.a||keys.A||touch.has("left"))x--;
-  if(keys.ArrowRight||keys.d||keys.D||touch.has("right"))x++;
-  if(keys.ArrowUp||keys.w||keys.W||touch.has("up"))y--;
-  if(keys.ArrowDown||keys.s||keys.S||touch.has("down"))y++;
+  if(keys.ArrowLeft||keys.a||keys.A||touch.has("left")||gestureTouch.has("left"))x--;
+  if(keys.ArrowRight||keys.d||keys.D||touch.has("right")||gestureTouch.has("right"))x++;
+  if(keys.ArrowUp||keys.w||keys.W||touch.has("up")||gestureTouch.has("up"))y--;
+  if(keys.ArrowDown||keys.s||keys.S||touch.has("down")||gestureTouch.has("down"))y++;
   const d=Math.hypot(x,y)||1;return{x:x/d,y:y/d};
 }
 
@@ -609,8 +609,39 @@ ui.soundBtn.addEventListener("click",()=>{
   soundOn=!soundOn;safeStore.set("sergeySplashSound",soundOn?"1":"0");ui.soundBtn.textContent=soundOn?"🔊":"🔇";if(soundOn)ensureAudio();
 });
 ui.soundBtn.textContent=soundOn?"🔊":"🔇";
+
+// Mobil/iPad: Das Spielfeld selbst wird zum virtuellen Joystick.
+// Ziehen/Wischen bewegt Sergey auch diagonal; D-Pad und Tastatur bleiben aktiv.
+canvas.style.touchAction="none";
+canvas.style.userSelect="none";
+canvas.style.webkitUserSelect="none";
+let moveGesture=null;
+function clearMoveGesture(){
+  moveGesture=null;
+  gestureTouch.clear();
+}
+function updateMoveGesture(e){
+  if(!moveGesture || moveGesture.id!==e.pointerId)return;
+  const dx=e.clientX-moveGesture.x,dy=e.clientY-moveGesture.y;
+  const dead=14;
+  gestureTouch.clear();
+  if(Math.abs(dx)>dead)gestureTouch.add(dx<0?"left":"right");
+  if(Math.abs(dy)>dead)gestureTouch.add(dy<0?"up":"down");
+  if(e.cancelable)e.preventDefault();
+}
+canvas.addEventListener("pointerdown",e=>{
+  if(!running||paused||(e.pointerType==="mouse"&&e.button!==0))return;
+  moveGesture={id:e.pointerId,x:e.clientX,y:e.clientY};
+  try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+  if(e.cancelable)e.preventDefault();
+},{passive:false});
+canvas.addEventListener("pointermove",updateMoveGesture,{passive:false});
+canvas.addEventListener("pointerup",e=>{if(moveGesture&&moveGesture.id===e.pointerId)clearMoveGesture();if(e.cancelable)e.preventDefault()},{passive:false});
+canvas.addEventListener("pointercancel",e=>{if(moveGesture&&moveGesture.id===e.pointerId)clearMoveGesture()},{passive:false});
+canvas.addEventListener("lostpointercapture",()=>clearMoveGesture());
+canvas.addEventListener("selectstart",e=>e.preventDefault());
 canvas.addEventListener("contextmenu",e=>e.preventDefault());
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&running)togglePause(true)});
+document.addEventListener("visibilitychange",()=>{clearMoveGesture();if(document.hidden&&running)togglePause(true)});
 
 window.__sergeySplashTest={
   snapshot:()=>({running,paused,elapsed,score,combo,enemies:enemies.length,shots:shots.length,enemyShots:enemyShots.length,pickups:pickups.length,hp:p.hp,super:p.super,bossSpawned}),
