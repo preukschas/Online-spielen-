@@ -14,14 +14,15 @@ Die Startseite beginnt mit einer **Weltenauswahl**:
 
 - **🧠 Lernwelt** – immer frei zugänglich
 - **🎮 Spielewelt** – durch eine vierstellige Eltern-PIN geschützt
+- **🎉 Specials** – besondere Spiele, ebenfalls mit der Eltern-PIN geschützt
 
-## PIN-Schutz der Spielewelt
+## PIN-Schutz von Spielewelt und Specials
 
 Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 
 - 3 falsche Versuche führen zu 60 Sekunden Sperrzeit.
-- Nach erfolgreicher Freigabe bleibt die Spielewelt 60 Minuten geöffnet.
-- Direkte URLs zu veröffentlichten reinen Spaß-Games prüfen die Freigabe ebenfalls.
+- Nach erfolgreicher Freigabe bleiben Spielewelt und Specials 60 Minuten geöffnet.
+- Direkte URLs zu veröffentlichten Nicht-Lernspielen prüfen die Freigabe ebenfalls.
 - Nach Ablauf der Freigabe wird ein geöffnetes Spaß-Game wieder durch die PIN-Sperre überlagert.
 - Es gilt auf allen Geräten dieselbe zentral veröffentlichte Eltern-PIN.
 - Eine PIN-Änderung erfolgt bewusst nur über einen neuen geprüften Veröffentlichungsstand, damit nicht jedes Gerät eine eigene PIN bekommt.
@@ -40,6 +41,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Spielewelt | Planet unter Druck | `/planet-unter-druck/` | `preukschas/DMP-Games` → `projects/tower-defense/` (V18) |
 | Spielewelt | Domi Run | `/domi-run/` | Entwickelte Standalone-Datei V0.2 |
 | Spielewelt | Ronja Race | `/ronja-race/` | `preukschas/DMP-Games` → PR #3 (V0.3) |
+| Specials | Leons Geschenk-Jagd | `/leon-geburtstag/` | Bereits entwickeltes Geburtstagsspiel |
 
 Der separat besprochene Weltraum-Shooter hat derzeit keine eigene Spieldatei. Die bereits entwickelte Weltraum-Abwehr ist Teil von Vokabel Quest und dort über das Lernen erreichbar.
 
@@ -48,12 +50,13 @@ Der separat besprochene Weltraum-Shooter hat derzeit keine eigene Spieldatei. Di
 1. Änderungen werden im jeweiligen privaten Entwicklungs-Repository entwickelt und getestet.
 2. Dort bleibt der maßgebliche Quellstand.
 3. Erst ein geprüfter Stand wird hier in den passenden öffentlichen Unterordner kopiert.
-4. Reine Spaß-Games müssen beim Veröffentlichen zusätzlich den gemeinsamen `fun-access.js`-Schutz laden.
+4. Alle Nicht-Lernspiele, einschließlich Specials, müssen beim Veröffentlichen zusätzlich den gemeinsamen `fun-access.js`-Schutz laden.
 5. Dateien in diesem Repository werden nicht als eigenständige Spielvariante weiterentwickelt.
 
 ## Stand
 
-- Alle sieben vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
+- Alle acht vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
 - Lernwelt: vier Spiele ohne Eltern-PIN.
 - Spielewelt: drei Spiele mit gemeinsamer PIN-Prüfung auch beim direkten URL-Aufruf.
+- Specials: Leons Geburtstagsspiel mit derselben PIN-Prüfung auch beim direkten URL-Aufruf.
 - Die Spielinhalte stammen aus bereits entwickelten Fassungen. Die beiden neuen Spaß-Games tragen nur die zentrale PIN-Einbindung zusätzlich.
