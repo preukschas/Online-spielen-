@@ -41,6 +41,11 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Lernwelt | Vokabel Quest | `/vokabel-quest/` | `preukschas/Lernspiele--bei-DMP` → `vokabel-quest/index.html` (V10) |
 | Lernwelt | Einmaleins Space | `/einmaleins-space/` | `preukschas/Lernspiele--bei-DMP` → `projects/einmaleins-space/` (V1.0) |
 | Lernwelt | Mario – Malermeister auf Tour | `/mario-maler/` | `preukschas/Lernspiele--bei-DMP` → `projects/mario-maler/` (V0.1) |
+| Lernwelt | Chaos-Labor | `/chaos-labor/` | `preukschas/Lernspiele--bei-DMP` → `projects/chaos-labor/` (V1.0) |
+| Lernwelt | Code-Knacker | `/code-knacker/` | `preukschas/Lernspiele--bei-DMP` → `projects/code-knacker/` (V1.0) |
+| Lernwelt | Wildnis-Boss | `/wildnis-boss/` | `preukschas/Lernspiele--bei-DMP` → `projects/wildnis-boss/` (V1.0) |
+| Lernwelt | Fake-Alarm! | `/fake-alarm/` | `preukschas/Lernspiele--bei-DMP` → `projects/fake-alarm/` (V1.0) |
+| Lernwelt | Stunt-Werkstatt | `/stunt-werkstatt/` | `preukschas/Lernspiele--bei-DMP` → `projects/stunt-werkstatt/` (V1.0) |
 | Lernwelt | Einmaleins Ringkampf | `/einmaleins-ringkampf/` | `preukschas/Lernspiele--bei-DMP` → `projects/einmaleins-ringkampf/` (V1.0) |
 | Lernwelt | Die sieben Siegel des Nils | `/sieben-siegel-des-nils/` | `preukschas/Lernspiele--bei-DMP` → `projects/sieben-siegel-des-nils/` (V1.0) |
 | Spielewelt | Planet unter Druck | `/planet-unter-druck/` | `preukschas/DMP-Games` → `projects/tower-defense/` (V18) |
@@ -63,8 +68,8 @@ Einmaleins Space ist ein eigenständiges Lernspiel. Die Weltraum-Abwehr innerhal
 
 ## Stand
 
-- Alle fünfzehn vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
-- Lernwelt: neun Spiele ohne Eltern-PIN.
-- Spielewelt: sechs Spiele mit gemeinsamer PIN-Prüfung auch beim direkten URL-Aufruf.
+- Alle zwanzig vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
+- Lernwelt: vierzehn Spiele ohne Eltern-PIN.
+- Spielewelt: fünf Spiele mit gemeinsamer PIN-Prüfung auch beim direkten URL-Aufruf.
 - Specials: Leons Geburtstagsspiel frei zugänglich ohne PIN und ohne Zeitsperre.
 - Die Spielinhalte stammen aus den jeweiligen Entwicklungsfassungen; Spaß-Games tragen zusätzlich die zentrale PIN-Einbindung.
