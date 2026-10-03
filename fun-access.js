@@ -1,10 +1,9 @@
 (function(){
 'use strict';
-const DEFAULT_PIN_HASH='70cc782d';
-const PIN_KEY='dmpFunPinHashV1';
-const UNLOCK_KEY='dmpFunUnlockedUntilV1';
-const FAIL_KEY='dmpFunFailedAttemptsV1';
-const LOCK_KEY='dmpFunLockedUntilV1';
+const CENTRAL_PIN_HASH='092b602e';
+const UNLOCK_KEY='dmpFunUnlockedUntilV2';
+const FAIL_KEY='dmpFunFailedAttemptsV2';
+const LOCK_KEY='dmpFunLockedUntilV2';
 const UNLOCK_MS=60*60*1000;
 const LOCK_MS=60*1000;
 const MAX_FAILS=3;
@@ -38,9 +37,6 @@ function num(key){
   const n=Number(store.getItem(key));
   return Number.isFinite(n)?n:0;
 }
-function pinHash(){
-  return store&&store.getItem(PIN_KEY)||DEFAULT_PIN_HASH;
-}
 function isUnlocked(){
   return num(UNLOCK_KEY)>now();
 }
@@ -53,7 +49,7 @@ function lockRemainingSeconds(){
 function checkPin(pin){
   const locked=lockRemainingSeconds();
   if(locked>0)return {ok:false,locked:true,seconds:locked};
-  if(hashPin(pin)===pinHash()){
+  if(hashPin(pin)===CENTRAL_PIN_HASH){
     if(store){
       store.setItem(UNLOCK_KEY,String(now()+UNLOCK_MS));
       store.setItem(FAIL_KEY,'0');
@@ -74,27 +70,6 @@ function checkPin(pin){
 }
 function lockNow(){
   if(store)store.removeItem(UNLOCK_KEY);
-}
-function changePin(oldPin,newPin){
-  if(!/^\d{4}$/.test(String(newPin)))return {ok:false,reason:'format'};
-  if(hashPin(oldPin)!==pinHash())return {ok:false,reason:'old'};
-  if(store){
-    store.setItem(PIN_KEY,hashPin(newPin));
-    store.setItem(UNLOCK_KEY,String(now()+UNLOCK_MS));
-    store.setItem(FAIL_KEY,'0');
-    store.removeItem(LOCK_KEY);
-  }
-  return {ok:true};
-}
-function resetToDefault(oldPin){
-  if(hashPin(oldPin)!==pinHash())return false;
-  if(store){
-    store.removeItem(PIN_KEY);
-    store.setItem(UNLOCK_KEY,String(now()+UNLOCK_MS));
-    store.setItem(FAIL_KEY,'0');
-    store.removeItem(LOCK_KEY);
-  }
-  return true;
 }
 function addGateStyle(){
   if(document.getElementById('dmpFunGateStyle'))return;
@@ -227,8 +202,6 @@ window.DMPFunAccess={
   requireAccess,
   checkPin,
   lockNow,
-  changePin,
-  resetToDefault,
   remainingUnlockMinutes,
   lockRemainingSeconds
 };
