@@ -1,0 +1,19 @@
+/* DMP Games – shared interaction guard
+   Prevents accidental text/image selection during play, especially on iPhone/iPad.
+   Editable fields stay selectable so typing remains usable. */
+html, body, body * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+html, body {
+  -webkit-touch-callout: none;
+}
+input, textarea, select, [contenteditable="true"], [contenteditable=""] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+img, svg, canvas {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
