@@ -15,9 +15,12 @@
     --ink:#3a2a20;--cream:#fff0b8;--leaf:#3f8f3d;--berry:#d84662;--sky:#69c6e5;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  #wrap,#wrap *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none}
+  #wrap.playing{touch-action:none;overscroll-behavior:none}
   html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#26351f;color:var(--text);font-family:"Trebuchet MS",ui-rounded,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
   button{font:inherit}
   #wrap{position:fixed;inset:0;overflow:hidden;background:#314b2a}
+  #wrap.playing canvas,#wrap.playing #controls,#wrap.playing .ctrl,#wrap.playing #boostBtn{touch-action:none}
   canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
   .hidden{display:none!important}
   #hud{position:absolute;top:max(9px,env(safe-area-inset-top));left:9px;right:9px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-items:start;z-index:3;pointer-events:none}#hud .missionBox{grid-column:1/-1;padding-top:6px;padding-bottom:7px}
@@ -63,12 +66,13 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id);
-const canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
+const wrap=$('wrap'),canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
 const overlay=$('overlay'),panel=$('panel'),hud=$('hud'),subHud=$('subHud'),controls=$('controls'),actions=$('actions'),boostBtn=$('boostBtn');
 const distEl=$('distance'),scoreEl=$('score'),coinEl=$('coins'),missionEl=$('missionText'),missionBar=$('missionBar'),comboPill=$('comboPill'),powerPill=$('powerPill');
 const soundBtn=$('soundBtn'),pauseBtn=$('pauseBtn'),toast=$('toast'),banner=$('banner');
 const quip=$('quip'),quipText=$('quipText'),cutin=$('cutin'),cutinKick=$('cutinKick'),cutinTitle=$('cutinTitle'),cutinText=$('cutinText');
 let W=0,H=0,DPR=1,last=0,mode='menu',paused=false,audio=null,view='home',touchStart=null,now=0,lastQuipAt=-99;
+const SWIPE_MIN=30,SWIPE_AXIS_RATIO=1.12;
 const MAXZ=1320, LANES=[-1,0,1], SAVE_KEY='ronjaRaceSaveV2';
 const prefersReduced=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const defaultSave={version:3,best:0,bestScore:0,bank:0,totalHearts:0,runs:0,totalDistance:0,bestCombo:1,missions:0,sound:true,tutorialSeen:false,upgrades:{shield:0,magnet:0,luck:0,heart:0},skin:'berry',unlocked:['berry'],achievements:{}};
@@ -113,12 +117,12 @@ function showToast(t,ms=900){toast.textContent=t;toast.classList.add('showToast'
 function showBanner(top,big,ms=1450){banner.querySelector('span').textContent=top;banner.querySelector('b').textContent=big;banner.classList.add('bannerShow');clearTimeout(showBanner.t);showBanner.t=setTimeout(()=>banner.classList.remove('bannerShow'),ms)}
 function rr(x,y,w,h,r){const q=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+q,y);ctx.arcTo(x+w,y,x+w,y+h,q);ctx.arcTo(x+w,y+h,x,y+h,q);ctx.arcTo(x,y+h,x,y,q);ctx.arcTo(x,y,x+w,y,q);ctx.closePath()}
 function box(x,y,w,h,r,fill,stroke){rr(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}}
-function setGameUi(on){[hud,subHud,controls,actions,boostBtn].forEach(el=>el.classList.toggle('hidden',!on));overlay.classList.toggle('hidden',on)}
+function setGameUi(on){[hud,subHud,controls,actions,boostBtn].forEach(el=>el.classList.toggle('hidden',!on));overlay.classList.toggle('hidden',on);wrap.classList.toggle('playing',on)}
 function money(n){return Math.max(0,Math.floor(n))}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function renderMenu(next='home'){mode='menu';paused=false;view=next;setGameUi(false);overlay.classList.remove('hidden');
  const tabs='<div class="tabs"><button class="tab '+(view==='home'?'active':'')+'" data-view="home">Spielen</button><button class="tab '+(view==='garage'?'active':'')+'" data-view="garage">Werkstatt</button><button class="tab '+(view==='stats'?'active':'')+'" data-view="stats">Statistik</button></div>';
- if(view==='home') panel.innerHTML='<div class="eyebrow">DMP Games · Version 0.5</div><div class="retroBadge">Retro Cartoon Edition</div><div class="title">RONJA<br>RACE</div><div class="subtitle">Ein wildes Retro-Cartoon-Rennen durch den Schwarzwald – jetzt mit Ronja-Reaktionen, Mini-Cut-ins, neuen Hindernissen und reaktivem Spielshow-Sound.</div>'+tabs+'<div class="stats"><div class="stat"><b>'+save.best+'</b><span>Bestwert m</span></div><div class="stat"><b>'+save.bestScore+'</b><span>Bestscore</span></div><div class="stat"><b>♥ '+save.bank+'</b><span>Werkstatt</span></div></div><div class="chips"><span class="chip">← → Spur</span><span class="chip">↑ Springen</span><span class="chip">↓ Ducken</span><span class="chip">B = Turbo</span><span class="chip">Touch + Wischen</span></div><button class="bigbtn" id="startBtn">Auf die Strecke!</button><div class="small">Eigenständiger Endless-Runner. Keine fremden Figuren, Grafiken oder Originalstrecken werden verwendet.</div>';
+ if(view==='home') panel.innerHTML='<div class="eyebrow">DMP Games · Version 0.5.1</div><div class="retroBadge">Retro Cartoon Edition</div><div class="title">RONJA<br>RACE</div><div class="subtitle">Ein wildes Retro-Cartoon-Rennen durch den Schwarzwald – jetzt mit Ronja-Reaktionen, Mini-Cut-ins, neuen Hindernissen und reaktivem Spielshow-Sound.</div>'+tabs+'<div class="stats"><div class="stat"><b>'+save.best+'</b><span>Bestwert m</span></div><div class="stat"><b>'+save.bestScore+'</b><span>Bestscore</span></div><div class="stat"><b>♥ '+save.bank+'</b><span>Werkstatt</span></div></div><div class="chips"><span class="chip">← → Spur</span><span class="chip">↑ Springen</span><span class="chip">↓ Ducken</span><span class="chip">B = Turbo</span><span class="chip">Wischen: ← → ↑ ↓</span></div><button class="bigbtn" id="startBtn">Auf die Strecke!</button><div class="small">Eigenständiger Endless-Runner. Keine fremden Figuren, Grafiken oder Originalstrecken werden verwendet.</div>';
  if(view==='garage') panel.innerHTML='<div class="eyebrow">Draisine & Fortschritt</div><div class="title" style="font-size:clamp(32px,6vw,54px)">WERKSTATT</div>'+tabs+'<div class="bank">♥ '+save.bank+' Herzen verfügbar</div><div class="notice">Alle Verbesserungen werden nur lokal in diesem Browser gespeichert. Es gibt keine Käufe mit echtem Geld.</div><div class="shopGrid">'+Object.entries(upgrades).map(([id,u])=>upgradeCard(id,u)).join('')+'</div><h2 style="font-size:17px;margin:20px 0 9px">Draisinen-Look</h2><div class="shopGrid">'+Object.entries(skins).map(([id,s])=>skinCard(id,s)).join('')+'</div>';
  if(view==='stats') panel.innerHTML='<div class="eyebrow">Deine Fahrten</div><div class="title" style="font-size:clamp(32px,6vw,54px)">STATISTIK</div>'+tabs+'<div class="stats"><div class="stat"><b>'+save.best+'</b><span>Bestwert m</span></div><div class="stat"><b>'+save.bestScore+'</b><span>Bestscore</span></div><div class="stat"><b>'+save.runs+'</b><span>Fahrten</span></div><div class="stat"><b>'+Math.floor(save.totalDistance)+'</b><span>Gesamt m</span></div><div class="stat"><b>'+save.totalHearts+'</b><span>Herzen</span></div><div class="stat"><b>×'+save.bestCombo+'</b><span>Beste Combo</span></div><div class="stat"><b>'+save.missions+'</b><span>Missionen</span></div></div><h2 style="font-size:17px;margin:16px 0 9px">Abzeichen</h2>'+achievementList()+'<div class="row"><button class="ghostbtn" id="resetStats">Nur Statistik zurücksetzen</button></div>';
  bindMenu();
@@ -142,10 +146,32 @@ function activateTurbo(){if(mode!=='play'||paused||world.turboMeter<100||world.t
 boostBtn.onclick=activateTurbo;
 function input(act){if(mode!=='play'||paused)return;if(act==='left'&&player.lane>-1){player.lane--;player.tilt=-1;world.lastLaneChangeAt=now;hapticMove()}else if(act==='right'&&player.lane<1){player.lane++;player.tilt=1;world.lastLaneChangeAt=now;hapticMove()}else if(act==='jump'&&player.jumpY<=1){player.jumpV=545;beep(520,.045,'triangle',.022)}else if(act==='duck'){player.duck=.62;beep(230,.035,'square',.018)}}
 function hapticMove(){beep(330+player.lane*25,.025,'square',.012);vibrate(6)}
-document.querySelectorAll('[data-act]').forEach(b=>{b.addEventListener('pointerdown',e=>{e.preventDefault();b.classList.add('active');input(b.dataset.act)});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,()=>b.classList.remove('active')))})
+document.querySelectorAll('[data-act]').forEach(b=>{b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();b.classList.add('active');input(b.dataset.act)});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,e=>{e.stopPropagation();b.classList.remove('active')}))})
 addEventListener('keydown',e=>{const k=e.key,m={ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right',ArrowUp:'jump',w:'jump',W:'jump',' ':'jump',ArrowDown:'duck',s:'duck',S:'duck'};if(m[k]){e.preventDefault();input(m[k])}if(k==='b'||k==='B')activateTurbo();if(k==='p'||k==='P'||k==='Escape')togglePause()});
-canvas.addEventListener('pointerdown',e=>{touchStart={x:e.clientX,y:e.clientY,t:performance.now()}});canvas.addEventListener('pointerup',e=>{if(!touchStart||mode!=='play'||paused)return;const dx=e.clientX-touchStart.x,dy=e.clientY-touchStart.y,d=Math.hypot(dx,dy);touchStart=null;if(d<26)return;if(Math.abs(dx)>Math.abs(dy))input(dx<0?'left':'right');else input(dy<0?'jump':'duck')});
-canvas.addEventListener('contextmenu',e=>e.preventDefault());
+function swipeTargetBlocked(target){return !!(target&&target.closest&&target.closest('button'))}
+function clearSwipe(pointerId){if(!touchStart)return;if(pointerId==null||touchStart.id===pointerId)touchStart=null}
+function handleSwipeMove(e){
+ if(!touchStart||touchStart.id!==e.pointerId||touchStart.fired||mode!=='play'||paused)return;
+ const dx=e.clientX-touchStart.x,dy=e.clientY-touchStart.y,ax=Math.abs(dx),ay=Math.abs(dy),threshold=Math.max(SWIPE_MIN,Math.min(44,W*.065));
+ if(Math.max(ax,ay)<threshold)return;
+ if(ax>ay*SWIPE_AXIS_RATIO){touchStart.fired=true;input(dx<0?'left':'right')}
+ else if(ay>ax*SWIPE_AXIS_RATIO){touchStart.fired=true;input(dy<0?'jump':'duck')}
+}
+wrap.addEventListener('pointerdown',e=>{
+ if(mode!=='play'||paused||swipeTargetBlocked(e.target))return;
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ touchStart={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now(),fired:false};
+ try{wrap.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();
+});
+wrap.addEventListener('pointermove',e=>{if(touchStart&&touchStart.id===e.pointerId){handleSwipeMove(e);e.preventDefault()}},{passive:false});
+wrap.addEventListener('pointerup',e=>{if(touchStart&&touchStart.id===e.pointerId){handleSwipeMove(e);clearSwipe(e.pointerId)}});
+wrap.addEventListener('pointercancel',e=>clearSwipe(e.pointerId));
+wrap.addEventListener('lostpointercapture',e=>clearSwipe(e.pointerId));
+wrap.addEventListener('selectstart',e=>{if(mode==='play')e.preventDefault()});
+wrap.addEventListener('contextmenu',e=>{if(mode==='play')e.preventDefault()});
+wrap.addEventListener('touchstart',e=>{if(mode==='play'&&!swipeTargetBlocked(e.target))e.preventDefault()},{passive:false});
+wrap.addEventListener('touchmove',e=>{if(mode==='play'&&!swipeTargetBlocked(e.target))e.preventDefault()},{passive:false});
 function togglePause(){if(mode!=='play')return;paused=!paused;pauseBtn.textContent=paused?'▶':'Ⅱ';showToast(paused?'Pause':'Weiter');if(!paused)last=performance.now()}
 pauseBtn.onclick=togglePause;soundBtn.onclick=()=>{sound=!sound;save.sound=sound;persist();soundBtn.textContent=sound?'♪':'×';if(sound)beep(700,.06,'triangle',.035)};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='play'&&!paused)togglePause()});
