@@ -56,8 +56,8 @@ Der separat besprochene Weltraum-Shooter hat derzeit keine eigene Spieldatei. Di
 
 ## Stand
 
-- Alle acht vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
-- Lernwelt: vier Spiele ohne Eltern-PIN.
+- Alle neun vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
+- Lernwelt: fünf Spiele ohne Eltern-PIN.
 - Spielewelt: drei Spiele mit gemeinsamer PIN-Prüfung auch beim direkten URL-Aufruf.
 - Specials: Leons Geburtstagsspiel mit derselben PIN-Prüfung auch beim direkten URL-Aufruf.
 - Die Spielinhalte stammen aus bereits entwickelten Fassungen. Die beiden neuen Spaß-Games tragen nur die zentrale PIN-Einbindung zusätzlich.
