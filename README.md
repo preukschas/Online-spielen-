@@ -68,8 +68,8 @@ Einmaleins Space ist ein eigenständiges Lernspiel. Die Weltraum-Abwehr innerhal
 
 ## Stand
 
-- Alle zwanzig vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
+- Alle einundzwanzig vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
 - Lernwelt: vierzehn Spiele ohne Eltern-PIN.
-- Spielewelt: fünf Spiele mit gemeinsamer PIN-Prüfung auch beim direkten URL-Aufruf.
+- Spielewelt: sechs Spiele mit gemeinsamer PIN-Prüfung auch beim direkten URL-Aufruf.
 - Specials: Leons Geburtstagsspiel frei zugänglich ohne PIN und ohne Zeitsperre.
 - Die Spielinhalte stammen aus den jeweiligen Entwicklungsfassungen; Spaß-Games tragen zusätzlich die zentrale PIN-Einbindung.
