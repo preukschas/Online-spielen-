@@ -10,12 +10,15 @@ const LOCK_MS=60*1000;
 const MAX_FAILS=3;
 
 function storage(){
-  try{
-    const t='__dmp_fun_test__';
-    localStorage.setItem(t,'1');
-    localStorage.removeItem(t);
-    return localStorage;
-  }catch(e){return null;}
+  for(const candidate of [window.localStorage,window.sessionStorage]){
+    try{
+      const t='__dmp_fun_test__';
+      candidate.setItem(t,'1');
+      candidate.removeItem(t);
+      return candidate;
+    }catch(e){}
+  }
+  return null;
 }
 const store=storage();
 
@@ -70,7 +73,6 @@ function checkPin(pin){
 }
 function lockNow(){
   if(store)store.removeItem(UNLOCK_KEY);
-  document.documentElement.classList.add('dmp-fun-locked');
 }
 function changePin(oldPin,newPin){
   if(!/^\d{4}$/.test(String(newPin)))return {ok:false,reason:'format'};
@@ -131,6 +133,7 @@ function showGate(options){
     gate.setAttribute('role','dialog');
     gate.setAttribute('aria-modal','true');
     gate.setAttribute('aria-label','PIN für Spaß-Games');
+    const backHref=options.backHref||((location.pathname.replace(/\/+$/,'').split('/').length>2)?'../':'./');
     gate.innerHTML=`<div class="dmpGateCard">
       <div class="dmpGateIcon" aria-hidden="true">🔐🎮</div>
       <div style="color:#f2c66d;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase">Spaß-Games geschützt</div>
@@ -141,7 +144,7 @@ function showGate(options){
         <button type="submit">Spielewelt freischalten</button>
       </form>
       <div class="dmpGateMsg" id="dmpGateMsg" aria-live="polite"></div>
-      <a href="../">← Zur Lern- und Spielauswahl</a>
+      <a href="${backHref}">← Zur Lern- und Spielauswahl</a>
       <div class="dmpGateSmall">Nach richtiger PIN bleibt die Spielewelt 60 Minuten freigeschaltet.</div>
     </div>`;
     document.body.appendChild(gate);
