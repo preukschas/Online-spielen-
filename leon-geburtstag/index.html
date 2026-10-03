@@ -410,6 +410,38 @@
   }
 
   function setMove(dir,val){if(dir==='left')left=val;else right=val}
+
+  // Mobil/iPad: Direkt im Spielfeld ziehen oder wischen bewegt Leon zur Fingerposition.
+  // Die bisherigen Links/Rechts-Tasten bleiben als Fallback erhalten.
+  let leonDragPointer=null;
+  function moveLeonToPointer(e){
+    if(!running||paused)return;
+    const r=canvas.getBoundingClientRect();
+    const x=(e.clientX-r.left)/Math.max(1,r.width)*W;
+    leon.x=clamp(x,42,W-42);
+  }
+  canvas.addEventListener('pointerdown',e=>{
+    if(!running||paused||(e.pointerType==='mouse'&&e.button!==0))return;
+    leonDragPointer=e.pointerId;
+    left=false;right=false;
+    moveLeonToPointer(e);
+    try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+  canvas.addEventListener('pointermove',e=>{
+    if(leonDragPointer!==e.pointerId)return;
+    moveLeonToPointer(e);
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+  function endLeonDrag(e){
+    if(leonDragPointer===e.pointerId)leonDragPointer=null;
+    if(e.cancelable)e.preventDefault();
+  }
+  canvas.addEventListener('pointerup',endLeonDrag,{passive:false});
+  canvas.addEventListener('pointercancel',endLeonDrag,{passive:false});
+  canvas.addEventListener('lostpointercapture',()=>{leonDragPointer=null});
+  canvas.addEventListener('selectstart',e=>e.preventDefault());
+
   for(const [ev,val] of [['pointerdown',true],['pointerup',false],['pointercancel',false],['pointerleave',false]]){
     leftBtn.addEventListener(ev,e=>{setMove('left',val);if(val&&leftBtn.setPointerCapture)leftBtn.setPointerCapture(e.pointerId)});
     rightBtn.addEventListener(ev,e=>{setMove('right',val);if(val&&rightBtn.setPointerCapture)rightBtn.setPointerCapture(e.pointerId)});
