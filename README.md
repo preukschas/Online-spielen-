@@ -10,16 +10,21 @@ GitHub Pages:
 
 `https://preukschas.github.io/Online-spielen-/`
 
+Die Startseite trennt bewusst zwischen zwei Bereichen:
+
+- **Lernspiele** – Entwicklung in `preukschas/Lernspiele--bei-DMP`
+- **Spaß-Games** – Entwicklung in `preukschas/DMP-Games`
+
 ## Veröffentlichte Spiele
 
-| Spiel | Öffentlicher Pfad | Entwicklungsquelle |
-|---|---|---|
-| Moe's English World | `/moes-english-world/` | `preukschas/Lernspiele--bei-DMP` → `projects/moes-english-world/` |
-| Planet unter Druck | `/planet-unter-druck/` | `preukschas/DMP-Games` → `projects/tower-defense/` |
+| Bereich | Spiel | Öffentlicher Pfad | Entwicklungsquelle |
+|---|---|---|---|
+| Lernspiele | Moe's English World | `/moes-english-world/` | `preukschas/Lernspiele--bei-DMP` → `projects/moes-english-world/` |
+| Spaß-Games | Planet unter Druck | `/planet-unter-druck/` | `preukschas/DMP-Games` → `projects/tower-defense/` |
 
 ## Geplant
 
-- Domi Run → später als eigener Unterordner
+- Spaß-Games: Domi Run → später als eigener Unterordner
 
 ## Veröffentlichungsregel
 
@@ -30,6 +35,6 @@ GitHub Pages:
 
 ## Stand
 
-- Planet unter Druck: bisherige öffentliche V17-Version in `planet-unter-druck/index.html`
+- Planet unter Druck: öffentliche V17-Version in `planet-unter-druck/index.html`
 - Moe's English World: aktueller geprüfter Stand in `moes-english-world/index.html`
-- Root-`index.html`: öffentliche Spielzentrale
+- Root-`index.html`: öffentliche Spielzentrale mit klarer Trennung zwischen Lernspielen und Spaß-Games
