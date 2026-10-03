@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Leons Geschenk-Jagd</title>\n  <script src="../fun-access.js"></script>\n  <script>DMPFunAccess.requireAccess({backHref:'../'});</script>
+  <style>
+    :root{color-scheme:dark;--bg:#121622;--panel:#1d2331;--card:#242c3d;--text:#f6f7fb;--muted:#b9c1d2;--border:#3a455c;--accent:#f4b73f}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(circle at 50% 0,#283149 0,#121622 55%);color:var(--text);min-height:100svh}
+    main{width:min(100%,840px);margin:0 auto;padding:16px}
+    h1{font-size:clamp(24px,5vw,38px);margin:2px 0 4px;text-align:center}
+    .sub{text-align:center;color:var(--muted);margin:0 0 14px}
+    .hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px}
+    .pill{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-size:14px}
+    .stage{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:18px;background:#171c29}
+    canvas{display:block;width:100%;height:auto;touch-action:none}
+    .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(7,9,14,.62)}
+    .overlay[hidden]{display:none}
+    .dialog{width:min(100%,430px);padding:22px;border-radius:20px;background:rgba(29,35,49,.97);border:1px solid var(--border);text-align:center}
+    .emoji{font-size:44px}
+    .controls{display:flex;gap:12px;justify-content:center;align-items:center;margin-top:12px}
+    button{font:inherit;color:inherit;cursor:pointer}
+    .move,.secondary,.primary{min-height:52px;border-radius:14px;border:1px solid var(--border);font-weight:800}
+    .move{min-width:76px;background:var(--card);font-size:24px;touch-action:none}
+    .secondary{padding:0 18px;background:var(--card)}
+    .primary{width:100%;background:var(--accent);color:#17130a;border-color:#d69a21;padding:0 18px}
+    .help{text-align:center;color:var(--muted);font-size:13px;margin:10px 0 0}
+    button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+    @media (max-width:480px){main{padding:10px}.controls{gap:8px}.move{min-width:68px}.secondary{padding:0 12px}}
+  </style>
+</head>
+<body>
+<main id="game">
+  <h1>🎂 Leons Geschenk-Jagd</h1>
+  <p class="sub">Das Geburtstagsspiel für Leon</p>
+
+  <div class="hud" aria-label="Spielstand">
+    <div class="pill">🎁 Punkte: <strong id="score">0</strong></div>
+    <div class="pill">⏱️ Zeit: <strong id="time">45</strong>s</div>
+    <div class="pill">❤️ Leben: <strong id="lives">3</strong></div>
+    <div class="pill">Level <strong id="level">1</strong></div>
+  </div>
+
+  <section class="stage">
+    <canvas id="canvas" width="720" height="460" aria-label="Leons Geburtstagsspiel"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="dialog">
+        <div class="emoji">🎂🎈🎁</div>
+        <h2>Alles Gute, Leon!</h2>
+        <p>Fange Geschenke, Ballons, Sterne und Kuchen. Weiche Gewitterwolken aus. Kurz vor Schluss kommt die große Geburtstagstorte.</p>
+        <button class="primary" id="start" type="button">Spiel starten</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="controls">
+    <button class="move" id="left" type="button" aria-label="Nach links">◀</button>
+    <button class="secondary" id="pause" type="button">Pause</button>
+    <button class="move" id="right" type="button" aria-label="Nach rechts">▶</button>
+  </div>
+  <p class="help">iPhone/iPad: Pfeile gedrückt halten · Tastatur: ← → oder A/D</p>
+  <div id="status" aria-live="polite" style="position:absolute;left:-9999px"></div>
+</main>
+
+<script>
+(()=>{
+  const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+  const scoreEl=document.getElementById('score'),timeEl=document.getElementById('time'),livesEl=document.getElementById('lives'),levelEl=document.getElementById('level');
+  const overlay=document.getElementById('overlay'),startBtn=document.getElementById('start'),pauseBtn=document.getElementById('pause'),status=document.getElementById('status');
+  const leftBtn=document.getElementById('left'),rightBtn=document.getElementById('right');
+  const W=720,H=460;
+  let running=false,paused=false,last=0,elapsed=0,spawnClock=0,score=0,lives=3,level=1,items=[],confetti=[],cakeSpawned=false,raf=0,left=false,right=false;
+  const leon={x:W/2,y:H-86,w:66,h:78,speed:330};
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function rand(a,b){return a+Math.random()*(b-a)}
+  function reset(){
+    running=true;paused=false;last=performance.now();elapsed=0;spawnClock=0;score=0;lives=3;level=1;items=[];confetti=[];cakeSpawned=false;leon.x=W/2;
+    scoreEl.textContent='0';timeEl.textContent='45';livesEl.textContent='3';levelEl.textContent='1';pauseBtn.textContent='Pause';overlay.hidden=true;
+    cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+  }
+  function spawn(type){
+    const size=type==='bigcake'?58:type==='cloud'?42:36;
+    items.push({type,x:rand(28,W-28),y:-45,size,vy:type==='bigcake'?105:rand(105,150)+(level-1)*24,rot:rand(-.25,.25)});
+  }
+  function burst(x,y){
+    const icons=['🎉','✨','🎊','⭐'];
+    for(let i=0;i<(reduced?4:12);i++) confetti.push({x,y,vx:rand(-100,100),vy:rand(-170,-60),life:rand(.5,1.1),icon:icons[i%icons.length]});
+  }
+  function drawLeon(){
+    const x=leon.x,y=leon.y;ctx.save();ctx.translate(x,y);
+    ctx.fillStyle='#f2c39e';ctx.beginPath();ctx.arc(0,-42,18,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#b9824f';ctx.beginPath();ctx.arc(0,-49,19,Math.PI,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#b9824f';ctx.lineWidth=4;
+    for(let i=-13;i<=13;i+=6){ctx.beginPath();ctx.moveTo(i,-58);ctx.lineTo(i+5,-66+Math.abs(i)*.15);ctx.stroke()}
+    ctx.fillStyle='#17233f';ctx.beginPath();ctx.roundRect(-25,-24,50,46,10);ctx.fill();
+    ctx.fillStyle='#dceafb';ctx.beginPath();ctx.moveTo(-12,-23);ctx.lineTo(0,-8);ctx.lineTo(12,-23);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#17233f';ctx.beginPath();ctx.ellipse(-24,23,20,10,-.4,0,Math.PI*2);ctx.ellipse(24,23,20,10,.4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#f5f7fb';ctx.beginPath();ctx.roundRect(-35,29,29,12,6);ctx.roundRect(6,29,29,12,6);ctx.fill();
+    ctx.fillStyle='#f2c39e';ctx.beginPath();ctx.arc(0,7,8,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#31567d';ctx.beginPath();ctx.arc(-6,-44,2.1,0,Math.PI*2);ctx.arc(6,-44,2.1,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#9c4e4a';ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(0,-38,7,.15,Math.PI-.15);ctx.stroke();
+    ctx.restore();
+  }
+  function drawItem(it){
+    ctx.save();ctx.translate(it.x,it.y);ctx.rotate(it.rot);ctx.font=it.size+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    const icon=it.type==='gift'?'🎁':it.type==='balloon'?'🎈':it.type==='cake'?'🍰':it.type==='star'?'⭐':it.type==='cloud'?'🌩️':'🎂';
+    ctx.fillText(icon,0,0);ctx.restore();
+  }
+  function drawBg(){
+    ctx.clearRect(0,0,W,H);
+    const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1b2130');g.addColorStop(1,'#111520');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,255,255,.08)';
+    for(let i=0;i<18;i++){ctx.beginPath();ctx.arc((i*83)%W,35+(i%4)*58,2+(i%3),0,Math.PI*2);ctx.fill()}
+    ctx.font='28px system-ui';ctx.textAlign='center';ctx.fillText('🎈',55,65);ctx.fillText('🎈',665,95);ctx.fillText('🎉',120,145);ctx.fillText('🎊',600,170);
+    ctx.fillStyle='rgba(255,255,255,.10)';ctx.fillRect(0,H-36,W,36);
+  }
+  function collide(it){return Math.abs(it.x-leon.x)<(it.size*.42+leon.w*.35)&&Math.abs(it.y-(leon.y-4))<(it.size*.42+leon.h*.38)}
+  function reward(it){
+    if(it.type==='cloud'){
+      lives--;livesEl.textContent=lives;status.textContent='Autsch, Gewitterwolke!';
+      if(lives<=0){finish(false);return}
+    }else{
+      const pts=it.type==='gift'?10:it.type==='balloon'?6:it.type==='cake'?18:it.type==='star'?25:60;
+      score+=pts;scoreEl.textContent=score;burst(it.x,it.y);status.textContent=pts+' Punkte!';
+    }
+  }
+  function finish(won){
+    running=false;cancelAnimationFrame(raf);overlay.hidden=false;
+    overlay.innerHTML='<div class="dialog"><div class="emoji">'+(won?'🎂🏆':'🌩️')+'</div><h2>'+(won?'Happy Birthday, Leon!':'Fast geschafft!')+'</h2><p>Du hast <strong>'+score+' Punkte</strong> gesammelt. '+(score>=220?'Geburtstags-Profi! 🎉':score>=130?'Stark gespielt! 🎁':'Noch eine Runde? 🎈')+'</p><button class="primary" id="again" type="button">Noch einmal spielen</button></div>';
+    document.getElementById('again').addEventListener('click',reset);
+  }
+  function loop(t){
+    if(!running)return;
+    const dt=Math.min((t-last)/1000,.033);last=t;
+    if(!paused){
+      elapsed+=dt;spawnClock+=dt;
+      timeEl.textContent=Math.max(0,Math.ceil(45-elapsed));
+      const nl=elapsed<15?1:elapsed<30?2:3;if(nl!==level){level=nl;levelEl.textContent=level;burst(W/2,100)}
+      if(left)leon.x-=leon.speed*dt;if(right)leon.x+=leon.speed*dt;leon.x=Math.max(38,Math.min(W-38,leon.x));
+      const interval=Math.max(.34,.72-(level-1)*.12);
+      if(spawnClock>interval){spawnClock=0;const r=Math.random();spawn(r<.10?'cloud':r<.25?'cake':r<.34?'star':r<.64?'balloon':'gift')}
+      if(elapsed>37&&!cakeSpawned){cakeSpawned=true;spawn('bigcake')}
+      for(let i=items.length-1;i>=0;i--){const it=items[i];it.y+=it.vy*dt;if(collide(it)){reward(it);items.splice(i,1);if(!running)return;continue}if(it.y>H+60)items.splice(i,1)}
+      for(let i=confetti.length-1;i>=0;i--){const c=confetti[i];c.x+=c.vx*dt;c.y+=c.vy*dt;c.vy+=260*dt;c.life-=dt;if(c.life<=0)confetti.splice(i,1)}
+      if(elapsed>=45){finish(true);return}
+    }
+    drawBg();items.forEach(drawItem);drawLeon();ctx.font='20px system-ui';ctx.textAlign='center';for(const c of confetti)ctx.fillText(c.icon,c.x,c.y);
+    if(paused){ctx.fillStyle='rgba(0,0,0,.42)';ctx.fillRect(0,0,W,H);ctx.fillStyle='white';ctx.font='700 34px system-ui';ctx.textAlign='center';ctx.fillText('Pause',W/2,H/2)}
+    raf=requestAnimationFrame(loop);
+  }
+  function setMove(dir,val){if(dir==='left')left=val;else right=val}
+  for(const [ev,val] of [['pointerdown',true],['pointerup',false],['pointercancel',false],['pointerleave',false]]){
+    leftBtn.addEventListener(ev,e=>{setMove('left',val);if(val&&leftBtn.setPointerCapture)leftBtn.setPointerCapture(e.pointerId)});
+    rightBtn.addEventListener(ev,e=>{setMove('right',val);if(val&&rightBtn.setPointerCapture)rightBtn.setPointerCapture(e.pointerId)});
+  }
+  document.addEventListener('pointerup',()=>{left=false;right=false});
+  document.addEventListener('pointercancel',()=>{left=false;right=false});
+  window.addEventListener('blur',()=>{left=false;right=false});
+  document.addEventListener('keydown',e=>{if(['ArrowLeft','a','A'].includes(e.key)){left=true;e.preventDefault()}if(['ArrowRight','d','D'].includes(e.key)){right=true;e.preventDefault()}});
+  document.addEventListener('keyup',e=>{if(['ArrowLeft','a','A'].includes(e.key))left=false;if(['ArrowRight','d','D'].includes(e.key))right=false});
+  startBtn.addEventListener('click',reset);
+  pauseBtn.addEventListener('click',()=>{if(!running)return;paused=!paused;pauseBtn.textContent=paused?'Weiter':'Pause';last=performance.now()});
+  drawBg();drawLeon();
+})();
+</script>
+</body>
+</html>
