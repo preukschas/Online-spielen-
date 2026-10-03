@@ -54,7 +54,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Spielewelt | Ronja Race | `/ronja-race/` | `preukschas/DMP-Games` → `projects/ronja-race/` (V0.3.1 Browser-Start-Hotfix) |
 | Spielewelt | Bett Battle | `/bett-battle/` | `preukschas/DMP-Games` → `projects/bett-battle/` (Final 1.0) |
 | Specials | Franz – Meister der Fuge | `/franz-fliesenleger/` | `preukschas/DMP-Games` → `projects/franz-fliesenleger/` (V1.0) |
-| Specials | Elli – Ein schöner Tag | `/elli-ein-schoener-tag/` | `preukschas/DMP-Games` → `projects/elli-ein-schoener-tag/` (Final 1.1) |
+| Specials | Elli – Ein schöner Tag | `/elli-ein-schoener-tag/` | `preukschas/DMP-Games` → `projects/elli-ein-schoener-tag/` (Final 1.2) |
 | Specials | Leons Geschenk-Jagd | `/leon-geburtstag/` | Bereits entwickeltes Geburtstagsspiel |
 
 Einmaleins Space ist ein eigenständiges Lernspiel. Die Weltraum-Abwehr innerhalb von Vokabel Quest bleibt Teil des Vokabeltrainers.
