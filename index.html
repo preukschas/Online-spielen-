@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Planet unter Druck – Tower Defence v16</title>
+<title>Planet unter Druck – Tower Defence v17</title>
 <style>
 :root{
   --bg:#08141b;--panel:#11252f;--panel2:#17313c;--panel3:#1d3a45;--line:#315565;
@@ -999,7 +999,7 @@ function continueReport(autoStart=false){
   if(r.end==='lost'){recordScore('Niederlage');showEnd(false);return}
   if(r.end==='prestige'){recordScore(`Prestige ${state.prestige} geschafft`);showPrestige();return}  addLog(`🏗️ Runde ${state.round} abgeschlossen. Jetzt ist Bauphase: neue Gebäude kaufen oder vorhandene verbessern.`);
   saveGame('build-phase',true);syncUI();
-  if(autoStart) setTimeout(()=>startWave(true),20);
+  if(autoStart===true) setTimeout(()=>startWave(true),20);
 }
 function showPrestige(){
   const next=Math.min(engine.MAX_PRESTIGE,state.prestige+1),nextBudget=engine.startingBudget(next),nextDiff=engine.difficulty(next),nowDiff=engine.difficulty(state.prestige);
@@ -1253,7 +1253,7 @@ $('startWave').onclick=startWave;
 $('pauseBtn').onclick=()=>{if(state.phase==='wave'){paused=!paused;syncUI()}};
 $('speedBtn').onclick=()=>{if(state.phase==='wave'){const speeds=[1,2,3,5,10],i=speeds.indexOf(speed);speed=speeds[(i+1)%speeds.length];syncUI()}};
 $('upgradeBtn').onclick=upgradeSelected;$('quickUpgradeBtn').onclick=upgradeSelected;$('sellBtn').onclick=sellSelected;
-$('continueBtn').onclick=continueReport;
+$('continueBtn').onclick=()=>continueReport(false);
 let towerInfoPauseRestore=null;
 function openTowerInfo(type){
   const t=engine.TOWERS[type];if(!t)return;
@@ -1310,7 +1310,7 @@ else {makeBaseCheckpoint();saveGame('initial-checkpoint',true);addLog('Spiel ber
 
 window.addEventListener('pagehide',()=>saveGame('pagehide',true));
 let last=performance.now();function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
-window.__gameDebug={version:16,engine,startWave,continueReport,buildTower,upgradeSelected,sellSelected,toggleDrawer,closeDrawer,saveGame,clearSave,get phase(){return state.phase},get paused(){return paused},get enemies(){return enemies.map(e=>({x:e.x,y:e.y,type:e.type,hp:e.hp,seg:e.seg}))},get queue(){return spawnQueue.length},get selectedPad(){return selectedPad},set selectedPad(v){selectedPad=v},set selectedTower(v){selectedTower=v},startPrestige,get score(){return currentScore()},get prestige(){return state.prestige},get openDrawer(){return openDrawerId}};
+window.__gameDebug={version:17,engine,startWave,continueReport,buildTower,upgradeSelected,sellSelected,toggleDrawer,closeDrawer,saveGame,clearSave,get phase(){return state.phase},get paused(){return paused},get enemies(){return enemies.map(e=>({x:e.x,y:e.y,type:e.type,hp:e.hp,seg:e.seg}))},get queue(){return spawnQueue.length},get selectedPad(){return selectedPad},set selectedPad(v){selectedPad=v},set selectedTower(v){selectedTower=v},startPrestige,get score(){return currentScore()},get prestige(){return state.prestige},get openDrawer(){return openDrawerId}};
 })();
 </script>
 </body>
