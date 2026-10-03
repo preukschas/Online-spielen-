@@ -114,15 +114,23 @@ const zones = ['Eingang','Festgasse','Fahrgeschäfte','Zielgerade'];
 const player={x:150,y:GROUND-182,w:70,h:182,vy:0,onGround:true,inv:0,runT:0};
 
 const img = new Image();
+let spriteReady=false;
+img.addEventListener('load',()=>{spriteReady=true});
+img.addEventListener('error',()=>{spriteReady=false});
 img.src = SPRITE;
+if(img.complete && img.naturalWidth>0)spriteReady=true;
 
 function rnd(){
   seed = (seed * 1664525 + 1013904223) >>> 0;
   return seed/4294967296;
 }
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function hi(){return Number(localStorage.getItem('michaWasenHigh')||0)}
-function setHi(v){localStorage.setItem('michaWasenHigh', String(v))}
+function hi(){
+  try{return Number(localStorage.getItem('michaWasenHigh')||0)||0}catch(e){return 0}
+}
+function setHi(v){
+  try{localStorage.setItem('michaWasenHigh', String(v))}catch(e){}
+}
 
 let audioCtx=null;
 function tone(freq=440,dur=.08,type='sine',gain=.06){
@@ -148,6 +156,7 @@ function reset(){
   updateHud();
 }
 function startGame(){
+  if(running)return;
   reset();running=true;overlay.classList.add('hidden');
   if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
   last=performance.now();
@@ -317,7 +326,21 @@ function end(isWin){
 
 function roundRect(x,y,w,h,r){
   ctx.beginPath();
-  ctx.roundRect(x,y,w,h,r);
+  if(typeof ctx.roundRect==='function'){
+    ctx.roundRect(x,y,w,h,r);
+    return;
+  }
+  const rr=Math.max(0,Math.min(r,Math.abs(w)/2,Math.abs(h)/2));
+  ctx.moveTo(x+rr,y);
+  ctx.lineTo(x+w-rr,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
+  ctx.lineTo(x+w,y+h-rr);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
+  ctx.lineTo(x+rr,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-rr);
+  ctx.lineTo(x,y+rr);
+  ctx.quadraticCurveTo(x,y,x+rr,y);
+  ctx.closePath();
 }
 function drawSky(t){
   const grad=ctx.createLinearGradient(0,0,0,H);
@@ -416,7 +439,16 @@ function drawPlayer(t){
   ctx.rotate(lean);
   ctx.shadowColor='#0007';ctx.shadowBlur=12;ctx.shadowOffsetY=7;
   // photo sprite as an intentionally animated "sticker"
-  ctx.drawImage(img,-w/2,-h/2,w,h);
+  if(spriteReady && img.naturalWidth>0){
+    try{ctx.drawImage(img,-w/2,-h/2,w,h)}catch(e){spriteReady=false}
+  }
+  if(!spriteReady){
+    // Fallback keeps the game playable even if the embedded photo is still decoding.
+    ctx.shadowColor='transparent';
+    ctx.fillStyle='#5f8f45';roundRect(-w*.34,-h*.05,w*.68,h*.55,12);ctx.fill();
+    ctx.fillStyle='#e8bb8d';ctx.beginPath();ctx.arc(0,-h*.23,Math.max(13,w*.22),0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#4d3529';ctx.fillRect(-w*.25,h*.26,w*.2,h*.24);ctx.fillRect(w*.05,h*.26,w*.2,h*.24);
+  }
   ctx.restore();
   ctx.globalAlpha=1;
 
