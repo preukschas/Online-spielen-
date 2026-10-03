@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#102a2a">
 <title>DMP Spielzentrale</title>
-<meta name="description" content="Öffentliche DMP Spielzentrale mit klar getrennten Lernspielen und Spaß-Games.">
+<meta name="description" content="DMP Spielzentrale mit frei zugänglicher Lernwelt und PIN-geschützter Spielewelt.">
+<script src="./fun-access.js"></script>
 <style>
 :root{
   --bg:#0f1d1d;--panel:#152626;--panel2:#1b3130;--text:#f6f8f7;--muted:#a9bbb8;
@@ -13,7 +14,7 @@
   --shadow:0 18px 50px rgba(0,0,0,.24)
 }
 *{box-sizing:border-box}
-html{color-scheme:dark;scroll-behavior:smooth}
+html{color-scheme:dark}
 body{
   margin:0;min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   color:var(--text);background:
@@ -21,40 +22,63 @@ body{
     radial-gradient(circle at 95% 15%,rgba(242,198,109,.09),transparent 30%),
     linear-gradient(180deg,#0d1919 0%,#102020 55%,#0d1919 100%);
 }
+button,a{font:inherit}
+button{color:inherit}
+.hidden{display:none!important}
 .wrap{max-width:1080px;margin:0 auto;padding:28px 18px 48px}
-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.brand small{display:block;color:var(--green);font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-h1{font-size:clamp(32px,5vw,56px);line-height:1;margin:10px 0 12px;letter-spacing:-.04em}
-.lead{max-width:720px;color:var(--muted);font-size:17px;line-height:1.55;margin:0}
+.topline{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.brandSmall{color:var(--green);font-weight:900;letter-spacing:.09em;text-transform:uppercase;font-size:12px}
 .badge{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:13px;background:rgba(255,255,255,.03)}
-.quickNav{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
-.quickNav a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:9px 13px;font-weight:800;color:var(--text);background:rgba(255,255,255,.03)}
-.quickNav a.learn{border-color:rgba(97,214,168,.35);color:var(--green2)}
-.quickNav a.fun{border-color:rgba(242,198,109,.35);color:var(--gold2)}
-.category{margin-top:38px}
-.categoryHeader{
-  display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;
-  padding:0 2px 13px;border-bottom:1px solid var(--line)
+.hero{text-align:center;max-width:760px;margin:42px auto 28px}
+.hero h1{font-size:clamp(36px,6vw,64px);line-height:.98;margin:12px 0 14px;letter-spacing:-.05em}
+.hero p{color:var(--muted);font-size:18px;line-height:1.55;margin:0 auto;max-width:650px}
+.worldChooser{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:34px}
+.worldButton{
+  position:relative;overflow:hidden;min-height:360px;border:1px solid var(--line);border-radius:28px;padding:28px;
+  background:linear-gradient(145deg,rgba(27,49,48,.97),rgba(18,33,32,.97));box-shadow:var(--shadow);
+  text-align:left;cursor:pointer;display:flex;flex-direction:column;transition:transform .16s ease,border-color .16s ease
 }
-.categoryTitle{display:flex;align-items:center;gap:12px}
-.categoryIcon{font-size:32px}
-.category h2{font-size:28px;margin:0;letter-spacing:-.03em}
-.category p{margin:5px 0 0;color:var(--muted);line-height:1.5}
-.categoryTag{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:7px 10px}
-.learning .categoryTag{background:rgba(97,214,168,.10);color:var(--green2);border:1px solid rgba(97,214,168,.28)}
-.fun .categoryTag{background:rgba(242,198,109,.09);color:var(--gold2);border:1px solid rgba(242,198,109,.28)}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}
+.worldButton:hover{transform:translateY(-3px)}
+.worldButton:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.worldButton:before{content:"";position:absolute;width:260px;height:260px;border-radius:50%;right:-100px;top:-110px}
+.worldButton.learning{border-color:rgba(97,214,168,.33)}
+.worldButton.learning:before{background:rgba(97,214,168,.10)}
+.worldButton.fun{border-color:rgba(242,198,109,.30)}
+.worldButton.fun:before{background:rgba(242,198,109,.09)}
+.worldEmoji{font-size:74px;line-height:1;margin:8px 0 22px;filter:drop-shadow(0 12px 16px rgba(0,0,0,.22))}
+.worldLabel{font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.learning .worldLabel{color:var(--green2)}
+.fun .worldLabel{color:var(--gold2)}
+.worldButton h2{font-size:36px;line-height:1.05;margin:7px 0 12px;letter-spacing:-.04em}
+.worldButton p{color:var(--muted);font-size:16px;line-height:1.55;margin:0 0 18px;max-width:42ch}
+.worldCta{margin-top:auto;display:inline-flex;align-items:center;gap:8px;font-weight:900;font-size:17px}
+.learning .worldCta{color:var(--green2)}
+.fun .worldCta{color:var(--gold2)}
+.lockState{margin-top:10px;color:var(--muted);font-size:13px}
+.worldScreen{margin-top:22px}
+.worldHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.worldHeaderMain{display:flex;gap:14px;align-items:flex-start}
+.worldHeaderIcon{font-size:44px}
+.worldHeader h1{font-size:34px;margin:0 0 6px;letter-spacing:-.04em}
+.worldHeader p{color:var(--muted);margin:0;line-height:1.5}
+.headerActions{display:flex;gap:8px;flex-wrap:wrap}
+.controlBtn{
+  min-height:44px;padding:9px 13px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);
+  color:var(--text);font-weight:800;cursor:pointer
+}
+.controlBtn.gold{border-color:rgba(242,198,109,.35);color:var(--gold2)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
 .card{
   position:relative;overflow:hidden;border:1px solid var(--line);border-radius:24px;padding:22px;
   background:linear-gradient(145deg,rgba(27,49,48,.96),rgba(20,37,37,.96));box-shadow:var(--shadow);
   min-height:285px;display:flex;flex-direction:column
 }
 .card:before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-70px;top:-85px;background:rgba(97,214,168,.08)}
-.fun .card:before{background:rgba(242,198,109,.08)}
+.funWorld .card:before{background:rgba(242,198,109,.08)}
 .kicker{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--green)}
-.fun .kicker{color:var(--gold)}
+.funWorld .kicker{color:var(--gold)}
 .icon{font-size:54px;margin:16px 0 8px;filter:drop-shadow(0 10px 12px rgba(0,0,0,.18))}
-.card h3{font-size:28px;margin:0 0 8px;letter-spacing:-.03em}
+.card h2{font-size:28px;margin:0 0 8px;letter-spacing:-.03em}
 .card p{color:var(--muted);line-height:1.55;margin:0 0 18px;max-width:48ch}
 .meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
 .meta span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:6px 9px;color:#d6e2df;background:rgba(255,255,255,.025)}
@@ -63,103 +87,199 @@ a.play{
   display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 16px;border-radius:14px;
   background:var(--green);color:#092019;text-decoration:none;font-weight:900;box-shadow:0 8px 22px rgba(97,214,168,.18)
 }
-.fun a.play{background:var(--gold);color:#2a210e;box-shadow:0 8px 22px rgba(242,198,109,.16)}
-a.play:hover{transform:translateY(-1px)}
+.funWorld a.play{background:var(--gold);color:#2a210e;box-shadow:0 8px 22px rgba(242,198,109,.16)}
 .soon{opacity:.62}
 .soon .actions{color:var(--muted);font-weight:700}
+.infoStrip{margin:0 0 18px;padding:12px 14px;border-radius:14px;border:1px solid rgba(242,198,109,.25);background:rgba(242,198,109,.06);color:#e6ddc8;font-size:13px;line-height:1.5}
 footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.5}
 @media(max-width:760px){
-  .grid{grid-template-columns:1fr}.wrap{padding:20px 14px 34px}.card{min-height:0}.icon{font-size:48px}
-  .category{margin-top:30px}.category h2{font-size:25px}.categoryHeader{align-items:flex-start}
+  .wrap{padding:18px 14px 34px}.hero{margin-top:28px}.worldChooser,.grid{grid-template-columns:1fr}
+  .worldButton{min-height:300px;padding:22px}.worldEmoji{font-size:62px}.worldButton h2{font-size:32px}
+  .worldHeader h1{font-size:29px}.card{min-height:0}
 }
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <main class="wrap">
-<header>
-  <div class="brand">
-    <small>DMP · Online spielen</small>
-    <h1>Spielzentrale</h1>
-    <p class="lead">Lernspiele und Spaß-Games sind hier bewusst getrennt. So ist sofort klar: Willst du üben und lernen – oder einfach nur zocken?</p>
-    <nav class="quickNav" aria-label="Spielkategorien">
-      <a class="learn" href="#lernspiele">🧠 Lernspiele</a>
-      <a class="fun" href="#spass-games">🎮 Spaß-Games</a>
-    </nav>
+  <div class="topline">
+    <div class="brandSmall">DMP · Online</div>
+    <div class="badge">Lernwelt frei · Spielewelt mit Eltern-PIN</div>
   </div>
-  <div class="badge">Öffentliche GitHub-Pages-Version</div>
-</header>
 
-<section class="category learning" id="lernspiele" aria-labelledby="lernspiele-title">
-  <div class="categoryHeader">
-    <div class="categoryTitle">
-      <div class="categoryIcon" aria-hidden="true">🧠</div>
-      <div>
-        <h2 id="lernspiele-title">Lernspiele</h2>
-        <p>Für Schule, Übung und kluges Wiederholen – spielerisch, aber mit echtem Lernziel.</p>
+  <section id="worldSelect">
+    <div class="hero">
+      <div style="font-size:52px" aria-hidden="true">🌍</div>
+      <h1>Wohin möchtest du?</h1>
+      <p>Wähle zuerst eine Welt. Lernen ist immer möglich. Reine Spaß-Games werden erst nach Freigabe durch die Eltern geöffnet.</p>
+    </div>
+
+    <div class="worldChooser">
+      <button class="worldButton learning" id="openLearning" type="button">
+        <div class="worldLabel">Immer geöffnet</div>
+        <div class="worldEmoji" aria-hidden="true">🧠✨</div>
+        <h2>Lernwelt</h2>
+        <p>Englisch, Lernabenteuer und Übungen. Hier kannst du jederzeit loslegen.</p>
+        <div class="worldCta">Lernwelt betreten →</div>
+      </button>
+
+      <button class="worldButton fun" id="openFun" type="button">
+        <div class="worldLabel">Eltern-Freigabe</div>
+        <div class="worldEmoji" aria-hidden="true">🎮🔐</div>
+        <h2>Spielewelt</h2>
+        <p>Reine Spaß-Games wie Planet unter Druck. Dafür ist eine vierstellige Eltern-PIN nötig.</p>
+        <div class="worldCta">Spielewelt öffnen →</div>
+        <div class="lockState" id="funStatus">🔒 Gesperrt</div>
+      </button>
+    </div>
+  </section>
+
+  <section class="worldScreen hidden" id="learningWorld" aria-labelledby="learningTitle">
+    <div class="worldHeader">
+      <div class="worldHeaderMain">
+        <div class="worldHeaderIcon" aria-hidden="true">🧠</div>
+        <div>
+          <h1 id="learningTitle">Lernwelt</h1>
+          <p>Lernen bleibt jederzeit frei zugänglich.</p>
+        </div>
+      </div>
+      <div class="headerActions">
+        <button class="controlBtn" type="button" data-back>← Weltenauswahl</button>
       </div>
     </div>
-    <div class="categoryTag">Lernen mit Spaß</div>
-  </div>
 
-  <div class="grid">
-    <article class="card">
-      <div class="kicker">Englisch · Moe</div>
-      <div class="icon" aria-hidden="true">🇬🇧🧠</div>
-      <h3>Moe’s English World</h3>
-      <p>Adaptives Englischtraining mit 90 Vokabeln, Wiederholungsalgorithmus, Spielwelt, Mini-Games, Belohnungen und Elternansicht.</p>
-      <div class="meta"><span>12-Wörter-Runden</span><span>speichert Fortschritt</span><span>mobil optimiert</span></div>
-      <div class="actions"><a class="play" href="./moes-english-world/">Lernspiel starten →</a></div>
-    </article>
-  </div>
-</section>
+    <div class="grid">
+      <article class="card">
+        <div class="kicker">Englisch · Moe</div>
+        <div class="icon" aria-hidden="true">🇬🇧🧠</div>
+        <h2>Moe’s English World</h2>
+        <p>Adaptives Englischtraining mit 90 Vokabeln, Wiederholungsalgorithmus, Spielwelt, Mini-Games, Belohnungen und Elternansicht.</p>
+        <div class="meta"><span>12-Wörter-Runden</span><span>speichert Fortschritt</span><span>mobil optimiert</span></div>
+        <div class="actions"><a class="play" href="./moes-english-world/">Lernspiel starten →</a></div>
+      </article>
 
-<section class="category fun" id="spass-games" aria-labelledby="spass-title">
-  <div class="categoryHeader">
-    <div class="categoryTitle">
-      <div class="categoryIcon" aria-hidden="true">🎮</div>
-      <div>
-        <h2 id="spass-title">Spaß-Games</h2>
-        <p>Action, Strategie und Unterhaltung – hier geht es einfach ums Spielen.</p>
+      <article class="card">
+        <div class="kicker">Lernabenteuer · Moe</div>
+        <div class="icon" aria-hidden="true">🤖⚙️</div>
+        <h2>Moe – Machine City</h2>
+        <p>Story-RPG mit Bike, Fußball, 3D-Druck, Geheimwegen und kurzen Englisch-Momenten. Kapitel 1 als spielbare Demo.</p>
+        <div class="meta"><span>Kapitel 1</span><span>Gameplay + Englisch</span><span>mobil optimiert</span></div>
+        <div class="actions"><a class="play" href="./moe-machine-city/">Lernabenteuer starten →</a></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="worldScreen funWorld hidden" id="funWorld" aria-labelledby="funTitle">
+    <div class="worldHeader">
+      <div class="worldHeaderMain">
+        <div class="worldHeaderIcon" aria-hidden="true">🎮</div>
+        <div>
+          <h1 id="funTitle">Spielewelt</h1>
+          <p>Freigeschaltet für maximal 60 Minuten.</p>
+        </div>
+      </div>
+      <div class="headerActions">
+        <button class="controlBtn" type="button" data-back>← Weltenauswahl</button>
+        <button class="controlBtn gold" type="button" id="changePinBtn">PIN ändern</button>
+        <button class="controlBtn gold" type="button" id="lockFunBtn">Jetzt sperren</button>
       </div>
     </div>
-    <div class="categoryTag">Einfach zocken</div>
-  </div>
 
-  <div class="grid">
-    <article class="card">
-      <div class="kicker">Strategie · Tower Defense</div>
-      <div class="icon" aria-hidden="true">🌍🛡️</div>
-      <h3>Planet unter Druck</h3>
-      <p>Öko-Sci-Fi-Tower-Defense mit neuen Weltbossen, progressiven Bauplätzen und Schrödingers Kompostkanone.</p>
-      <div class="meta"><span>V18</span><span>Tower Defense</span><span>Browsergame</span></div>
-      <div class="actions"><a class="play" href="./planet-unter-druck/">Game starten →</a></div>
-    </article>
+    <div class="infoStrip" id="unlockInfo">🔓 Spielewelt freigeschaltet.</div>
 
-    
-  <article class="card">
-    <div class="kicker">Lernabenteuer · Moe</div>
-    <div class="icon" aria-hidden="true">🤖⚙️</div>
-    <h2>Moe – Machine City</h2>
-    <p>Story-RPG mit Bike, Fußball, 3D-Druck, Geheimwegen und kurzen Englisch-Momenten. Kapitel 1 als spielbare Demo.</p>
-    <div class="meta"><span>Kapitel 1</span><span>Gameplay + Englisch</span><span>mobil optimiert</span></div>
-    <div class="actions"><a class="play" href="./moe-machine-city/">Jetzt starten →</a></div>
-  </article>
+    <div class="grid">
+      <article class="card">
+        <div class="kicker">Strategie · Tower Defense</div>
+        <div class="icon" aria-hidden="true">🌍🛡️</div>
+        <h2>Planet unter Druck</h2>
+        <p>Öko-Sci-Fi-Tower-Defense mit Weltbossen, progressiven Bauplätzen und ungewöhnlichen Spezialwaffen.</p>
+        <div class="meta"><span>V18</span><span>Tower Defense</span><span>Browsergame</span></div>
+        <div class="actions"><a class="play" href="./planet-unter-druck/">Game starten →</a></div>
+      </article>
 
+      <article class="card soon">
+        <div class="kicker">Demnächst · Runner</div>
+        <div class="icon" aria-hidden="true">🏃‍♂️</div>
+        <h2>Domi Run</h2>
+        <p>Die öffentliche Browser-Version folgt später. Auch dieses reine Spaß-Game wird beim Veröffentlichen PIN-geschützt.</p>
+        <div class="actions">Noch nicht veröffentlicht</div>
+      </article>
+    </div>
+  </section>
 
-  <article class="card soon">
-      <div class="kicker">Demnächst · Runner</div>
-      <div class="icon" aria-hidden="true">🏃‍♂️</div>
-      <h3>Domi Run</h3>
-      <p>Die öffentliche Browser-Version folgt später. Die Entwicklung bleibt weiterhin getrennt im privaten Spiele-Repository.</p>
-      <div class="actions">Noch nicht veröffentlicht</div>
-    </article>
-  </div>
-</section>
-
-<footer>
-  Die öffentlichen Dateien sind Veröffentlichungs-Spiegel. Lernspiele werden im privaten Lernspiele-Repository entwickelt, Spaß-Games im privaten Games-Repository. Erst geprüfte Stände werden hier veröffentlicht.
-</footer>
+  <footer>
+    Lernspiele bleiben frei. Die Spielewelt ist eine praktische Elternsperre auf einer statischen GitHub-Pages-Seite; technisch versierte Nutzer mit Entwicklerwerkzeugen könnten eine rein clientseitige Sperre grundsätzlich umgehen.
+  </footer>
 </main>
+
+<script>
+(function(){
+  const select=document.getElementById('worldSelect');
+  const learning=document.getElementById('learningWorld');
+  const fun=document.getElementById('funWorld');
+  const status=document.getElementById('funStatus');
+  const info=document.getElementById('unlockInfo');
+
+  function hideWorlds(){
+    learning.classList.add('hidden');
+    fun.classList.add('hidden');
+  }
+  function showSelect(){
+    hideWorlds();
+    select.classList.remove('hidden');
+    updateStatus();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function showLearning(){
+    select.classList.add('hidden');
+    fun.classList.add('hidden');
+    learning.classList.remove('hidden');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function showFun(){
+    select.classList.add('hidden');
+    learning.classList.add('hidden');
+    fun.classList.remove('hidden');
+    const m=DMPFunAccess.remainingUnlockMinutes();
+    info.textContent='🔓 Spielewelt freigeschaltet · noch ungefähr '+m+' Minute'+(m===1?'':'n')+'.';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function updateStatus(){
+    if(DMPFunAccess.isUnlocked()){
+      const m=DMPFunAccess.remainingUnlockMinutes();
+      status.textContent='🔓 Noch ca. '+m+' Min. freigeschaltet';
+    }else{
+      const s=DMPFunAccess.lockRemainingSeconds();
+      status.textContent=s>0?'⏳ Nach Fehlversuchen '+s+' Sek. gesperrt':'🔒 PIN erforderlich';
+    }
+  }
+
+  document.getElementById('openLearning').addEventListener('click',showLearning);
+  document.getElementById('openFun').addEventListener('click',()=>{
+    DMPFunAccess.requestAccess({onUnlock:()=>{updateStatus();showFun();}});
+  });
+  document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',showSelect));
+  document.getElementById('lockFunBtn').addEventListener('click',()=>{
+    DMPFunAccess.lockNow();
+    showSelect();
+  });
+  document.getElementById('changePinBtn').addEventListener('click',()=>{
+    const oldPin=prompt('Aktuelle vierstellige Spiele-PIN:');
+    if(oldPin===null)return;
+    const newPin=prompt('Neue vierstellige Spiele-PIN:');
+    if(newPin===null)return;
+    if(!/^\d{4}$/.test(newPin)){alert('Die neue PIN muss genau vier Ziffern haben.');return;}
+    const again=prompt('Neue PIN wiederholen:');
+    if(again!==newPin){alert('Die beiden neuen PINs stimmen nicht überein.');return;}
+    const r=DMPFunAccess.changePin(oldPin,newPin);
+    if(r.ok)alert('Die Spiele-PIN wurde geändert.');
+    else if(r.reason==='old')alert('Die bisherige PIN ist falsch.');
+    else alert('PIN konnte nicht geändert werden.');
+  });
+
+  updateStatus();
+  setInterval(updateStatus,15000);
+})();
+</script>
 </body>
 </html>
