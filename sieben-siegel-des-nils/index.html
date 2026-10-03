@@ -496,6 +496,7 @@ function loadTask(){
  $('answers').querySelectorAll('button').forEach(b=>b.onclick=()=>answer(Number(b.dataset.a)));
 }
 function answer(i){
+ if(!$('nextTask').classList.contains('hidden'))return;
  const c=chapters[save.current],tasks=activeTasks(),t=tasks[save.task],buttons=[...$('answers').children];
  if(i!==t.ok){const pressed=buttons.find(b=>Number(b.dataset.a)===i);if(pressed)pressed.classList.add('bad');$('feedback').textContent='Noch nicht. Hinweis: Prüfe, welche Antwort durch Alltag, Verwaltung oder Quellen wirklich gestützt wird.';$('feedback').className='feedback warn';return}
  buttons.forEach(b=>{b.disabled=true;if(Number(b.dataset.a)===t.ok)b.classList.add('good')});
@@ -506,10 +507,11 @@ function answer(i){
    if(!save.clues.includes(save.current))save.clues.push(save.current);
    save.done.sort((a,b)=>a-b);save.clues.sort((a,b)=>a-b);persist();
    $('chapterProgress').style.width='100%';$('clueBox').textContent='🔶 Hinweis gefunden: '+c.clue;$('clueBox').classList.remove('hidden');
-   $('nextTask').textContent=save.done.length===7?'Zum Finale →':'Nächstes Siegel →';$('nextTask').classList.remove('hidden');
- }else{$('chapterProgress').style.width=`${save.task/tasks.length*100}%`;$('nextTask').textContent='Nächste Aufgabe →';$('nextTask').classList.remove('hidden')}
+   $('nextTask').textContent=save.done.length===7?'Zum Finale →':'Nächstes Siegel →';$('nextTask').disabled=false;$('nextTask').classList.remove('hidden');
+ }else{$('chapterProgress').style.width=`${save.task/tasks.length*100}%`;$('nextTask').textContent='Nächste Aufgabe →';$('nextTask').disabled=false;$('nextTask').classList.remove('hidden')}
 }
 $('nextTask').onclick=()=>{
+ if($('nextTask').disabled||$('nextTask').classList.contains('hidden'))return;$('nextTask').disabled=true;
  const c=chapters[save.current],tasks=activeTasks();
  if(save.task<tasks.length){loadTask();return}
  if(save.done.length===7){renderFinale();show('finale');return}
