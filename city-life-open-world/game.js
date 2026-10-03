@@ -28,7 +28,7 @@ const roadsX=[650,1850,3070,4310,5550];
 const roadsY=[520,1570,2640,3690];
 
 const buildings=[
-  {id:'market',x:80,y:70,w:450,h:320,name:'FRISCHMARKT',type:'shop',wall:'#b86c53',door:[305,415],items:[['Getränk',4,'🥤',4],['Snack',6,'🥪',8],['Lebensmittel',25,'🛍️',0],['Rucksack',45,'🎒',0],['Tablet',250,'📱',0]]},
+  {id:'market',x:80,y:70,w:450,h:320,name:'FRISCHMARKT',type:'shop',wall:'#b86c53',door:[305,415],items:[['Getränk',4,'🥤',4],['Snack',6,'🥪',8],['Lebensmittel',25,'🛍️',0],['Rucksack',45,'🎒',0],['Wasserpistole',35,'💦',0],['Tablet',250,'📱',0]]},
   {id:'home-a',x:790,y:60,w:760,h:330,name:'WOHNHAUS AM PARK',type:'home',wall:'#bb8b65',door:[1170,420]},
   {id:'tech',x:2110,y:70,w:700,h:320,name:'TECH CENTER',type:'shop',wall:'#929da6',door:[2460,415],items:[['Kopfhörer',55,'🎧',0],['Smartwatch',180,'⌚',0],['Smartphone',320,'📱',0],['Laptop',900,'💻',0]]},
   {id:'cafe',x:3350,y:70,w:700,h:320,name:'CAFÉ CENTRAL',type:'cafe',wall:'#a96e52',door:[3700,415],items:[['Kaffee',4,'☕',6],['Kuchen',6,'🍰',8],['Sandwich',8,'🥪',12]]},
@@ -164,7 +164,7 @@ const state={
   x:1100,y:1250,a:0,money:1000,hp:100,heat:0,lastCrime:99999,
   worldCar:-1,speed:0,sprint:false,punchT:0,punchCd:0,
   mode:'outside',buildingId:null,rx:140,ry:640,roomCar:-1,roomSpeed:0,
-  camX:460,camY:890,walk:0,inventory:[]
+  camX:460,camY:890,walk:0,inventory:[],sprayCd:0,waterFx:[]
 };
 
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
@@ -178,6 +178,14 @@ function currentCar(){
   if(state.mode==='outside'&&state.worldCar>=0)return worldCars[state.worldCar]||null;
   if(state.mode==='interior'&&state.roomCar>=0)return (roomVehicles[state.buildingId]||[])[state.roomCar]||null;
   return null;
+}
+function hasWaterPistol(){
+  return state.inventory.some(x=>x.includes('Wasserpistole'));
+}
+function angleDiff(a,b){
+  let d=(b-a+Math.PI)%(Math.PI*2)-Math.PI;
+  if(d<-Math.PI)d+=Math.PI*2;
+  return d;
 }
 function toast(text){
   ui.toast.textContent=text;ui.toast.style.display='block';clearTimeout(toast.timer);
@@ -244,13 +252,14 @@ function buildingPanel(){
     for(const [name,price,icon,heal=0] of b.items||[]){
       row.appendChild(panelButton('Kaufen '+icon+' '+name+' · '+price+' €',()=>{
         if(state.money<price)return toast('Zu wenig Geld.');
+        if(name==='Wasserpistole'&&hasWaterPistol())return toast('Du hast schon eine Wasserpistole.');
         state.money-=price;
         if(heal>0){
           state.hp=Math.min(100,state.hp+heal);
           log('✅ '+name+' gekauft und benutzt: +'+heal+' Gesundheit.');
         }else{
           state.inventory.push(icon+' '+name);
-          log('✅ '+name+' gekauft und ins Inventar gelegt.');
+          log(name==='Wasserpistole'?'💦 Wasserpistole gekauft. G oder „Spritzen“ benutzen.':'✅ '+name+' gekauft und ins Inventar gelegt.');
         }
         hud();
       },price<=10));
@@ -369,6 +378,60 @@ function vehicleAction(){
   if(!c.owned&&!c.stolen){c.stolen=true;crime(20,'🚘 Fahrzeug im Gebäude genommen.');}
   hud();
 }
+function sprayWater(){
+  if(currentCar())return toast('Zum Spritzen erst aussteigen.');
+  if(!hasWaterPistol())return toast('Wasserpistole zuerst im Frischmarkt kaufen.');
+  if(state.sprayCd>0)return;
+
+  const outside=state.mode==='outside';
+  const x=outside?state.x:state.rx,y=outside?state.y:state.ry;
+  const list=outside?people:(indoorPeople[state.buildingId]||[]);
+  state.sprayCd=360;
+  state.waterFx.push({
+    mode:outside?'outside':'interior',
+    buildingId:outside?null:state.buildingId,
+    x,y,a:state.a,ttl:260
+  });
+
+  let target=null,best=190;
+  for(const p of list){
+    const dx=p.x-x,dy=p.y-y,d=Math.hypot(dx,dy);
+    if(d>best||d<14)continue;
+    const a=Math.atan2(dy,dx);
+    if(Math.abs(angleDiff(state.a,a))<0.34){best=d;target=p;}
+  }
+  if(target){
+    target.wet=1200;target.pause=Math.max(target.pause||0,650);
+    target.dir*=-1;
+    toast('💦 Treffer!');
+  }else{
+    toast('💦 Pssssch!');
+  }
+}
+function updateWaterFx(dt){
+  state.sprayCd=Math.max(0,state.sprayCd-dt);
+  for(const fx of state.waterFx)fx.ttl-=dt;
+  state.waterFx=state.waterFx.filter(fx=>fx.ttl>0);
+}
+function drawWaterFx(mode){
+  for(const fx of state.waterFx){
+    if(fx.mode!==mode)continue;
+    if(mode==='interior'&&fx.buildingId!==state.buildingId)continue;
+    const t=clamp(fx.ttl/260,0,1),len=175*(1-t*.12);
+    ctx.save();
+    ctx.globalAlpha=.35+.55*t;
+    ctx.strokeStyle='#6fd3ff';ctx.lineWidth=5;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(fx.x+Math.cos(fx.a)*14,fx.y+Math.sin(fx.a)*14);
+    ctx.lineTo(fx.x+Math.cos(fx.a)*len,fx.y+Math.sin(fx.a)*len);ctx.stroke();
+    ctx.fillStyle='#aeeaff';
+    for(let i=0;i<7;i++){
+      const d=45+i*18,j=(i%2?5:-5);
+      ctx.beginPath();ctx.arc(fx.x+Math.cos(fx.a)*d-Math.sin(fx.a)*j,fx.y+Math.sin(fx.a)*d+Math.cos(fx.a)*j,2.2+(i%2),0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
 function punch(){
   if(state.punchCd>0||currentCar())return;
   state.punchT=160;state.punchCd=330;
@@ -496,6 +559,7 @@ function updateTraffic(dt){
 }
 function updatePeople(list,dt,inside){
   for(const p of list){
+    if(p.wet>0)p.wet=Math.max(0,p.wet-dt);
     if(p.stun>0){p.stun-=dt;continue;}
     if(p.pause>0){p.pause-=dt;continue;}
     if(Math.random()<.00045*dt){p.pause=500+Math.random()*1400;continue;}
@@ -706,6 +770,10 @@ function drawPerson(p,x,y,a,phase,player){
   ctx.fillStyle=player?'#f0c6a2':p.skin;ctx.beginPath();ctx.arc(0,-12*h,8*h,0,Math.PI*2);ctx.fill();
   ctx.fillStyle=player?'#30231d':p.hair;ctx.beginPath();ctx.arc(0,-14*h,7.8*h,Math.PI,Math.PI*2);ctx.fill();
   ctx.fillStyle='#262626';ctx.beginPath();ctx.arc(-2.6*h,-11*h,1*h,0,Math.PI*2);ctx.arc(2.6*h,-11*h,1*h,0,Math.PI*2);ctx.fill();
+  if(!player&&p.wet>0){
+    ctx.fillStyle='rgba(104,207,255,.85)';
+    for(let i=0;i<4;i++){ctx.beginPath();ctx.arc((-8+i*5)*h,(2+(i%2)*7)*h,1.8*h,0,Math.PI*2);ctx.fill();}
+  }
   ctx.restore();
 }
 function drawCity(){
@@ -715,6 +783,7 @@ function drawCity(){
   people.forEach(p=>{const a=p.horizontal?(p.dir>0?0:Math.PI):(p.dir>0?Math.PI/2:-Math.PI/2);drawPerson(p,p.x,p.y,a,p.phase,false);});
   police.forEach(p=>{ctx.fillStyle='#194f99';rr(p.x-28,p.y-15,56,30,6);ctx.fill();ctx.fillStyle='#d33';ctx.fillRect(p.x-8,p.y-20,8,4);ctx.fillStyle='#39f';ctx.fillRect(p.x,p.y-20,8,4);});
   if(state.worldCar<0)drawPerson({height:1,skin:'#f0c6a2',top:'#37688f',bottom:'#293640',hair:'#30231d'},state.x,state.y,state.a,state.walk,true);
+  drawWaterFx('outside');
 }
 function drawRoomBase(b){
   ctx.fillStyle=b.type==='parking'?'#73797d':b.type==='dealer'?'#a6aaad':b.type==='home'?'#c2a17c':'#d8cbb5';ctx.fillRect(0,0,W,H);
@@ -763,6 +832,8 @@ function drawInterior(){
 
   if(state.roomCar<0)drawPerson({height:1,skin:'#f0c6a2',top:'#37688f',bottom:'#293640',hair:'#30231d'},state.rx,state.ry,state.a,state.walk,true);
 
+  drawWaterFx('interior');
+
   if(state.roomCar<0&&b.type==='dealer'){
     const list=roomVehicles[b.id]||[],i=nearestVehicle(list,state.rx,state.ry,112);
     if(i>=0){ctx.strokeStyle='#ffd348';ctx.lineWidth=3;ctx.beginPath();ctx.arc(list[i].x,list[i].y,75,0,Math.PI*2);ctx.stroke();}
@@ -804,7 +875,7 @@ function resetGame(){location.reload();}
 let last=performance.now();
 function frame(now){
   const dt=Math.min(32,now-last);last=now;
-  state.punchT=Math.max(0,state.punchT-dt);state.punchCd=Math.max(0,state.punchCd-dt);
+  state.punchT=Math.max(0,state.punchT-dt);state.punchCd=Math.max(0,state.punchCd-dt);updateWaterFx(dt);
 
   if(state.mode==='outside'){
     updateOutside(dt);updateTraffic(dt);updatePeople(people,dt,false);updatePolice(dt);camera();
@@ -828,6 +899,7 @@ document.addEventListener('keydown',e=>{
   if(['w','a','s','d','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(k)){keys.add(k);e.preventDefault();}
   if(k==='e'){e.preventDefault();action();}
   if(k==='f'){e.preventDefault();vehicleAction();}
+  if(k==='g'){e.preventDefault();sprayWater();}
   if(e.code==='Space'){e.preventDefault();punch();}
   if(e.key==='Shift')state.sprint=true;
 });
@@ -855,6 +927,7 @@ document.querySelectorAll('[data-dir]').forEach(btn=>{
 document.getElementById('actionBtn').addEventListener('click',action);
 document.getElementById('vehicleBtn').addEventListener('click',vehicleAction);
 document.getElementById('punchBtn').addEventListener('click',punch);
+document.getElementById('sprayBtn').addEventListener('click',sprayWater);
 document.getElementById('sprintBtn').addEventListener('click',()=>{state.sprint=!state.sprint;toast(state.sprint?'Sprint an':'Sprint aus');});
 document.getElementById('resetBtn').addEventListener('click',resetGame);
 
