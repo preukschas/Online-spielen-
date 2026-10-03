@@ -16,9 +16,9 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#16120e;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-  body{display:grid;place-items:center;touch-action:none}
+  body{display:grid;place-items:center}
   #shell{position:relative;width:min(100vw,1100px,calc(100vh * 16 / 9));aspect-ratio:16/9;max-height:100vh;overflow:hidden;background:#222;border-radius:18px;box-shadow:0 20px 70px #0009}
-  canvas{width:100%;height:100%;display:block;background:#8cc7ef}
+  canvas{width:100%;height:100%;display:block;background:#8cc7ef;touch-action:none;-webkit-user-select:none;user-select:none}
   #hud{position:absolute;inset:12px 12px auto 12px;display:flex;gap:10px;align-items:center;justify-content:space-between;pointer-events:none}
   .pill{background:rgba(12,12,12,.62);backdrop-filter:blur(7px);border:1px solid #ffffff2d;border-radius:999px;padding:8px 13px;color:white;font-weight:800;text-shadow:0 2px 3px #000;box-shadow:0 4px 14px #0003}
   #leftHud,#rightHud{display:flex;gap:8px;align-items:center}
@@ -28,13 +28,13 @@
   .controlCluster{display:flex;gap:12px;pointer-events:auto}
   .ctl{width:78px;height:78px;border-radius:24px;border:2px solid #ffffff72;background:#111b;color:#fff;font-size:30px;font-weight:900;box-shadow:0 9px 24px #0005;backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;cursor:pointer}
   .ctl:active{transform:translateY(2px) scale(.98);background:#2b2118df}
-  #overlay{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(#201a13aa,#000a);padding:20px}
+  #overlay{position:absolute;inset:0;z-index:50;display:grid;place-items:center;background:linear-gradient(#201a13aa,#000a);padding:20px;pointer-events:auto;touch-action:auto}
   #card{width:min(620px,94%);background:linear-gradient(160deg,rgba(39,28,18,.96),rgba(17,16,14,.96));border:1px solid #fff3;border-radius:28px;padding:28px;text-align:center;color:white;box-shadow:0 30px 90px #0009}
   h1{margin:0 0 6px;font-size:clamp(34px,7vw,64px);line-height:.95}
   .sub{opacity:.88;font-weight:650;margin:8px 0 18px}
   .rules{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}
   .rule{background:#ffffff10;border:1px solid #ffffff14;border-radius:16px;padding:11px;font-size:14px}
-  #startBtn{border:0;border-radius:999px;padding:14px 28px;font-size:20px;font-weight:900;background:linear-gradient(#ffe06b,#f2af2e);color:#3b2600;box-shadow:0 9px 24px #0005}
+  #startBtn{position:relative;z-index:60;border:0;border-radius:999px;padding:16px 30px;min-width:190px;min-height:56px;font-size:20px;font-weight:900;background:linear-gradient(#ffe06b,#f2af2e);color:#3b2600;box-shadow:0 9px 24px #0005;touch-action:manipulation;-webkit-user-select:none;user-select:none;cursor:pointer}
   #small{font-size:12px;opacity:.7;margin-top:12px}
   #sound{pointer-events:auto;border:0;background:#111a;color:white;border-radius:999px;padding:8px 11px;font-size:16px}
   .hidden{display:none!important}
@@ -78,7 +78,7 @@
         <div class="rule"><b>⬇️ Ducken</b><br>wenn ein Hut durch die Luft segelt</div>
         <div class="rule"><b>🥨 Sammeln</b><br>Brezeln, Herzen, Mandeln, Tickets & Plüschtiere</div>
       </div>
-      <button id="startBtn">Los geht's!</button>
+      <button id="startBtn" type="button">Los geht's!</button>
       <div id="small">Mobil: ↑ wischen = springen · ↓ wischen = ducken · große Tasten bleiben nutzbar · Tastatur: Leertaste / ↑ / ↓</div>
     </div>
   </div>
@@ -136,7 +136,7 @@ let audioCtx=null;
 function tone(freq=440,dur=.08,type='sine',gain=.06){
   if(muted) return;
   try{
-    audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
     const o=audioCtx.createOscillator(), g=audioCtx.createGain();
     o.type=type;o.frequency.value=freq;g.gain.value=gain;
     o.connect(g);g.connect(audioCtx.destination);o.start();
@@ -162,7 +162,17 @@ function startGame(){
   last=performance.now();
   requestAnimationFrame(loop);
 }
-startBtn.addEventListener('click', startGame);
+let lastStartInput=-1000;
+function triggerStart(e){
+  if(e && e.cancelable)e.preventDefault();
+  const now=performance.now();
+  if(now-lastStartInput<250)return;
+  lastStartInput=now;
+  startGame();
+}
+startBtn.addEventListener('touchstart',triggerStart,{passive:false});
+startBtn.addEventListener('pointerdown',triggerStart);
+startBtn.addEventListener('click',triggerStart);
 
 function updateHud(){
   scoreEl.textContent='Punkte '+Math.floor(score);
@@ -291,7 +301,7 @@ function spawnCollect(){
   const t=collectTypes[Math.floor(rnd()*collectTypes.length)];
   const high=rnd();
   const y=high<.25?GROUND-205:high<.58?GROUND-130:GROUND-76;
-  objects.push({kind:'collect',...t,x:1010,y,w:42,h:42,bob:rnd()*6.28});
+  objects.push(Object.assign({kind:'collect'},t,{x:1010,y:y,w:42,h:42,bob:rnd()*6.28}));
 }
 function puff(x,y,n=4){
   for(let i=0;i<n;i++) particles.push({x,y,vx:(rnd()-.5)*90,vy:-35-rnd()*70,life:.45+rnd()*.25,s:4+rnd()*5});
