@@ -162,7 +162,7 @@ function passObstacle(o){if(o.passed)return;o.passed=true;const same=Math.abs(o.
 function update(dt){if(mode!=='play'||paused)return;now+=dt;world.baseSpeed=Math.min(430,250+world.distance*.012);world.speed=world.baseSpeed+(world.turbo>0?100:0);const meters=world.speed*dt*.083;world.distance+=meters;world.score+=meters*10*(world.turbo>0?2:1);player.bob+=dt*(5+world.speed/100);player.xLane+=(player.lane-player.xLane)*Math.min(1,dt*11);player.tilt*=Math.pow(.05,dt);
  if(player.jumpV||player.jumpY>0){player.jumpY+=player.jumpV*dt;player.jumpV-=1160*dt;if(player.jumpY<=0){player.jumpY=0;player.jumpV=0}}player.duck=Math.max(0,player.duck-dt);world.magnet=Math.max(0,world.magnet-dt);world.turbo=Math.max(0,world.turbo-dt);world.shake=Math.max(0,world.shake-dt);world.flash=Math.max(0,world.flash-dt);world.bonusTimer=Math.max(0,world.bonusTimer-dt);
  if(world.comboTimer>0){world.comboTimer-=dt;if(world.comboTimer<=0)world.combo=1}
- const sec=Math.floor(world.distance/1050)%palettes.length;if(sec!==world.section){world.section=sec;showBanner('NEUER ABSCHNITT',palettes[sec].name);beep(760,.075,'triangle',.03)}
+ const sec=Math.max(0,Math.floor(Math.max(0,world.distance)/1050))%palettes.length;if(sec!==world.section){world.section=sec;const section=palettes[sec]||palettes[0];showBanner('NEUER ABSCHNITT',section.name);beep(760,.075,'triangle',.03)}
  if(world.distance>=world.nextCheckpoint){save.bank+=3;world.checkpointRewards+=3;persist();showBanner('CHECKPOINT '+world.nextCheckpoint+' m','+3 ♥ SOFORT');world.nextCheckpoint+=1000;beep(820,.08,'triangle',.035)}
  if(world.distance>=world.nextBonus){world.bonusTimer=9;world.nextBonus+=2500;showBanner('BONUSRUNDE','HERZREGEN!');beep(980,.12,'triangle',.04)}
  if(world.tutorial&&world.tutorialStage>=3&&world.distance>=600){world.tutorial=false;save.tutorialSeen=true;persist();showBanner('TRAINING GESCHAFFT','JETZT FREIE FAHRT!')}
@@ -187,7 +187,7 @@ function drawPlayer(){const skin=skins[save.skin]||skins.berry,x=laneX(player.xL
 function drawParticles(){for(const p of particles){ctx.save();ctx.globalAlpha=Math.max(0,p.life);if(p.type==='heart')drawHeart(p.x,p.y,7,'#ff6e87',p.life);else{ctx.fillStyle='#ffe67b';ctx.fillRect(p.x,p.y,4,4)}ctx.restore()}}
 function drawForeground(){if(world.flash>0){ctx.fillStyle='rgba(255,255,255,'+(world.flash*.35)+')';ctx.fillRect(0,0,W,H)}const g=ctx.createRadialGradient(W/2,H*.55,Math.min(W,H)*.25,W/2,H*.55,Math.max(W,H)*.75);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.19)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
 function render(){ctx.save();if(world.shake>0&&!prefersReduced){const a=world.shake*8;ctx.translate((Math.random()-.5)*a,(Math.random()-.5)*a)}drawBackground();drawObjects();drawPlayer();drawParticles();drawForeground();if(paused){ctx.fillStyle='rgba(0,0,0,.30)';ctx.fillRect(0,0,W,H)}ctx.restore()}
-function loop(t){const dt=Math.min(.034,(t-last)/1000||0);last=t;update(dt);render();requestAnimationFrame(loop)}
+function loop(t){const rawDt=(t-last)/1000;const dt=Math.max(0,Math.min(.034,Number.isFinite(rawDt)?rawDt:0));last=t;update(dt);render();requestAnimationFrame(loop)}
 renderMenu('home');requestAnimationFrame(loop);
 })();
 </script>
