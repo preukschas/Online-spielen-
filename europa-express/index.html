@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#102b31">
+  <title>Europa-Express · DMP Lernwelt</title>
+  <meta name="description" content="Ein kurzes Kartenabenteuer zu Europas Ländern, Hauptstädten, Flüssen und Gebirgen.">
+  <style>
+    :root{--bg:#0b222a;--panel:#12333a;--panel2:#19434b;--line:#32606a;--ink:#f4f7ec;--muted:#b5d0ce;--mint:#93e6c0;--sun:#ffd879;--coral:#ffac8c;--blue:#76d4eb}
+    *{box-sizing:border-box}html{color-scheme:dark}body{margin:0;background:radial-gradient(circle at 80% -20%,#226063 0,transparent 48%),linear-gradient(160deg,#0a2028,#11343b 55%,#0b242c);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+    button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+    .shell{max-width:1250px;margin:auto;padding:16px clamp(12px,2vw,28px) 34px}.top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.brand{font-weight:950;letter-spacing:.06em;color:var(--mint);font-size:13px}.top a{color:var(--muted);text-decoration:none;font-weight:750}.top a:hover{text-decoration:underline}
+    h1{font-size:clamp(30px,5vw,54px);letter-spacing:-.05em;line-height:1;margin:16px 0 8px}.subtitle{color:var(--muted);margin:0 0 18px;line-height:1.45}
+    .dashboard{display:grid;grid-template-columns:minmax(0,1.47fr) minmax(320px,.8fr);gap:16px}.panel{border:1px solid var(--line);border-radius:22px;background:linear-gradient(150deg,rgba(27,70,76,.95),rgba(15,47,55,.96));box-shadow:0 20px 55px #061a2099;overflow:hidden}
+    .map-head{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:15px 18px 8px;flex-wrap:wrap}.map-head strong{font-size:17px}.small{font-size:12px;color:var(--muted)}
+    .map-wrap{position:relative;background:radial-gradient(circle at 56% 50%,#1a6670,#15505b 60%,#123c49);margin:0 12px 12px;border-radius:16px;overflow:hidden;border:1px solid #3d7480}
+    svg{display:block;width:100%;height:auto;aspect-ratio:1000/620;touch-action:manipulation}.land{fill:#37756f;stroke:#aed4b6;stroke-width:1.1;vector-effect:non-scaling-stroke}.land.active{fill:#efd180;stroke:#fff6cc;stroke-width:2.3}.waterline{fill:none;stroke:#8ad7ec;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;opacity:.25}.waterline.active{stroke:#78e9ff;stroke-width:8;opacity:1;filter:drop-shadow(0 0 8px #76d4eb)}.ridge{fill:none;stroke:#efca97;stroke-width:5;stroke-dasharray:6 5;stroke-linecap:round;opacity:.3}.ridge.active{stroke:#ffe19a;stroke-width:10;opacity:1;filter:drop-shadow(0 0 8px #f8be69)}
+    .map-pin{cursor:pointer}.map-pin circle{fill:#163a40;stroke:#c7e9d2;stroke-width:2}.map-pin text{fill:white;font-size:16px;font-weight:950;text-anchor:middle;dominant-baseline:middle;pointer-events:none}.map-pin.candidate circle{fill:#ffce70;stroke:#fff4d1;stroke-width:3}.map-pin.candidate text{fill:#173338;font-size:20px}.map-pin.target circle{fill:#ffdd85;stroke:#fff;stroke-width:3}.map-pin:hover circle{fill:#ffdf91}.map-pin circle.hit{fill:transparent;stroke:none}
+    .map-caption{position:absolute;left:12px;bottom:10px;background:#0c2c35df;padding:7px 11px;border-radius:10px;font-size:12px;color:#d4ece8;max-width:calc(100% - 24px)}
+    .rail{padding:15px 18px;border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;flex-wrap:wrap}.progress{display:flex;gap:8px;flex:1}.track{height:10px;border-radius:20px;flex:1;background:#34535a}.track.done{background:var(--mint)}.track.current{background:var(--sun)}.stat{font-size:13px;color:var(--muted);white-space:nowrap}
+    .control{padding:20px;min-height:490px;display:flex;flex-direction:column}.eyebrow{font-size:12px;color:var(--mint);letter-spacing:.1em;text-transform:uppercase;font-weight:900}.question{font-size:clamp(24px,3vw,34px);line-height:1.15;letter-spacing:-.03em;margin:11px 0 6px}.instruction{color:var(--muted);line-height:1.45;min-height:42px;margin:0 0 15px}.answers{display:grid;gap:10px}.answer,.primary,.secondary{border:1px solid #557e80;border-radius:14px;min-height:54px;padding:12px 15px;text-align:left;color:var(--ink);font-weight:850;background:#23535a}.answer:hover:not(:disabled){background:#347177}.answer:disabled{opacity:.48;cursor:default}.answer.correct{background:#2d765e;border-color:#99efbb;opacity:1}.answer.wrong{background:#724546;border-color:#ffb6a0}.primary{background:var(--sun);color:#17323b;border:none;text-align:center;box-shadow:0 8px 0 #a3773b}.primary:hover{filter:brightness(1.08)}.secondary{background:transparent;text-align:center}
+    .feedback{min-height:45px;margin-top:13px;color:var(--sun);font-weight:750;line-height:1.4}.push{margin-top:auto}.timerline{height:9px;background:#2e535c;border-radius:20px;overflow:hidden;margin-top:16px}.timerfill{height:100%;background:linear-gradient(90deg,#84d9b3,#ffdb7e);width:100%;transition:width .2s linear}.timernum{font-variant-numeric:tabular-nums;color:var(--sun);font-weight:950}.score-row{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);margin-top:12px}.score-row b{color:var(--ink)}
+    .postcard{border:1px solid #dfb976;border-radius:16px;background:linear-gradient(130deg,#684d3b,#3a5552);padding:18px;margin-top:8px}.postcard .stamp{font-size:35px}.postcard h3{font-size:24px;margin:6px 0}.postcard p{line-height:1.5;margin:0;color:#fff3dd}.postcard .primary{width:100%;margin-top:18px}
+    .hide{display:none!important}.below{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.note{padding:16px 18px;line-height:1.5;color:var(--muted)}.note h2{color:var(--ink);font-size:17px;margin:0 0 5px}.note p{margin:0}.album{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.chip{border:1px solid var(--line);border-radius:30px;padding:4px 8px;font-size:12px;color:var(--mint)}
+    @media(max-width:800px){.dashboard,.below{grid-template-columns:1fr}.control{min-height:370px}.map-wrap{margin:0 8px 8px}.shell{padding-bottom:22px}svg{aspect-ratio:1000/650}.rail{padding:12px}.map-caption{font-size:11px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header class="top"><span class="brand">DMP · LERNWELT</span><a href="https://preukschas.github.io/Online-spielen-/">← Zur Spielzentrale</a></header>
+  <h1>🚂 Europa-Express</h1>
+  <p class="subtitle">Drei Stationen, eine kurze Reise. Entdecke Länder, Hauptstädte, Flüsse und Gebirge.</p>
+  <main class="dashboard">
+    <section class="panel" aria-label="Europakarte">
+      <div class="map-head"><strong id="mapTitle">Deine Europakarte</strong><span class="small" id="mapHint">Tippe auf „Reise starten“</span></div>
+      <div class="map-wrap">
+        <svg id="map" viewBox="0 0 1000 620" role="img" aria-label="Vereinfachte Karte Europas mit markierten Orten"></svg>
+        <div class="map-caption" id="caption">Auf jeder Reise entdeckst du neue Orte.</div>
+      </div>
+      <div class="rail"><span aria-hidden="true">🚂</span><div class="progress" aria-label="Drei Stationen"><span class="track"></span><span class="track"></span><span class="track"></span></div><span class="stat" id="routeStat">0 / 3 Stationen</span></div>
+    </section>
+    <section class="panel control" aria-live="polite">
+      <div class="eyebrow" id="stepLabel">DEIN REISEPASS</div>
+      <h2 class="question" id="question">Wohin soll die Reise gehen?</h2>
+      <p class="instruction" id="instruction">In jeder Etappe warten drei kurze Aufgaben. Die Uhr läuft nur beim Rätseln.</p>
+      <div class="answers" id="answers"></div>
+      <div id="postcard" class="postcard hide"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="push"><button class="primary" id="mainButton" type="button">Reise starten →</button><div class="timerline" role="progressbar" aria-label="Verbleibende Zeit" aria-valuemin="0" aria-valuemax="30" aria-valuenow="30" id="timerbar"><div class="timerfill" id="timerfill"></div></div><div class="score-row"><span>⏱️ <b class="timernum" id="time">30</b> Sek.</span><span>⭐ Punkte: <b id="score">0</b></span><span>🏆 Bestwert: <b id="best">0</b></span></div></div>
+    </section>
+  </main>
+  <div class="below">
+    <section class="panel note"><h2>🗺️ Reisepass <span id="albumCount">0</span></h2><p>Entdeckte Postkarten bleiben auf diesem Gerät erhalten.</p><div class="album" id="album"></div></section>
+    <section class="panel note"><h2>So lernst du unterwegs</h2><p>Eine falsche Antwort gibt einen Hinweis. Schwierige Orte tauchen wieder auf. Die Regionen sind eine vereinfachte Einteilung fürs Spiel; einige Länder lassen sich auch anders zuordnen.</p></section>
+  </div>
+</div>
+<script src="map-data.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
