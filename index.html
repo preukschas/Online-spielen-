@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#102a2a">
 <title>DMP Spielzentrale</title>
-<meta name="description" content="DMP Spielzentrale mit frei zugänglicher Lernwelt und PIN-geschützter Spielewelt.">
+<meta name="description" content="DMP Spielzentrale mit frei zugänglicher Lernwelt und PIN-geschützter Spielewelt und Specials.">
 <script src="./fun-access.js"></script>
 <style>
 :root{
@@ -48,7 +48,11 @@ button{color:inherit}
 .worldEmoji{font-size:74px;line-height:1;margin:8px 0 22px;filter:drop-shadow(0 12px 16px rgba(0,0,0,.22))}
 .worldLabel{font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
 .learning .worldLabel{color:var(--green2)}
-.fun .worldLabel{color:var(--gold2)}\n.special .worldLabel{color:#ff9fcb}\n.worldButton.special{border-color:rgba(255,159,203,.32)}\n.worldButton.special:before{background:rgba(255,159,203,.09)}\n.special .worldCta{color:#ffb8d8}
+.fun .worldLabel{color:var(--gold2)}
+.special .worldLabel{color:#ff9fcb}
+.worldButton.special{border-color:rgba(255,159,203,.32)}
+.worldButton.special:before{background:rgba(255,159,203,.09)}
+.special .worldCta{color:#ffb8d8}
 .worldButton h2{font-size:36px;line-height:1.05;margin:7px 0 12px;letter-spacing:-.04em}
 .worldButton p{color:var(--muted);font-size:16px;line-height:1.55;margin:0 0 18px;max-width:42ch}
 .worldCta{margin-top:auto;display:inline-flex;align-items:center;gap:8px;font-weight:900;font-size:17px}
@@ -92,6 +96,7 @@ a.play{
 .soon .actions{color:var(--muted);font-weight:700}
 .infoStrip{margin:0 0 18px;padding:12px 14px;border-radius:14px;border:1px solid rgba(242,198,109,.25);background:rgba(242,198,109,.06);color:#e6ddc8;font-size:13px;line-height:1.5}
 footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.5}
+@media(max-width:900px){.worldChooser{grid-template-columns:1fr}.worldButton{min-height:250px}}
 @media(max-width:760px){
   .wrap{padding:18px 14px 34px}.hero{margin-top:28px}.worldChooser,.grid{grid-template-columns:1fr}
   .worldButton{min-height:300px;padding:22px}.worldEmoji{font-size:62px}.worldButton h2{font-size:32px}
@@ -104,14 +109,14 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
 <main class="wrap">
   <div class="topline">
     <div class="brandSmall">DMP · Online</div>
-    <div class="badge">Lernwelt frei · Spielewelt mit Eltern-PIN</div>
+    <div class="badge">Lernwelt frei · Spielewelt & Specials mit Eltern-PIN</div>
   </div>
 
   <section id="worldSelect">
     <div class="hero">
       <div style="font-size:52px" aria-hidden="true">🌍</div>
       <h1>Wohin möchtest du?</h1>
-      <p>Wähle zuerst eine Welt. Lernen ist immer möglich. Reine Spaß-Games werden erst nach Freigabe durch die Eltern geöffnet.</p>
+      <p>Wähle zuerst eine Welt. Lernen ist immer möglich. Spielewelt und Specials werden mit der Eltern-PIN geöffnet.</p>
     </div>
 
     <div class="worldChooser">
@@ -124,11 +129,12 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
       </button>
 
       <button class="worldButton special" id="openSpecials" type="button">
-        <div class="worldLabel">Besondere Spiele</div>
+        <div class="worldLabel">Eltern-Freigabe</div>
         <div class="worldEmoji" aria-hidden="true">🎉✨</div>
         <h2>Specials</h2>
-        <p>Geburtstage und besondere Anlässe. Diese Spiele sind vorerst ohne PIN erreichbar.</p>
+        <p>Geburtstage und besondere Anlässe. Für Specials ist die Eltern-PIN nötig.</p>
         <div class="worldCta">Specials öffnen →</div>
+        <div class="lockState" id="specialsStatus">🔒 Gesperrt</div>
       </button>
 
       <button class="worldButton fun" id="openFun" type="button">
@@ -201,18 +207,19 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
         <div class="worldHeaderIcon" aria-hidden="true">🎉</div>
         <div>
           <h1 id="specialsTitle">Specials</h1>
-          <p>Besondere Spiele für besondere Anlässe – vorerst frei zugänglich.</p>
+          <p>Besondere Spiele für besondere Anlässe. Freigeschaltet für maximal 60 Minuten.</p>
         </div>
       </div>
-      <div class="headerActions"><button class="controlBtn" type="button" data-back>← Weltenauswahl</button></div>
+      <div class="headerActions"><button class="controlBtn" type="button" data-back>← Weltenauswahl</button><button class="controlBtn gold" type="button" id="lockSpecialsBtn">Jetzt sperren</button></div>
     </div>
+    <div class="infoStrip" id="specialsUnlockInfo">🔓 Specials freigeschaltet.</div>
     <div class="grid">
       <article class="card">
         <div class="kicker">Geburtstag · Leon</div>
         <div class="icon" aria-hidden="true">🎂🎁</div>
         <h2>Leons Geschenk-Jagd</h2>
         <p>45 Sekunden Geburtstags-Action: Geschenke, Ballons, Sterne und Kuchen sammeln, Gewitterwolken ausweichen und die große Torte erwischen.</p>
-        <div class="meta"><span>45 Sekunden</span><span>Touch + Tastatur</span><span>ohne PIN</span></div>
+        <div class="meta"><span>45 Sekunden</span><span>Touch + Tastatur</span><span>Eltern-PIN</span></div>
         <div class="actions"><a class="play" href="./leon-geburtstag/">Leon spielen →</a></div>
       </article>
     </div>
@@ -266,7 +273,7 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
   </section>
 
   <footer>
-    Lernspiele bleiben frei. Die Spielewelt ist eine praktische Elternsperre auf einer statischen GitHub-Pages-Seite; technisch versierte Nutzer mit Entwicklerwerkzeugen könnten eine rein clientseitige Sperre grundsätzlich umgehen.
+    Lernspiele bleiben frei. Spielewelt und Specials nutzen eine praktische Elternsperre auf einer statischen GitHub-Pages-Seite; technisch versierte Nutzer mit Entwicklerwerkzeugen könnten eine rein clientseitige Sperre grundsätzlich umgehen.
   </footer>
 </main>
 
@@ -274,13 +281,17 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
 (function(){
   const select=document.getElementById('worldSelect');
   const learning=document.getElementById('learningWorld');
-  const fun=document.getElementById('funWorld');\n  const specials=document.getElementById('specialsWorld');
+  const fun=document.getElementById('funWorld');
+  const specials=document.getElementById('specialsWorld');
   const status=document.getElementById('funStatus');
+  const specialsStatus=document.getElementById('specialsStatus');
+  const specialsInfo=document.getElementById('specialsUnlockInfo');
   const info=document.getElementById('unlockInfo');
 
   function hideWorlds(){
     learning.classList.add('hidden');
-    fun.classList.add('hidden');\n    specials.classList.add('hidden');
+    fun.classList.add('hidden');
+    specials.classList.add('hidden');
   }
   function showSelect(){
     hideWorlds();
@@ -291,12 +302,23 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
   function showLearning(){
     select.classList.add('hidden');
     fun.classList.add('hidden');
+    specials.classList.add('hidden');
     learning.classList.remove('hidden');
     window.scrollTo({top:0,behavior:'smooth'});
   }
-  function showSpecials(){\n    select.classList.add('hidden');\n    learning.classList.add('hidden');\n    fun.classList.add('hidden');\n    specials.classList.remove('hidden');\n    window.scrollTo({top:0,behavior:'smooth'});\n  }\n  function showFun(){
+  function showSpecials(){
     select.classList.add('hidden');
     learning.classList.add('hidden');
+    fun.classList.add('hidden');
+    specials.classList.remove('hidden');
+    const m=DMPFunAccess.remainingUnlockMinutes();
+    specialsInfo.textContent='🔓 Specials freigeschaltet · noch ungefähr '+m+' Minute'+(m===1?'':'n')+'.';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function showFun(){
+    select.classList.add('hidden');
+    learning.classList.add('hidden');
+    specials.classList.add('hidden');
     fun.classList.remove('hidden');
     const m=DMPFunAccess.remainingUnlockMinutes();
     info.textContent='🔓 Spielewelt freigeschaltet · noch ungefähr '+m+' Minute'+(m===1?'':'n')+'.';
@@ -306,18 +328,28 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
     if(DMPFunAccess.isUnlocked()){
       const m=DMPFunAccess.remainingUnlockMinutes();
       status.textContent='🔓 Noch ca. '+m+' Min. freigeschaltet';
+      specialsStatus.textContent=status.textContent;
     }else{
       const s=DMPFunAccess.lockRemainingSeconds();
       status.textContent=s>0?'⏳ Nach Fehlversuchen '+s+' Sek. gesperrt':'🔒 PIN erforderlich';
+      specialsStatus.textContent=status.textContent;
     }
   }
 
-  document.getElementById('openLearning').addEventListener('click',showLearning);\n  document.getElementById('openSpecials').addEventListener('click',showSpecials);
+  document.getElementById('openLearning').addEventListener('click',showLearning);
+  document.getElementById('openSpecials').addEventListener('click',()=>{
+    DMPFunAccess.requestAccess({onUnlock:()=>{updateStatus();showSpecials();}});
+  });
   document.getElementById('openFun').addEventListener('click',()=>{
     DMPFunAccess.requestAccess({onUnlock:()=>{updateStatus();showFun();}});
   });
   document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',showSelect));
   document.getElementById('lockFunBtn').addEventListener('click',()=>{
+    DMPFunAccess.lockNow();
+    showSelect();
+  });
+
+  document.getElementById('lockSpecialsBtn').addEventListener('click',()=>{
     DMPFunAccess.lockNow();
     showSelect();
   });
