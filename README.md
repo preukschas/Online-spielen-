@@ -54,6 +54,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Spielewelt | Ronja Race | `/ronja-race/` | `preukschas/DMP-Games` → `projects/ronja-race/` (V0.3.1 Browser-Start-Hotfix) |
 | Spielewelt | Bett Battle | `/bett-battle/` | `preukschas/DMP-Games` → `projects/bett-battle/` (Final 1.0) |
 | Specials | Franz – Meister der Fuge | `/franz-fliesenleger/` | `preukschas/DMP-Games` → `projects/franz-fliesenleger/` (V1.0) |
+| Specials | Elli – Ein schöner Tag | `/elli-ein-schoener-tag/` | `preukschas/DMP-Games` → `projects/elli-ein-schoener-tag/` (Final 1.0) |
 | Specials | Leons Geschenk-Jagd | `/leon-geburtstag/` | Bereits entwickeltes Geburtstagsspiel |
 
 Einmaleins Space ist ein eigenständiges Lernspiel. Die Weltraum-Abwehr innerhalb von Vokabel Quest bleibt Teil des Vokabeltrainers.
@@ -68,8 +69,8 @@ Einmaleins Space ist ein eigenständiges Lernspiel. Die Weltraum-Abwehr innerhal
 
 ## Stand
 
-- Alle einundzwanzig vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
+- Alle zweiundzwanzig vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
 - Lernwelt: vierzehn Spiele ohne Eltern-PIN.
 - Spielewelt: fünf Spiele mit gemeinsamer PIN-Prüfung auch beim direkten URL-Aufruf.
-- Specials: Leons Geschenk-Jagd und Franz – Meister der Fuge frei zugänglich ohne PIN und ohne Zeitsperre.
+- Specials: Leons Geschenk-Jagd, Franz – Meister der Fuge und Elli – Ein schöner Tag frei zugänglich ohne PIN und ohne Zeitsperre.
 - Die Spielinhalte stammen aus den jeweiligen Entwicklungsfassungen; Spaß-Games tragen zusätzlich die zentrale PIN-Einbindung.
