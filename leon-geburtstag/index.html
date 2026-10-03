@@ -42,7 +42,7 @@
   <div class="hud" aria-label="Spielstand">
     <div class="pill">🎁 Punkte: <strong id="score">0</strong></div>
     <div class="pill">🏆 Highscore: <strong id="highscore">0</strong></div>
-    <div class="pill">⏱️ Zeit: <strong id="time">45</strong>s</div>
+    <div class="pill">⏱️ Zeit: <strong id="time">60</strong>s</div>
     <div class="pill">❤️ Leben: <strong id="lives">3</strong></div>
     <div class="pill">Level <strong id="level">1</strong></div>
   </div>
@@ -105,7 +105,7 @@
   function rand(a,b){return a+Math.random()*(b-a)}
   function reset(){
     running=true;paused=false;last=performance.now();elapsed=0;spawnClock=0;score=0;lives=3;level=1;items=[];confetti=[];cakeSpawned=false;leon.x=W/2;
-    scoreEl.textContent='0';timeEl.textContent='45';livesEl.textContent='3';levelEl.textContent='1';pauseBtn.textContent='Pause';overlay.hidden=true;
+    scoreEl.textContent='0';timeEl.textContent='60';livesEl.textContent='3';levelEl.textContent='1';pauseBtn.textContent='Pause';overlay.hidden=true;
     cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
   }
   function spawn(type){
@@ -187,15 +187,15 @@
     const dt=Math.min((t-last)/1000,.033);last=t;
     if(!paused){
       elapsed+=dt;spawnClock+=dt;
-      timeEl.textContent=Math.max(0,Math.ceil(45-elapsed));
-      const nl=elapsed<15?1:elapsed<30?2:3;if(nl!==level){level=nl;levelEl.textContent=level;burst(W/2,100)}
+      timeEl.textContent=Math.max(0,Math.ceil(60-elapsed));
+      const nl=elapsed<20?1:elapsed<40?2:3;if(nl!==level){level=nl;levelEl.textContent=level;burst(W/2,100)}
       if(left)leon.x-=leon.speed*dt;if(right)leon.x+=leon.speed*dt;leon.x=Math.max(38,Math.min(W-38,leon.x));
       const interval=Math.max(.54,.86-(level-1)*.12);
       if(spawnClock>interval){spawnClock=0;const r=Math.random();spawn(r<.10?'cloud':r<.25?'cake':r<.34?'star':r<.64?'balloon':'gift')}
-      if(elapsed>37&&!cakeSpawned){cakeSpawned=true;spawn('bigcake')}
+      if(elapsed>52&&!cakeSpawned){cakeSpawned=true;spawn('bigcake')}
       for(let i=items.length-1;i>=0;i--){const it=items[i];it.y+=it.vy*dt;if(collide(it)){reward(it);items.splice(i,1);if(!running)return;continue}if(it.y>H+60)items.splice(i,1)}
       for(let i=confetti.length-1;i>=0;i--){const c=confetti[i];c.x+=c.vx*dt;c.y+=c.vy*dt;c.vy+=260*dt;c.life-=dt;if(c.life<=0)confetti.splice(i,1)}
-      if(elapsed>=45){finish(true);return}
+      if(elapsed>=60){finish(true);return}
     }
     drawBg();items.forEach(drawItem);drawLeon();ctx.font='20px system-ui';ctx.textAlign='center';for(const c of confetti)ctx.fillText(c.icon,c.x,c.y);
     if(paused){ctx.fillStyle='rgba(0,0,0,.42)';ctx.fillRect(0,0,W,H);ctx.fillStyle='white';ctx.font='700 34px system-ui';ctx.textAlign='center';ctx.fillText('Pause',W/2,H/2)}
