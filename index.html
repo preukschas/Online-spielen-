@@ -3,146 +3,49 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#102a2a">
+<meta name="theme-color" content="#101b22">
 <title>DMP Spielzentrale</title>
 <meta name="description" content="DMP Spielzentrale mit frei zugänglicher Lernwelt und PIN-geschützter Spielewelt und Specials.">
 <script src="./fun-access.js"></script>
-<style>
-:root{
-  --bg:#0f1d1d;--panel:#152626;--panel2:#1b3130;--text:#f6f8f7;--muted:#a9bbb8;
-  --line:#2a4542;--green:#61d6a8;--green2:#8ce8c4;--gold:#f2c66d;--gold2:#ffdf91;
-  --shadow:0 18px 50px rgba(0,0,0,.24)
-}
-*{box-sizing:border-box}
-html{color-scheme:dark}
-body{
-  margin:0;min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  color:var(--text);background:
-    radial-gradient(circle at 10% 0%,rgba(97,214,168,.12),transparent 34%),
-    radial-gradient(circle at 95% 15%,rgba(242,198,109,.09),transparent 30%),
-    linear-gradient(180deg,#0d1919 0%,#102020 55%,#0d1919 100%);
-}
-button,a{font:inherit}
-button{color:inherit}
-.hidden{display:none!important}
-.wrap{max-width:1080px;margin:0 auto;padding:28px 18px 48px}
-.topline{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.brandSmall{color:var(--green);font-weight:900;letter-spacing:.09em;text-transform:uppercase;font-size:12px}
-.badge{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:13px;background:rgba(255,255,255,.03)}
-.hero{text-align:center;max-width:760px;margin:42px auto 28px}
-.hero h1{font-size:clamp(36px,6vw,64px);line-height:.98;margin:12px 0 14px;letter-spacing:-.05em}
-.hero p{color:var(--muted);font-size:18px;line-height:1.55;margin:0 auto;max-width:650px}
-.worldChooser{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:34px}
-.worldButton{
-  position:relative;overflow:hidden;min-height:360px;border:1px solid var(--line);border-radius:28px;padding:28px;
-  background:linear-gradient(145deg,rgba(27,49,48,.97),rgba(18,33,32,.97));box-shadow:var(--shadow);
-  text-align:left;cursor:pointer;display:flex;flex-direction:column;transition:transform .16s ease,border-color .16s ease
-}
-.worldButton:hover{transform:translateY(-3px)}
-.worldButton:focus-visible{outline:3px solid #fff;outline-offset:3px}
-.worldButton:before{content:"";position:absolute;width:260px;height:260px;border-radius:50%;right:-100px;top:-110px}
-.worldButton.learning{border-color:rgba(97,214,168,.33)}
-.worldButton.learning:before{background:rgba(97,214,168,.10)}
-.worldButton.fun{border-color:rgba(242,198,109,.30)}
-.worldButton.fun:before{background:rgba(242,198,109,.09)}
-.worldEmoji{font-size:74px;line-height:1;margin:8px 0 22px;filter:drop-shadow(0 12px 16px rgba(0,0,0,.22))}
-.worldLabel{font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
-.learning .worldLabel{color:var(--green2)}
-.fun .worldLabel{color:var(--gold2)}
-.special .worldLabel{color:#ff9fcb}
-.worldButton.special{border-color:rgba(255,159,203,.32)}
-.worldButton.special:before{background:rgba(255,159,203,.09)}
-.special .worldCta{color:#ffb8d8}
-.worldButton h2{font-size:36px;line-height:1.05;margin:7px 0 12px;letter-spacing:-.04em}
-.worldButton p{color:var(--muted);font-size:16px;line-height:1.55;margin:0 0 18px;max-width:42ch}
-.worldCta{margin-top:auto;display:inline-flex;align-items:center;gap:8px;font-weight:900;font-size:17px}
-.learning .worldCta{color:var(--green2)}
-.fun .worldCta{color:var(--gold2)}
-.lockState{margin-top:10px;color:var(--muted);font-size:13px}
-.worldScreen{margin-top:22px}
-.worldHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
-.worldHeaderMain{display:flex;gap:14px;align-items:flex-start}
-.worldHeaderIcon{font-size:44px}
-.worldHeader h1{font-size:34px;margin:0 0 6px;letter-spacing:-.04em}
-.worldHeader p{color:var(--muted);margin:0;line-height:1.5}
-.headerActions{display:flex;gap:8px;flex-wrap:wrap}
-.controlBtn{
-  min-height:44px;padding:9px 13px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);
-  color:var(--text);font-weight:800;cursor:pointer
-}
-.controlBtn.gold{border-color:rgba(242,198,109,.35);color:var(--gold2)}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
-.card{
-  position:relative;overflow:hidden;border:1px solid var(--line);border-radius:24px;padding:22px;
-  background:linear-gradient(145deg,rgba(27,49,48,.96),rgba(20,37,37,.96));box-shadow:var(--shadow);
-  min-height:285px;display:flex;flex-direction:column
-}
-.card:before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-70px;top:-85px;background:rgba(97,214,168,.08)}
-.funWorld .card:before{background:rgba(242,198,109,.08)}
-.kicker{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--green)}
-.funWorld .kicker{color:var(--gold)}
-.icon{font-size:54px;margin:16px 0 8px;filter:drop-shadow(0 10px 12px rgba(0,0,0,.18))}
-.card h2{font-size:28px;margin:0 0 8px;letter-spacing:-.03em}
-.card p{color:var(--muted);line-height:1.55;margin:0 0 18px;max-width:48ch}
-.meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-.meta span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:6px 9px;color:#d6e2df;background:rgba(255,255,255,.025)}
-.actions{margin-top:auto;display:flex;gap:10px;flex-wrap:wrap}
-a.play{
-  display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 16px;border-radius:14px;
-  background:var(--green);color:#092019;text-decoration:none;font-weight:900;box-shadow:0 8px 22px rgba(97,214,168,.18)
-}
-.funWorld a.play{background:var(--gold);color:#2a210e;box-shadow:0 8px 22px rgba(242,198,109,.16)}
-.soon{opacity:.62}
-.soon .actions{color:var(--muted);font-weight:700}
-.infoStrip{margin:0 0 18px;padding:12px 14px;border-radius:14px;border:1px solid rgba(242,198,109,.25);background:rgba(242,198,109,.06);color:#e6ddc8;font-size:13px;line-height:1.5}
-footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.5}
-@media(max-width:900px){.worldChooser{grid-template-columns:1fr}.worldButton{min-height:250px}}
-@media(max-width:760px){
-  .wrap{padding:18px 14px 34px}.hero{margin-top:28px}.worldChooser,.grid{grid-template-columns:1fr}
-  .worldButton{min-height:300px;padding:22px}.worldEmoji{font-size:62px}.worldButton h2{font-size:32px}
-  .worldHeader h1{font-size:29px}.card{min-height:0}
-}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
-</style>
+<link rel="stylesheet" href="./hub-theme.css">
 </head>
 <body>
 <main class="wrap">
   <div class="topline">
-    <div class="brandSmall">DMP · Online</div>
-    <div class="badge">Lernwelt & Specials frei · Spielewelt mit Eltern-PIN</div>
+    <div class="brand" aria-label="DMP Games"><span class="brandMark" aria-hidden="true"></span><span>DMP <b>GAMES</b></span></div>
+    <div class="badge">Lernen & Specials frei · Spaß mit Eltern-PIN</div>
   </div>
 
   <section id="worldSelect">
     <div class="hero">
-      <div style="font-size:52px" aria-hidden="true">🌍</div>
-      <h1>Wohin möchtest du?</h1>
-      <p>Wähle zuerst eine Welt. Lernwelt und Specials sind frei zugänglich. Nur die Spielewelt wird mit der Eltern-PIN geöffnet.</p>
+      <h1>Deine Spielezentrale</h1>
+      <p>Wähle deine Welt und leg los.</p>
     </div>
 
     <div class="worldChooser">
       <button class="worldButton learning" id="openLearning" type="button">
-        <div class="worldLabel">Immer geöffnet</div>
-        <div class="worldEmoji" aria-hidden="true">🧠✨</div>
-        <h2>Lernwelt</h2>
-        <p>Englisch, Lernabenteuer und Übungen. Hier kannst du jederzeit loslegen.</p>
-        <div class="worldCta">Lernwelt betreten →</div>
-      </button>
-
-      <button class="worldButton special" id="openSpecials" type="button">
-        <div class="worldLabel">Frei zugänglich</div>
-        <div class="worldEmoji" aria-hidden="true">🎉✨</div>
-        <h2>Specials</h2>
-        <p>Geburtstage und besondere Anlässe. Hier kannst du ohne PIN und ohne Zeitsperre loslegen.</p>
-        <div class="worldCta">Specials öffnen →</div>
+        <span class="worldLabel">Immer geöffnet</span>
+        <span class="worldArt" aria-hidden="true"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="none" stroke-width="5"/><path d="M61 38 55 55 38 61 45 45Z" stroke-width="3"/><circle cx="50" cy="50" r="4" fill="#167f6c" stroke="none"/><path d="M50 6v7M50 87v7M6 50h7M87 50h7" fill="none" stroke-width="4"/></svg></span>
+        <h2>LERNEN</h2>
+        <p>Abenteuer, Englisch und Mathe</p>
+        <span class="worldCta">Lernwelt öffnen →</span>
       </button>
 
       <button class="worldButton fun" id="openFun" type="button">
-        <div class="worldLabel">Eltern-Freigabe</div>
-        <div class="worldEmoji" aria-hidden="true">🎮🔐</div>
-        <h2>Spielewelt</h2>
-        <p>Reine Spaß-Games wie Planet unter Druck. Dafür ist eine vierstellige Eltern-PIN nötig.</p>
-        <div class="worldCta">Spielewelt öffnen →</div>
-        <div class="lockState" id="funStatus">🔒 Gesperrt</div>
+        <span class="worldLabel">Mit Eltern-PIN</span>
+        <span class="worldArt" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M26 35c-8 0-13 6-16 19l-3 16c-2 11 9 17 17 10l14-12h24l14 12c8 7 19 1 17-10l-3-16c-3-13-8-19-16-19H26Z" stroke-width="3"/><path d="M29 47v17M20.5 55.5h17" fill="none" stroke="#823029" stroke-width="5"/><circle cx="68" cy="49" r="4" fill="#823029" stroke="none"/><circle cx="78" cy="58" r="4" fill="#823029" stroke="none"/><circle cx="58" cy="58" r="4" fill="#823029" stroke="none"/></svg></span>
+        <h2>Spaß</h2>
+        <p>Action und Games zum Abschalten</p>
+        <span class="worldCta">Spielewelt öffnen →</span>
+        <span class="lockState" id="funStatus">🔒 Gesperrt</span>
+      </button>
+
+      <button class="worldButton special" id="openSpecials" type="button">
+        <span class="worldLabel">Frei zugänglich</span>
+        <span class="worldArt" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="m50 9 12.5 25.5 28 4-20.25 19.75 4.8 27.9L50 73 25 86.15l4.75-27.9L9.5 38.5l28-4Z" stroke-width="3"/></svg></span>
+        <h2>SPECIALS</h2>
+        <p>Geburtstage und besondere Spiele</p>
+        <span class="worldCta">Specials öffnen →</span>
       </button>
     </div>
   </section>
@@ -235,7 +138,7 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
         <div class="icon" aria-hidden="true">🎂🎁</div>
         <h2>Leons Geschenk-Jagd</h2>
         <p>45 Sekunden Geburtstags-Action: Geschenke, Ballons, Sterne und Kuchen sammeln, Gewitterwolken ausweichen und die große Torte erwischen.</p>
-        <div class="meta"><span>45 Sekunden</span><span>Touch + Tastatur</span><span>Eltern-PIN</span></div>
+        <div class="meta"><span>45 Sekunden</span><span>Touch + Tastatur</span><span>ohne PIN</span></div>
         <div class="actions"><a class="play" href="./leon-geburtstag/">Leon spielen →</a></div>
       </article>
     </div>
@@ -288,9 +191,7 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
     </div>
   </section>
 
-  <footer>
-    Lernspiele bleiben frei. Spielewelt und Specials nutzen eine praktische Elternsperre auf einer statischen GitHub-Pages-Seite; technisch versierte Nutzer mit Entwicklerwerkzeugen könnten eine rein clientseitige Sperre grundsätzlich umgehen.
-  </footer>
+  <footer>DMP GAMES · Lernen und Specials sind frei. Für Spaß-Games brauchst du die Eltern-PIN.</footer>
 </main>
 
 <script>
