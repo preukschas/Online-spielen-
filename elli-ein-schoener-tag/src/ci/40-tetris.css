@@ -1,0 +1,24 @@
+#tetrisCanvas{
+  border:7px solid #d4934c!important;
+  outline:4px solid #75401e;
+  background:#172547!important;
+  box-shadow:0 8px 0 #5e3219,0 14px 26px rgba(32,30,38,.24)!important;
+}
+.tetris-controls button{
+  background:linear-gradient(180deg,#2b91e2,#1268b4)!important;
+  color:white!important;
+  border:3px solid #fff0ca!important;
+  box-shadow:0 4px 0 #0b4c87!important;
+}
+.tetris-controls button.wide{
+  background:linear-gradient(180deg,#ff7696,#e84b77)!important;
+  box-shadow:0 4px 0 #a92f55!important;
+}
+.tetris-kicker{color:var(--elli-blue-dark)!important}
+.tetris-message,.next-piece-box,.swipe-help{
+  border:2px solid #e0b36f;
+  background:#fff9e9!important;
+}
+#nextCanvas{background:#172547!important}
+.progress-track{background:#ead7ac!important}
+.progress-track i{background:linear-gradient(90deg,var(--elli-blue),var(--elli-pink))!important}
