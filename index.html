@@ -5,14 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#102a2a">
 <title>DMP Spielzentrale</title>
-<meta name="description" content="Öffentliche Spielzentrale für DMP Games und Lernspiele.">
+<meta name="description" content="Öffentliche DMP Spielzentrale mit klar getrennten Lernspielen und Spaß-Games.">
 <style>
 :root{
   --bg:#0f1d1d;--panel:#152626;--panel2:#1b3130;--text:#f6f8f7;--muted:#a9bbb8;
-  --line:#2a4542;--green:#61d6a8;--gold:#f2c66d;--shadow:0 18px 50px rgba(0,0,0,.24)
+  --line:#2a4542;--green:#61d6a8;--green2:#8ce8c4;--gold:#f2c66d;--gold2:#ffdf91;
+  --shadow:0 18px 50px rgba(0,0,0,.24)
 }
 *{box-sizing:border-box}
-html{color-scheme:dark}
+html{color-scheme:dark;scroll-behavior:smooth}
 body{
   margin:0;min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   color:var(--text);background:
@@ -24,20 +25,36 @@ body{
 header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
 .brand small{display:block;color:var(--green);font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 h1{font-size:clamp(32px,5vw,56px);line-height:1;margin:10px 0 12px;letter-spacing:-.04em}
-.lead{max-width:700px;color:var(--muted);font-size:17px;line-height:1.55;margin:0}
+.lead{max-width:720px;color:var(--muted);font-size:17px;line-height:1.55;margin:0}
 .badge{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:13px;background:rgba(255,255,255,.03)}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:34px}
+.quickNav{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.quickNav a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:9px 13px;font-weight:800;color:var(--text);background:rgba(255,255,255,.03)}
+.quickNav a.learn{border-color:rgba(97,214,168,.35);color:var(--green2)}
+.quickNav a.fun{border-color:rgba(242,198,109,.35);color:var(--gold2)}
+.category{margin-top:38px}
+.categoryHeader{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;
+  padding:0 2px 13px;border-bottom:1px solid var(--line)
+}
+.categoryTitle{display:flex;align-items:center;gap:12px}
+.categoryIcon{font-size:32px}
+.category h2{font-size:28px;margin:0;letter-spacing:-.03em}
+.category p{margin:5px 0 0;color:var(--muted);line-height:1.5}
+.categoryTag{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:7px 10px}
+.learning .categoryTag{background:rgba(97,214,168,.10);color:var(--green2);border:1px solid rgba(97,214,168,.28)}
+.fun .categoryTag{background:rgba(242,198,109,.09);color:var(--gold2);border:1px solid rgba(242,198,109,.28)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}
 .card{
   position:relative;overflow:hidden;border:1px solid var(--line);border-radius:24px;padding:22px;
   background:linear-gradient(145deg,rgba(27,49,48,.96),rgba(20,37,37,.96));box-shadow:var(--shadow);
   min-height:285px;display:flex;flex-direction:column
 }
 .card:before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-70px;top:-85px;background:rgba(97,214,168,.08)}
-.card.game:before{background:rgba(242,198,109,.08)}
+.fun .card:before{background:rgba(242,198,109,.08)}
 .kicker{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--green)}
-.game .kicker{color:var(--gold)}
+.fun .kicker{color:var(--gold)}
 .icon{font-size:54px;margin:16px 0 8px;filter:drop-shadow(0 10px 12px rgba(0,0,0,.18))}
-.card h2{font-size:28px;margin:0 0 8px;letter-spacing:-.03em}
+.card h3{font-size:28px;margin:0 0 8px;letter-spacing:-.03em}
 .card p{color:var(--muted);line-height:1.55;margin:0 0 18px;max-width:48ch}
 .meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
 .meta span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:6px 9px;color:#d6e2df;background:rgba(255,255,255,.025)}
@@ -46,12 +63,15 @@ a.play{
   display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 16px;border-radius:14px;
   background:var(--green);color:#092019;text-decoration:none;font-weight:900;box-shadow:0 8px 22px rgba(97,214,168,.18)
 }
-.game a.play{background:var(--gold);color:#2a210e;box-shadow:0 8px 22px rgba(242,198,109,.16)}
+.fun a.play{background:var(--gold);color:#2a210e;box-shadow:0 8px 22px rgba(242,198,109,.16)}
 a.play:hover{transform:translateY(-1px)}
 .soon{opacity:.62}
 .soon .actions{color:var(--muted);font-weight:700}
-footer{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.5}
-@media(max-width:760px){.grid{grid-template-columns:1fr}.wrap{padding:20px 14px 34px}.card{min-height:0}.icon{font-size:48px}}
+footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.5}
+@media(max-width:760px){
+  .grid{grid-template-columns:1fr}.wrap{padding:20px 14px 34px}.card{min-height:0}.icon{font-size:48px}
+  .category{margin-top:30px}.category h2{font-size:25px}.categoryHeader{align-items:flex-start}
+}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 </style>
 </head>
@@ -61,41 +81,73 @@ footer{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);color:v
   <div class="brand">
     <small>DMP · Online spielen</small>
     <h1>Spielzentrale</h1>
-    <p class="lead">Hier starten die veröffentlichten Spiele und Lernspiele direkt im Browser – ohne Download und ohne Installation.</p>
+    <p class="lead">Lernspiele und Spaß-Games sind hier bewusst getrennt. So ist sofort klar: Willst du üben und lernen – oder einfach nur zocken?</p>
+    <nav class="quickNav" aria-label="Spielkategorien">
+      <a class="learn" href="#lernspiele">🧠 Lernspiele</a>
+      <a class="fun" href="#spass-games">🎮 Spaß-Games</a>
+    </nav>
   </div>
   <div class="badge">Öffentliche GitHub-Pages-Version</div>
 </header>
 
-<section class="grid" aria-label="Spiele">
-  <article class="card">
-    <div class="kicker">Lernspiel · Moe</div>
-    <div class="icon" aria-hidden="true">🧠🇬🇧</div>
-    <h2>Moe’s English World</h2>
-    <p>Adaptives Englischtraining mit 90 Vokabeln, Wiederholungsalgorithmus, Spielwelt, Mini-Games, Belohnungen und Elternansicht.</p>
-    <div class="meta"><span>12-Wörter-Runden</span><span>speichert Fortschritt</span><span>mobil optimiert</span></div>
-    <div class="actions"><a class="play" href="./moes-english-world/">Jetzt starten →</a></div>
-  </article>
+<section class="category learning" id="lernspiele" aria-labelledby="lernspiele-title">
+  <div class="categoryHeader">
+    <div class="categoryTitle">
+      <div class="categoryIcon" aria-hidden="true">🧠</div>
+      <div>
+        <h2 id="lernspiele-title">Lernspiele</h2>
+        <p>Für Schule, Übung und kluges Wiederholen – spielerisch, aber mit echtem Lernziel.</p>
+      </div>
+    </div>
+    <div class="categoryTag">Lernen mit Spaß</div>
+  </div>
 
-  <article class="card game">
-    <div class="kicker">Game · Strategie</div>
-    <div class="icon" aria-hidden="true">🌍🛡️</div>
-    <h2>Planet unter Druck</h2>
-    <p>Öko-Sci-Fi-Tower-Defense mit langen Runden, Prestige-System und Katastrophen. Die bisherige öffentliche Version bleibt vollständig erhalten.</p>
-    <div class="meta"><span>V17</span><span>Tower Defense</span><span>Browsergame</span></div>
-    <div class="actions"><a class="play" href="./planet-unter-druck/">Jetzt starten →</a></div>
-  </article>
+  <div class="grid">
+    <article class="card">
+      <div class="kicker">Englisch · Moe</div>
+      <div class="icon" aria-hidden="true">🇬🇧🧠</div>
+      <h3>Moe’s English World</h3>
+      <p>Adaptives Englischtraining mit 90 Vokabeln, Wiederholungsalgorithmus, Spielwelt, Mini-Games, Belohnungen und Elternansicht.</p>
+      <div class="meta"><span>12-Wörter-Runden</span><span>speichert Fortschritt</span><span>mobil optimiert</span></div>
+      <div class="actions"><a class="play" href="./moes-english-world/">Lernspiel starten →</a></div>
+    </article>
+  </div>
+</section>
 
-  <article class="card soon">
-    <div class="kicker">Demnächst</div>
-    <div class="icon" aria-hidden="true">🏃‍♂️</div>
-    <h2>Domi Run</h2>
-    <p>Die öffentliche Browser-Version folgt später. Die Entwicklung bleibt weiterhin getrennt im privaten Spiele-Repository.</p>
-    <div class="actions">Noch nicht veröffentlicht</div>
-  </article>
+<section class="category fun" id="spass-games" aria-labelledby="spass-title">
+  <div class="categoryHeader">
+    <div class="categoryTitle">
+      <div class="categoryIcon" aria-hidden="true">🎮</div>
+      <div>
+        <h2 id="spass-title">Spaß-Games</h2>
+        <p>Action, Strategie und Unterhaltung – hier geht es einfach ums Spielen.</p>
+      </div>
+    </div>
+    <div class="categoryTag">Einfach zocken</div>
+  </div>
+
+  <div class="grid">
+    <article class="card">
+      <div class="kicker">Strategie · Tower Defense</div>
+      <div class="icon" aria-hidden="true">🌍🛡️</div>
+      <h3>Planet unter Druck</h3>
+      <p>Öko-Sci-Fi-Tower-Defense mit langen Runden, Prestige-System und Katastrophen. Die bisherige öffentliche Version bleibt vollständig erhalten.</p>
+      <div class="meta"><span>V17</span><span>Tower Defense</span><span>Browsergame</span></div>
+      <div class="actions"><a class="play" href="./planet-unter-druck/">Game starten →</a></div>
+    </article>
+
+    <article class="card soon">
+      <div class="kicker">Demnächst · Runner</div>
+      <div class="icon" aria-hidden="true">🏃‍♂️</div>
+      <h3>Domi Run</h3>
+      <p>Die öffentliche Browser-Version folgt später. Die Entwicklung bleibt weiterhin getrennt im privaten Spiele-Repository.</p>
+      <div class="actions">Noch nicht veröffentlicht</div>
+    </article>
+  </div>
 </section>
 
 <footer>
-  Die öffentlichen Dateien sind Veröffentlichungs-Spiegel. Entwickelt wird weiterhin in den privaten Repositories; veröffentlichte Versionen werden von dort hierher übernommen.
+  Die öffentlichen Dateien sind Veröffentlichungs-Spiegel. Lernspiele werden im privaten Lernspiele-Repository entwickelt, Spaß-Games im privaten Games-Repository. Erst geprüfte Stände werden hier veröffentlicht.
 </footer>
 </main>
 </body>
