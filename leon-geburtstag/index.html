@@ -69,7 +69,12 @@
   const scoreEl=document.getElementById('score'),highscoreEl=document.getElementById('highscore'),timeEl=document.getElementById('time'),livesEl=document.getElementById('lives'),levelEl=document.getElementById('level');
   const overlay=document.getElementById('overlay'),startBtn=document.getElementById('start'),pauseBtn=document.getElementById('pause'),status=document.getElementById('status');
   const leftBtn=document.getElementById('left'),rightBtn=document.getElementById('right');
-  const W=720,H=460;\n  const HIGH_KEY='dmp.leonGeburtstag.highscore.v1';\n  let highscore=Number(localStorage.getItem(HIGH_KEY)||0);highscoreEl.textContent=highscore;\n  const leonImg=new Image();leonImg.src='./leon-figur.webp?v=2';
+  const W=720,H=460;
+  const HIGH_KEY='dmp.leonGeburtstag.highscore.v1';
+  let highscore=0;
+  try{highscore=Number(localStorage.getItem(HIGH_KEY)||0)||0}catch(e){}
+  highscoreEl.textContent=highscore;
+  const leonImg=new Image();leonImg.src='./leon-figur.webp?v=3';
   let running=false,paused=false,last=0,elapsed=0,spawnClock=0,score=0,lives=3,level=1,items=[],confetti=[],cakeSpawned=false,raf=0,left=false,right=false;
   const leon={x:W/2,y:H-86,w:66,h:78,speed:330};
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -99,7 +104,7 @@
       ctx.restore();
       return;
     }
-    ctx.save();ctx.translate(x,y);ctx.fillStyle='#17233f';ctx.beginPath();ctx.roundRect(-25,-24,50,46,10);ctx.fill();ctx.restore();
+    ctx.save();ctx.translate(x,y);ctx.fillStyle='#17233f';ctx.fillRect(-25,-24,50,46);ctx.restore();
   }
   function drawItem(it){
     ctx.save();ctx.translate(it.x,it.y);ctx.rotate(it.rot);ctx.font=it.size+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
@@ -115,7 +120,7 @@
     ctx.fillStyle='rgba(255,255,255,.10)';ctx.fillRect(0,H-36,W,36);
   }
   function collide(it){return Math.abs(it.x-leon.x)<(it.size*.42+leon.w*.35)&&Math.abs(it.y-(leon.y-4))<(it.size*.42+leon.h*.38)}
-  function updateHighscore(){if(score>highscore){highscore=score;highscoreEl.textContent=highscore;localStorage.setItem(HIGH_KEY,String(highscore));}}
+  function updateHighscore(){if(score>highscore){highscore=score;highscoreEl.textContent=highscore;try{localStorage.setItem(HIGH_KEY,String(highscore))}catch(e){}}}
   function reward(it){
     if(it.type==='cloud'){
       lives--;livesEl.textContent=lives;status.textContent='Autsch, Gewitterwolke!';
