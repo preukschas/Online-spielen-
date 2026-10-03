@@ -127,3 +127,12 @@ footer { margin: 36px 0 0; color: #b6c5c6; font-size: 13px; text-align: center; 
   object-fit:cover;
   object-position:center 13%;
 }
+
+
+/* Lokaler Spielstart-Zähler */
+.meta span.clickCount {
+  border-color: rgba(255,255,255,.24);
+  background: rgba(255,255,255,.075);
+  color: #fffaf0;
+  font-weight: 850;
+}
