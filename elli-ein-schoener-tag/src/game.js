@@ -260,8 +260,8 @@
   }
 
   function sceneFrame(icon,title,intro,body){
-    return "<section class=\"scene\">" +
-      "<header class=\"scene-head\"><img class=\"elli-mini-img\" src=\"" + ELLI_ART + "\" alt=\"\" aria-hidden=\"true\"><span class=\"scene-head-icon\" aria-hidden=\"true\">" + icon + "</span><div><h2>" + title + "</h2><p>" + intro + "</p></div></header>" +
+    return "<section class=\"scene\" data-debug-id=\"elli.scene.shell\">" +
+      "<header class=\"scene-head\"><img class=\"elli-mini-img\" data-debug-id=\"elli.character.chapter\" src=\"" + ELLI_ART + "\" alt=\"\" aria-hidden=\"true\"><span class=\"scene-head-icon\" aria-hidden=\"true\">" + icon + "</span><div><h2>" + title + "</h2><p>" + intro + "</p></div></header>" +
       "<div class=\"scene-body\">" + body + "</div></section>";
   }
 
@@ -457,7 +457,7 @@
 
   function renderCraft(){
     var body =
-      "<div class=\"craft-studio\">" +
+      "<div class=\"craft-studio\" data-debug-id=\"elli.craft\">" +
         "<aside class=\"craft-sidebar\">" +
           "<div class=\"craft-section\"><h3>1. Hintergrund</h3><div class=\"background-grid\">" +
             "<button class=\"background-button\" type=\"button\" data-bg=\"meadow\">🌷<span>Wiese</span></button>" +
@@ -814,10 +814,10 @@
     var alreadyDone = hasBridgeCompleted(bridgeId);
     var currentLines = Number(state.bridgeLines[bridgeId]) || 0;
     var body =
-      "<div class=\"tetris-layout\">" +
+      "<div class=\"tetris-layout\" data-debug-id=\"elli.tetris\">" +
         "<div class=\"tetris-stage\">" +
           "<canvas id=\"tetrisCanvas\" width=\"300\" height=\"540\" aria-label=\"Tetris-Spielfeld\"></canvas>" +
-          "<div class=\"tetris-controls\" aria-label=\"Tetris-Steuerung\">" +
+          "<div class=\"tetris-controls\" data-debug-id=\"elli.tetris.controls\" aria-label=\"Tetris-Steuerung\">" +
             "<button type=\"button\" data-tetris=\"left\" aria-label=\"Nach links\">←</button>" +
             "<button type=\"button\" data-tetris=\"rotate\" aria-label=\"Drehen\">↻</button>" +
             "<button type=\"button\" data-tetris=\"right\" aria-label=\"Nach rechts\">→</button>" +
