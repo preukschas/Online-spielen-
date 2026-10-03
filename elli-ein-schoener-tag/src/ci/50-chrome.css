@@ -1,0 +1,12 @@
+.footer{
+  margin-top:10px;
+  padding:10px 14px 18px!important;
+  color:#64432e!important;
+  font-weight:800;
+}
+
+.toast{
+  background:#57311e!important;
+  border:3px solid #f1c984;
+  box-shadow:0 5px 0 #351d11,0 14px 28px rgba(40,25,18,.25)!important;
+}
