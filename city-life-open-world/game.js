@@ -412,10 +412,20 @@ function updateOutside(dt){
     if(up)state.speed+=c.acc*dt;if(down)state.speed-=c.acc*.72*dt;
     state.speed*=Math.pow(.985,dt/16.67);state.speed=clamp(state.speed,-c.max*.32,c.max);
     if(Math.abs(state.speed)>5)state.a+=((left?-1:0)+(right?1:0))*c.turn*dt*(state.speed>=0?1:-1);
-    const nx=state.x+Math.cos(state.a)*state.speed*dt/1000,ny=state.y+Math.sin(state.a)*state.speed*dt/1000;
-    if(!outsideBlocked(nx,ny,28)){state.x=nx;state.y=ny;c.x=nx;c.y=ny;c.a=state.a;}
-    else{damageCar(c,Math.min(42,8+Math.abs(state.speed)*.08));state.speed*=-.16;}
-    outsideCarCollisions();return;
+    const visualScale=1.65+(c.max/760)*1.10;
+    const travel=Math.abs(state.speed)*dt/1000*visualScale;
+    const steps=Math.max(1,Math.ceil(travel/16));
+    const stepDistance=(state.speed*dt/1000*visualScale)/steps;
+    let crashed=false;
+    for(let i=0;i<steps;i++){
+      const nx=state.x+Math.cos(state.a)*stepDistance,ny=state.y+Math.sin(state.a)*stepDistance;
+      if(!outsideBlocked(nx,ny,28)){
+        state.x=nx;state.y=ny;c.x=nx;c.y=ny;c.a=state.a;
+      }else{
+        damageCar(c,Math.min(42,8+Math.abs(state.speed)*.08));state.speed*=-.16;crashed=true;break;
+      }
+    }
+    if(!crashed)outsideCarCollisions();return;
   }
   let dx=0,dy=0;
   if(keys.has('w')||keys.has('ArrowUp'))dy--;if(keys.has('s')||keys.has('ArrowDown'))dy++;
@@ -479,8 +489,12 @@ function updatePolice(dt){
   }
 }
 function camera(){
-  const tx=clamp(state.x-W/2,0,WORLD_W-W),ty=clamp(state.y-H/2,0,WORLD_H-H);
-  state.camX+=(tx-state.camX)*.1;state.camY+=(ty-state.camY)*.1;
+  const speedAbs=state.worldCar>=0?Math.abs(state.speed):0;
+  const look=clamp((speedAbs-120)*.18,0,115);
+  const leadX=Math.cos(state.a)*look,leadY=Math.sin(state.a)*look;
+  const tx=clamp(state.x-W/2+leadX,0,WORLD_W-W),ty=clamp(state.y-H/2+leadY,0,WORLD_H-H);
+  const follow=state.worldCar>=0?.075:.11;
+  state.camX+=(tx-state.camX)*follow;state.camY+=(ty-state.camY)*follow;
 }
 
 function drawTree(x,y,r){
@@ -716,17 +730,22 @@ function drawInterior(){
 }
 function drawSpeedFX(){
   if(state.mode!=='outside'||state.worldCar<0)return;
-  const v=Math.abs(state.speed);if(v<300)return;
-  const strength=clamp((v-300)/460,0,1);
+  const v=Math.abs(state.speed);if(v<220)return;
+  const strength=clamp((v-220)/540,0,1);
   ctx.save();
-  ctx.globalAlpha=.10+.18*strength;
-  ctx.strokeStyle='#dce8ef';ctx.lineWidth=1+2*strength;
+  ctx.globalAlpha=.12+.25*strength;
+  ctx.strokeStyle='#dce8ef';ctx.lineWidth=1+2.6*strength;
   const cx=W/2,cy=H/2;
-  for(let i=0;i<24;i++){
-    const a=(i/24)*Math.PI*2;
-    const r1=170+(i%5)*22,r2=r1+35+strength*95;
+  for(let i=0;i<30;i++){
+    const a=(i/30)*Math.PI*2;
+    const r1=145+(i%6)*24,r2=r1+45+strength*145;
     ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);ctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);ctx.stroke();
   }
+  ctx.globalAlpha=.08+.10*strength;
+  ctx.fillStyle='#eef6fa';
+  const side=35+strength*70;
+  ctx.fillRect(0,H*.18,side,2);ctx.fillRect(0,H*.77,side*1.25,2);
+  ctx.fillRect(W-side,H*.28,side,2);ctx.fillRect(W-side*1.25,H*.68,side*1.25,2);
   ctx.restore();
 }
 
