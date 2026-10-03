@@ -324,6 +324,50 @@
   const status=document.getElementById('funStatus');
   const info=document.getElementById('unlockInfo');
 
+  const CLICK_KEY='dmp_game_click_counts_v1';
+  function loadClickCounts(){
+    try{
+      const raw=localStorage.getItem(CLICK_KEY);
+      const parsed=raw?JSON.parse(raw):{};
+      return parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?parsed:{};
+    }catch(e){return {}}
+  }
+  function saveClickCounts(counts){
+    try{localStorage.setItem(CLICK_KEY,JSON.stringify(counts))}catch(e){}
+  }
+  function gameSlugFromLink(link){
+    try{
+      const u=new URL(link.getAttribute('href'),location.href);
+      const parts=u.pathname.split('/').filter(Boolean);
+      return parts[parts.length-1]||'unknown';
+    }catch(e){return link.getAttribute('href')||'unknown'}
+  }
+  function renderClickCounts(){
+    const counts=loadClickCounts();
+    document.querySelectorAll('a.play').forEach(link=>{
+      const card=link.closest('.card');
+      const meta=card&&card.querySelector('.meta');
+      if(!meta)return;
+      const slug=gameSlugFromLink(link);
+      let chip=meta.querySelector('[data-click-count]');
+      if(!chip){
+        chip=document.createElement('span');
+        chip.dataset.clickCount=slug;
+        chip.className='clickCount';
+        meta.appendChild(chip);
+      }
+      const n=Math.max(0,Number(counts[slug])||0);
+      chip.textContent='🎮 Gestartet: '+n+'×';
+      chip.title='Starts dieses Spiels auf diesem Browser/Gerät';
+    });
+  }
+  function countGameStart(link){
+    const counts=loadClickCounts();
+    const slug=gameSlugFromLink(link);
+    counts[slug]=Math.max(0,Number(counts[slug])||0)+1;
+    saveClickCounts(counts);
+  }
+
   function hideWorlds(){
     learning.classList.add('hidden');
     fun.classList.add('hidden');
@@ -379,6 +423,12 @@
     showSelect();
   });
 
+
+  document.querySelectorAll('a.play').forEach(link=>{
+    link.addEventListener('click',()=>countGameStart(link));
+  });
+  renderClickCounts();
+  window.addEventListener('pageshow',renderClickCounts);
 
   updateStatus();
   setInterval(updateStatus,15000);
