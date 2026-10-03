@@ -11,7 +11,12 @@
 @media(max-width:380px){.joystick{width:88px;height:88px}.stick{width:40px;height:40px;left:22px;top:22px}.action,.special{width:54px;height:54px}.controller{grid-template-columns:auto .2fr auto}.hud .pill:nth-child(4){display:none}canvas{max-height:250px}}
 @media(prefers-reduced-motion:reduce){.scene.shake{animation:none}.charge span{transition:none}}
 </style>
-<link rel="stylesheet" href="../game-interaction-guard.css">\n</head>
+<link rel="stylesheet" href="../game-interaction-guard.css">\n<style id="mobile-learning-polish">
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button,[role="button"],a,.choice,.cmd,.slot,.targetword{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button,[role="button"],.choice,.cmd,.slot,.targetword,[data-control],.joystick,.gamearea,.arena,.controls,.series,canvas{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+</style></head>
 <body>
 <main class="app" id="app" tabindex="0">
 <div class="hud">
