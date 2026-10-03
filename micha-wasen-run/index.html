@@ -222,7 +222,8 @@ addEventListener('keyup',e=>{ if(e.key==='ArrowDown') setDuck(false); });
 function playerBox(){
   const crouch=duckHeld && player.onGround;
   const h=crouch?112:164;
-  return {x:player.x+13,y:GROUND-h-2,w:player.w-25,h};
+  const y=crouch ? GROUND-h-2 : player.y+(player.h-h)-2;
+  return {x:player.x+13,y,w:player.w-25,h};
 }
 function hit(a,b){
   return a.x < b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y;
@@ -454,7 +455,7 @@ function drawPlayer(t){
   const h=crouch?126:182;
   const w=crouch?82:70;
   const x=player.x+(70-w)/2;
-  const y=GROUND-h+bob;
+  const y=(crouch?GROUND-h:player.y)+bob;
   const blink=player.inv>0 && Math.floor(player.inv*12)%2===0;
   if(blink)ctx.globalAlpha=.38;
 
@@ -479,7 +480,8 @@ function drawPlayer(t){
   // shield ring
   if(shield>0){
     ctx.save();ctx.globalAlpha=.38+.12*Math.sin(t*7);ctx.strokeStyle='#8fe8ff';ctx.lineWidth=5;
-    ctx.beginPath();ctx.ellipse(player.x+35,GROUND-h/2,52,h*.54,0,0,6.3);ctx.stroke();ctx.restore();
+    const shieldY=(crouch?GROUND-h:player.y)+h/2;
+    ctx.beginPath();ctx.ellipse(player.x+35,shieldY,52,h*.54,0,0,6.3);ctx.stroke();ctx.restore();
   }
 }
 function drawParticles(){
