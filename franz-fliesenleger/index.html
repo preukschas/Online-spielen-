@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <script src="../fun-access.js"></script>
+  <script>window.DMPFunAccess.requireAccess({backHref:"../"});</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#14242c">
+  <meta name="description" content="Franz – Meister der Fuge: ein Fliesenleger-Geschicklichkeitsspiel.">
+  <title>Franz – Meister der Fuge</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">DMP GAMES · VERSION 1.0</div>
+        <h1>Franz <span>– Meister der Fuge</span></h1>
+      </div>
+      <div class="best">BEST <strong id="bestScore">0</strong></div>
+    </header>
+
+    <section class="hud" aria-live="polite">
+      <span id="levelLabel">Baustelle 1/5</span>
+      <span id="scoreLabel">0 Punkte</span>
+      <span id="comboLabel">Kombo ×1</span>
+      <span id="lifeLabel">❤️❤️❤️</span>
+    </section>
+
+    <section class="gameCard">
+      <canvas id="game" width="960" height="600" aria-label="Fliesenleger-Spielbereich"></canvas>
+
+      <div class="meterPanel">
+        <div class="meterTitle"><span>Fugen-Präzision</span><strong id="qualityText">Bereit</strong></div>
+        <div class="meter" aria-hidden="true">
+          <div class="sweet"></div>
+          <div class="perfect"></div>
+          <div id="needle" class="needle"></div>
+        </div>
+        <button id="placeBtn" class="placeBtn" type="button">🧱 FLIESE SETZEN</button>
+        <p class="hint">Leertaste oder Button drücken, wenn der Marker möglichst genau in der Mitte steht.</p>
+      </div>
+    </section>
+
+    <section class="legend">
+      <span><b>90–100</b> Perfekte Fuge</span>
+      <span><b>70–89</b> Sauber</span>
+      <span><b>45–69</b> Sitzt</span>
+      <span><b>0–44</b> Nacharbeit / Herzverlust möglich</span>
+    </section>
+  </main>
+
+  <div id="overlay" class="overlay">
+    <div class="panel">
+      <div id="modalTag" class="modalTag">NEUER AUFTRAG</div>
+      <h2 id="modalTitle">Franz braucht eine ruhige Hand.</h2>
+      <p id="modalText">Lege die Fliesen so sauber wie möglich. Gute Treffer bauen eine Kombo auf.</p>
+      <div id="cutBox" class="cutBox hidden">
+        <div id="cutQuestion" class="cutQuestion"></div>
+        <div id="cutAnswers" class="cutAnswers"></div>
+        <div id="cutFeedback" class="cutFeedback"></div>
+      </div>
+      <div id="modalActions" class="actions"></div>
+    </div>
+  </div>
+
+  <script src="game.js" defer></script>
+</body>
+</html>
