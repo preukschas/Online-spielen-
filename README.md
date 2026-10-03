@@ -43,7 +43,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Lernwelt | Mario – Malermeister auf Tour | `/mario-maler/` | `preukschas/Lernspiele--bei-DMP` → `projects/mario-maler/` (V0.1) |
 | Spielewelt | Planet unter Druck | `/planet-unter-druck/` | `preukschas/DMP-Games` → `projects/tower-defense/` (V18) |
 | Spielewelt | Domi Run | `/domi-run/` | Entwickelte Standalone-Datei V0.2 |
-| Spielewelt | Ronja Race | `/ronja-race/` | `preukschas/DMP-Games` → PR #3 (V0.3) |
+| Spielewelt | Ronja Race | `/ronja-race/` | `preukschas/DMP-Games` → `projects/ronja-race/` (V0.3.1 Browser-Start-Hotfix) |
 | Specials | Leons Geschenk-Jagd | `/leon-geburtstag/` | Bereits entwickeltes Geburtstagsspiel |
 
 Einmaleins Space ist ein eigenständiges Lernspiel. Die Weltraum-Abwehr innerhalb von Vokabel Quest bleibt Teil des Vokabeltrainers.
