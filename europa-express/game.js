@@ -81,7 +81,7 @@
   let saved;
   try{saved=JSON.parse(localStorage.getItem(key))||{best:0,album:[],mastery:{}}}catch{saved={best:0,album:[],mastery:{}}}
   if(!Array.isArray(saved.album))saved.album=[]; if(!saved.mastery||typeof saved.mastery!=="object")saved.mastery={};
-  let state={mode:"idle",round:0,step:0,remaining:30,score:0,question:null,mistakes:0,wrongValues:new Set(),used:new Set(),timer:null,last:0,country:null};
+  let state={mode:"idle",round:0,step:0,remaining:30,score:0,question:null,mistakes:0,wrongValues:new Set(),used:new Set(),timer:null,last:0,country:null};let visibilityPaused=false;
   const rand=n=>Math.floor(Math.random()*n);
   const shuffle=a=>[...a].sort(()=>Math.random()-.5);
   const pick=a=>a[rand(a.length)];
@@ -197,6 +197,7 @@
     if(state.mode==="idle"||state.mode==="end")start();
     else if(state.mode==="postcard"){state.step++;if(state.step===3)finish(true);else showQuestion()}
   });
+  document.addEventListener("visibilitychange",()=>{if(document.hidden&&state.mode==="question"){visibilityPaused=true;pause()}else if(!document.hidden&&visibilityPaused&&state.mode==="question"){visibilityPaused=false;state.last=performance.now();if(!state.timer)state.timer=setInterval(tick,100)}else if(!document.hidden){visibilityPaused=false}});
   renderAlbum();update();drawMap();
   window.EuropaExpressDebug={countries,rivers,mountains,getState:()=>({...state,used:[...state.used]})};
 })();
