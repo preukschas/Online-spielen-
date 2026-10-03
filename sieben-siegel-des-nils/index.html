@@ -75,40 +75,406 @@ button{font:inherit;touch-action:manipulation;cursor:pointer}.wrap{max-width:105
 (()=>{'use strict';
 const $=id=>document.getElementById(id),KEY='dmp.nilsiegel.v1';
 const chapters=[
- {title:'Der Rhythmus des Nils',icon:'🌊',fact:'Der Nil prägte Landwirtschaft und Kalender. Überschwemmungen konnten fruchtbaren Schlamm bringen, fielen aber nicht jedes Jahr gleich aus.',clue:'Die fehlende Tafel enthält Angaben zu Getreide und Wasserständen.',tasks:[
-  {story:'Seneb findet vier Notizen zur Feldarbeit. Welche Reihenfolge ist sinnvoll?',q:'Was folgt typischerweise nach dem Rückgang des Hochwassers auf nutzbaren Feldern?',a:['Aussaat auf dem feuchten, fruchtbaren Boden','Sofortiger Pyramidenbau','Schiffe werden auf dem Feld gebaut','Alle Vorräte werden weggeworfen'],ok:0,why:'Nach dem Rückgang des Wassers konnte auf feuchtem, mit Schlamm angereichertem Boden gesät werden.'},
-  {story:'Ein Bauer warnt: „Dieses Jahr stand das Wasser deutlich niedriger.“',q:'Welche Folge ist historisch am plausibelsten?',a:['Die Ernte könnte schlechter ausfallen','Der Nil verschwindet dauerhaft','Hieroglyphen werden verboten','Kupfer wird zu Gold'],ok:0,why:'Zu wenig Wasser konnte die Ernte gefährden. Nilstände waren deshalb wirtschaftlich wichtig.'}
- ]},
- {title:'Kornkammer in Gefahr',icon:'🌾',fact:'Getreide war Grundnahrungsmittel, Vorrat und wichtige Abgabe. Lagerung half, schlechte Ernten zu überstehen.',clue:'In einer Kornkammer stimmt eine Mengenangabe nicht mit der Lieferung überein.',tasks:[
-  {story:'Du findest Säcke für Aussaat, Nahrung und Reserve.',q:'Warum waren Vorräte besonders wichtig?',a:['Sie halfen bei schwachen Ernten und versorgten Menschen außerhalb der Erntezeit','Sie dienten nur als Dekoration','Sie ersetzten den Nil','Sie wurden grundsätzlich nie geöffnet'],ok:0,why:'Vorratshaltung machte Versorgung planbarer und half, Schwankungen abzufedern.'},
-  {story:'Eine Liste behauptet: 40 Säcke kamen an, 30 wurden ausgegeben, trotzdem liegen angeblich noch 20 im Lager.',q:'Was ist daran verdächtig?',a:['Die Rechnung passt nicht: Es müssten 10 übrig sein','Es müssten 70 übrig sein','Getreide kann nicht gezählt werden','Listen waren im Alten Ägypten unbekannt'],ok:0,why:'40 − 30 = 10. Genau solche Verwaltungsfehler konnten für Schreiber wichtig sein.'}
- ]},
- {title:'Markt am Fluss',icon:'⛵',fact:'Ägypten nutzte den Nil als Verkehrsweg. Güter wurden getauscht und über weite Strecken transportiert; manche Rohstoffe mussten eingeführt werden.',clue:'Ein Händler sah am Abend einen Gehilfen mit einer Rolle aus der Verwaltung kommen.',tasks:[
-  {story:'Am Kai liegen Getreide, Leinen, Holz und Kupfer bereit.',q:'Warum war Fernhandel für Ägypten sinnvoll?',a:['Nicht alle benötigten Rohstoffe waren in Ägypten ausreichend vorhanden','Weil niemand am Nil Landwirtschaft betrieb','Weil Schiffe nur auf dem Meer fahren konnten','Weil Handel Schreiben überflüssig machte'],ok:0,why:'Zum Beispiel hochwertiges Holz und bestimmte Metalle kamen teilweise aus anderen Regionen.'},
-  {story:'Der Händler beschreibt Lasten auf einem Boot.',q:'Welche Rolle spielte der Nil zusätzlich zur Landwirtschaft?',a:['Er war eine wichtige Verkehrs- und Transportachse','Er war ausschließlich eine religiöse Grenze','Er durfte nicht befahren werden','Er führte nur zu den Pyramiden'],ok:0,why:'Der Nil verband Siedlungen und erleichterte Transport und Handel.'}
- ]},
- {title:'Die Zeichen der Schreiber',icon:'✍️',fact:'Ägyptische Schrift nutzte unterschiedliche Zeichenfunktionen. Hieroglyphen sind kein simples Bild-für-Buchstabe-Alphabet.',clue:'Auf einem Übungsstück wurde eine Zahl nachträglich verändert.',tasks:[
-  {story:'Seneb zeigt dir eine Inschrift mit Bildzeichen.',q:'Welche Aussage über Hieroglyphen ist richtig?',a:['Zeichen konnten Laute, Wörter oder Bedeutungs-Hinweise darstellen','Jedes Bild bedeutete immer genau einen deutschen Buchstaben','Nur Pharaonen durften Zeichen sehen','Hieroglyphen bestanden ausschließlich aus Zahlen'],ok:0,why:'Das Schriftsystem kombinierte verschiedene Zeichenarten; eine 1:1-Alphabetregel wäre irreführend.'},
-  {story:'Neben der Lagerliste liegt ein Schreibübungsstück.',q:'Wozu brauchte eine Verwaltung Schreiber?',a:['Um Mengen, Abgaben, Lieferungen und andere Vorgänge festzuhalten','Nur um Grabwände zu bemalen','Um den Nil zu bewegen','Um Steine ohne Arbeiter zu transportieren'],ok:0,why:'Schrift und Verwaltung waren für Organisation, Abgaben und Lagerbestände wichtig.'}
- ]},
- {title:'Wer macht was?',icon:'👥',fact:'Die Gesellschaft umfasste viele Rollen: Bauern, Handwerker, Schreiber, Beamte, Priester und Herrscher. Soziale Stellung und Aufgaben unterschieden sich.',clue:'Der beschuldigte Hafenarbeiter konnte die Verwaltungsliste wahrscheinlich nicht selbst verändern.',tasks:[
-  {story:'Vier Personen streiten darüber, wer eine Getreideliste bearbeitet hat.',q:'Wer hatte beruflich am ehesten regelmäßig mit solchen Listen zu tun?',a:['Ein Schreiber oder Verwaltungsbeamter','Ein beliebiger Tourist','Ein Nilpferdjäger ohne Verwaltungsaufgabe','Ein Kind aus ferner Zukunft'],ok:0,why:'Schreiber und Verwaltungsbeamte führten Aufzeichnungen und Listen.'},
-  {story:'Ein Beamter sagt: „Die Gesellschaft war wie eine starre Pyramide und jeder Mensch hatte exakt dieselbe Aufgabe sein ganzes Leben.“',q:'Wie gehst du mit dieser Aussage um?',a:['Als vereinfachtes Modell: Rollen und Hierarchien gab es, aber die Wirklichkeit war komplexer','Als exakte Naturregel ohne Ausnahmen','Als Beweis, dass es keine Handwerker gab','Als Beweis, dass Bauern über dem Pharao standen'],ok:0,why:'Schulmodelle helfen beim Überblick, dürfen aber nicht mit einer lückenlosen Beschreibung jedes Lebens verwechselt werden.'}
- ]},
- {title:'Götter, Gräber, Quellen',icon:'⚱️',fact:'Religion prägte Vorstellungen von Göttern, Tod und Jenseits. Für Geschichte ist wichtig zu unterscheiden, was Menschen glaubten und was eine Quelle direkt belegt.',clue:'Eine Tempelnotiz erwähnt, dass der Verwaltungsgehilfe am fraglichen Abend nicht beim Ritualdienst war.',tasks:[
-  {story:'Du liest einen Grabtext über das Jenseits.',q:'Was kann ein solcher Text Historikern besonders gut zeigen?',a:['Welche religiösen Vorstellungen Menschen ausdrückten','Dass jede beschriebene übernatürliche Handlung naturwissenschaftlich bewiesen ist','Die exakte Zahl aller Einwohner Ägyptens','Den täglichen Nilstand für 500 Jahre'],ok:0,why:'Religiöse Texte sind wichtige Quellen für Vorstellungen und Rituale; Glaubensaussagen sind nicht automatisch naturwissenschaftliche Belege.'},
-  {story:'Ein Priester nennt verschiedene Götter und Rituale.',q:'Was ist für eine historische Untersuchung sinnvoll?',a:['Quelle, Zweck und Perspektive berücksichtigen','Jede Aussage ohne Kontext wörtlich als moderne Messung nehmen','Nur moderne Filme verwenden','Widersprüche grundsätzlich löschen'],ok:0,why:'Quellenkritik fragt, wer etwas warum und in welchem Zusammenhang überliefert hat.'}
- ]},
- {title:'Baustelle für die Ewigkeit',icon:'🔺',fact:'Große Pyramidenprojekte verlangten Planung, Versorgung, Materialtransport und viele spezialisierte Arbeitskräfte. Das Bild ausschließlich versklavter Massen ist zu simpel.',clue:'Der Gehilfe kannte Lagerlisten, Zahlen und den Weg zwischen Kornkammer und Schreibstube.',tasks:[
-  {story:'Auf der Baustelle werden Stein, Wasser, Brot und Werkzeuge verteilt.',q:'Was zeigt ein Großprojekt wie der Pyramidenbau besonders?',a:['Dass Organisation, Versorgung und Arbeitsteilung entscheidend waren','Dass Planung unnötig war','Dass ein einzelner Mensch die Pyramide allein baute','Dass Getreide keine Rolle in der Versorgung spielte'],ok:0,why:'Großbaustellen brauchten koordinierte Arbeitskräfte, Material und Versorgung.'},
-  {story:'Ein Besucher behauptet: „Wir wissen sicher, dass jede Pyramide nur von angeketteten Sklaven gebaut wurde.“',q:'Welche Antwort ist angemessener?',a:['Die Forschung zeigt ein komplexeres Bild mit organisierten Arbeitskräften; pauschale Aussagen sind problematisch','Das stimmt sicher immer','Pyramiden entstanden ohne Menschen','Über Arbeitsorganisation gibt es überhaupt keine Hinweise'],ok:0,why:'Archäologische Befunde sprechen für organisierte Arbeitergruppen und Versorgung; einfache Filmklischees greifen zu kurz.'}
- ]}
+ {
+  "title": "Der Rhythmus des Nils",
+  "icon": "🌊",
+  "fact": "Der Nil prägte Landwirtschaft und Kalender. Überschwemmungen konnten fruchtbaren Schlamm bringen, fielen aber nicht jedes Jahr gleich aus.",
+  "clue": "Die fehlende Tafel enthält Angaben zu Getreide und Wasserständen.",
+  "tasks": [
+   {
+    "story": "Seneb findet vier Notizen zur Feldarbeit. Welche Reihenfolge ist sinnvoll?",
+    "q": "Was folgt typischerweise nach dem Rückgang des Hochwassers auf nutzbaren Feldern?",
+    "a": [
+     "Aussaat auf dem feuchten, fruchtbaren Boden",
+     "Sofortiger Pyramidenbau",
+     "Schiffe werden auf dem Feld gebaut",
+     "Alle Vorräte werden weggeworfen"
+    ],
+    "ok": 0,
+    "why": "Nach dem Rückgang des Wassers konnte auf feuchtem, mit Schlamm angereichertem Boden gesät werden."
+   },
+   {
+    "story": "Ein Bauer warnt: „Dieses Jahr stand das Wasser deutlich niedriger.“",
+    "q": "Welche Folge ist historisch am plausibelsten?",
+    "a": [
+     "Die Ernte könnte schlechter ausfallen",
+     "Der Nil verschwindet dauerhaft",
+     "Hieroglyphen werden verboten",
+     "Kupfer wird zu Gold"
+    ],
+    "ok": 0,
+    "why": "Zu wenig Wasser konnte die Ernte gefährden. Nilstände waren deshalb wirtschaftlich wichtig."
+   },
+   {
+    "story": "Ein Schreiber vergleicht Wasserstände aus mehreren Jahren.",
+    "q": "Warum konnten solche Aufzeichnungen für die Landwirtschaft nützlich sein?",
+    "a": [
+     "Sie halfen, Wasserstände zu vergleichen und Vorräte oder Feldarbeit besser zu planen",
+     "Sie machten Regen und Hochwasser exakt steuerbar",
+     "Sie ersetzten Saatgut",
+     "Sie zeigten automatisch den nächsten Pharao"
+    ],
+    "ok": 0,
+    "why": "Messungen und Aufzeichnungen konnten Planung unterstützen, auch wenn Hochwasser nicht vollkommen berechenbar war."
+   },
+   {
+    "story": "Nach dem Hochwasser bleibt dunkler Schlamm auf einem Feld zurück.",
+    "q": "Warum war dieser Schlamm für viele Felder wertvoll?",
+    "a": [
+     "Er konnte Nährstoffe eintragen und den Boden für den Anbau verbessern",
+     "Er verwandelte Sand in Gold",
+     "Er machte Bewässerung überflüssig",
+     "Er verhinderte jede schlechte Ernte"
+    ],
+    "ok": 0,
+    "why": "Nilwasser und Sedimente waren ein wichtiger Teil der Landwirtschaft; sie garantierten aber keine perfekte Ernte."
+   }
+  ]
+ },
+ {
+  "title": "Kornkammer in Gefahr",
+  "icon": "🌾",
+  "fact": "Getreide war Grundnahrungsmittel, Vorrat und wichtige Abgabe. Lagerung half, schlechte Ernten zu überstehen.",
+  "clue": "In einer Kornkammer stimmt eine Mengenangabe nicht mit der Lieferung überein.",
+  "tasks": [
+   {
+    "story": "Du findest Säcke für Aussaat, Nahrung und Reserve.",
+    "q": "Warum waren Vorräte besonders wichtig?",
+    "a": [
+     "Sie halfen bei schwachen Ernten und versorgten Menschen außerhalb der Erntezeit",
+     "Sie dienten nur als Dekoration",
+     "Sie ersetzten den Nil",
+     "Sie wurden grundsätzlich nie geöffnet"
+    ],
+    "ok": 0,
+    "why": "Vorratshaltung machte Versorgung planbarer und half, Schwankungen abzufedern."
+   },
+   {
+    "story": "Eine Liste behauptet: 40 Säcke kamen an, 30 wurden ausgegeben, trotzdem liegen angeblich noch 20 im Lager.",
+    "q": "Was ist daran verdächtig?",
+    "a": [
+     "Die Rechnung passt nicht: Es müssten 10 übrig sein",
+     "Es müssten 70 übrig sein",
+     "Getreide kann nicht gezählt werden",
+     "Listen waren im Alten Ägypten unbekannt"
+    ],
+    "ok": 0,
+    "why": "40 − 30 = 10. Genau solche Verwaltungsfehler konnten für Schreiber wichtig sein."
+   },
+   {
+    "story": "In einer Lagerliste stehen Eingänge und Ausgaben von Getreide.",
+    "q": "Warum musste beides aufgeschrieben werden?",
+    "a": [
+     "Damit sich der tatsächliche Bestand nachvollziehen ließ",
+     "Damit Säcke leichter wurden",
+     "Damit niemand mehr zählen musste",
+     "Damit das Getreide länger haltbar wurde"
+    ],
+    "ok": 0,
+    "why": "Verwaltung funktioniert nur, wenn Zugänge und Entnahmen nachvollziehbar dokumentiert werden."
+   },
+   {
+    "story": "Ein Lagerraum ist feucht und mehrere Säcke sind beschädigt.",
+    "q": "Welche Gefahr für Vorräte ist am plausibelsten?",
+    "a": [
+     "Feuchtigkeit und Schädlinge können Vorräte verderben",
+     "Getreide wird durch Feuchtigkeit zu Metall",
+     "Säcke vermehren sich von selbst",
+     "Lagerung verhindert grundsätzlich jeden Verlust"
+    ],
+    "ok": 0,
+    "why": "Vorräte mussten geschützt und kontrolliert werden; Lagerung verringerte Risiken, beseitigte sie aber nicht."
+   }
+  ]
+ },
+ {
+  "title": "Markt am Fluss",
+  "icon": "⛵",
+  "fact": "Ägypten nutzte den Nil als Verkehrsweg. Güter wurden getauscht und über weite Strecken transportiert; manche Rohstoffe mussten eingeführt werden.",
+  "clue": "Ein Händler sah am Abend einen Gehilfen mit einer Rolle aus der Verwaltung kommen.",
+  "tasks": [
+   {
+    "story": "Am Kai liegen Getreide, Leinen, Holz und Kupfer bereit.",
+    "q": "Warum war Fernhandel für Ägypten sinnvoll?",
+    "a": [
+     "Nicht alle benötigten Rohstoffe waren in Ägypten ausreichend vorhanden",
+     "Weil niemand am Nil Landwirtschaft betrieb",
+     "Weil Schiffe nur auf dem Meer fahren konnten",
+     "Weil Handel Schreiben überflüssig machte"
+    ],
+    "ok": 0,
+    "why": "Zum Beispiel hochwertiges Holz und bestimmte Metalle kamen teilweise aus anderen Regionen."
+   },
+   {
+    "story": "Der Händler beschreibt Lasten auf einem Boot.",
+    "q": "Welche Rolle spielte der Nil zusätzlich zur Landwirtschaft?",
+    "a": [
+     "Er war eine wichtige Verkehrs- und Transportachse",
+     "Er war ausschließlich eine religiöse Grenze",
+     "Er durfte nicht befahren werden",
+     "Er führte nur zu den Pyramiden"
+    ],
+    "ok": 0,
+    "why": "Der Nil verband Siedlungen und erleichterte Transport und Handel."
+   },
+   {
+    "story": "Am Kai soll eine schwere Ladung Stein und Getreide weitertransportiert werden.",
+    "q": "Warum war ein Flussschiff dafür besonders praktisch?",
+    "a": [
+     "Auf dem Nil konnten große Lasten zwischen Orten transportiert werden",
+     "Schiffe brauchten grundsätzlich keine Besatzung",
+     "Der Nil führte direkt in jede Wüste",
+     "Boote konnten nur leere Körbe transportieren"
+    ],
+    "ok": 0,
+    "why": "Der Fluss war eine zentrale Transportachse und erleichterte die Bewegung schwerer Güter."
+   },
+   {
+    "story": "Ein Händler bietet hochwertiges Holz an, das nicht aus dem Niltal stammt.",
+    "q": "Was zeigt dieses Beispiel?",
+    "a": [
+     "Handel ergänzte Rohstoffe, die vor Ort nicht ausreichend verfügbar waren",
+     "Ägypten besaß überhaupt kein Holz",
+     "Alle Waren wurden nur verschenkt",
+     "Fernhandel war ohne Verkehrswege möglich"
+    ],
+    "ok": 0,
+    "why": "Ägypten bezog bestimmte Rohstoffe über regionale und überregionale Handelskontakte."
+   }
+  ]
+ },
+ {
+  "title": "Die Zeichen der Schreiber",
+  "icon": "✍️",
+  "fact": "Ägyptische Schrift nutzte unterschiedliche Zeichenfunktionen. Hieroglyphen sind kein simples Bild-für-Buchstabe-Alphabet.",
+  "clue": "Auf einem Übungsstück wurde eine Zahl nachträglich verändert.",
+  "tasks": [
+   {
+    "story": "Seneb zeigt dir eine Inschrift mit Bildzeichen.",
+    "q": "Welche Aussage über Hieroglyphen ist richtig?",
+    "a": [
+     "Zeichen konnten Laute, Wörter oder Bedeutungs-Hinweise darstellen",
+     "Jedes Bild bedeutete immer genau einen deutschen Buchstaben",
+     "Nur Pharaonen durften Zeichen sehen",
+     "Hieroglyphen bestanden ausschließlich aus Zahlen"
+    ],
+    "ok": 0,
+    "why": "Das Schriftsystem kombinierte verschiedene Zeichenarten; eine 1:1-Alphabetregel wäre irreführend."
+   },
+   {
+    "story": "Neben der Lagerliste liegt ein Schreibübungsstück.",
+    "q": "Wozu brauchte eine Verwaltung Schreiber?",
+    "a": [
+     "Um Mengen, Abgaben, Lieferungen und andere Vorgänge festzuhalten",
+     "Nur um Grabwände zu bemalen",
+     "Um den Nil zu bewegen",
+     "Um Steine ohne Arbeiter zu transportieren"
+    ],
+    "ok": 0,
+    "why": "Schrift und Verwaltung waren für Organisation, Abgaben und Lagerbestände wichtig."
+   },
+   {
+    "story": "Ein Beamter möchte wissen, wie viel Getreide eingelagert und wieder ausgegeben wurde.",
+    "q": "Welche Fähigkeit eines Schreibers ist dafür besonders wichtig?",
+    "a": [
+     "Lesen, Schreiben und der Umgang mit Zahlen und Listen",
+     "Nur das Zeichnen von Götterbildern",
+     "Das Steuern jedes Schiffes",
+     "Das Behauen großer Steinblöcke"
+    ],
+    "ok": 0,
+    "why": "Schreiber übernahmen viele Verwaltungsaufgaben und mussten Angaben zuverlässig festhalten."
+   },
+   {
+    "story": "Du findest eine beschriftete Tonscherbe neben einer Papyrusrolle.",
+    "q": "Welche Aussage ist sinnvoll?",
+    "a": [
+     "Im Alltag konnten unterschiedliche Materialien zum Schreiben genutzt werden",
+     "Nur Goldplatten durften beschrieben werden",
+     "Papyrus war eine Steinart",
+     "Tonscherben wurden grundsätzlich nie beschriftet"
+    ],
+    "ok": 0,
+    "why": "Neben Papyrus wurden zum Beispiel auch Ostraka – beschriftete Kalkstein- oder Tonscherben – für Notizen verwendet."
+   }
+  ]
+ },
+ {
+  "title": "Wer macht was?",
+  "icon": "👥",
+  "fact": "Die Gesellschaft umfasste viele Rollen: Bauern, Handwerker, Schreiber, Beamte, Priester und Herrscher. Soziale Stellung und Aufgaben unterschieden sich.",
+  "clue": "Der beschuldigte Hafenarbeiter konnte die Verwaltungsliste wahrscheinlich nicht selbst verändern.",
+  "tasks": [
+   {
+    "story": "Vier Personen streiten darüber, wer eine Getreideliste bearbeitet hat.",
+    "q": "Wer hatte beruflich am ehesten regelmäßig mit solchen Listen zu tun?",
+    "a": [
+     "Ein Schreiber oder Verwaltungsbeamter",
+     "Ein beliebiger Tourist",
+     "Ein Nilpferdjäger ohne Verwaltungsaufgabe",
+     "Ein Kind aus ferner Zukunft"
+    ],
+    "ok": 0,
+    "why": "Schreiber und Verwaltungsbeamte führten Aufzeichnungen und Listen."
+   },
+   {
+    "story": "Ein Beamter sagt: „Die Gesellschaft war wie eine starre Pyramide und jeder Mensch hatte exakt dieselbe Aufgabe sein ganzes Leben.“",
+    "q": "Wie gehst du mit dieser Aussage um?",
+    "a": [
+     "Als vereinfachtes Modell: Rollen und Hierarchien gab es, aber die Wirklichkeit war komplexer",
+     "Als exakte Naturregel ohne Ausnahmen",
+     "Als Beweis, dass es keine Handwerker gab",
+     "Als Beweis, dass Bauern über dem Pharao standen"
+    ],
+    "ok": 0,
+    "why": "Schulmodelle helfen beim Überblick, dürfen aber nicht mit einer lückenlosen Beschreibung jedes Lebens verwechselt werden."
+   },
+   {
+    "story": "Auf dem Markt arbeiten Bauern, Handwerker, Händler und Schreiber nebeneinander.",
+    "q": "Was zeigt diese Szene am besten?",
+    "a": [
+     "Die Gesellschaft umfasste unterschiedliche Tätigkeiten und soziale Rollen",
+     "Alle Menschen hatten exakt denselben Beruf",
+     "Nur Beamte arbeiteten",
+     "Berufe gab es erst viel später"
+    ],
+    "ok": 0,
+    "why": "Das gesellschaftliche Leben beruhte auf vielen verschiedenen Tätigkeiten und Verantwortlichkeiten."
+   },
+   {
+    "story": "Ein Schulbild ordnet die Gesellschaft als einfache Pyramide.",
+    "q": "Wie sollte man dieses Modell verstehen?",
+    "a": [
+     "Als vereinfachte Orientierung, nicht als vollständige Beschreibung jedes einzelnen Lebens",
+     "Als exakte Liste jedes Menschen",
+     "Als Beweis, dass niemand seine Tätigkeit wechseln konnte",
+     "Als Bauplan einer echten Pyramide"
+    ],
+    "ok": 0,
+    "why": "Solche Modelle helfen beim Lernen, vereinfachen aber eine vielfältige Gesellschaft stark."
+   }
+  ]
+ },
+ {
+  "title": "Götter, Gräber, Quellen",
+  "icon": "⚱️",
+  "fact": "Religion prägte Vorstellungen von Göttern, Tod und Jenseits. Für Geschichte ist wichtig zu unterscheiden, was Menschen glaubten und was eine Quelle direkt belegt.",
+  "clue": "Eine Tempelnotiz erwähnt, dass der Verwaltungsgehilfe am fraglichen Abend nicht beim Ritualdienst war.",
+  "tasks": [
+   {
+    "story": "Du liest einen Grabtext über das Jenseits.",
+    "q": "Was kann ein solcher Text Historikern besonders gut zeigen?",
+    "a": [
+     "Welche religiösen Vorstellungen Menschen ausdrückten",
+     "Dass jede beschriebene übernatürliche Handlung naturwissenschaftlich bewiesen ist",
+     "Die exakte Zahl aller Einwohner Ägyptens",
+     "Den täglichen Nilstand für 500 Jahre"
+    ],
+    "ok": 0,
+    "why": "Religiöse Texte sind wichtige Quellen für Vorstellungen und Rituale; Glaubensaussagen sind nicht automatisch naturwissenschaftliche Belege."
+   },
+   {
+    "story": "Ein Priester nennt verschiedene Götter und Rituale.",
+    "q": "Was ist für eine historische Untersuchung sinnvoll?",
+    "a": [
+     "Quelle, Zweck und Perspektive berücksichtigen",
+     "Jede Aussage ohne Kontext wörtlich als moderne Messung nehmen",
+     "Nur moderne Filme verwenden",
+     "Widersprüche grundsätzlich löschen"
+    ],
+    "ok": 0,
+    "why": "Quellenkritik fragt, wer etwas warum und in welchem Zusammenhang überliefert hat."
+   },
+   {
+    "story": "Zwei Texte berichten unterschiedlich über dasselbe Ritual.",
+    "q": "Was sollte ein Historiker zuerst prüfen?",
+    "a": [
+     "Wer die Texte verfasst hat, wann und mit welchem Zweck",
+     "Welcher Text schöner aussieht",
+     "Welcher Text länger ist",
+     "Ob beide dieselbe Tintenfarbe haben"
+    ],
+    "ok": 0,
+    "why": "Quellenkritik berücksichtigt Herkunft, Zeit, Absicht und Überlieferung einer Quelle."
+   },
+   {
+    "story": "Ein Grabtext beschreibt Hoffnungen für das Jenseits.",
+    "q": "Was lässt sich daraus besonders gut erschließen?",
+    "a": [
+     "Vorstellungen und religiöse Hoffnungen der damaligen Menschen",
+     "Eine naturwissenschaftlich bewiesene Beschreibung des Jenseits",
+     "Die exakte Einwohnerzahl Ägyptens",
+     "Die tägliche Niltemperatur"
+    ],
+    "ok": 0,
+    "why": "Religiöse Texte geben vor allem Einblick in Glaubensvorstellungen und Rituale."
+   }
+  ]
+ },
+ {
+  "title": "Baustelle für die Ewigkeit",
+  "icon": "🔺",
+  "fact": "Große Pyramidenprojekte verlangten Planung, Versorgung, Materialtransport und viele spezialisierte Arbeitskräfte. Das Bild ausschließlich versklavter Massen ist zu simpel.",
+  "clue": "Der Gehilfe kannte Lagerlisten, Zahlen und den Weg zwischen Kornkammer und Schreibstube.",
+  "tasks": [
+   {
+    "story": "Auf der Baustelle werden Stein, Wasser, Brot und Werkzeuge verteilt.",
+    "q": "Was zeigt ein Großprojekt wie der Pyramidenbau besonders?",
+    "a": [
+     "Dass Organisation, Versorgung und Arbeitsteilung entscheidend waren",
+     "Dass Planung unnötig war",
+     "Dass ein einzelner Mensch die Pyramide allein baute",
+     "Dass Getreide keine Rolle in der Versorgung spielte"
+    ],
+    "ok": 0,
+    "why": "Großbaustellen brauchten koordinierte Arbeitskräfte, Material und Versorgung."
+   },
+   {
+    "story": "Ein Besucher behauptet: „Wir wissen sicher, dass jede Pyramide nur von angeketteten Sklaven gebaut wurde.“",
+    "q": "Welche Antwort ist angemessener?",
+    "a": [
+     "Die Forschung zeigt ein komplexeres Bild mit organisierten Arbeitskräften; pauschale Aussagen sind problematisch",
+     "Das stimmt sicher immer",
+     "Pyramiden entstanden ohne Menschen",
+     "Über Arbeitsorganisation gibt es überhaupt keine Hinweise"
+    ],
+    "ok": 0,
+    "why": "Archäologische Befunde sprechen für organisierte Arbeitergruppen und Versorgung; einfache Filmklischees greifen zu kurz."
+   },
+   {
+    "story": "Für eine Großbaustelle müssen täglich viele Menschen mit Nahrung versorgt werden.",
+    "q": "Was folgt daraus für die Organisation?",
+    "a": [
+     "Versorgung, Lagerung und Arbeitsplanung mussten koordiniert werden",
+     "Essen spielte bei Großprojekten keine Rolle",
+     "Nur ein einziger Arbeiter war nötig",
+     "Material musste nicht transportiert werden"
+    ],
+    "ok": 0,
+    "why": "Große Bauprojekte verlangten Logistik: Menschen, Werkzeuge, Material und Verpflegung mussten organisiert werden."
+   },
+   {
+    "story": "Archäologen finden Arbeiterunterkünfte und Hinweise auf Versorgung nahe einer Pyramidenbaustelle.",
+    "q": "Warum sind solche Funde wichtig?",
+    "a": [
+     "Sie liefern konkrete Hinweise auf Arbeitsorganisation und Alltag",
+     "Sie beweisen, dass niemand gearbeitet hat",
+     "Sie ersetzen jede andere Quelle vollständig",
+     "Sie zeigen nur, welche Farbe die Pyramide hatte"
+    ],
+    "ok": 0,
+    "why": "Archäologische Befunde helfen, Arbeitsbedingungen und Versorgung differenzierter zu rekonstruieren."
+   }
+  ]
+ }
 ];
-const fresh=()=>({done:[],clues:[],current:0,task:0,finished:false});
+const fresh=()=>({done:[],clues:[],current:0,task:0,order:[],finished:false});
 let save=load();
 function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&Array.isArray(x.done)&&Array.isArray(x.clues))return Object.assign(fresh(),x)}catch{}return fresh()}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(save))}catch{}}
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function shuffle(a){const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x}
+function activeTasks(){const c=chapters[save.current],order=Array.isArray(save.order)&&save.order.length?save.order:[0,1];return order.map(i=>c.tasks[i]).filter(Boolean)}
 function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.id===id));scrollTo({top:0,behavior:'smooth'})}
 function renderHome(){
  $('sealStat').textContent=`${save.done.length} / 7 Siegel`;$('clueStat').textContent=`${save.clues.length} Hinweise`;
@@ -117,30 +483,30 @@ function renderHome(){
  $('chapterGrid').querySelectorAll('[data-ch]').forEach(b=>b.onclick=()=>startChapter(Number(b.dataset.ch)));
  $('book').innerHTML=save.done.length?save.done.map(i=>`<div class="note"><b>Siegel ${i+1}: ${esc(chapters[i].title)}</b><br>${esc(chapters[i].fact)}</div>`).join(''):'<div class="note muted">Noch leer. Mit jedem gelösten Kapitel kommt ein Eintrag dazu.</div>';
 }
-function startChapter(i){save.current=i;save.task=0;persist();loadTask();show('play')}
+function startChapter(i){save.current=i;save.task=0;save.order=shuffle(chapters[i].tasks.map((_,n)=>n)).slice(0,2);persist();loadTask();show('play')}
 function loadTask(){
- const c=chapters[save.current],t=c.tasks[save.task];
- $('chapterKicker').textContent=`Siegel ${save.current+1} von 7 · Aufgabe ${save.task+1} von ${c.tasks.length}`;$('chapterTitle').textContent=c.title;$('sceneIcon').textContent=c.icon;$('story').textContent=t.story;$('question').textContent=t.q;$('feedback').textContent='Wähle die Antwort, die am besten zu den historischen Informationen passt.';$('feedback').className='feedback';$('clueBox').classList.add('hidden');$('nextTask').classList.add('hidden');$('chapterProgress').style.width=`${save.task/c.tasks.length*100}%`;
+ const c=chapters[save.current],tasks=activeTasks(),t=tasks[save.task];
+ $('chapterKicker').textContent=`Siegel ${save.current+1} von 7 · Aufgabe ${save.task+1} von ${tasks.length}`;$('chapterTitle').textContent=c.title;$('sceneIcon').textContent=c.icon;$('story').textContent=t.story;$('question').textContent=t.q;$('feedback').textContent='Wähle die Antwort, die am besten zu den historischen Informationen passt.';$('feedback').className='feedback';$('clueBox').classList.add('hidden');$('nextTask').classList.add('hidden');$('chapterProgress').style.width=`${save.task/tasks.length*100}%`;
  $('answers').innerHTML=t.a.map((a,i)=>`<button class="choice" data-a="${i}">${esc(a)}</button>`).join('');
  $('answers').querySelectorAll('button').forEach(b=>b.onclick=()=>answer(Number(b.dataset.a)));
 }
 function answer(i){
- const c=chapters[save.current],t=c.tasks[save.task],buttons=[...$('answers').children];
+ const c=chapters[save.current],tasks=activeTasks(),t=tasks[save.task],buttons=[...$('answers').children];
  if(i!==t.ok){buttons[i].classList.add('bad');$('feedback').textContent='Noch nicht. Hinweis: Prüfe, welche Antwort durch Alltag, Verwaltung oder Quellen wirklich gestützt wird.';$('feedback').className='feedback warn';return}
  buttons.forEach((b,j)=>{b.disabled=true;if(j===t.ok)b.classList.add('good')});
  $('feedback').textContent='Richtig. '+t.why;$('feedback').className='feedback success';
  save.task++;
- if(save.task>=c.tasks.length){
+ if(save.task>=tasks.length){
    if(!save.done.includes(save.current))save.done.push(save.current);
    if(!save.clues.includes(save.current))save.clues.push(save.current);
    save.done.sort((a,b)=>a-b);save.clues.sort((a,b)=>a-b);persist();
    $('chapterProgress').style.width='100%';$('clueBox').textContent='🔶 Hinweis gefunden: '+c.clue;$('clueBox').classList.remove('hidden');
    $('nextTask').textContent=save.done.length===7?'Zum Finale →':'Nächstes Siegel →';$('nextTask').classList.remove('hidden');
- }else{$('chapterProgress').style.width=`${save.task/c.tasks.length*100}%`;$('nextTask').textContent='Nächste Aufgabe →';$('nextTask').classList.remove('hidden')}
+ }else{$('chapterProgress').style.width=`${save.task/tasks.length*100}%`;$('nextTask').textContent='Nächste Aufgabe →';$('nextTask').classList.remove('hidden')}
 }
 $('nextTask').onclick=()=>{
- const c=chapters[save.current];
- if(save.task<c.tasks.length){loadTask();return}
+ const c=chapters[save.current],tasks=activeTasks();
+ if(save.task<tasks.length){loadTask();return}
  if(save.done.length===7){renderFinale();show('finale');return}
  const n=Math.min(6,save.current+1);startChapter(n)
 };
