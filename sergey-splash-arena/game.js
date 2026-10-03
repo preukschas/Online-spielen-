@@ -2,7 +2,24 @@
 "use strict";
 
 const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
+const ctx=canvas&&canvas.getContext?canvas.getContext("2d"):null;
+if(!canvas||!ctx){
+  const fallback=document.getElementById("overlay");
+  if(fallback)fallback.classList.remove("hidden");
+  throw new Error("Canvas 2D ist auf diesem Gerät nicht verfügbar.");
+}
+// Safari-/iPad-Kompatibilität für ältere Canvas-Versionen.
+if(typeof ctx.setLineDash!=="function")ctx.setLineDash=function(){};
+if(typeof ctx.ellipse!=="function"){
+  ctx.ellipse=function(x,y,rx,ry,rotation,startAngle,endAngle,anticlockwise){
+    this.save();
+    this.translate(x,y);
+    this.rotate(rotation||0);
+    this.scale(rx,ry);
+    this.arc(0,0,1,startAngle,endAngle,anticlockwise);
+    this.restore();
+  };
+}
 const W=canvas.width,H=canvas.height;
 
 const ui={
@@ -94,10 +111,27 @@ function reset(){
   updateUI();
 }
 
+function showStartError(err){
+  running=false;shootHeld=false;
+  ui.overlay.classList.remove("hidden");
+  ui.tag.textContent="STARTFEHLER";
+  ui.title.textContent="Nochmal versuchen";
+  ui.text.textContent="Das Spiel konnte auf diesem Gerät nicht sauber starten. Bitte Seite neu laden und erneut auf SPIEL STARTEN tippen.";
+  ui.start.textContent="ERNEUT STARTEN";
+  try{console.error("Sergey Splash Arena:",err)}catch(_){}
+}
 function start(){
-  ensureAudio();reset();running=true;last=performance.now();
-  ui.overlay.classList.add("hidden");
-  requestAnimationFrame(loop);
+  try{
+    ensureAudio();
+    reset();
+    running=true;
+    last=performance.now();
+    ui.overlay.classList.add("hidden");
+    render();
+    requestAnimationFrame(loop);
+  }catch(err){
+    showStartError(err);
+  }
 }
 
 function finish(reason){
@@ -570,10 +604,14 @@ function render(){
 
 function loop(now){
   if(!running)return;
-  const dt=Math.min(.033,(now-last)/1000||0);last=now;
-  if(!paused)update(dt);
-  render();
-  if(running)requestAnimationFrame(loop);
+  try{
+    const dt=Math.min(.033,(now-last)/1000||0);last=now;
+    if(!paused)update(dt);
+    render();
+    if(running)requestAnimationFrame(loop);
+  }catch(err){
+    showStartError(err);
+  }
 }
 
 function key(e,down){
