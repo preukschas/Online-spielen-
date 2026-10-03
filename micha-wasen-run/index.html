@@ -26,7 +26,7 @@
   #progress{height:100%;width:0;background:linear-gradient(90deg,#f2b938,#fff0a8)}
   #controls{position:absolute;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;padding:0 16px;pointer-events:none}
   .controlCluster{display:flex;gap:12px;pointer-events:auto}
-  .ctl{width:78px;height:78px;border-radius:24px;border:2px solid #ffffff72;background:#111b;color:#fff;font-size:30px;font-weight:900;box-shadow:0 9px 24px #0005;backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent}
+  .ctl{width:78px;height:78px;border-radius:24px;border:2px solid #ffffff72;background:#111b;color:#fff;font-size:30px;font-weight:900;box-shadow:0 9px 24px #0005;backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;cursor:pointer}
   .ctl:active{transform:translateY(2px) scale(.98);background:#2b2118df}
   #overlay{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(#201a13aa,#000a);padding:20px}
   #card{width:min(620px,94%);background:linear-gradient(160deg,rgba(39,28,18,.96),rgba(17,16,14,.96));border:1px solid #fff3;border-radius:28px;padding:28px;text-align:center;color:white;box-shadow:0 30px 90px #0009}
@@ -182,11 +182,35 @@ function jump(){
 }
 function setDuck(v){duckHeld=v}
 
-jumpBtn.addEventListener('pointerdown',e=>{e.preventDefault();jump()});
-duckBtn.addEventListener('pointerdown',e=>{e.preventDefault();setDuck(true)});
-duckBtn.addEventListener('pointerup',()=>setDuck(false));
-duckBtn.addEventListener('pointercancel',()=>setDuck(false));
-duckBtn.addEventListener('pointerleave',()=>setDuck(false));
+let lastJumpInput=-1000;
+function triggerJump(e){
+  if(e && e.cancelable)e.preventDefault();
+  const now=performance.now();
+  if(now-lastJumpInput<140)return;
+  lastJumpInput=now;
+  jump();
+}
+function duckStart(e){
+  if(e && e.cancelable)e.preventDefault();
+  setDuck(true);
+}
+function duckEnd(e){
+  if(e && e.cancelable)e.preventDefault();
+  setDuck(false);
+}
+
+// iPad/Safari: explicit touch handlers plus pointer/click fallbacks.
+jumpBtn.addEventListener('touchstart',triggerJump,{passive:false});
+jumpBtn.addEventListener('pointerdown',triggerJump);
+jumpBtn.addEventListener('click',triggerJump);
+
+duckBtn.addEventListener('touchstart',duckStart,{passive:false});
+duckBtn.addEventListener('touchend',duckEnd,{passive:false});
+duckBtn.addEventListener('touchcancel',duckEnd,{passive:false});
+duckBtn.addEventListener('pointerdown',duckStart);
+duckBtn.addEventListener('pointerup',duckEnd);
+duckBtn.addEventListener('pointercancel',duckEnd);
+duckBtn.addEventListener('pointerleave',duckEnd);
 
 addEventListener('keydown',e=>{
   if([' ','ArrowUp'].includes(e.key)){e.preventDefault(); if(!running && !over) startGame(); else jump();}
