@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#eef4ec">
+  <title>Elli – Ein schöner Tag · DMP Games</title>
+  <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="icon-button" id="homeButton" type="button" aria-label="Zur Tagesübersicht" title="Zur Übersicht">⌂</button>
+      <div class="brand">
+        <span class="brand-kicker">DMP Special · Ein ruhiges Spiel mit</span>
+        <strong>Elli – Ein schöner Tag</strong>
+      </div>
+      <div class="heart-counter" id="heartCounter" aria-live="polite">♡ 0 / 5</div>
+    </header>
+
+    <main id="app" class="app" tabindex="-1"></main>
+
+    <footer class="footer">
+      <span>Ohne Zeitdruck · ohne Verlieren · in deinem Tempo</span>
+      <button id="resetButton" class="text-button" type="button">Tag neu beginnen</button>
+    </footer>
+  </div>
+
+  <template id="overviewTemplate">
+    <section class="overview">
+      <div class="hero-card">
+        <figure class="elli-photo-wrap">
+          <img class="elli-photo" src="data:image/jpeg;base64,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" alt="Elli" width="180" height="236">
+          <figcaption>Elli</figcaption>
+        </figure>
+        <div class="hero-copy">
+          <p class="eyebrow">Heute muss niemand schnell sein.</p>
+          <h1>Was möchte Elli als Nächstes machen?</h1>
+          <p>Such dir einfach etwas aus. Es gibt keine falsche Reihenfolge und keinen Countdown.</p>
+        </div>
+      </div>
+
+      <div class="scene-grid" id="sceneGrid">
+        <button class="scene-card" type="button" data-scene="garden">
+          <span class="scene-icon" aria-hidden="true">🌷</span>
+          <span class="scene-copy"><strong>Gartenrunde</strong><small>Blumen versorgen und kurz draußen sein.</small></span>
+          <span class="scene-state" data-state-for="garden">Noch offen</span>
+        </button>
+        <button class="scene-card" type="button" data-scene="story">
+          <span class="scene-icon" aria-hidden="true">📖</span>
+          <span class="scene-copy"><strong>Leseecke</strong><small>Eine kleine Geschichte für heute auswählen.</small></span>
+          <span class="scene-state" data-state-for="story">Noch offen</span>
+        </button>
+        <button class="scene-card" type="button" data-scene="basket">
+          <span class="scene-icon" aria-hidden="true">🧺</span>
+          <span class="scene-copy"><strong>In Ruhe sortieren</strong><small>Sechs Dinge bekommen ihren Platz.</small></span>
+          <span class="scene-state" data-state-for="basket">Noch offen</span>
+        </button>
+        <button class="scene-card" type="button" data-scene="craft">
+          <span class="scene-icon" aria-hidden="true">🎨</span>
+          <span class="scene-copy"><strong>Basteltisch</strong><small>Ein kleines Bild ganz ohne Vorgaben gestalten.</small></span>
+          <span class="scene-state" data-state-for="craft">Noch offen</span>
+        </button>
+        <button class="scene-card" type="button" data-scene="tea">
+          <span class="scene-icon" aria-hidden="true">☕</span>
+          <span class="scene-copy"><strong>Kleine Pause</strong><small>Getränk und Lieblingsplatz für den Moment wählen.</small></span>
+          <span class="scene-state" data-state-for="tea">Noch offen</span>
+        </button>
+      </div>
+
+      <section class="day-note" id="dayNote" aria-live="polite"></section>
+    </section>
+  </template>
+
+  <script src="src/game.js"></script>
+</body>
+</html>
