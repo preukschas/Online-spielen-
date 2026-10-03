@@ -497,8 +497,8 @@ function loadTask(){
 }
 function answer(i){
  const c=chapters[save.current],tasks=activeTasks(),t=tasks[save.task],buttons=[...$('answers').children];
- if(i!==t.ok){buttons[i].classList.add('bad');$('feedback').textContent='Noch nicht. Hinweis: Prüfe, welche Antwort durch Alltag, Verwaltung oder Quellen wirklich gestützt wird.';$('feedback').className='feedback warn';return}
- buttons.forEach((b,j)=>{b.disabled=true;if(j===t.ok)b.classList.add('good')});
+ if(i!==t.ok){const pressed=buttons.find(b=>Number(b.dataset.a)===i);if(pressed)pressed.classList.add('bad');$('feedback').textContent='Noch nicht. Hinweis: Prüfe, welche Antwort durch Alltag, Verwaltung oder Quellen wirklich gestützt wird.';$('feedback').className='feedback warn';return}
+ buttons.forEach(b=>{b.disabled=true;if(Number(b.dataset.a)===t.ok)b.classList.add('good')});
  $('feedback').textContent='Richtig. '+t.why;$('feedback').className='feedback success';
  save.task++;
  if(save.task>=tasks.length){
