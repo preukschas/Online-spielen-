@@ -79,6 +79,36 @@
   } catch (_) { /* storage may be unavailable */ }
   const job = () => jobs[Math.min(state.jobIndex, jobs.length-1)];
   const count = () => state.painted.filter(Boolean).length;
+
+  const recentQuestionPrompts = [];
+  const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+  function generatedQuestion(slot){
+    const j=Math.min(state.jobIndex,jobs.length-1);
+    let q;
+    if(slot===0){
+      if(j===0){const a=rnd(18,39),b=rnd(11,34);q={where:'Büro · Materialliste',prompt:`Im Lager stehen ${a} kleine und ${b} große Pinsel. Wie viele Pinsel sind das zusammen?`,answer:a+b,unit:'Pinsel',hint:`Rechne ${a} + ${b}.`,explain:`${a} + ${b} = ${a+b}.`};}
+      else if(j===1){const a=rnd(4,9),b=rnd(3,8);q={where:'Büro · Rollen bestellen',prompt:`${a} Kartons enthalten jeweils ${b} Farbrollen. Wie viele Rollen sind das?`,answer:a*b,unit:'Rollen',hint:`Das ist ${a} × ${b}.`,explain:`${a} × ${b} = ${a*b}.`};}
+      else if(j===2){const a=rnd(6,10),b=rnd(5,9);q={where:'Büro · Gerüstteile',prompt:`${a} Stapel mit jeweils ${b} Gerüstschellen: Wie viele Schellen sind es?`,answer:a*b,unit:'Schellen',hint:`Rechne ${a} × ${b}.`,explain:`${a} × ${b} = ${a*b}.`};}
+      else if(j===3){const a=rnd(35,69),b=rnd(20,49);q={where:'Büro · Lieferschein',prompt:`${a} L Farbvorrat und ${b} L neue Lieferung: Wie viele Liter sind verfügbar?`,answer:a+b,unit:'L',hint:`Rechne ${a} + ${b}.`,explain:`${a} + ${b} = ${a+b} L.`};}
+      else{const a=rnd(75,99),b=rnd(21,49);q={where:'Büro · Endabrechnung',prompt:`${a} m Abdeckband sind da, ${b} m werden gebraucht. Wie viele Meter bleiben?`,answer:a-b,unit:'m',hint:`Rechne ${a} − ${b}.`,explain:`${a} − ${b} = ${a-b} m.`};}
+    }else if(slot===1){
+      if(j===0){const a=rnd(7,12),b=rnd(2,4);q={where:'Baustelle · Vermessen',prompt:`Eine Mauer ist ${a} m lang. Ein ${b} m breites Tor bleibt frei. Wie viele Meter streicht Mario?`,answer:a-b,unit:'m',hint:`Ziehe ${b} von ${a} ab.`,explain:`${a} − ${b} = ${a-b} m.`};}
+      else if(j===4){const w=rnd(6,9),h=rnd(4,6),win=rnd(4,8),area=w*h-win;q={where:'Baustelle · echte Fläche',prompt:`Die Fassade ist ${w} m breit und ${h} m hoch. ${win} m² Fensterfläche bleiben frei. Wie viele m² werden gestrichen?`,answer:area,unit:'m²',hint:`Erst ${w} × ${h}, dann ${win} abziehen.`,explain:`${w} × ${h} − ${win} = ${area} m².`};}
+      else{const w=rnd(j===1?3:4,j===1?6:8),h=rnd(2,5);q={where:'Baustelle · Fläche',prompt:`Eine Wand ist ${w} m breit und ${h} m hoch. Wie groß ist ihre Fläche?`,answer:w*h,unit:'m²',hint:'Breite × Höhe.',explain:`${w} × ${h} = ${w*h} m².`};}
+    }else{
+      if(j<=1){const a=rnd(7,15),b=rnd(3,9),used=rnd(1,Math.min(5,a+b-1));q={where:'Baustelle · Nachschub',prompt:`${a} Eimer stehen im Auto und ${b} im Büro. ${used} sind leer. Wie viele volle Eimer bleiben?`,answer:a+b-used,unit:'Eimer',hint:`Erst ${a} + ${b}, dann ${used} abziehen.`,explain:`${a} + ${b} − ${used} = ${a+b-used}.`};}
+      else if(j===2){const w=rnd(5,8),h=rnd(3,5),win=rnd(2,6),area=w*h-win;q={where:'Baustelle · Fenster aussparen',prompt:`Die Wand ist ${w} m × ${h} m groß. ${win} m² Fenster bleiben frei. Wie viel Fläche wird gestrichen?`,answer:area,unit:'m²',hint:`Erst ${w} × ${h}, dann ${win} abziehen.`,explain:`${w} × ${h} − ${win} = ${area} m².`};}
+      else{const cover=rnd(j===3?3:4,6),liters=rnd(4,9),area=cover*liters;q={where:'Baustelle · Farbbedarf',prompt:`1 L Farbe reicht für ${cover} m². Wie viele Liter braucht Mario für ${area} m²?`,answer:liters,unit:'L',hint:`${area} ÷ ${cover}.`,explain:`${area} ÷ ${cover} = ${liters} L.`};}
+    }
+    return {...q,_slot:slot};
+  }
+  function pickQuestion(slot){
+    let q=generatedQuestion(slot),tries=0;
+    while(recentQuestionPrompts.includes(q.prompt)&&tries++<12)q=generatedQuestion(slot);
+    recentQuestionPrompts.push(q.prompt);
+    if(recentQuestionPrompts.length>18)recentQuestionPrompts.shift();
+    return q;
+  }
   const updateHud = () => {
     document.getElementById('jobLabel').textContent = state.jobIndex >= jobs.length ? 'Alle Aufträge geschafft' : `Auftrag ${state.jobIndex+1} von ${jobs.length}: ${job().name}`;
     document.getElementById('progressLabel').textContent = `${count()} / 12 Felder`;
@@ -139,7 +169,7 @@
     const bonus=state.wrong===0 ? 2 : 1;
     state.stars += bonus; updateHud(); beep(650,.13);
     const next=state.afterAnswer;
-    showModal('Richtig!', 'Sauber gerechnet!', `${q.explain} ${bonus===2?'⭐ Zwei Sterne für die erste richtige Antwort!':'⭐ Gut drangeblieben!'}`, [{label:state.jobIndex===0&&q===job().questions[0]?'Zur Baustelle':'Weiter',action:()=>{hideModal();next();}}]);
+    showModal('Richtig!', 'Sauber gerechnet!', `${q.explain} ${bonus===2?'⭐ Zwei Sterne für die erste richtige Antwort!':'⭐ Gut drangeblieben!'}`, [{label:state.jobIndex===0&&q._slot===0?'Zur Baustelle':'Weiter',action:()=>{hideModal();next();}}]);
   }
   answerEl.addEventListener('keydown', e=>{if(e.key==='Enter'){e.preventDefault();submitAnswer();}});
 
@@ -148,7 +178,7 @@
     state.phase='office'; state.painted=Array(12).fill(false); state.milestones=new Set();
     state.x=155; state.row=0; state.paintColor=job().color; state.speedBonus=false; updateHud();
     showModal(`Auftrag ${state.jobIndex+1} · ${job().location}`,job().name,job().brief,[
-      {label:'Ins Büro',action:()=>openQuestion(job().questions[0],()=>toast('Auftrag vorbereitet – ab auf das Gerüst!'))}
+      {label:'Ins Büro',action:()=>openQuestion(pickQuestion(0),()=>toast('Auftrag vorbereitet – ab auf das Gerüst!'))}
     ]);
   }
   function colleague() {
@@ -171,9 +201,9 @@
     const n=count(); updateHud(); beep(460+n*15,.065);
     if (n===12) { finishJob(); return; }
     if (n===2 && !state.milestones.has('colleague')) {state.milestones.add('colleague');colleague();return;}
-    if (n===4 && !state.milestones.has('measure')) {state.milestones.add('measure');openQuestion(job().questions[1],()=>toast('Maße stimmen – weiter streichen!'));return;}
+    if (n===4 && !state.milestones.has('measure')) {state.milestones.add('measure');openQuestion(pickQuestion(1),()=>toast('Maße stimmen – weiter streichen!'));return;}
     if (n===7 && !state.milestones.has('customer')) {state.milestones.add('customer');customer();return;}
-    if (n===9 && !state.milestones.has('paintmath')) {state.milestones.add('paintmath');openQuestion(job().questions[2],()=>toast('Material geplant – die letzten Felder warten!'));}
+    if (n===9 && !state.milestones.has('paintmath')) {state.milestones.add('paintmath');openQuestion(pickQuestion(2),()=>toast('Material geplant – die letzten Felder warten!'));}
   }
   function finishJob() {
     state.phase='complete'; state.stars+=3; state.jobIndex++; save(); updateHud(); beep(850,.2);
