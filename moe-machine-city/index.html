@@ -27,8 +27,29 @@ html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden;backgrou
         d.head.appendChild(m);
       }
       const s=d.createElement('style');
-      s.textContent='html,body,body *{-webkit-user-select:none!important;user-select:none!important}html,body{-webkit-touch-callout:none!important}input,textarea,select,[contenteditable="true"],[contenteditable=""]{-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important}img,svg,canvas{-webkit-user-drag:none!important;user-drag:none!important}';
+      s.textContent='html,body,body *{-webkit-user-select:none!important;user-select:none!important}html,body{-webkit-touch-callout:none!important}input,textarea,select,[contenteditable="true"],[contenteditable=""]{-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important}img,svg,canvas{-webkit-user-drag:none!important;user-drag:none!important}button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}.road{touch-action:pan-y!important}@media(max-width:420px){button,.choice,.small-btn,.door,.switch,.obj,.person{min-width:44px}}';
       d.head.appendChild(s);
+
+      const enhance=()=>{
+        const road=d.querySelector('.road:not([data-dmp-swipe])');
+        if(road){
+          road.dataset.dmpSwipe='1';
+          let startX=null;
+          road.addEventListener('pointerdown',e=>{startX=e.clientX;try{road.setPointerCapture(e.pointerId)}catch(_){}});
+          road.addEventListener('pointercancel',()=>{startX=null});
+          road.addEventListener('pointerup',e=>{
+            if(startX===null)return;
+            const dx=e.clientX-startX;startX=null;
+            if(Math.abs(dx)<32)return;
+            const controls=[...road.parentElement.querySelectorAll('.grid.g3 button')];
+            if(dx<0&&controls[0])controls[0].click();
+            if(dx>0&&controls[2])controls[2].click();
+          });
+        }
+      };
+      enhance();
+      const observer=new MutationObserver(enhance);
+      observer.observe(d.body,{childList:true,subtree:true});
     }catch(e){}
   });
 })();
