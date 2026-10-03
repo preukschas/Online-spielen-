@@ -26,7 +26,7 @@
     </section>
 
     <section class="gameCard">
-      <img class="franzCharacter" src="./franz-cartoon.svg" alt="Franz als Cartoon-Fliesenleger mit Kelle und Fliese">
+      <img id="franzCharacter" class="franzCharacter" alt="Franz als Cartoon-Fliesenleger mit Kelle und Fliese">
       <canvas id="game" width="960" height="600" aria-label="Fliesenleger-Spielbereich"></canvas>
 
       <div class="meterPanel">
@@ -63,6 +63,25 @@
     </div>
   </div>
 
+  <script>
+  (async function(){
+    const franz=document.getElementById('franzCharacter');
+    if(!franz) return;
+    try{
+      const names=['0','1a','1b','2','3','4','5'];
+      const parts=await Promise.all(names.map(async function(name){
+        const response=await fetch('./assets/franz-'+name+'.txt',{cache:'force-cache'});
+        if(!response.ok) throw new Error('Franz-Grafikteil '+name+' konnte nicht geladen werden');
+        return (await response.text()).replace(/\s+/g,'');
+      }));
+      franz.addEventListener('load',function(){franz.classList.add('loaded');},{once:true});
+      franz.src='data:image/webp;base64,'+parts.join('');
+    }catch(error){
+      franz.classList.add('loadError');
+      console.error(error);
+    }
+  })();
+  </script>
   <script src="game.js" defer></script>
 </body>
 </html>
