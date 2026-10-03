@@ -1,0 +1,71 @@
+name: Publish FREISTADT Test
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'freistadt-test-src/**'
+      - '.github/workflows/freistadt-test-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: freistadt-test-publish
+  cancel-in-progress: true
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install
+        working-directory: freistadt-test-src
+        run: npm install --no-audit --no-fund
+
+      - name: Build FREISTADT
+        working-directory: freistadt-test-src
+        run: npm run build
+
+      - name: Add public test protections
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("freistadt-test-src/dist/index.html")
+          html = path.read_text(encoding="utf-8")
+          additions = """<meta name="robots" content="noindex,nofollow">
+          <script src="../fun-access.js"></script>
+          <script>window.DMPFunAccess.requireAccess({backHref:"../"});</script>
+          <link rel="stylesheet" href="../game-interaction-guard.css">"""
+          html = html.replace("<head>", "<head>\n    " + additions, 1)
+          html = html.replace("FREISTADT – v0.1 Driving Prototype", "FREISTADT – v0.4 Test")
+          path.write_text(html, encoding="utf-8")
+          PY
+
+      - name: Replace public test build
+        run: |
+          rm -rf freistadt-test
+          mkdir -p freistadt-test
+          cp -R freistadt-test-src/dist/. freistadt-test/
+          printf 'FREISTADT v0.4 test build\nSource commit: %s\nBuilt: %s\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > freistadt-test/BUILD.txt
+
+      - name: Commit test build
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add freistadt-test
+          if git diff --cached --quiet; then
+            echo "No build changes."
+            exit 0
+          fi
+          git commit -m "publish: update FREISTADT v0.4 test build"
+          git push
