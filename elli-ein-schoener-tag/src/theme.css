@@ -1,0 +1,537 @@
+/* Elli CI 1.3 — single source of truth for the visual identity */
+:root{
+  --elli-sky:#8fd0f3;
+  --elli-blue:#1676c5;
+  --elli-blue-dark:#0d4f8d;
+  --elli-pink:#f2557e;
+  --elli-pink-dark:#c73761;
+  --elli-heart:#ef4f78;
+  --elli-yellow:#ffd151;
+  --elli-green:#64ad49;
+  --elli-cream:#fff2d6;
+  --elli-paper:#fff8e8;
+  --elli-wood:#c77a32;
+  --elli-wood-light:#e4a35d;
+  --elli-wood-dark:#7d421d;
+  --elli-ink:#452718;
+  --elli-navy:#152344;
+  --elli-shadow:0 8px 0 rgba(94,53,25,.18),0 18px 40px rgba(64,45,28,.20);
+  --elli-radius:24px;
+}
+
+html{background:#dcefc7}
+body{
+  color:var(--elli-ink);
+  font-family:"Arial Rounded MT Bold","Trebuchet MS",system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(circle at 12% 12%,rgba(255,255,255,.85) 0 34px,transparent 35px),
+    radial-gradient(circle at 88% 14%,rgba(255,255,255,.75) 0 44px,transparent 45px),
+    linear-gradient(180deg,#8fd0f3 0 36%,#d7edbd 37% 72%,#efca8e 73% 100%);
+  background-attachment:fixed;
+}
+body::before,
+body::after{
+  content:"";
+  position:fixed;
+  z-index:-1;
+  pointer-events:none;
+}
+body::before{
+  left:-5vw;right:-5vw;bottom:-6vh;height:34vh;
+  background:
+    radial-gradient(ellipse at 10% 100%,#709b43 0 34%,transparent 35%),
+    radial-gradient(ellipse at 88% 100%,#5f8b3d 0 32%,transparent 33%),
+    linear-gradient(180deg,transparent,#8bb35c);
+  opacity:.78;
+}
+body::after{
+  inset:0;
+  background:
+    radial-gradient(circle at 7% 72%,#f08da2 0 7px,transparent 8px),
+    radial-gradient(circle at 11% 68%,#ffd24b 0 6px,transparent 7px),
+    radial-gradient(circle at 93% 74%,#ef78a1 0 8px,transparent 9px),
+    radial-gradient(circle at 88% 66%,#f5d54f 0 5px,transparent 6px);
+  opacity:.8;
+}
+.ci-sky{display:none}
+
+.app-shell{
+  width:min(1500px,100%);
+  padding-left:clamp(10px,2vw,28px);
+  padding-right:clamp(10px,2vw,28px);
+}
+
+.topbar{
+  min-height:78px;
+  margin-top:8px;
+  padding:10px 14px;
+  border:3px solid rgba(255,255,255,.72);
+  border-radius:22px;
+  background:linear-gradient(180deg,rgba(255,250,230,.94),rgba(247,217,165,.94));
+  box-shadow:var(--elli-shadow);
+}
+.icon-button{
+  background:linear-gradient(180deg,#3c9de8,#1269b4);
+  color:white;
+  border:4px solid #fff3cf;
+  box-shadow:0 4px 0 #0d4f8d;
+  font-weight:900;
+}
+.brand-kicker{color:#8c552c}
+.brand strong{color:var(--elli-blue-dark);font-weight:1000}
+.heart-counter{
+  color:white;
+  background:linear-gradient(180deg,#a96d37,#78451e);
+  border:4px solid #f5c56f;
+  box-shadow:0 4px 0 #633717;
+  font-weight:1000;
+  letter-spacing:.02em;
+}
+
+.ci-hero{
+  position:relative;
+  min-height:360px;
+  grid-template-columns:minmax(220px,320px) minmax(0,1fr) 170px;
+  gap:clamp(18px,3vw,38px);
+  padding:clamp(18px,3vw,34px);
+  overflow:hidden;
+  background:
+    linear-gradient(90deg,rgba(255,246,218,.94),rgba(255,246,218,.72)),
+    radial-gradient(circle at 80% 22%,rgba(255,255,255,.88),transparent 28%);
+  border:6px solid #fff0c8;
+  box-shadow:0 0 0 4px var(--elli-wood-dark),var(--elli-shadow);
+}
+.ci-hero::before{
+  content:"";
+  position:absolute;
+  inset:auto 0 0 0;
+  height:42%;
+  background:
+    linear-gradient(180deg,transparent 0 8%,rgba(112,156,74,.18) 9% 100%),
+    repeating-linear-gradient(90deg,rgba(140,89,45,.10) 0 3px,transparent 3px 44px);
+  pointer-events:none;
+}
+.hero-portrait{position:relative;z-index:2;align-self:end}
+.hero-portrait img{
+  display:block;
+  width:min(100%,290px);
+  max-height:330px;
+  margin:0 auto;
+  object-fit:cover;
+  object-position:center 16%;
+  border-radius:34px 34px 24px 24px;
+  border:6px solid #fff2d4;
+  box-shadow:0 0 0 4px var(--elli-wood-dark),0 18px 30px rgba(75,45,25,.24);
+}
+.welcome-bubble{
+  position:absolute;
+  left:58%;
+  top:-8px;
+  transform:translateX(-10%);
+  width:170px;
+  padding:12px 14px;
+  border-radius:22px;
+  background:#fff9ec;
+  border:3px solid #e7c998;
+  box-shadow:0 7px 0 rgba(121,74,36,.15);
+  font-size:14px;
+  line-height:1.25;
+  text-align:center;
+}
+.welcome-bubble span{color:var(--elli-pink)}
+
+.hero-copy{position:relative;z-index:2;text-align:center;align-self:center}
+.elli-logo{
+  display:inline-flex;
+  align-items:flex-start;
+  justify-content:center;
+  gap:6px;
+  margin-bottom:-2px;
+}
+.elli-logo-name{
+  font-size:clamp(64px,8vw,112px);
+  line-height:.82;
+  letter-spacing:-.06em;
+  color:#fff7dc;
+  -webkit-text-stroke:clamp(3px,.35vw,6px) var(--elli-blue-dark);
+  text-shadow:0 7px 0 var(--elli-blue),0 12px 18px rgba(19,68,110,.24);
+  font-weight:1000;
+  font-style:italic;
+}
+.elli-logo-heart{
+  color:var(--elli-pink);
+  font-size:clamp(34px,4vw,54px);
+  text-shadow:0 3px 0 white;
+}
+.wood-sign{
+  display:inline-block;
+  margin:12px auto 14px;
+  padding:12px 28px;
+  color:#4a2615;
+  font-size:clamp(26px,3.2vw,48px);
+  font-weight:1000;
+  background:
+    linear-gradient(180deg,#f1b96d,#d98c43);
+  border:4px solid #8e4c22;
+  border-radius:16px 16px 20px 20px;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 7px 0 #773c1c;
+  transform:rotate(-1deg);
+}
+.wood-sign span{color:var(--elli-pink)}
+.hero-motto{
+  display:inline-block;
+  margin:4px auto 10px!important;
+  padding:8px 16px;
+  border-radius:999px;
+  background:#fffaf0;
+  border:2px solid #edd09a;
+  color:var(--elli-blue-dark)!important;
+  font-size:clamp(13px,1.5vw,18px)!important;
+  box-shadow:0 5px 0 rgba(121,74,36,.10);
+}
+.hero-motto b{color:var(--elli-pink)}
+.hero-intro{
+  margin:8px auto 0!important;
+  color:#6b4a31!important;
+  font-size:clamp(14px,1.6vw,18px)!important;
+}
+.hero-values{
+  position:relative;
+  z-index:2;
+  align-self:center;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.hero-values span{
+  display:block;
+  padding:7px 9px;
+  text-align:center;
+  font-size:12px;
+  font-weight:1000;
+  color:#59331c;
+  background:linear-gradient(180deg,#eab16b,#c97c35);
+  border:2px solid #8b4b22;
+  border-radius:7px;
+  box-shadow:0 3px 0 #713816;
+}
+.hero-values span:nth-child(odd){transform:rotate(-2deg)}
+.hero-values span:nth-child(even){transform:rotate(2deg)}
+
+.journey-shell{
+  margin-top:24px;
+  padding:18px 18px 20px;
+  border-radius:28px;
+  background:rgba(255,246,222,.94);
+  border:4px solid #fff0c8;
+  box-shadow:0 0 0 3px var(--elli-wood-dark),var(--elli-shadow);
+}
+.journey-heading{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+  margin:0 4px 12px;
+}
+.journey-heading h2{margin:2px 0 0;color:#5b321c;font-size:clamp(24px,3vw,38px)}
+.journey-hint{font-size:12px;color:#916039;font-weight:800}
+
+.journey-grid{
+  display:grid!important;
+  grid-template-columns:repeat(9,minmax(130px,1fr))!important;
+  gap:12px!important;
+  max-width:none!important;
+  overflow-x:auto;
+  overscroll-behavior-inline:contain;
+  scroll-snap-type:x proximity;
+  padding:8px 6px 14px;
+  margin:0!important;
+}
+.journey-card{
+  scroll-snap-align:center;
+  position:relative;
+  min-height:220px!important;
+  width:auto!important;
+  margin:0!important;
+  padding:10px!important;
+  display:flex!important;
+  flex-direction:column;
+  justify-content:flex-end;
+  gap:7px!important;
+  text-align:center!important;
+  border:4px solid #8b4d24!important;
+  border-radius:20px!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,248,226,.98) 52%),
+    linear-gradient(135deg,#92d48b,#f6c66d)!important;
+  box-shadow:inset 0 0 0 3px #ffd891,0 7px 0 #6e381a,0 10px 22px rgba(91,54,29,.18)!important;
+}
+.journey-card::before{
+  content:"";
+  position:absolute;
+  inset:7px 7px 92px;
+  border-radius:12px;
+  background:
+    radial-gradient(circle at 26% 30%,rgba(255,255,255,.75) 0 8px,transparent 9px),
+    radial-gradient(circle at 72% 74%,rgba(246,93,127,.38) 0 8px,transparent 9px),
+    linear-gradient(160deg,#92cef0,#9cc86f 62%,#d9a45d 63%);
+  opacity:.9;
+}
+.journey-card .scene-icon{
+  position:relative;
+  z-index:1;
+  width:58px!important;
+  height:58px!important;
+  margin:auto;
+  border-radius:18px!important;
+  background:#fff5d9!important;
+  border:3px solid white;
+  box-shadow:0 4px 0 rgba(101,57,29,.18);
+  font-size:34px!important;
+}
+.journey-card .scene-copy{position:relative;z-index:1;gap:3px!important}
+.journey-card .scene-copy strong{font-size:14px!important;color:#4a2717}
+.journey-card .scene-copy small{
+  min-height:33px;
+  font-size:10.5px!important;
+  line-height:1.25!important;
+  color:#735039!important;
+}
+.journey-card .scene-state{
+  position:relative;
+  z-index:1;
+  align-self:center;
+  font-size:10px!important;
+  padding:5px 8px!important;
+  background:#fff4d2!important;
+  color:#794728!important;
+  border:1px solid #e7bd78;
+}
+.journey-card.bridge-card{
+  background:linear-gradient(180deg,#1f335f,#101c38)!important;
+  border-color:#7b481f!important;
+}
+.journey-card.bridge-card::before{
+  background:
+    linear-gradient(90deg,transparent 47%,rgba(255,255,255,.06) 48% 52%,transparent 53%),
+    linear-gradient(transparent 47%,rgba(255,255,255,.06) 48% 52%,transparent 53%),
+    #152344;
+  background-size:28px 28px;
+}
+.journey-card.bridge-card .scene-copy strong,
+.journey-card.bridge-card .scene-copy small{color:#fff4dc!important}
+.journey-card.bridge-card .scene-state{background:#223b72!important;color:#ffe997!important;border-color:#5275bd}
+.journey-card.is-locked{filter:saturate(.45);opacity:.64!important}
+.journey-card.is-done::after{
+  content:"♥";
+  position:absolute;
+  top:5px;
+  right:7px;
+  z-index:2;
+  display:grid;
+  place-items:center;
+  width:28px;height:28px;
+  border-radius:50%;
+  color:white;
+  background:var(--elli-pink);
+  border:3px solid white;
+  box-shadow:0 3px 0 #aa2e53;
+}
+
+.day-note{
+  border:3px solid #e0b26f!important;
+  background:#fff7df!important;
+  color:#765039!important;
+  box-shadow:0 5px 0 rgba(113,65,30,.12);
+}
+
+.scene{
+  max-width:1050px!important;
+  background:#fff7df!important;
+  border:5px solid #fff0c8;
+  box-shadow:0 0 0 4px var(--elli-wood-dark),var(--elli-shadow)!important;
+}
+.scene-head{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.16),rgba(0,0,0,.03)),
+    #dda15b;
+  border-bottom:4px solid #8d4b21!important;
+}
+.elli-mini-img{
+  width:66px;height:66px;
+  object-fit:cover;
+  object-position:center 15%;
+  border-radius:20px;
+  border:4px solid #fff0ca;
+  box-shadow:0 4px 0 #814820;
+}
+.scene-head-icon{
+  background:#fff0cf!important;
+  border:3px solid #fff8e9;
+  box-shadow:0 3px 0 #a26330;
+}
+.scene-head h2{color:#4d2a18}
+.scene-head p{color:#69462e!important}
+.scene-body{background:linear-gradient(180deg,#fff8e8,#fff0cc)}
+
+.primary-button{
+  background:linear-gradient(180deg,#ff7897,#e94c78)!important;
+  border:3px solid #fff4dd!important;
+  box-shadow:0 5px 0 #ac3157,0 8px 14px rgba(103,37,62,.18)!important;
+  color:white!important;
+}
+.primary-button:hover{transform:translateY(-1px)}
+.soft-button{
+  background:linear-gradient(180deg,#fffaf0,#f0d5a3)!important;
+  color:#60351f!important;
+  border:2px solid #d69c56!important;
+  box-shadow:0 3px 0 #a7652f!important;
+}
+.text-button{color:#70472f!important}
+
+.choice-button,
+.object-button,
+.basket-button,
+.background-button,
+.motif-button,
+.size-button,
+.option-pill{
+  border:2px solid #d8a15e!important;
+  background:#fff7df!important;
+  color:#57321f!important;
+  box-shadow:0 3px 0 rgba(119,66,29,.20)!important;
+}
+.choice-button.is-selected,
+.object-button.is-selected,
+.background-button.is-selected,
+.motif-button.is-selected,
+.size-button.is-selected,
+.option-pill.is-selected{
+  background:#dceeff!important;
+  box-shadow:inset 0 0 0 3px var(--elli-blue),0 3px 0 rgba(31,83,130,.22)!important;
+}
+
+.garden-bed{
+  border:4px solid #8c4e24;
+  background:
+    radial-gradient(circle at 12% 66%,#ffde4e 0 12px,transparent 13px),
+    radial-gradient(circle at 88% 72%,#f46a91 0 11px,transparent 12px),
+    linear-gradient(180deg,#8fd0f3 0 52%,#82bc59 53% 68%,#9a6738 69%)!important;
+}
+.story-box,.pause-result,.craft-section,.tetris-panel{
+  border:2px solid #e0b36f!important;
+  background:#fff6df!important;
+}
+.craft-canvas-area .art-board{
+  border:7px solid #fff0cc!important;
+  box-shadow:0 0 0 3px #8e4b22,0 12px 24px rgba(81,46,24,.20)!important;
+}
+.craft-help,.craft-summary{color:#70472f!important}
+
+#tetrisCanvas{
+  border:7px solid #d4934c!important;
+  outline:4px solid #75401e;
+  background:#172547!important;
+  box-shadow:0 8px 0 #5e3219,0 14px 26px rgba(32,30,38,.24)!important;
+}
+.tetris-controls button{
+  background:linear-gradient(180deg,#2b91e2,#1268b4)!important;
+  color:white!important;
+  border:3px solid #fff0ca!important;
+  box-shadow:0 4px 0 #0b4c87!important;
+}
+.tetris-controls button.wide{
+  background:linear-gradient(180deg,#ff7696,#e84b77)!important;
+  box-shadow:0 4px 0 #a92f55!important;
+}
+.tetris-kicker{color:var(--elli-blue-dark)!important}
+.tetris-message,.next-piece-box,.swipe-help{
+  border:2px solid #e0b36f;
+  background:#fff9e9!important;
+}
+#nextCanvas{background:#172547!important}
+.progress-track{background:#ead7ac!important}
+.progress-track i{background:linear-gradient(90deg,var(--elli-blue),var(--elli-pink))!important}
+
+.footer{
+  margin-top:10px;
+  padding:10px 14px 18px!important;
+  color:#64432e!important;
+  font-weight:800;
+}
+
+.toast{
+  background:#57311e!important;
+  border:3px solid #f1c984;
+  box-shadow:0 5px 0 #351d11,0 14px 28px rgba(40,25,18,.25)!important;
+}
+
+@media(max-width:900px){
+  .ci-hero{grid-template-columns:190px minmax(0,1fr);min-height:300px}
+  .hero-values{display:none}
+  .hero-portrait img{max-height:270px}
+  .welcome-bubble{width:145px;font-size:12px}
+  .journey-grid{grid-template-columns:repeat(9,138px)!important}
+}
+@media(max-width:650px){
+  .topbar{grid-template-columns:46px 1fr auto}
+  .heart-counter{font-size:11px;padding:8px}
+  .ci-hero{grid-template-columns:118px minmax(0,1fr);gap:12px;padding:14px}
+  .hero-portrait img{max-height:205px;border-width:4px;border-radius:24px}
+  .welcome-bubble{display:none}
+  .elli-logo-name{font-size:54px}
+  .wood-sign{font-size:23px;padding:8px 12px;border-width:3px}
+  .hero-motto{font-size:10px!important;padding:6px 9px}
+  .hero-intro{font-size:12px!important}
+  .journey-shell{padding:13px 8px 14px}
+  .journey-heading{align-items:center}
+  .journey-hint{display:none}
+  .journey-grid{grid-template-columns:repeat(9,126px)!important;gap:9px!important}
+  .journey-card{min-height:205px!important}
+  .scene-head{grid-template-columns:58px 42px minmax(0,1fr)!important;padding:16px!important}
+  .elli-mini-img{width:58px;height:58px;border-radius:18px}
+}
+@media(max-width:430px){
+  .ci-hero{grid-template-columns:1fr;text-align:center}
+  .hero-portrait{order:2}
+  .hero-portrait img{width:170px;max-height:220px}
+  .hero-copy{order:1}
+  .hero-intro{display:none}
+  .scene-head{grid-template-columns:54px minmax(0,1fr)!important}
+  .scene-head-icon{display:none!important}
+  .elli-mini-img{width:54px;height:54px}
+  .journey-heading h2{font-size:24px}
+}
+
+/* Chapter-specific artwork: pure CSS so the cards never depend on remote images. */
+.journey-card[data-step-id="garden"]::before{
+  background:
+    radial-gradient(circle at 22% 74%,#ff6f9a 0 7px,transparent 8px),
+    radial-gradient(circle at 68% 66%,#ffd84f 0 9px,transparent 10px),
+    radial-gradient(circle at 84% 82%,#fff 0 5px,transparent 6px),
+    linear-gradient(180deg,#92d5f4 0 53%,#83bd59 54% 72%,#a46d38 73%);
+}
+.journey-card[data-step-id="story"]::before{
+  background:
+    linear-gradient(90deg,transparent 0 14%,#8b4d27 15% 18%,transparent 19% 39%,#a65c2e 40% 43%,transparent 44% 67%,#7d4625 68% 71%,transparent 72%),
+    linear-gradient(180deg,#e6b36e 0 18%,#8e512b 19% 23%,#e8c087 24% 49%,#8e512b 50% 54%,#d99b54 55%);
+}
+.journey-card[data-step-id="basket"]::before{
+  background:
+    radial-gradient(circle at 20% 70%,#ff785f 0 12px,transparent 13px),
+    radial-gradient(circle at 52% 55%,#2f84ff 0 13px,transparent 14px),
+    radial-gradient(circle at 78% 74%,#ffd33d 0 12px,transparent 13px),
+    linear-gradient(180deg,#f5c879,#eab16a);
+}
+.journey-card[data-step-id="craft"]::before{
+  background:
+    linear-gradient(35deg,transparent 0 38%,#f2557e 39% 48%,transparent 49%),
+    linear-gradient(-35deg,transparent 0 52%,#1676c5 53% 61%,transparent 62%),
+    radial-gradient(circle at 70% 28%,#ffd151 0 15px,transparent 16px),
+    #f6d69f;
+}
+.journey-card[data-step-id="tea"]::before{
+  background:
+    radial-gradient(circle at 74% 72%,#fff5d8 0 17px,#d59a55 18px 22px,transparent 23px),
+    linear-gradient(180deg,#f3a5a8 0 42%,#9272a9 43% 56%,#5f8b4c 57% 100%);
+}
