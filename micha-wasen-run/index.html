@@ -79,7 +79,7 @@
         <div class="rule"><b>🥨 Sammeln</b><br>Brezeln, Herzen, Mandeln, Tickets & Plüschtiere</div>
       </div>
       <button id="startBtn">Los geht's!</button>
-      <div id="small">Tastatur: Leertaste / ↑ zum Springen · ↓ zum Ducken · mobil über die großen Tasten</div>
+      <div id="small">Mobil: ↑ wischen = springen · ↓ wischen = ducken · große Tasten bleiben nutzbar · Tastatur: Leertaste / ↑ / ↓</div>
     </div>
   </div>
 </div>
@@ -183,6 +183,9 @@ function jump(){
 function setDuck(v){duckHeld=v}
 
 let lastJumpInput=-1000;
+let swipeStart=null;
+let swipeDuckTimer=0;
+const SWIPE_MIN=38;
 function triggerJump(e){
   if(e && e.cancelable)e.preventDefault();
   const now=performance.now();
@@ -211,6 +214,38 @@ duckBtn.addEventListener('pointerdown',duckStart);
 duckBtn.addEventListener('pointerup',duckEnd);
 duckBtn.addEventListener('pointercancel',duckEnd);
 duckBtn.addEventListener('pointerleave',duckEnd);
+
+// Gestensteuerung: Auf dem Spielfeld nach oben wischen = springen,
+// nach unten wischen = kurz ducken. Buttons und Tastatur bleiben erhalten.
+c.addEventListener('pointerdown',e=>{
+  if(!running || (e.pointerType==='mouse' && e.button!==0))return;
+  swipeStart={id:e.pointerId,x:e.clientX,y:e.clientY,fired:false};
+  try{c.setPointerCapture(e.pointerId)}catch(_){}
+  if(e.cancelable)e.preventDefault();
+},{passive:false});
+c.addEventListener('pointermove',e=>{
+  if(!swipeStart || swipeStart.id!==e.pointerId || swipeStart.fired || !running)return;
+  const dx=e.clientX-swipeStart.x,dy=e.clientY-swipeStart.y;
+  const ax=Math.abs(dx),ay=Math.abs(dy);
+  if(ay>=SWIPE_MIN && ay>ax*1.15){
+    swipeStart.fired=true;
+    if(dy<0){
+      triggerJump(e);
+    }else{
+      setDuck(true);
+      clearTimeout(swipeDuckTimer);
+      swipeDuckTimer=setTimeout(()=>setDuck(false),520);
+    }
+  }
+  if(e.cancelable)e.preventDefault();
+},{passive:false});
+function endSwipe(e){
+  if(swipeStart && swipeStart.id===e.pointerId)swipeStart=null;
+  if(e.cancelable)e.preventDefault();
+}
+c.addEventListener('pointerup',endSwipe,{passive:false});
+c.addEventListener('pointercancel',endSwipe,{passive:false});
+c.addEventListener('selectstart',e=>e.preventDefault());
 
 addEventListener('keydown',e=>{
   if([' ','ArrowUp'].includes(e.key)){e.preventDefault(); if(!running && !over) startGame(); else jump();}
