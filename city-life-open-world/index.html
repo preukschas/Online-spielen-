@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1318">
+<script src="../fun-access.js"></script>
+<script>window.DMPFunAccess.requireAccess({backHref:"../"});</script>
+<link rel="stylesheet" href="../game-interaction-guard.css">
+<title>City Life – Open World</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div>
+      <h1>City Life – Open World</h1>
+      <p>Große Stadt · befahrbare Showrooms · Parkhaus · Verkehr · Fahrzeugschäden</p>
+    </div>
+    <button id="resetBtn">Neu starten</button>
+  </header>
+
+  <div class="layout">
+    <main class="game-card">
+      <div class="stage">
+        <canvas id="game" width="1280" height="720" aria-label="City Life Spielfläche"></canvas>
+        <div id="toast" class="toast" aria-live="polite"></div>
+      </div>
+
+      <div class="controls">
+        <div class="desktop-hint">WASD/Pfeile bewegen · E Aktion/Portal · F Fahrzeug · Shift Sprint · Leertaste Hauen</div>
+
+        <div class="touch-grid" aria-label="Touch-Steuerung">
+          <button data-dir="up" class="up">▲</button>
+          <button data-dir="left" class="left">◀</button>
+          <button id="actionBtn" class="action primary">AKTION</button>
+          <button data-dir="right" class="right">▶</button>
+          <button data-dir="down" class="down">▼</button>
+        </div>
+
+        <div class="action-buttons">
+          <button id="vehicleBtn">🚗 Fahrzeug</button>
+          <button id="punchBtn">👊 Hauen</button>
+          <button id="sprintBtn">🏃 Sprint</button>
+        </div>
+      </div>
+
+      <section id="interactionPanel" class="interaction-panel">
+        Fahre zum Autohaus oder Parkhaus. Die Fahrzeuge stehen wirklich im Gebäude und werden selbst durch die Ausfahrt hinausgefahren.
+      </section>
+    </main>
+
+    <aside class="sidebar">
+      <section class="panel">
+        <div class="label">Geld</div>
+        <div id="money" class="big-value">1.000 €</div>
+        <div class="label gap-top">Fahrzeug</div>
+        <div id="vehicleName" class="strong">Zu Fuß</div>
+        <div id="speed" class="subvalue">0 km/h</div>
+      </section>
+
+      <section class="panel gauges">
+        <div class="gauge-row"><span>Gesundheit</span><span id="hpText">100%</span></div>
+        <div class="gauge"><span id="hpBar" class="hp"></span></div>
+
+        <div class="gauge-row gap-top"><span>Fahrzeug</span><span id="carHpText">–</span></div>
+        <div class="gauge"><span id="carHpBar" class="car"></span></div>
+
+        <div class="gauge-row gap-top"><span>Polizeiaufmerksamkeit</span><span id="heatText">0%</span></div>
+        <div class="gauge"><span id="heatBar" class="heat"></span></div>
+      </section>
+
+      <section class="panel">
+        <div class="strong">📍 Ort</div>
+        <div id="place">Innenstadt</div>
+      </section>
+
+      <section class="panel">
+        <div class="strong">🎒 Inventar</div>
+        <div id="inventory" class="muted">Leer</div>
+      </section>
+
+      <section class="panel">
+        <div class="strong">📜 Ereignisse</div>
+        <div id="log" class="log"><div>Du startest in der Innenstadt.</div></div>
+      </section>
+    </aside>
+  </div>
+</div>
+<script src="./game.js"></script>
+</body>
+</html>
