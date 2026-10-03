@@ -20,6 +20,7 @@ Die Startseite trennt bewusst zwischen zwei Bereichen:
 | Bereich | Spiel | Öffentlicher Pfad | Entwicklungsquelle |
 |---|---|---|---|
 | Lernspiele | Moe's English World | `/moes-english-world/` | `preukschas/Lernspiele--bei-DMP` → `projects/moes-english-world/` |
+| Moe – Machine City | `/moe-machine-city/` | `preukschas/Lernspiele--bei-DMP` → `projects/moe-machine-city-rpg/` |
 | Spaß-Games | Planet unter Druck | `/planet-unter-druck/` | `preukschas/DMP-Games` → `projects/tower-defense/` |
 
 ## Geplant
