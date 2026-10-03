@@ -778,9 +778,20 @@ canvas.addEventListener('pointerdown',()=>canvas.focus());
 const dirMap={up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight'};
 document.querySelectorAll('[data-dir]').forEach(btn=>{
   const key=dirMap[btn.dataset.dir];
-  const start=e=>{e.preventDefault();keys.add(key);};
-  const stop=()=>keys.delete(key);
-  btn.addEventListener('pointerdown',start);btn.addEventListener('pointerup',stop);btn.addEventListener('pointercancel',stop);btn.addEventListener('pointerleave',stop);
+  const start=e=>{
+    e.preventDefault();
+    try{btn.setPointerCapture(e.pointerId);}catch(_){}
+    keys.add(key);
+  };
+  const stop=e=>{
+    keys.delete(key);
+    if(e&&btn.hasPointerCapture&&btn.hasPointerCapture(e.pointerId)){
+      try{btn.releasePointerCapture(e.pointerId);}catch(_){}
+    }
+  };
+  btn.addEventListener('pointerdown',start);
+  btn.addEventListener('pointerup',stop);
+  btn.addEventListener('pointercancel',stop);
 });
 document.getElementById('actionBtn').addEventListener('click',action);
 document.getElementById('vehicleBtn').addEventListener('click',vehicleAction);
