@@ -180,7 +180,6 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
       </div>
       <div class="headerActions">
         <button class="controlBtn" type="button" data-back>← Weltenauswahl</button>
-        <button class="controlBtn gold" type="button" id="changePinBtn">PIN ändern</button>
         <button class="controlBtn gold" type="button" id="lockFunBtn">Jetzt sperren</button>
       </div>
     </div>
@@ -262,19 +261,6 @@ footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:v
   document.getElementById('lockFunBtn').addEventListener('click',()=>{
     DMPFunAccess.lockNow();
     showSelect();
-  });
-  document.getElementById('changePinBtn').addEventListener('click',()=>{
-    const oldPin=prompt('Aktuelle vierstellige Spiele-PIN:');
-    if(oldPin===null)return;
-    const newPin=prompt('Neue vierstellige Spiele-PIN:');
-    if(newPin===null)return;
-    if(!/^\d{4}$/.test(newPin)){alert('Die neue PIN muss genau vier Ziffern haben.');return;}
-    const again=prompt('Neue PIN wiederholen:');
-    if(again!==newPin){alert('Die beiden neuen PINs stimmen nicht überein.');return;}
-    const r=DMPFunAccess.changePin(oldPin,newPin);
-    if(r.ok)alert('Die Spiele-PIN wurde geändert.');
-    else if(r.reason==='old')alert('Die bisherige PIN ist falsch.');
-    else alert('PIN konnte nicht geändert werden.');
   });
 
   updateStatus();
