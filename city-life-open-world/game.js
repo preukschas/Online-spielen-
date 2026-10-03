@@ -42,7 +42,7 @@ const buildings=[
 
   {id:'fashion',x:80,y:1780,w:450,h:500,name:'MODEHAUS',type:'shop',wall:'#c18c74',door:[560,2030],items:[['T-Shirt',30,'👕',0],['Sneaker',75,'👟',0],['Jacke',80,'🧥',0],['Uhr',120,'⌚',0]]},
   {id:'home-b',x:790,y:1770,w:760,h:510,name:'WOHNQUARTIER',type:'home',wall:'#b87f60',door:[1170,2310]},
-  {id:'mall',x:2110,y:1780,w:700,h:500,name:'CITY MALL',type:'shop',wall:'#999ca0',door:[2460,2310],items:[['Kamera',350,'📷',0],['Konsole',450,'🎮',0],['Schmuck',600,'💎',0],['Fernseher',700,'📺',0]]},
+  {id:'mall',x:2110,y:1780,w:700,h:500,name:'CITY MALL',type:'shop',wall:'#999ca0',door:[2460,2310],items:[['Kamera',350,'📷',0],['Konsole',450,'🎮',0],['Pistole',650,'🔫',0],['Schmuck',600,'💎',0],['Fernseher',700,'📺',0]]},
   {id:'moto',x:3350,y:1780,w:700,h:500,name:'BIKE & MOTO',type:'dealer',wall:'#8b9196',vehiclePortal:true,entrance:[3440,2310],exit:[3960,2310],dealerSet:'moto'},
   {id:'home-c',x:4590,y:1770,w:900,h:510,name:'WOHNPARK',type:'home',wall:'#b9896b',door:[5040,2310]},
 
@@ -164,7 +164,7 @@ const state={
   x:1100,y:1250,a:0,money:1000,hp:100,heat:0,lastCrime:99999,
   worldCar:-1,speed:0,sprint:false,punchT:0,punchCd:0,
   mode:'outside',buildingId:null,rx:140,ry:640,roomCar:-1,roomSpeed:0,
-  camX:460,camY:890,walk:0,inventory:[],sprayCd:0,waterFx:[]
+  camX:460,camY:890,walk:0,inventory:[],sprayCd:0,waterFx:[],shootCd:0,shotFx:[],activeWeapon:null
 };
 
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
@@ -181,6 +181,9 @@ function currentCar(){
 }
 function hasWaterPistol(){
   return state.inventory.some(x=>x.includes('Wasserpistole'));
+}
+function hasPistol(){
+  return state.inventory.some(x=>x.includes('Pistole')&&!x.includes('Wasserpistole'));
 }
 function angleDiff(a,b){
   let d=(b-a+Math.PI)%(Math.PI*2)-Math.PI;
@@ -253,13 +256,16 @@ function buildingPanel(){
       row.appendChild(panelButton('Kaufen '+icon+' '+name+' · '+price+' €',()=>{
         if(state.money<price)return toast('Zu wenig Geld.');
         if(name==='Wasserpistole'&&hasWaterPistol())return toast('Du hast schon eine Wasserpistole.');
+        if(name==='Pistole'&&hasPistol())return toast('Du hast schon eine Pistole.');
         state.money-=price;
         if(heal>0){
           state.hp=Math.min(100,state.hp+heal);
           log('✅ '+name+' gekauft und benutzt: +'+heal+' Gesundheit.');
         }else{
           state.inventory.push(icon+' '+name);
-          log(name==='Wasserpistole'?'💦 Wasserpistole gekauft. G oder „Spritzen“ benutzen.':'✅ '+name+' gekauft und ins Inventar gelegt.');
+          if(name==='Wasserpistole'){state.activeWeapon='water';log('💦 Wasserpistole gekauft. G oder „Spritzen“ benutzen.');}
+          else if(name==='Pistole'){state.activeWeapon='pistol';log('🔫 Pistole gekauft. R oder „Schießen“ benutzen.');}
+          else log('✅ '+name+' gekauft und ins Inventar gelegt.');
         }
         hud();
       },price<=10));
@@ -382,6 +388,7 @@ function sprayWater(){
   if(currentCar())return toast('Zum Spritzen erst aussteigen.');
   if(!hasWaterPistol())return toast('Wasserpistole zuerst im Frischmarkt kaufen.');
   if(state.sprayCd>0)return;
+  state.activeWeapon='water';
 
   const outside=state.mode==='outside';
   const x=outside?state.x:state.rx,y=outside?state.y:state.ry;
@@ -421,13 +428,69 @@ function drawWaterFx(mode){
     ctx.save();
     ctx.globalAlpha=.35+.55*t;
     ctx.strokeStyle='#6fd3ff';ctx.lineWidth=5;ctx.lineCap='round';
-    ctx.beginPath();ctx.moveTo(fx.x+Math.cos(fx.a)*14,fx.y+Math.sin(fx.a)*14);
+    ctx.beginPath();ctx.moveTo(fx.x+Math.cos(fx.a)*28,fx.y+Math.sin(fx.a)*28);
     ctx.lineTo(fx.x+Math.cos(fx.a)*len,fx.y+Math.sin(fx.a)*len);ctx.stroke();
     ctx.fillStyle='#aeeaff';
     for(let i=0;i<7;i++){
       const d=45+i*18,j=(i%2?5:-5);
       ctx.beginPath();ctx.arc(fx.x+Math.cos(fx.a)*d-Math.sin(fx.a)*j,fx.y+Math.sin(fx.a)*d+Math.cos(fx.a)*j,2.2+(i%2),0,Math.PI*2);ctx.fill();
     }
+    ctx.restore();
+  }
+}
+
+function shootPistol(){
+  if(currentCar())return toast('Zum Schießen erst aussteigen.');
+  if(!hasPistol())return toast('Pistole zuerst in der City Mall kaufen.');
+  if(state.shootCd>0)return;
+
+  const outside=state.mode==='outside';
+  const x=outside?state.x:state.rx,y=outside?state.y:state.ry;
+  const list=outside?people:(indoorPeople[state.buildingId]||[]);
+  state.shootCd=420;state.activeWeapon='pistol';
+
+  let target=null,best=315;
+  for(const p of list){
+    const dx=p.x-x,dy=p.y-y,d=Math.hypot(dx,dy);
+    if(d>best||d<20)continue;
+    const a=Math.atan2(dy,dx);
+    if(Math.abs(angleDiff(state.a,a))<0.18){best=d;target=p;}
+  }
+
+  const endDist=target?best:300;
+  state.shotFx.push({
+    mode:outside?'outside':'interior',
+    buildingId:outside?null:state.buildingId,
+    x,y,a:state.a,len:endDist,ttl:120
+  });
+
+  if(target){
+    target.stun=Math.max(target.stun||0,900);
+    target.pause=Math.max(target.pause||0,900);
+    target.x+=Math.cos(state.a)*16;target.y+=Math.sin(state.a)*16;
+    crime(38,'🔫 Schuss abgegeben – hohe Polizeiaufmerksamkeit.');
+    toast('🔫 Treffer');
+  }else{
+    crime(24,'🔫 Schuss abgegeben – Polizeiaufmerksamkeit.');
+    toast('🔫 Schuss');
+  }
+}
+function updateShotFx(dt){
+  state.shootCd=Math.max(0,state.shootCd-dt);
+  for(const fx of state.shotFx)fx.ttl-=dt;
+  state.shotFx=state.shotFx.filter(fx=>fx.ttl>0);
+}
+function drawShotFx(mode){
+  for(const fx of state.shotFx){
+    if(fx.mode!==mode)continue;
+    if(mode==='interior'&&fx.buildingId!==state.buildingId)continue;
+    const t=clamp(fx.ttl/120,0,1);
+    ctx.save();
+    ctx.globalAlpha=.35+.65*t;
+    const sx=fx.x+Math.cos(fx.a)*26,sy=fx.y+Math.sin(fx.a)*26;
+    const ex=fx.x+Math.cos(fx.a)*fx.len,ey=fx.y+Math.sin(fx.a)*fx.len;
+    ctx.strokeStyle='#f7d878';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(ex,ey);ctx.stroke();
+    ctx.fillStyle='#ffd66b';ctx.beginPath();ctx.arc(sx,sy,5+4*t,0,Math.PI*2);ctx.fill();
     ctx.restore();
   }
 }
@@ -760,6 +823,39 @@ function drawVehicle(c,active){
   }
   ctx.restore();
 }
+function drawWaterPistolHeld(){
+  ctx.save();
+  ctx.translate(7,-1);
+  ctx.fillStyle='#2aa9e0';
+  rr(0,-4,20,8,3);ctx.fill();
+  ctx.fillStyle='#ffe05a';
+  ctx.fillRect(18,-2,9,4);
+  ctx.fillStyle='#ef5f74';
+  ctx.fillRect(5,4,7,11);
+  ctx.fillStyle='#56d6c6';
+  ctx.beginPath();ctx.arc(2,0,5,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.65)';
+  ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(3,-2);ctx.lineTo(15,-2);ctx.stroke();
+  ctx.restore();
+}
+
+function drawPistolHeld(){
+  ctx.save();
+  ctx.translate(7,-1);
+  ctx.fillStyle='#25292c';
+  rr(0,-3,19,6,2);ctx.fill();
+  ctx.fillStyle='#111416';
+  ctx.fillRect(16,-2,8,4);
+  ctx.fillStyle='#3b4044';
+  ctx.fillRect(5,3,6,12);
+  ctx.fillStyle='#171a1c';
+  ctx.fillRect(6,11,5,4);
+  ctx.fillStyle='rgba(255,255,255,.16)';
+  ctx.fillRect(3,-2,10,1);
+  ctx.restore();
+}
+
 function drawPerson(p,x,y,a,phase,player){
   ctx.save();ctx.translate(x,y);ctx.rotate(a||0);
   const h=player?1:p.height,bob=Math.sin(phase)*1.2,leg=Math.sin(phase)*5.2,arm=-Math.sin(phase)*4.2;ctx.translate(0,bob);
@@ -767,6 +863,7 @@ function drawPerson(p,x,y,a,phase,player){
   ctx.strokeStyle=player?'#293640':p.bottom;ctx.lineWidth=5*h;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,8*h);ctx.lineTo(-4*h+leg,23*h);ctx.moveTo(0,8*h);ctx.lineTo(4*h-leg,23*h);ctx.stroke();
   ctx.strokeStyle=player?'#37688f':p.top;ctx.lineWidth=9*h;ctx.beginPath();ctx.moveTo(0,-4*h);ctx.lineTo(0,11*h);ctx.stroke();
   ctx.strokeStyle=player?'#f0c6a2':p.skin;ctx.lineWidth=4*h;ctx.beginPath();ctx.moveTo(-2*h,0);ctx.lineTo(-9*h+arm,10*h);ctx.moveTo(2*h,0);ctx.lineTo(9*h-arm,10*h);ctx.stroke();
+  if(player&&state.activeWeapon==='pistol'&&hasPistol())drawPistolHeld(); else if(player&&hasWaterPistol())drawWaterPistolHeld();
   ctx.fillStyle=player?'#f0c6a2':p.skin;ctx.beginPath();ctx.arc(0,-12*h,8*h,0,Math.PI*2);ctx.fill();
   ctx.fillStyle=player?'#30231d':p.hair;ctx.beginPath();ctx.arc(0,-14*h,7.8*h,Math.PI,Math.PI*2);ctx.fill();
   ctx.fillStyle='#262626';ctx.beginPath();ctx.arc(-2.6*h,-11*h,1*h,0,Math.PI*2);ctx.arc(2.6*h,-11*h,1*h,0,Math.PI*2);ctx.fill();
@@ -783,7 +880,7 @@ function drawCity(){
   people.forEach(p=>{const a=p.horizontal?(p.dir>0?0:Math.PI):(p.dir>0?Math.PI/2:-Math.PI/2);drawPerson(p,p.x,p.y,a,p.phase,false);});
   police.forEach(p=>{ctx.fillStyle='#194f99';rr(p.x-28,p.y-15,56,30,6);ctx.fill();ctx.fillStyle='#d33';ctx.fillRect(p.x-8,p.y-20,8,4);ctx.fillStyle='#39f';ctx.fillRect(p.x,p.y-20,8,4);});
   if(state.worldCar<0)drawPerson({height:1,skin:'#f0c6a2',top:'#37688f',bottom:'#293640',hair:'#30231d'},state.x,state.y,state.a,state.walk,true);
-  drawWaterFx('outside');
+  drawWaterFx('outside');drawShotFx('outside');
 }
 function drawRoomBase(b){
   ctx.fillStyle=b.type==='parking'?'#73797d':b.type==='dealer'?'#a6aaad':b.type==='home'?'#c2a17c':'#d8cbb5';ctx.fillRect(0,0,W,H);
@@ -832,7 +929,7 @@ function drawInterior(){
 
   if(state.roomCar<0)drawPerson({height:1,skin:'#f0c6a2',top:'#37688f',bottom:'#293640',hair:'#30231d'},state.rx,state.ry,state.a,state.walk,true);
 
-  drawWaterFx('interior');
+  drawWaterFx('interior');drawShotFx('interior');
 
   if(state.roomCar<0&&b.type==='dealer'){
     const list=roomVehicles[b.id]||[],i=nearestVehicle(list,state.rx,state.ry,112);
@@ -875,7 +972,7 @@ function resetGame(){location.reload();}
 let last=performance.now();
 function frame(now){
   const dt=Math.min(32,now-last);last=now;
-  state.punchT=Math.max(0,state.punchT-dt);state.punchCd=Math.max(0,state.punchCd-dt);updateWaterFx(dt);
+  state.punchT=Math.max(0,state.punchT-dt);state.punchCd=Math.max(0,state.punchCd-dt);updateWaterFx(dt);updateShotFx(dt);
 
   if(state.mode==='outside'){
     updateOutside(dt);updateTraffic(dt);updatePeople(people,dt,false);updatePolice(dt);camera();
@@ -900,6 +997,7 @@ document.addEventListener('keydown',e=>{
   if(k==='e'){e.preventDefault();action();}
   if(k==='f'){e.preventDefault();vehicleAction();}
   if(k==='g'){e.preventDefault();sprayWater();}
+  if(k==='r'){e.preventDefault();shootPistol();}
   if(e.code==='Space'){e.preventDefault();punch();}
   if(e.key==='Shift')state.sprint=true;
 });
@@ -928,6 +1026,7 @@ document.getElementById('actionBtn').addEventListener('click',action);
 document.getElementById('vehicleBtn').addEventListener('click',vehicleAction);
 document.getElementById('punchBtn').addEventListener('click',punch);
 document.getElementById('sprayBtn').addEventListener('click',sprayWater);
+document.getElementById('shootBtn').addEventListener('click',shootPistol);
 document.getElementById('sprintBtn').addEventListener('click',()=>{state.sprint=!state.sprint;toast(state.sprint?'Sprint an':'Sprint aus');});
 document.getElementById('resetBtn').addEventListener('click',resetGame);
 
