@@ -1,0 +1,82 @@
+.scene{
+  max-width:1050px!important;
+  background:#fff7df!important;
+  border:5px solid #fff0c8;
+  box-shadow:0 0 0 4px var(--elli-wood-dark),var(--elli-shadow)!important;
+}
+.scene-head{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.16),rgba(0,0,0,.03)),
+    #dda15b;
+  border-bottom:4px solid #8d4b21!important;
+}
+.elli-mini-img{
+  width:66px;height:66px;
+  object-fit:cover;
+  object-position:center 15%;
+  border-radius:20px;
+  border:4px solid #fff0ca;
+  box-shadow:0 4px 0 #814820;
+}
+.scene-head-icon{
+  background:#fff0cf!important;
+  border:3px solid #fff8e9;
+  box-shadow:0 3px 0 #a26330;
+}
+.scene-head h2{color:#4d2a18}
+.scene-head p{color:#69462e!important}
+.scene-body{background:linear-gradient(180deg,#fff8e8,#fff0cc)}
+
+.primary-button{
+  background:linear-gradient(180deg,#ff7897,#e94c78)!important;
+  border:3px solid #fff4dd!important;
+  box-shadow:0 5px 0 #ac3157,0 8px 14px rgba(103,37,62,.18)!important;
+  color:white!important;
+}
+.primary-button:hover{transform:translateY(-1px)}
+.soft-button{
+  background:linear-gradient(180deg,#fffaf0,#f0d5a3)!important;
+  color:#60351f!important;
+  border:2px solid #d69c56!important;
+  box-shadow:0 3px 0 #a7652f!important;
+}
+.text-button{color:#70472f!important}
+
+.choice-button,
+.object-button,
+.basket-button,
+.background-button,
+.motif-button,
+.size-button,
+.option-pill{
+  border:2px solid #d8a15e!important;
+  background:#fff7df!important;
+  color:#57321f!important;
+  box-shadow:0 3px 0 rgba(119,66,29,.20)!important;
+}
+.choice-button.is-selected,
+.object-button.is-selected,
+.background-button.is-selected,
+.motif-button.is-selected,
+.size-button.is-selected,
+.option-pill.is-selected{
+  background:#dceeff!important;
+  box-shadow:inset 0 0 0 3px var(--elli-blue),0 3px 0 rgba(31,83,130,.22)!important;
+}
+
+.garden-bed{
+  border:4px solid #8c4e24;
+  background:
+    radial-gradient(circle at 12% 66%,#ffde4e 0 12px,transparent 13px),
+    radial-gradient(circle at 88% 72%,#f46a91 0 11px,transparent 12px),
+    linear-gradient(180deg,#8fd0f3 0 52%,#82bc59 53% 68%,#9a6738 69%)!important;
+}
+.story-box,.pause-result,.craft-section,.tetris-panel{
+  border:2px solid #e0b36f!important;
+  background:#fff6df!important;
+}
+.craft-canvas-area .art-board{
+  border:7px solid #fff0cc!important;
+  box-shadow:0 0 0 3px #8e4b22,0 12px 24px rgba(81,46,24,.20)!important;
+}
+.craft-help,.craft-summary{color:#70472f!important}
