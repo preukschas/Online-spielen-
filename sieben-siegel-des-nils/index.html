@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#132522">
+<title>Die sieben Siegel des Nils · DMP Lernspiele</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#f7f3e8;background:#091512;--bg:#091512;--panel:#132522;--panel2:#1b322d;--line:#41645b;--gold:#f3c766;--sand:#e6c88d;--green:#83c99f;--red:#ef8d70;--muted:#bdcfc8}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -10%,#315d4f 0,transparent 42rem),linear-gradient(#091512,#0d1b18 55%,#13201d);color:#f7f3e8}
+button{font:inherit;touch-action:manipulation;cursor:pointer}.wrap{max-width:1050px;margin:auto;padding:max(18px,env(safe-area-inset-top)) 14px max(36px,env(safe-area-inset-bottom))}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}.brand{font-size:.78rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:var(--gold)}.back{color:#e9d8ad;text-decoration:none;font-weight:750}
+.hero,.panel{background:linear-gradient(160deg,rgba(27,50,45,.96),rgba(14,31,27,.96));border:1px solid var(--line);border-radius:24px;box-shadow:0 18px 55px #0006}
+.hero{padding:clamp(22px,5vw,42px);margin:16px 0;position:relative;overflow:hidden}.hero:after{content:"𓂀";position:absolute;right:4%;bottom:-20px;font-size:clamp(7rem,24vw,14rem);color:#f3c76612;transform:rotate(-8deg)}
+.kicker{color:var(--gold);font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;font-weight:900}h1{font-size:clamp(2.3rem,7vw,4.8rem);line-height:.92;margin:8px 0 14px;letter-spacing:-.045em;max-width:780px}h2{margin:0 0 10px}.lead,.muted{color:var(--muted);line-height:1.55}.stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.pill{background:#ffffff0b;border:1px solid #ffffff16;border-radius:999px;padding:8px 11px;font-size:.84rem;font-weight:800}
+.primary,.secondary,.choice{border-radius:14px;padding:12px 16px;font-weight:900}.primary{border:0;background:var(--gold);color:#2b2412;box-shadow:0 5px 0 #8f6f2e}.primary:active{transform:translateY(3px);box-shadow:0 2px 0 #8f6f2e}.secondary{border:1px solid #769288;background:#1d3a33;color:white}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:14px 0}.chapter{padding:18px;text-align:left;border:1px solid var(--line);background:#142923;color:white;border-radius:18px;min-height:165px;position:relative}.chapter.done{border-color:#7ccf9e;background:linear-gradient(145deg,#17362c,#142923)}.chapter.locked{opacity:.5}.chapter .num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#f3c7661b;color:var(--gold);font-weight:1000;margin-bottom:12px}.chapter b{display:block;font-size:1.1rem;margin-bottom:6px}.chapter small{color:var(--muted);line-height:1.4}.chapter .seal{position:absolute;right:14px;top:13px;font-size:1.5rem}
+.screen{display:none}.screen.active{display:block}.panel{padding:clamp(18px,4vw,32px);margin:14px 0}.scene{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(260px,.8fr);gap:18px}.art{min-height:245px;border-radius:20px;border:1px solid #ffffff18;background:linear-gradient(#d7994f,#efd092 44%,#3e8a83 45%,#1b5c5a 58%,#c8aa65 59%);position:relative;overflow:hidden;display:grid;place-items:center}.art .sun{position:absolute;width:74px;height:74px;border-radius:50%;background:#ffe49c;right:11%;top:10%;box-shadow:0 0 50px #ffe49c88}.art .river{position:absolute;left:39%;top:43%;bottom:-10%;width:22%;background:linear-gradient(90deg,#4ba0a0,#8ed0c9,#438b91);transform:skew(-5deg)}.art .pyramid{position:absolute;left:9%;bottom:24%;width:0;height:0;border-left:92px solid transparent;border-right:92px solid transparent;border-bottom:0;border-top:130px solid #c99d59;filter:drop-shadow(18px 10px 0 #a77b3f)}.art .boat{position:absolute;left:46%;bottom:20%;font-size:3rem;filter:drop-shadow(0 5px 3px #0006)}.art .iconbig{z-index:2;font-size:5rem;filter:drop-shadow(0 6px 5px #0007)}.task{padding:2px}.story{color:#d9e5e0;line-height:1.55;margin-bottom:14px}.question{font-size:1.28rem;font-weight:900;line-height:1.3;margin:12px 0}.answers{display:grid;gap:9px}.choice{border:1px solid #5e8076;background:#1b3731;color:#fff;text-align:left}.choice:hover,.choice:focus-visible{outline:2px solid var(--gold);background:#24483f}.choice.good{border-color:#80dda3;background:#204b35}.choice.bad{border-color:#ed927d;background:#512e29}.feedback{min-height:54px;margin-top:12px;padding:12px;border-radius:13px;background:#ffffff09;color:#e9eee9;line-height:1.45}.progress{height:10px;border-radius:20px;background:#06100e;overflow:hidden;margin:12px 0}.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--gold));width:0;transition:width .25s}.clue{border-left:4px solid var(--gold);background:#f3c76610;padding:12px 14px;border-radius:10px;margin:13px 0;color:#efdfb9}.book{display:grid;gap:9px}.note{padding:12px 14px;border-radius:13px;background:#ffffff08;border:1px solid #ffffff0e}.note b{color:var(--sand)}.finaleOptions{display:grid;gap:10px}.ending{font-size:1.1rem;line-height:1.55}.success{color:#adf0bd}.warn{color:#ffd09e}.tiny{font-size:.8rem;color:#94aaa2}.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.hidden{display:none!important}
+@media(max-width:760px){.scene{grid-template-columns:1fr}.art{min-height:185px}.panel{padding:17px}.chapter{min-height:145px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<div class="top"><span class="brand">DMP Lernspiele · Geschichte</span><a class="back" href="../">← Lernwelt</a></div>
+
+<section id="home" class="screen active">
+  <div class="hero">
+    <div class="kicker">Klasse 6 · Altes Ägypten · Detektivabenteuer</div>
+    <h1>Die sieben Siegel des Nils</h1>
+    <p class="lead">In der Schreibstube des jungen Schreibers Seneb fehlt eine wichtige Tontafel. Sieben Siegel führen durch Alltag, Nil, Handel, Schrift, Gesellschaft, Religion und Pyramidenbau. Sammle die Hinweise – und löse am Ende den Fall.</p>
+    <div class="stats"><span class="pill" id="sealStat">0 / 7 Siegel</span><span class="pill" id="clueStat">0 Hinweise</span><span class="pill">Fortschritt wird lokal gespeichert</span></div>
+    <div class="row" style="margin-top:18px"><button class="primary" id="continueBtn">Abenteuer starten →</button><button class="secondary" id="resetBtn">Fortschritt löschen</button></div>
+  </div>
+  <div id="chapterGrid" class="grid"></div>
+  <div class="panel">
+    <div class="kicker">Ägyptenbuch</div>
+    <h2>Was du schon herausgefunden hast</h2>
+    <div id="book" class="book"></div>
+  </div>
+</section>
+
+<section id="play" class="screen">
+  <div class="panel">
+    <div class="row" style="justify-content:space-between"><div><div id="chapterKicker" class="kicker"></div><h2 id="chapterTitle"></h2></div><button class="secondary" id="homeBtn">Zur Karte</button></div>
+    <div class="progress" aria-label="Kapitel-Fortschritt"><i id="chapterProgress"></i></div>
+    <div class="scene">
+      <div class="art" aria-hidden="true"><span class="sun"></span><span class="pyramid"></span><span class="river"></span><span class="boat">𓊝</span><span id="sceneIcon" class="iconbig">𓂀</span></div>
+      <div class="task">
+        <p id="story" class="story"></p>
+        <div id="question" class="question"></div>
+        <div id="answers" class="answers"></div>
+        <div id="feedback" class="feedback" aria-live="polite">Wähle eine Antwort.</div>
+        <div id="clueBox" class="clue hidden"></div>
+        <button id="nextTask" class="primary hidden">Weiter →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="finale" class="screen">
+  <div class="panel">
+    <div class="kicker">Finale · Die Schreibstube</div>
+    <h1 style="font-size:clamp(2.1rem,6vw,4rem)">Wer nahm die Tontafel?</h1>
+    <p class="lead">Du hast alle sieben Siegel. Die Hinweise zeigen: Die Tafel wurde nicht gestohlen, um reich zu werden. Jemand wollte einen Fehler in der Getreideliste verstecken. Prüfe die Aussagen.</p>
+    <div id="finalClues" class="book" style="margin:18px 0"></div>
+    <div class="question">Welche Erklärung passt am besten zu allen Hinweisen?</div>
+    <div class="finaleOptions" id="finaleAnswers"></div>
+    <div id="finalFeedback" class="feedback">Nutze die Hinweise – nicht nur ein Bauchgefühl.</div>
+    <div id="ending" class="hidden"></div>
+  </div>
+</section>
+</main>
+
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),KEY='dmp.nilsiegel.v1';
+const chapters=[
+ {title:'Der Rhythmus des Nils',icon:'🌊',fact:'Der Nil prägte Landwirtschaft und Kalender. Überschwemmungen konnten fruchtbaren Schlamm bringen, fielen aber nicht jedes Jahr gleich aus.',clue:'Die fehlende Tafel enthält Angaben zu Getreide und Wasserständen.',tasks:[
+  {story:'Seneb findet vier Notizen zur Feldarbeit. Welche Reihenfolge ist sinnvoll?',q:'Was folgt typischerweise nach dem Rückgang des Hochwassers auf nutzbaren Feldern?',a:['Aussaat auf dem feuchten, fruchtbaren Boden','Sofortiger Pyramidenbau','Schiffe werden auf dem Feld gebaut','Alle Vorräte werden weggeworfen'],ok:0,why:'Nach dem Rückgang des Wassers konnte auf feuchtem, mit Schlamm angereichertem Boden gesät werden.'},
+  {story:'Ein Bauer warnt: „Dieses Jahr stand das Wasser deutlich niedriger.“',q:'Welche Folge ist historisch am plausibelsten?',a:['Die Ernte könnte schlechter ausfallen','Der Nil verschwindet dauerhaft','Hieroglyphen werden verboten','Kupfer wird zu Gold'],ok:0,why:'Zu wenig Wasser konnte die Ernte gefährden. Nilstände waren deshalb wirtschaftlich wichtig.'}
+ ]},
+ {title:'Kornkammer in Gefahr',icon:'🌾',fact:'Getreide war Grundnahrungsmittel, Vorrat und wichtige Abgabe. Lagerung half, schlechte Ernten zu überstehen.',clue:'In einer Kornkammer stimmt eine Mengenangabe nicht mit der Lieferung überein.',tasks:[
+  {story:'Du findest Säcke für Aussaat, Nahrung und Reserve.',q:'Warum waren Vorräte besonders wichtig?',a:['Sie halfen bei schwachen Ernten und versorgten Menschen außerhalb der Erntezeit','Sie dienten nur als Dekoration','Sie ersetzten den Nil','Sie wurden grundsätzlich nie geöffnet'],ok:0,why:'Vorratshaltung machte Versorgung planbarer und half, Schwankungen abzufedern.'},
+  {story:'Eine Liste behauptet: 40 Säcke kamen an, 30 wurden ausgegeben, trotzdem liegen angeblich noch 20 im Lager.',q:'Was ist daran verdächtig?',a:['Die Rechnung passt nicht: Es müssten 10 übrig sein','Es müssten 70 übrig sein','Getreide kann nicht gezählt werden','Listen waren im Alten Ägypten unbekannt'],ok:0,why:'40 − 30 = 10. Genau solche Verwaltungsfehler konnten für Schreiber wichtig sein.'}
+ ]},
+ {title:'Markt am Fluss',icon:'⛵',fact:'Ägypten nutzte den Nil als Verkehrsweg. Güter wurden getauscht und über weite Strecken transportiert; manche Rohstoffe mussten eingeführt werden.',clue:'Ein Händler sah am Abend einen Gehilfen mit einer Rolle aus der Verwaltung kommen.',tasks:[
+  {story:'Am Kai liegen Getreide, Leinen, Holz und Kupfer bereit.',q:'Warum war Fernhandel für Ägypten sinnvoll?',a:['Nicht alle benötigten Rohstoffe waren in Ägypten ausreichend vorhanden','Weil niemand am Nil Landwirtschaft betrieb','Weil Schiffe nur auf dem Meer fahren konnten','Weil Handel Schreiben überflüssig machte'],ok:0,why:'Zum Beispiel hochwertiges Holz und bestimmte Metalle kamen teilweise aus anderen Regionen.'},
+  {story:'Der Händler beschreibt Lasten auf einem Boot.',q:'Welche Rolle spielte der Nil zusätzlich zur Landwirtschaft?',a:['Er war eine wichtige Verkehrs- und Transportachse','Er war ausschließlich eine religiöse Grenze','Er durfte nicht befahren werden','Er führte nur zu den Pyramiden'],ok:0,why:'Der Nil verband Siedlungen und erleichterte Transport und Handel.'}
+ ]},
+ {title:'Die Zeichen der Schreiber',icon:'✍️',fact:'Ägyptische Schrift nutzte unterschiedliche Zeichenfunktionen. Hieroglyphen sind kein simples Bild-für-Buchstabe-Alphabet.',clue:'Auf einem Übungsstück wurde eine Zahl nachträglich verändert.',tasks:[
+  {story:'Seneb zeigt dir eine Inschrift mit Bildzeichen.',q:'Welche Aussage über Hieroglyphen ist richtig?',a:['Zeichen konnten Laute, Wörter oder Bedeutungs-Hinweise darstellen','Jedes Bild bedeutete immer genau einen deutschen Buchstaben','Nur Pharaonen durften Zeichen sehen','Hieroglyphen bestanden ausschließlich aus Zahlen'],ok:0,why:'Das Schriftsystem kombinierte verschiedene Zeichenarten; eine 1:1-Alphabetregel wäre irreführend.'},
+  {story:'Neben der Lagerliste liegt ein Schreibübungsstück.',q:'Wozu brauchte eine Verwaltung Schreiber?',a:['Um Mengen, Abgaben, Lieferungen und andere Vorgänge festzuhalten','Nur um Grabwände zu bemalen','Um den Nil zu bewegen','Um Steine ohne Arbeiter zu transportieren'],ok:0,why:'Schrift und Verwaltung waren für Organisation, Abgaben und Lagerbestände wichtig.'}
+ ]},
+ {title:'Wer macht was?',icon:'👥',fact:'Die Gesellschaft umfasste viele Rollen: Bauern, Handwerker, Schreiber, Beamte, Priester und Herrscher. Soziale Stellung und Aufgaben unterschieden sich.',clue:'Der beschuldigte Hafenarbeiter konnte die Verwaltungsliste wahrscheinlich nicht selbst verändern.',tasks:[
+  {story:'Vier Personen streiten darüber, wer eine Getreideliste bearbeitet hat.',q:'Wer hatte beruflich am ehesten regelmäßig mit solchen Listen zu tun?',a:['Ein Schreiber oder Verwaltungsbeamter','Ein beliebiger Tourist','Ein Nilpferdjäger ohne Verwaltungsaufgabe','Ein Kind aus ferner Zukunft'],ok:0,why:'Schreiber und Verwaltungsbeamte führten Aufzeichnungen und Listen.'},
+  {story:'Ein Beamter sagt: „Die Gesellschaft war wie eine starre Pyramide und jeder Mensch hatte exakt dieselbe Aufgabe sein ganzes Leben.“',q:'Wie gehst du mit dieser Aussage um?',a:['Als vereinfachtes Modell: Rollen und Hierarchien gab es, aber die Wirklichkeit war komplexer','Als exakte Naturregel ohne Ausnahmen','Als Beweis, dass es keine Handwerker gab','Als Beweis, dass Bauern über dem Pharao standen'],ok:0,why:'Schulmodelle helfen beim Überblick, dürfen aber nicht mit einer lückenlosen Beschreibung jedes Lebens verwechselt werden.'}
+ ]},
+ {title:'Götter, Gräber, Quellen',icon:'⚱️',fact:'Religion prägte Vorstellungen von Göttern, Tod und Jenseits. Für Geschichte ist wichtig zu unterscheiden, was Menschen glaubten und was eine Quelle direkt belegt.',clue:'Eine Tempelnotiz erwähnt, dass der Verwaltungsgehilfe am fraglichen Abend nicht beim Ritualdienst war.',tasks:[
+  {story:'Du liest einen Grabtext über das Jenseits.',q:'Was kann ein solcher Text Historikern besonders gut zeigen?',a:['Welche religiösen Vorstellungen Menschen ausdrückten','Dass jede beschriebene übernatürliche Handlung naturwissenschaftlich bewiesen ist','Die exakte Zahl aller Einwohner Ägyptens','Den täglichen Nilstand für 500 Jahre'],ok:0,why:'Religiöse Texte sind wichtige Quellen für Vorstellungen und Rituale; Glaubensaussagen sind nicht automatisch naturwissenschaftliche Belege.'},
+  {story:'Ein Priester nennt verschiedene Götter und Rituale.',q:'Was ist für eine historische Untersuchung sinnvoll?',a:['Quelle, Zweck und Perspektive berücksichtigen','Jede Aussage ohne Kontext wörtlich als moderne Messung nehmen','Nur moderne Filme verwenden','Widersprüche grundsätzlich löschen'],ok:0,why:'Quellenkritik fragt, wer etwas warum und in welchem Zusammenhang überliefert hat.'}
+ ]},
+ {title:'Baustelle für die Ewigkeit',icon:'🔺',fact:'Große Pyramidenprojekte verlangten Planung, Versorgung, Materialtransport und viele spezialisierte Arbeitskräfte. Das Bild ausschließlich versklavter Massen ist zu simpel.',clue:'Der Gehilfe kannte Lagerlisten, Zahlen und den Weg zwischen Kornkammer und Schreibstube.',tasks:[
+  {story:'Auf der Baustelle werden Stein, Wasser, Brot und Werkzeuge verteilt.',q:'Was zeigt ein Großprojekt wie der Pyramidenbau besonders?',a:['Dass Organisation, Versorgung und Arbeitsteilung entscheidend waren','Dass Planung unnötig war','Dass ein einzelner Mensch die Pyramide allein baute','Dass Getreide keine Rolle in der Versorgung spielte'],ok:0,why:'Großbaustellen brauchten koordinierte Arbeitskräfte, Material und Versorgung.'},
+  {story:'Ein Besucher behauptet: „Wir wissen sicher, dass jede Pyramide nur von angeketteten Sklaven gebaut wurde.“',q:'Welche Antwort ist angemessener?',a:['Die Forschung zeigt ein komplexeres Bild mit organisierten Arbeitskräften; pauschale Aussagen sind problematisch','Das stimmt sicher immer','Pyramiden entstanden ohne Menschen','Über Arbeitsorganisation gibt es überhaupt keine Hinweise'],ok:0,why:'Archäologische Befunde sprechen für organisierte Arbeitergruppen und Versorgung; einfache Filmklischees greifen zu kurz.'}
+ ]}
+];
+const fresh=()=>({done:[],clues:[],current:0,task:0,finished:false});
+let save=load();
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&Array.isArray(x.done)&&Array.isArray(x.clues))return Object.assign(fresh(),x)}catch{}return fresh()}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(save))}catch{}}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.id===id));scrollTo({top:0,behavior:'smooth'})}
+function renderHome(){
+ $('sealStat').textContent=`${save.done.length} / 7 Siegel`;$('clueStat').textContent=`${save.clues.length} Hinweise`;
+ $('continueBtn').textContent=save.done.length===7?'Zum Finale →':save.done.length?'Weiterermitteln →':'Abenteuer starten →';
+ $('chapterGrid').innerHTML=chapters.map((c,i)=>{const done=save.done.includes(i),open=i===0||save.done.includes(i-1)||done;return `<button class="chapter ${done?'done':''} ${open?'':'locked'}" data-ch="${i}" ${open?'':'disabled'}><span class="seal">${done?'🔶':'◇'}</span><span class="num">${i+1}</span><b>${esc(c.title)}</b><small>${esc(c.fact)}</small></button>`}).join('');
+ $('chapterGrid').querySelectorAll('[data-ch]').forEach(b=>b.onclick=()=>startChapter(Number(b.dataset.ch)));
+ $('book').innerHTML=save.done.length?save.done.map(i=>`<div class="note"><b>Siegel ${i+1}: ${esc(chapters[i].title)}</b><br>${esc(chapters[i].fact)}</div>`).join(''):'<div class="note muted">Noch leer. Mit jedem gelösten Kapitel kommt ein Eintrag dazu.</div>';
+}
+function startChapter(i){save.current=i;save.task=0;persist();loadTask();show('play')}
+function loadTask(){
+ const c=chapters[save.current],t=c.tasks[save.task];
+ $('chapterKicker').textContent=`Siegel ${save.current+1} von 7 · Aufgabe ${save.task+1} von ${c.tasks.length}`;$('chapterTitle').textContent=c.title;$('sceneIcon').textContent=c.icon;$('story').textContent=t.story;$('question').textContent=t.q;$('feedback').textContent='Wähle die Antwort, die am besten zu den historischen Informationen passt.';$('feedback').className='feedback';$('clueBox').classList.add('hidden');$('nextTask').classList.add('hidden');$('chapterProgress').style.width=`${save.task/c.tasks.length*100}%`;
+ $('answers').innerHTML=t.a.map((a,i)=>`<button class="choice" data-a="${i}">${esc(a)}</button>`).join('');
+ $('answers').querySelectorAll('button').forEach(b=>b.onclick=()=>answer(Number(b.dataset.a)));
+}
+function answer(i){
+ const c=chapters[save.current],t=c.tasks[save.task],buttons=[...$('answers').children];
+ if(i!==t.ok){buttons[i].classList.add('bad');$('feedback').textContent='Noch nicht. Hinweis: Prüfe, welche Antwort durch Alltag, Verwaltung oder Quellen wirklich gestützt wird.';$('feedback').className='feedback warn';return}
+ buttons.forEach((b,j)=>{b.disabled=true;if(j===t.ok)b.classList.add('good')});
+ $('feedback').textContent='Richtig. '+t.why;$('feedback').className='feedback success';
+ save.task++;
+ if(save.task>=c.tasks.length){
+   if(!save.done.includes(save.current))save.done.push(save.current);
+   if(!save.clues.includes(save.current))save.clues.push(save.current);
+   save.done.sort((a,b)=>a-b);save.clues.sort((a,b)=>a-b);persist();
+   $('chapterProgress').style.width='100%';$('clueBox').textContent='🔶 Hinweis gefunden: '+c.clue;$('clueBox').classList.remove('hidden');
+   $('nextTask').textContent=save.done.length===7?'Zum Finale →':'Nächstes Siegel →';$('nextTask').classList.remove('hidden');
+ }else{$('chapterProgress').style.width=`${save.task/c.tasks.length*100}%`;$('nextTask').textContent='Nächste Aufgabe →';$('nextTask').classList.remove('hidden')}
+}
+$('nextTask').onclick=()=>{
+ const c=chapters[save.current];
+ if(save.task<c.tasks.length){loadTask();return}
+ if(save.done.length===7){renderFinale();show('finale');return}
+ const n=Math.min(6,save.current+1);startChapter(n)
+};
+function renderFinale(){
+ $('finalClues').innerHTML=chapters.map((c,i)=>`<div class="note"><b>${i+1}. ${esc(c.title)}</b><br>${esc(c.clue)}</div>`).join('');
+ const opts=[
+  'Der Verwaltungsgehilfe veränderte die Getreidezahl und versteckte die Tafel, damit sein Rechenfehler nicht auffällt.',
+  'Ein Händler stahl sie, weil Hieroglyphen aus Gold bestanden.',
+  'Der Hafenarbeiter nahm sie, obwohl er laut Hinweisen weder Zugang noch Schreibkenntnisse hatte.',
+  'Der Nil spülte die Tafel fort, obwohl sie zuletzt in der Schreibstube gesehen wurde.'
+ ];
+ $('finaleAnswers').innerHTML=opts.map((x,i)=>`<button class="choice" data-f="${i}">${esc(x)}</button>`).join('');
+ $('finaleAnswers').querySelectorAll('button').forEach(b=>b.onclick=()=>finishFinale(Number(b.dataset.f)));
+}
+function finishFinale(i){
+ if(i!==0){$('finalFeedback').textContent='Das passt nicht zu allen sieben Hinweisen. Achte besonders auf Lagerrechnung, Schriftkenntnisse und Alibis.';$('finalFeedback').className='feedback warn';return}
+ save.finished=true;persist();$('finaleAnswers').querySelectorAll('button').forEach((b,j)=>{b.disabled=true;if(j===0)b.classList.add('good')});
+ $('finalFeedback').textContent='Fall gelöst! Du hast mehrere Quellen und Sachinformationen miteinander verbunden.';$('finalFeedback').className='feedback success';
+ $('ending').className='panel ending';$('ending').innerHTML='<div class="kicker">Alle sieben Siegel geöffnet</div><h2>Der Fehler hinter dem Geheimnis</h2><p>Der Verwaltungsgehilfe hatte beim Übertragen einer Getreidelieferung eine falsche Zahl eingetragen. Aus Angst vor Ärger versteckte er die Tafel. Seneb korrigiert die Liste – und erklärt, warum eine Verwaltung nur funktioniert, wenn Zahlen, Vorräte und Berichte überprüft werden.</p><p class="success"><b>Geschafft:</b> Du hast Nilwirtschaft, Vorratshaltung, Handel, Schrift, gesellschaftliche Rollen, Religion und Pyramidenbau in einem Fall verbunden.</p><div class="row"><button class="primary" id="againBtn">Kapitel wiederholen</button><button class="secondary" id="mapBtn">Zur Karte</button></div><p class="tiny">Die Detektivgeschichte und Figuren sind erfunden. Die Sachinformationen orientieren sich am schulischen Überblick zum Alten Ägypten; vereinfachte Modelle werden als solche gekennzeichnet.</p>';
+ $('againBtn').onclick=()=>startChapter(0);$('mapBtn').onclick=()=>{renderHome();show('home')}
+}
+$('continueBtn').onclick=()=>{if(save.done.length===7){renderFinale();show('finale')}else{let n=0;while(n<7&&save.done.includes(n))n++;startChapter(Math.min(6,n))}};
+$('homeBtn').onclick=()=>{renderHome();show('home')};
+$('resetBtn').onclick=()=>{if(confirm('Alle sieben Siegel und Hinweise auf diesem Gerät löschen?')){save=fresh();persist();renderHome()}};
+renderHome();
+})();
+</script>
+</body>
+</html>
