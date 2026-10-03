@@ -179,23 +179,23 @@
     state.phase='office'; state.painted=Array(12).fill(false); state.milestones=new Set();
     state.x=155; state.row=0; state.paintColor=job().color; state.speedBonus=false; updateHud();
     showModal(`Auftrag ${state.jobIndex+1} · ${job().location}`,job().name,job().brief,[
-      {label:'Ins Büro',action:()=>openQuestion(pickQuestion(0),()=>toast('Auftrag vorbereitet – ab auf das Gerüst!'))}
+      {label:'Ins Büro',action:()=>{if(state.phase!=='office')return;state.phase='transition';openQuestion(pickQuestion(0),()=>toast('Auftrag vorbereitet – ab auf das Gerüst!'))}}
     ]);
   }
   function colleague() {
     state.phase='dialogue';
     const line=['„Mario, welcher Eimer gehört nach oben? Die Etiketten sind durcheinander!“','„Kannst du kurz helfen, die Rollen zu sortieren?“','„Der Pinsel ist weg. Wer hat ihn zuletzt gesehen?“','„Die Abdeckfolie flattert! Was machen wir?“','„Die letzte Farbrolle ist verschwunden!“'][state.jobIndex];
     showModal('Kollege auf der Baustelle','Kurze Teamfrage',line,[
-      {label:'Zusammen lösen',action:()=>{state.speedBonus=true;state.stars++;updateHud();hideModal();toast('Teamwork! Mario streicht jetzt schneller. ⭐');}},
-      {label:'Mit Humor weiter',secondary:true,action:()=>{hideModal();toast('Ein Lacher hilft. Weiter geht’s!');}}
+      {label:'Zusammen lösen',action:()=>{if(state.phase!=='dialogue')return;state.phase='dialogue-done';state.speedBonus=true;state.stars++;updateHud();hideModal();toast('Teamwork! Mario streicht jetzt schneller. ⭐');}},
+      {label:'Mit Humor weiter',secondary:true,action:()=>{if(state.phase!=='dialogue')return;state.phase='dialogue-done';hideModal();toast('Ein Lacher hilft. Weiter geht’s!');}}
     ]);
   }
   function customer() {
     state.phase='dialogue';
     showModal('Kunde vor Ort','Noch ein Sonderwunsch!',
       '„Das sieht gut aus. Können wir den Rest etwas anders absetzen?“ Mario kann zuerst abstimmen oder gleich ein Musterfeld anlegen.',[
-      {label:'Farbton absprechen',action:()=>{state.stars++;updateHud();hideModal();toast('Kunde zufrieden: klare Absprache! ⭐');}},
-      {label:'Musterfeld streichen',secondary:true,action:()=>{state.paintColor=job().accent;hideModal();toast('Neue Akzentfarbe für die übrigen Felder!');}}
+      {label:'Farbton absprechen',action:()=>{if(state.phase!=='dialogue')return;state.phase='dialogue-done';state.stars++;updateHud();hideModal();toast('Kunde zufrieden: klare Absprache! ⭐');}},
+      {label:'Musterfeld streichen',secondary:true,action:()=>{if(state.phase!=='dialogue')return;state.phase='dialogue-done';state.paintColor=job().accent;hideModal();toast('Neue Akzentfarbe für die übrigen Felder!');}}
     ]);
   }
   function afterPaint() {
