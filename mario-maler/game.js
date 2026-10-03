@@ -167,11 +167,12 @@
       answerEl.select(); beep(210,.12); return;
     }
     const bonus=state.wrong===0 ? 2 : 1;
+    state.phase='answered';state.question=null;
     state.stars += bonus; updateHud(); beep(650,.13);
     const next=state.afterAnswer;
     showModal('Richtig!', 'Sauber gerechnet!', `${q.explain} ${bonus===2?'⭐ Zwei Sterne für die erste richtige Antwort!':'⭐ Gut drangeblieben!'}`, [{label:state.jobIndex===0&&q._slot===0?'Zur Baustelle':'Weiter',action:()=>{hideModal();next();}}]);
   }
-  answerEl.addEventListener('keydown', e=>{if(e.key==='Enter'){e.preventDefault();submitAnswer();}});
+  answerEl.addEventListener('keydown', e=>{if(e.key==='Enter'){e.preventDefault();if(e.repeat)return;submitAnswer();}});
 
   function startJob() {
     if (state.jobIndex >= jobs.length) { showFinal(); return; }
