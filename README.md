@@ -23,7 +23,8 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 - Nach erfolgreicher Freigabe bleibt die Spielewelt 60 Minuten geöffnet.
 - Direkte URLs zu veröffentlichten reinen Spaß-Games prüfen die Freigabe ebenfalls.
 - Nach Ablauf der Freigabe wird ein geöffnetes Spaß-Game wieder durch die PIN-Sperre überlagert.
-- Die PIN kann innerhalb der freigeschalteten Spielewelt geändert werden.
+- Es gilt auf allen Geräten dieselbe zentral veröffentlichte Eltern-PIN.
+- Eine PIN-Änderung erfolgt bewusst nur über einen neuen geprüften Veröffentlichungsstand, damit nicht jedes Gerät eine eigene PIN bekommt.
 - Lernspiele benötigen keine PIN.
 
 **Wichtig:** GitHub Pages ist eine statische Website. Die Sperre ist deshalb eine praktische Kindersicherung, keine kryptografisch sichere Zugriffskontrolle gegen technisch versierte Nutzer mit Entwicklerwerkzeugen.
