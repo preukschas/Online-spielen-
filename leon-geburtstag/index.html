@@ -14,10 +14,15 @@
     .hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px}
     .pill{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-size:14px}
     .stage{position:relative;overflow:hidden;border:1px solid #7891aa;border-radius:18px;background:#365b7c;box-shadow:0 18px 50px rgba(5,17,30,.28)}
+    .stage.dialogMode{min-height:420px;min-height:clamp(360px,64svh,520px)}
     canvas{display:block;width:100%;height:auto;touch-action:none}
-    .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(7,9,14,.62)}
+    .stage.dialogMode canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.28}
+    .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,20px);background:rgba(7,18,31,.62);overflow:auto;overscroll-behavior:contain}
     .overlay[hidden]{display:none}
-    .dialog{width:min(100%,430px);padding:22px;border-radius:20px;background:rgba(35,55,78,.97);border:1px solid #7891aa;text-align:center}
+    .dialog{width:min(100%,460px);max-height:calc(100% - 4px);overflow:auto;padding:clamp(14px,4vw,22px);border-radius:20px;background:rgba(35,55,78,.97);border:1px solid #7891aa;text-align:center;-webkit-overflow-scrolling:touch}
+    .startVisual{height:clamp(110px,24vw,180px);display:flex;align-items:flex-end;justify-content:center;margin:0 auto 8px}
+    .startLeon{display:block;width:auto;height:100%;max-width:min(76vw,290px);object-fit:contain;object-position:center bottom;filter:drop-shadow(0 10px 16px rgba(0,0,0,.28));user-select:none;-webkit-user-select:none}
+    .startFallback{font-size:54px;line-height:1}
     .emoji{font-size:44px}
     .controls{display:flex;gap:12px;justify-content:center;align-items:center;margin-top:12px}
     button{font:inherit;color:inherit;cursor:pointer}
@@ -36,7 +41,21 @@
     .leaderboardPanel ol{margin:0;padding-left:28px;display:grid;gap:4px;color:var(--muted);font-size:14px}
     .leaderboardPanel li:first-child{color:#ffe08a;font-weight:900}
     button:focus-visible{outline:3px solid #fff;outline-offset:3px}
-    @media (max-width:480px){main{padding:10px}.controls{gap:8px}.move{min-width:68px}.secondary{padding:0 12px}}
+    @media (max-width:480px){
+      main{padding:10px}.controls{gap:8px}.move{min-width:68px}.secondary{padding:0 12px}
+      .stage.dialogMode{min-height:460px}
+      .startVisual{height:140px}
+      .dialog h2{margin:4px 0 8px}
+      .dialog p{margin:8px 0 14px}
+    }
+    @media (max-height:560px) and (orientation:landscape){
+      .stage.dialogMode{min-height:340px}
+      .startVisual{height:84px;margin-bottom:4px}
+      .dialog{padding:12px 16px}
+      .dialog h2{font-size:20px;margin:2px 0 5px}
+      .dialog p{font-size:13px;line-height:1.35;margin:5px 0 9px}
+      .primary{min-height:46px}
+    }
   </style>
 </head>
 <body>
@@ -55,11 +74,14 @@
   </div>
 
   <div class="missionBar" aria-live="polite">🎯 <strong>Auftrag:</strong> <span id="mission">Fange 3 Ballons (0/3)</span></div>
-  <section class="stage">
+  <section class="stage dialogMode">
     <canvas id="canvas" width="720" height="460" aria-label="Leons Geburtstagsspiel"></canvas>
     <div class="overlay" id="overlay">
       <div class="dialog">
-        <div class="emoji">🎂🎈🎁</div>
+        <div class="startVisual">
+          <img id="startLeon" class="startLeon" src="./leon-figur.webp?v=7" width="512" height="501" alt="Leon als Spielfigur" decoding="async" fetchpriority="high" draggable="false">
+          <span id="startLeonFallback" class="startFallback" hidden aria-hidden="true">🎂🎈🎁</span>
+        </div>
         <h2>Alles Gute, Leon!</h2>
         <p>Fange Geschenke, Ballons, Sterne und Kuchen, baue Combos auf und nutze Power-ups. Erfülle Mini-Aufträge und schnapp dir im Party-Finale die große Geburtstagstorte.</p>
         <button class="primary" id="start" type="button">Spiel starten</button>
@@ -87,6 +109,7 @@
   const leaderboardList=document.getElementById('leaderboardList');
   const overlay=document.getElementById('overlay'),startBtn=document.getElementById('start'),pauseBtn=document.getElementById('pause'),status=document.getElementById('status');
   const leftBtn=document.getElementById('left'),rightBtn=document.getElementById('right');
+  const stage=canvas.parentElement,startLeon=document.getElementById('startLeon'),startLeonFallback=document.getElementById('startLeonFallback');
   const W=720,H=460,BASE_DURATION=60;
   const TOP_KEY='dmp.leonGeburtstag.top5.v1';
   const LEGACY_KEY='dmp.leonGeburtstag.highscore.v2';
@@ -98,7 +121,8 @@
   let combo=0,magnetUntil=0,shield=0,toast={text:'',until:0},missionIndex=0,mission=null;
   const leon={x:W/2,y:H-86,w:66,h:78,speed:330};
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const leonImg=new Image();leonImg.src='./leon-figur.webp?v=3';
+  const leonImg=new Image();leonImg.src='./leon-figur.webp?v=7';
+  if(startLeon)startLeon.addEventListener('error',()=>{startLeon.hidden=true;if(startLeonFallback)startLeonFallback.hidden=false});
 
   const missionDefs=[
     {id:'balloons',label:'Fange 3 Ballons',target:3,bonus:60,type:'balloon'},
@@ -194,6 +218,7 @@
   }
 
   function reset(){
+    stage.classList.remove('dialogMode');
     running=true;paused=false;last=performance.now();elapsed=0;timeBonus=0;spawnClock=0;score=0;lives=3;level=1;items=[];confetti=[];cakeSpawned=false;finaleStarted=false;leon.x=W/2;magnetUntil=0;shield=0;missionIndex=0;
     scoreEl.textContent='0';timeEl.textContent='60';livesEl.textContent='3';levelEl.textContent='1';pauseBtn.textContent='Pause';overlay.hidden=true;
     setCombo(0);powerText();startMission();
@@ -319,6 +344,7 @@
 
   function leaderboardHtml(){return '<ol>'+scores.map(x=>'<li><strong>'+esc(x.name)+'</strong> · '+x.score+'</li>').join('')+'</ol>'}
   function finish(won){
+    stage.classList.add('dialogMode');
     running=false;cancelAnimationFrame(raf);overlay.hidden=false;
     const qualifies=qualifiesTop5(score);
     if(qualifies){
