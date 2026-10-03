@@ -69,24 +69,32 @@ canvas{width:100%;height:auto;display:block;border-radius:16px;background:#d9d5c
 .franzCharacter{
   position:absolute;
   z-index:4;
-  left:10px;
-  top:92px;
-  width:min(20%,190px);
-  min-width:145px;
+  left:4px;
+  top:62px;
+  width:min(24%,220px);
+  min-width:170px;
   height:auto;
-  max-height:58%;
+  max-height:66%;
   object-fit:contain;
   object-position:left bottom;
   pointer-events:none;
-  filter:drop-shadow(0 12px 10px rgba(0,0,0,.34));
+  opacity:0;
+  transform:translateY(4px);
+  transition:opacity .18s ease,transform .18s ease;
+  filter:drop-shadow(0 14px 12px rgba(0,0,0,.42));
 }
+.franzCharacter.loaded{
+  opacity:1;
+  transform:translateY(0);
+}
+.franzCharacter.loadError{display:none}
 @media(max-width:700px){
   .franzCharacter{
-    left:2px;
-    top:82px;
-    width:34%;
-    min-width:112px;
-    max-width:145px;
-    max-height:52%;
+    left:-2px;
+    top:68px;
+    width:40%;
+    min-width:132px;
+    max-width:165px;
+    max-height:58%;
   }
 }
