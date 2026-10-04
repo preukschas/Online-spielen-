@@ -10,7 +10,7 @@ button{font:inherit;color:inherit;background:#202a31;border:1px solid #425560;bo
 button:hover{background:#293740}button:active{transform:translateY(1px)}
 button.primary{background:linear-gradient(#5a95ff,#3979ee);border-color:#71a5ff;font-weight:800}
 #app{width:min(1560px,100%);margin:auto}
-.topbar{display:flex;justify-content:space-between;gap:14px;align-items:center;margin:0 0 10px;padding:2px 4px}
+.topbar{display:flex;justify-content:space-between;gap:14px;align-items:center;margin:0 0 10px;padding:2px 4px}.top-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
 .topbar h1{font-size:22px;margin:0}.topbar p{margin:2px 0 0;color:var(--muted);font-size:13px}
 .layout{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(250px,.62fr);gap:12px}
 .game-card,.panel{background:linear-gradient(180deg,#172129,#131b21);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
@@ -30,3 +30,14 @@ canvas{display:block;width:100%;aspect-ratio:16/9;touch-action:none;user-select:
 .log{display:flex;flex-direction:column;gap:5px;margin-top:5px;font-size:13px;color:#d7e0e4}
 @media(max-width:980px){.layout{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:1fr 1fr}.controls{grid-template-columns:1fr}.desktop-hint{text-align:center}.action-buttons{justify-content:center}}
 @media(max-width:600px){body{padding:6px}.topbar h1{font-size:18px}.topbar p{display:none}.game-card{padding:7px}.sidebar{grid-template-columns:1fr 1fr}.panel{padding:10px}.controls{gap:7px}.touch-grid{grid-template-columns:54px 84px 54px}.desktop-hint{display:none}}
+
+#app:fullscreen,#app:-webkit-full-screen{width:100%;height:100%;max-width:none;margin:0;padding:10px;background:#0d1318;overflow:auto}
+#app:fullscreen .layout,#app:-webkit-full-screen .layout{min-height:calc(100% - 62px)}
+#app:fullscreen .game-card,#app:-webkit-full-screen .game-card{display:flex;flex-direction:column;min-height:0}
+#app:fullscreen .stage,#app:-webkit-full-screen .stage{flex:1;min-height:360px}
+#app:fullscreen canvas,#app:-webkit-full-screen canvas{height:100%;max-height:calc(100vh - 235px);aspect-ratio:auto;object-fit:contain}
+body.pseudo-fullscreen{padding:0;overflow:hidden}
+body.pseudo-fullscreen #app{position:fixed;inset:0;width:100%;max-width:none;margin:0;padding:8px;background:#0d1318;z-index:9999;overflow:auto}
+body.pseudo-fullscreen .layout{min-height:calc(100% - 62px)}
+body.pseudo-fullscreen canvas{max-height:calc(100vh - 235px)}
+@media(max-width:700px){.topbar{align-items:flex-start;flex-direction:column}.top-actions{width:100%;justify-content:stretch}.top-actions button{flex:1 1 30%}}
