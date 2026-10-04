@@ -52,7 +52,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Spielewelt | Domi Run | `/domi-run/` | Entwickelte Standalone-Datei V0.2 |
 | Spielewelt | Micha auf'm Wasen | `/micha-wasen-run/` | `preukschas/DMP-Games` → `projects/micha-wasen-run/` (V0.1) |
 | Spielewelt | Ronja Race | `/ronja-race/` | `preukschas/DMP-Games` → `projects/ronja-race/` (V0.5.1 Touch-/Swipe-Hotfix) |
-| Spielewelt | City Life – Open World | `/city-life-open-world/` | `preukschas/DMP-Games` → `projects/city-life-open-world/` (V4.7) |
+| Spielewelt | City Life – Open World | `/city-life-open-world/` | `preukschas/DMP-Games` → `projects/city-life-open-world/` (V4.8) |
 | Spielewelt | Bett Battle | `/bett-battle/` | `preukschas/DMP-Games` → `projects/bett-battle/` (Final 1.0) |
 | Specials | Franz – Meister der Fuge | `/franz-fliesenleger/` | `preukschas/DMP-Games` → `projects/franz-fliesenleger/` (V1.0) |
 | Specials | Elli – Ein schöner Tag | `/elli-ein-schoener-tag/` | `preukschas/DMP-Games` → `projects/elli-ein-schoener-tag/` (Test 1.3 RC1) |
