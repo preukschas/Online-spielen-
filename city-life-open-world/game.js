@@ -212,6 +212,12 @@ function hud(){
   ui.inventory.innerHTML=state.inventory.length?state.inventory.map(x=>'<div>'+x+'</div>').join(''):'Leer';
 }
 function crime(amount,msg){state.heat=clamp(state.heat+amount,0,100);state.lastCrime=0;if(msg)log(msg);hud();}
+function isRoadZone(x,y,margin=0){
+  return roadsY.some(ry=>Math.abs(y-ry)<122+margin)||roadsX.some(rx=>Math.abs(x-rx)<122+margin);
+}
+function isBuildingZone(x,y,margin=0){
+  return buildings.some(b=>b.type!=='park'&&x>b.x-margin&&x<b.x+b.w+margin&&y>b.y-margin&&y<b.y+b.h+margin);
+}
 function outsideBlocked(x,y,r){
   for(const b of buildings){
     if(b.type==='park')continue;
@@ -710,7 +716,9 @@ function drawRoads(){
     for(let y=120;y<WORLD_H;y+=420){ctx.strokeRect(x+76,y,42,115);}
   }
 
-  for(let x=180;x<WORLD_W;x+=430)for(let y=180;y<WORLD_H;y+=460)drawTree(x,y,20);
+  for(let x=180;x<WORLD_W;x+=430)for(let y=180;y<WORLD_H;y+=460){
+    if(!isRoadZone(x,y,48)&&!isBuildingZone(x,y,24))drawTree(x,y,20);
+  }
 }
 function drawBrickFacade(b){
   ctx.fillStyle=b.wall;rr(b.x,b.y,b.w,b.h,8);ctx.fill();
@@ -941,46 +949,89 @@ function fpBuildingHeight(b){
   if(b.type==='parking')return 92;
   return 78;
 }
+function fpRoadHalfScreen(p){
+  return clamp(150*p.scale+30,52,W*.43);
+}
 function drawFirstPersonBuilding(b,p){
-  const corners=[[b.x,b.y],[b.x+b.w,b.y],[b.x,b.y+b.h],[b.x+b.w,b.y+b.h]];
-  let minX=Infinity,maxX=-Infinity;
-  for(const [x,y] of corners){
-    const cp=fpProject(x,y);if(!cp)continue;minX=Math.min(minX,cp.sx);maxX=Math.max(maxX,cp.sx);
-  }
-  const bw=clamp((maxX>minX?maxX-minX:Math.min(b.w,b.h)*p.scale),34,W*1.6);
-  const bh=clamp(fpBuildingHeight(b)*p.scale,28,430);
-  const gy=fpGroundY(p.forward),x=clamp(p.sx-bw/2,-bw*.85,W-bw*.15),y=gy-bh;
+  const worldFront=clamp(Math.min(b.w,b.h)*.62,105,245);
+  const bw=clamp(worldFront*p.scale,40,500);
+  const bh=clamp(fpBuildingHeight(b)*p.scale,30,430);
+  const gy=fpGroundY(p.forward);
+  const roadHalf=fpRoadHalfScreen(p);
+  let x=p.sx-bw/2;
 
-  ctx.fillStyle='rgba(0,0,0,.22)';ctx.fillRect(x+9,y+10,bw,bh);
+  // Gebäude bleiben optisch neben der Fahrbahn und schneiden nicht durch die Straße.
+  if(p.side<0)x=Math.min(x,W/2-roadHalf-bw-10);
+  else x=Math.max(x,W/2+roadHalf+10);
+  x=clamp(x,-bw*.65,W-bw*.35);
+  const y=gy-bh;
+
+  // kleiner Gehweg-/Vorgartenstreifen vor der Fassade
+  ctx.fillStyle='rgba(182,180,171,.86)';
+  ctx.beginPath();
+  ctx.moveTo(x-8,gy);ctx.lineTo(x+bw+8,gy);ctx.lineTo(x+bw*.92,gy+Math.min(26,bh*.10));ctx.lineTo(x+bw*.08,gy+Math.min(26,bh*.10));
+  ctx.closePath();ctx.fill();
+
+  ctx.fillStyle='rgba(0,0,0,.24)';ctx.fillRect(x+10,y+11,bw,bh);
   ctx.fillStyle=b.wall||'#9a8b7d';ctx.fillRect(x,y,bw,bh);
-  const shade=ctx.createLinearGradient(x,y,x+bw,y);shade.addColorStop(0,'rgba(0,0,0,.22)');shade.addColorStop(.45,'rgba(255,255,255,.05)');shade.addColorStop(1,'rgba(0,0,0,.16)');ctx.fillStyle=shade;ctx.fillRect(x,y,bw,bh);
+
+  // Fassadentiefe und Sockel
+  const shade=ctx.createLinearGradient(x,y,x+bw,y);
+  shade.addColorStop(0,'rgba(0,0,0,.23)');shade.addColorStop(.22,'rgba(255,255,255,.05)');shade.addColorStop(.78,'rgba(255,255,255,.02)');shade.addColorStop(1,'rgba(0,0,0,.19)');
+  ctx.fillStyle=shade;ctx.fillRect(x,y,bw,bh);
+  ctx.fillStyle='rgba(45,43,39,.24)';ctx.fillRect(x,y+bh*.86,bw,bh*.14);
 
   if(b.type==='home'){
-    ctx.fillStyle='#654635';ctx.beginPath();ctx.moveTo(x-4,y);ctx.lineTo(x+bw/2,y-bh*.18);ctx.lineTo(x+bw+4,y);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#654635';ctx.beginPath();ctx.moveTo(x-5,y);ctx.lineTo(x+bw/2,y-bh*.17);ctx.lineTo(x+bw+5,y);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#4f3729';ctx.fillRect(x+bw*.20,y-bh*.11,Math.max(6,bw*.07),bh*.12);
+  }else if(b.type==='office'||b.type==='station'){
+    ctx.fillStyle='rgba(50,62,69,.30)';ctx.fillRect(x+bw*.08,y+bw*.02,bw*.84,bh*.10);
   }
-  const cols=clamp(Math.floor(bw/62),2,9),rows=clamp(Math.floor(bh/58),1,6);
-  const ww=Math.max(9,Math.min(32,bw/(cols*1.65))),wh=Math.max(10,Math.min(27,bh/(rows*2.0)));
+
+  const cols=clamp(Math.floor(bw/58),2,8),rows=clamp(Math.floor(bh/60),1,5);
+  const cellW=(bw-30)/cols,cellH=(bh-45)/rows;
   for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-    const wx=x+14+c*(bw-28)/cols,wy=y+24+r*(bh-38)/rows;
-    ctx.fillStyle='#253944';ctx.fillRect(wx,wy,ww,wh);
-    ctx.fillStyle='rgba(158,207,225,.62)';ctx.fillRect(wx+2,wy+2,ww-4,wh-4);
-    ctx.fillStyle='rgba(255,255,255,.24)';ctx.fillRect(wx+4,wy+3,Math.max(2,ww*.23),wh-6);
+    const ww=Math.max(9,Math.min(30,cellW*.52)),wh=Math.max(10,Math.min(27,cellH*.47));
+    const wx=x+15+c*cellW+(cellW-ww)/2,wy=y+22+r*cellH;
+    ctx.fillStyle='#304652';ctx.fillRect(wx-2,wy-2,ww+4,wh+4);
+    ctx.fillStyle='#79a9bd';ctx.fillRect(wx,wy,ww,wh);
+    ctx.fillStyle='rgba(240,252,255,.48)';ctx.fillRect(wx+3,wy+3,Math.max(2,ww*.23),wh-6);
+    ctx.strokeStyle='rgba(30,40,45,.55)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(wx+ww*.52,wy);ctx.lineTo(wx+ww*.52,wy+wh);ctx.stroke();
+    if(b.type==='home'&&r<2){
+      ctx.fillStyle='rgba(69,96,57,.62)';ctx.fillRect(wx-2,wy+wh+2,ww+4,Math.max(2,wh*.12));
+    }
   }
+
   if(b.type==='dealer'){
-    ctx.fillStyle='rgba(155,211,235,.78)';ctx.fillRect(x+bw*.08,y+bh*.45,bw*.84,bh*.46);
-    ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(x+bw*.12,y+bh*.49,bw*.30,bh*.36);
+    ctx.fillStyle='rgba(155,211,235,.80)';ctx.fillRect(x+bw*.08,y+bh*.48,bw*.84,bh*.43);
+    ctx.strokeStyle='rgba(230,248,255,.50)';ctx.lineWidth=2;
+    for(let k=1;k<4;k++){ctx.beginPath();ctx.moveTo(x+bw*(.08+.21*k),y+bh*.48);ctx.lineTo(x+bw*(.08+.21*k),y+bh*.91);ctx.stroke();}
   }
-  ctx.fillStyle='#242a2e';ctx.fillRect(x+6,y+5,Math.min(bw-12,220),Math.max(18,bh*.12));
-  ctx.fillStyle='#fff';ctx.font='bold '+clamp(bw/18,10,18)+'px system-ui';ctx.fillText(b.name,x+12,y+clamp(bh*.09,15,28));
-  ctx.fillStyle='rgba(20,20,20,.7)';ctx.fillRect(x+bw*.46,gy-Math.max(18,bh*.20),Math.max(12,bw*.09),Math.max(18,bh*.20));
+
+  // Tür niemals in der Straßenmitte, sondern in der Fassade.
+  ctx.fillStyle='#3f3028';ctx.fillRect(x+bw*.44,gy-Math.max(20,bh*.22),Math.max(14,bw*.11),Math.max(20,bh*.22));
+  ctx.fillStyle='rgba(255,220,150,.35)';ctx.fillRect(x+bw*.46,gy-Math.max(18,bh*.19),Math.max(5,bw*.035),Math.max(7,bh*.07));
+
+  ctx.fillStyle='#242a2e';ctx.fillRect(x+7,y+6,Math.min(bw-14,210),Math.max(18,bh*.11));
+  ctx.fillStyle='#fff';ctx.font='bold '+clamp(bw/20,10,17)+'px system-ui';ctx.fillText(b.name,x+13,y+clamp(bh*.085,15,26));
 }
 function drawFirstPersonTree(x,y,r,p){
-  const gy=fpGroundY(p.forward),h=clamp(r*4.8*p.scale,24,260),w=h*.72;
-  ctx.fillStyle='#5e402c';ctx.fillRect(p.sx-w*.06,gy-h*.38,w*.12,h*.38);
-  const grad=ctx.createRadialGradient(p.sx-w*.12,gy-h*.72,4,p.sx,gy-h*.65,w*.62);
-  grad.addColorStop(0,'#5b9650');grad.addColorStop(.55,'#39753f');grad.addColorStop(1,'#24572f');
-  ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(p.sx,gy-h*.68,w*.52,h*.34,0,0,Math.PI*2);ctx.fill();
-  for(let i=0;i<10;i++){ctx.fillStyle=i%2?'#4b8747':'#2f6a39';ctx.beginPath();ctx.arc(p.sx+(i%5-2)*w*.11,gy-h*(.58+(i%3)*.08),Math.max(2,w*.08),0,Math.PI*2);ctx.fill();}
+  const gy=fpGroundY(p.forward),h=clamp(r*4.8*p.scale,24,250),w=h*.72;
+  const roadHalf=fpRoadHalfScreen(p);
+  let sx=p.sx;
+  if(p.side<0)sx=Math.min(sx,W/2-roadHalf-w*.60-10);
+  else sx=Math.max(sx,W/2+roadHalf+w*.60+10);
+  if(sx<-w||sx>W+w)return;
+
+  ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(sx,gy+2,w*.28,h*.06,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#5e402c';ctx.fillRect(sx-w*.055,gy-h*.38,w*.11,h*.38);
+  const grad=ctx.createRadialGradient(sx-w*.12,gy-h*.72,4,sx,gy-h*.65,w*.62);
+  grad.addColorStop(0,'#639a55');grad.addColorStop(.52,'#39753f');grad.addColorStop(1,'#24572f');
+  ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(sx,gy-h*.68,w*.52,h*.34,0,0,Math.PI*2);ctx.fill();
+  for(let i=0;i<14;i++){
+    ctx.fillStyle=i%3===0?'#568f49':i%2?'#4b8747':'#2f6a39';
+    ctx.beginPath();ctx.arc(sx+(i%7-3)*w*.08,gy-h*(.55+(i%4)*.07),Math.max(2,w*.065),0,Math.PI*2);ctx.fill();
+  }
 }
 function drawFirstPersonCar(c,p,policeCar=false){
   const gy=fpGroundY(p.forward),w=clamp((c.w||68)*1.85*p.scale,24,330),h=clamp((c.h||34)*1.55*p.scale,13,155);
@@ -1034,35 +1085,82 @@ function drawFirstPersonOverlay(){
   const water=state.waterFx.find(f=>f.mode==='outside'&&f.ttl>0);
   if(water){ctx.strokeStyle='rgba(100,210,255,.9)';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(W*.78,H-80);ctx.lineTo(W*.52,H*.53);ctx.stroke();}
 }
+function nearestRoadInfo(){
+  let best={dist:Infinity,axis:'h',coord:0};
+  for(const y of roadsY){const d=Math.abs(state.y-y);if(d<best.dist)best={dist:d,axis:'h',coord:y};}
+  for(const x of roadsX){const d=Math.abs(state.x-x);if(d<best.dist)best={dist:d,axis:'v',coord:x};}
+  return best;
+}
 function drawFirstPerson(){
-  const horizon=316;
-  const sky=ctx.createLinearGradient(0,0,0,horizon);sky.addColorStop(0,'#78b5dc');sky.addColorStop(.65,'#b9d9ea');sky.addColorStop(1,'#e6eff2');ctx.fillStyle=sky;ctx.fillRect(0,0,W,horizon);
-  ctx.fillStyle='#657d56';ctx.fillRect(0,horizon,W,H-horizon);
+  const horizon=310;
+  const sky=ctx.createLinearGradient(0,0,0,horizon);
+  sky.addColorStop(0,'#69a9d4');sky.addColorStop(.58,'#a7cee4');sky.addColorStop(1,'#e7eef0');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,horizon);
+  ctx.fillStyle='#73865f';ctx.fillRect(0,horizon,W,H-horizon);
 
-  const roadDist=Math.min(...roadsY.map(v=>Math.abs(state.y-v)),...roadsX.map(v=>Math.abs(state.x-v)));
-  if(roadDist<175){
-    ctx.fillStyle='#454c51';ctx.beginPath();ctx.moveTo(W*.43,horizon);ctx.lineTo(W*.57,horizon);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#aaa9a3';ctx.beginPath();ctx.moveTo(W*.39,horizon);ctx.lineTo(W*.43,horizon);ctx.lineTo(0,H);ctx.lineTo(0,H-30);ctx.closePath();ctx.fill();
-    ctx.beginPath();ctx.moveTo(W*.57,horizon);ctx.lineTo(W*.61,horizon);ctx.lineTo(W,H-30);ctx.lineTo(W,H);ctx.closePath();ctx.fill();
-    ctx.strokeStyle='#dfd59c';ctx.lineWidth=4;
-    for(let i=1;i<10;i++){const t=i/10,y=horizon+(H-horizon)*t*t,w=3+10*t;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(W/2,y);ctx.lineTo(W/2,y+18+35*t);ctx.stroke();}
+  const road=nearestRoadInfo();
+  const roadAngle=road.axis==='h'?0:Math.PI/2;
+  const align=Math.abs(Math.cos(state.a-roadAngle));
+  const onRoad=road.dist<170;
+
+  if(onRoad&&align>.50){
+    // Fahrbahn, Gehwege und Bordsteine laufen sauber nach vorne.
+    ctx.fillStyle='#444b50';ctx.beginPath();ctx.moveTo(W*.455,horizon);ctx.lineTo(W*.545,horizon);ctx.lineTo(W*.92,H);ctx.lineTo(W*.08,H);ctx.closePath();ctx.fill();
+
+    ctx.fillStyle='#aeadab';
+    ctx.beginPath();ctx.moveTo(W*.405,horizon);ctx.lineTo(W*.455,horizon);ctx.lineTo(W*.08,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(W*.545,horizon);ctx.lineTo(W*.595,horizon);ctx.lineTo(W,H);ctx.lineTo(W*.92,H);ctx.closePath();ctx.fill();
+
+    ctx.strokeStyle='#d5d3ca';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(W*.455,horizon);ctx.lineTo(W*.08,H);ctx.moveTo(W*.545,horizon);ctx.lineTo(W*.92,H);ctx.stroke();
+
+    ctx.strokeStyle='#ded59d';
+    for(let i=1;i<11;i++){
+      const t=i/11,y=horizon+(H-horizon)*t*t;
+      ctx.lineWidth=2+7*t;ctx.beginPath();ctx.moveTo(W/2,y);ctx.lineTo(W/2,y+10+25*t);ctx.stroke();
+    }
+  }else if(onRoad){
+    // Beim Blick quer zur Straße wird keine falsche Straße "nach vorne" erfunden.
+    ctx.fillStyle='#aaa9a3';ctx.fillRect(0,horizon,W,H-horizon);
+    ctx.fillStyle='#474e53';ctx.beginPath();ctx.moveTo(0,horizon+95);ctx.lineTo(W,horizon+95);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
   }
 
   const drawables=[];
   for(const b of buildings){
     if(b.type==='park')continue;
-    const p=fpProject(b.x+b.w/2,b.y+b.h/2);if(p&&p.forward<1900)drawables.push({d:p.forward,fn:()=>drawFirstPersonBuilding(b,p)});
+    const cx=b.x+b.w/2,cy=b.y+b.h/2;
+    const p=fpProject(cx,cy);
+    if(p&&p.forward<1750){
+      // Physisch stehen Gebäude bereits außerhalb der Straßen; der Renderer hält ihre Fassade zusätzlich außerhalb des Fahrbahnkorridors.
+      drawables.push({d:p.forward,fn:()=>drawFirstPersonBuilding(b,p)});
+    }
   }
+
   for(let tx=180;tx<WORLD_W;tx+=430)for(let ty=180;ty<WORLD_H;ty+=460){
-    const p=fpProject(tx,ty);if(p&&p.forward<1500)drawables.push({d:p.forward,fn:()=>drawFirstPersonTree(tx,ty,20,p)});
+    if(isRoadZone(tx,ty,48)||isBuildingZone(tx,ty,24))continue;
+    const p=fpProject(tx,ty);
+    if(p&&p.forward<1450)drawables.push({d:p.forward,fn:()=>drawFirstPersonTree(tx,ty,20,p)});
   }
-  for(const c of traffic){if(c.dead)continue;const p=fpProject(c.x,c.y);if(p&&p.forward<1250)drawables.push({d:p.forward,fn:()=>drawFirstPersonCar(c,p,false)});}
-  worldCars.forEach((c,i)=>{if(i===state.worldCar)return;const p=fpProject(c.x,c.y);if(p&&p.forward<1250)drawables.push({d:p.forward,fn:()=>drawFirstPersonCar(c,p,false)});});
-  for(const person of people){const p=fpProject(person.x,person.y);if(p&&p.forward<850)drawables.push({d:p.forward,fn:()=>drawFirstPersonPerson(person,p)});}
-  for(const pc of police){const p=fpProject(pc.x,pc.y);if(p&&p.forward<1300)drawables.push({d:p.forward,fn:()=>drawFirstPersonCar({w:68,h:34,color:'#e8edf0',name:'Polizei',hp:100},p,true)});}
+
+  for(const c of traffic){
+    if(c.dead)continue;const p=fpProject(c.x,c.y);
+    if(p&&p.forward<1250)drawables.push({d:p.forward,fn:()=>drawFirstPersonCar(c,p,false)});
+  }
+  worldCars.forEach((c,i)=>{
+    if(i===state.worldCar)return;const p=fpProject(c.x,c.y);
+    if(p&&p.forward<1250)drawables.push({d:p.forward,fn:()=>drawFirstPersonCar(c,p,false)});
+  });
+  for(const person of people){
+    const p=fpProject(person.x,person.y);
+    if(p&&p.forward<850)drawables.push({d:p.forward,fn:()=>drawFirstPersonPerson(person,p)});
+  }
+  for(const pc of police){
+    const p=fpProject(pc.x,pc.y);
+    if(p&&p.forward<1300)drawables.push({d:p.forward,fn:()=>drawFirstPersonCar({w:68,h:34,color:'#e8edf0',name:'Polizei',hp:100},p,true)});
+  }
+
   drawables.sort((a,b)=>b.d-a.d);drawables.forEach(o=>o.fn());
 
-  ctx.fillStyle='rgba(255,255,255,.55)';ctx.font='bold 14px system-ui';ctx.fillText('ICH-PERSPEKTIVE',18,28);
+  ctx.fillStyle='rgba(255,255,255,.62)';ctx.font='bold 14px system-ui';ctx.fillText('ICH-PERSPEKTIVE',18,28);
   drawFirstPersonOverlay();
 }
 
