@@ -1,4 +1,4 @@
-name: Publish FREISTADT Test
+name: Publish GTR-Kids Test
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
         working-directory: freistadt-test-src
         run: npm install --no-audit --no-fund
 
-      - name: Build FREISTADT
+      - name: Build GTR-Kids
         working-directory: freistadt-test-src
         run: npm run build
 
@@ -47,7 +47,6 @@ jobs:
           <script>window.DMPFunAccess.requireAccess({backHref:"../"});</script>
           <link rel="stylesheet" href="../game-interaction-guard.css">"""
           html = html.replace("<head>", "<head>\n    " + additions, 1)
-          html = html.replace("FREISTADT – v0.1 Driving Prototype", "FREISTADT – v0.4 Test")
           path.write_text(html, encoding="utf-8")
           PY
 
@@ -56,7 +55,7 @@ jobs:
           rm -rf /tmp/freistadt-test-build
           mkdir -p /tmp/freistadt-test-build
           cp -R freistadt-test-src/dist/. /tmp/freistadt-test-build/
-          printf 'FREISTADT v0.4 test build\nSource commit: %s\nBuilt: %s\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /tmp/freistadt-test-build/BUILD.txt
+          printf 'GTR-Kids v0.4.3 test build\nSource commit: %s\nBuilt: %s\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /tmp/freistadt-test-build/BUILD.txt
 
       - name: Commit test build
         run: |
@@ -72,5 +71,5 @@ jobs:
             echo "No build changes."
             exit 0
           fi
-          git commit -m "publish: update FREISTADT v0.4 test build"
+          git commit -m "publish: update GTR-Kids v0.4.3 test build"
           git push
