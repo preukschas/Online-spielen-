@@ -1,12 +1,20 @@
+import { getVehicleProfile, sanitizeOwnedVehicles, type VehicleId } from '../data/vehicles';
+import { sanitizeCollectedIds } from '../data/collectibles';
+
 export type SavedDriveMode = 'on-foot' | 'vehicle';
 
 export interface FreistadtSaveData {
-  version: 3;
+  version: 4;
   credits: number;
   mapUnlocked: boolean;
   mode: SavedDriveMode;
   player: { x: number; y: number };
   vehicle: { x: number; y: number; rotation: number; condition: number };
+  garage: {
+    currentVehicleId: VehicleId;
+    ownedVehicleIds: VehicleId[];
+  };
+  collectibles: string[];
   reputation: {
     metroexpress: number;
     velocity: number;
@@ -86,7 +94,17 @@ export class SaveSystem {
     const snapshot: FreistadtSaveData = {
       ...data,
       player: { ...data.player },
-      vehicle: { ...data.vehicle }
+      vehicle: { ...data.vehicle },
+      garage: {
+        currentVehicleId: data.garage.currentVehicleId,
+        ownedVehicleIds: [...data.garage.ownedVehicleIds]
+      },
+      collectibles: [...data.collectibles],
+      reputation: { ...data.reputation },
+      missions: {
+        ...data.missions,
+        completedMissionIds: [...data.missions.completedMissionIds]
+      }
     };
 
     this.writeQueue = this.writeQueue
@@ -181,6 +199,11 @@ export class SaveSystem {
       mode?: unknown;
       player?: { x?: unknown; y?: unknown };
       vehicle?: { x?: unknown; y?: unknown; rotation?: unknown; condition?: unknown };
+      garage?: {
+        currentVehicleId?: unknown;
+        ownedVehicleIds?: unknown;
+      };
+      collectibles?: unknown;
       reputation?: {
         metroexpress?: unknown;
         velocity?: unknown;
@@ -230,9 +253,15 @@ export class SaveSystem {
       };
     };
 
-    if (candidate.version === 3) {
+    if (candidate.version === 4) {
+      const ownedVehicleIds = sanitizeOwnedVehicles(candidate.garage?.ownedVehicleIds);
+      const requestedVehicle = getVehicleProfile(candidate.garage?.currentVehicleId).id;
+      const currentVehicleId = ownedVehicleIds.includes(requestedVehicle)
+        ? requestedVehicle
+        : 'city_compact';
+
       return {
-        version: 3,
+        version: 4,
         credits: numberOr(candidate.credits, 500),
         mapUnlocked: candidate.mapUnlocked === true,
         mode: candidate.mode === 'vehicle' ? 'vehicle' : 'on-foot',
@@ -246,6 +275,43 @@ export class SaveSystem {
           rotation: numberOr(vehicle.rotation, 0),
           condition: numberOr(vehicle.condition, 100)
         },
+        garage: {
+          currentVehicleId,
+          ownedVehicleIds
+        },
+        collectibles: sanitizeCollectedIds(candidate.collectibles),
+        reputation: {
+          metroexpress: sanitizeReputationValue(candidate.reputation?.metroexpress ?? defaultReputation.metroexpress),
+          velocity: sanitizeReputationValue(candidate.reputation?.velocity ?? defaultReputation.velocity),
+          kulturverein: sanitizeReputationValue(candidate.reputation?.kulturverein ?? defaultReputation.kulturverein)
+        },
+        heat: sanitizeHeat(candidate.heat),
+        missions: sanitizeMissions(),
+        timestamp: numberOr(candidate.timestamp, Date.now())
+      };
+    }
+
+    if (candidate.version === 3) {
+      return {
+        version: 4,
+        credits: numberOr(candidate.credits, 500),
+        mapUnlocked: candidate.mapUnlocked === true,
+        mode: candidate.mode === 'vehicle' ? 'vehicle' : 'on-foot',
+        player: {
+          x: numberOr(player.x, 1420),
+          y: numberOr(player.y, 810)
+        },
+        vehicle: {
+          x: numberOr(vehicle.x, 1600),
+          y: numberOr(vehicle.y, 825),
+          rotation: numberOr(vehicle.rotation, 0),
+          condition: numberOr(vehicle.condition, 100)
+        },
+        garage: {
+          currentVehicleId: 'city_compact',
+          ownedVehicleIds: ['city_compact']
+        },
+        collectibles: [],
         reputation: {
           metroexpress: sanitizeReputationValue(candidate.reputation?.metroexpress ?? defaultReputation.metroexpress),
           velocity: sanitizeReputationValue(candidate.reputation?.velocity ?? defaultReputation.velocity),
@@ -259,7 +325,7 @@ export class SaveSystem {
 
     if (candidate.version === 2) {
       return {
-        version: 3,
+        version: 4,
         credits: numberOr(candidate.credits, 500),
         mapUnlocked: candidate.mapUnlocked === true,
         mode: candidate.mode === 'vehicle' ? 'vehicle' : 'on-foot',
@@ -273,6 +339,11 @@ export class SaveSystem {
           rotation: numberOr(vehicle.rotation, 0),
           condition: numberOr(vehicle.condition, 100)
         },
+        garage: {
+          currentVehicleId: 'city_compact',
+          ownedVehicleIds: ['city_compact']
+        },
+        collectibles: [],
         reputation: defaultReputation,
         heat: 0,
         missions: {
@@ -286,7 +357,7 @@ export class SaveSystem {
 
     if (candidate.version === 1) {
       return {
-        version: 3,
+        version: 4,
         credits: numberOr(candidate.credits, 500),
         mapUnlocked: false,
         mode: 'on-foot',
@@ -300,6 +371,11 @@ export class SaveSystem {
           rotation: numberOr(vehicle.rotation, 0),
           condition: numberOr(vehicle.condition, 100)
         },
+        garage: {
+          currentVehicleId: 'city_compact',
+          ownedVehicleIds: ['city_compact']
+        },
+        collectibles: [],
         reputation: {
           metroexpress: 0,
           velocity: 0,
