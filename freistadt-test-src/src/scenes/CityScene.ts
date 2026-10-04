@@ -10,8 +10,11 @@ import {
   type ReputationState
 } from '../systems/FactionSystem';
 import { SettingsSystem, type AppSettings } from '../systems/SettingsSystem';
+import { VEHICLES, getVehicleProfile, sanitizeOwnedVehicles } from '../data/vehicles';
+import { COLLECTIBLES, sanitizeCollectedIds, type CollectibleDefinition } from '../data/collectibles';
+import { AudioSystem } from '../systems/AudioSystem';
 
-const WORLD_WIDTH = 3200;
+const WORLD_WIDTH = 5000;
 const WORLD_HEIGHT = 2200;
 const PLAYER_SPEED = 245;
 const PLAYER_SPRINT_SPEED = 335;
@@ -28,7 +31,7 @@ type DoorPoint = {
 };
 
 type TrafficAgent = {
-  sprite: Phaser.GameObjects.Rectangle;
+  sprite: Phaser.GameObjects.Image;
   route: Phaser.Math.Vector2[];
   routeIndex: number;
   speed: number;
@@ -38,7 +41,7 @@ type TrafficAgent = {
 };
 
 type PedestrianAgent = {
-  sprite: Phaser.GameObjects.Arc;
+  sprite: Phaser.GameObjects.Image;
   route: Phaser.Math.Vector2[];
   routeIndex: number;
   speed: number;
@@ -52,6 +55,12 @@ type CityEvent = {
   reward: number;
   marker: Phaser.GameObjects.Arc;
   text: Phaser.GameObjects.Text;
+};
+
+type CollectibleMarker = {
+  definition: CollectibleDefinition;
+  marker: Phaser.GameObjects.Arc;
+  label: Phaser.GameObjects.Text;
 };
 
 export class CityScene extends Phaser.Scene {
@@ -68,8 +77,12 @@ export class CityScene extends Phaser.Scene {
   private joystickOrigin = new Phaser.Math.Vector2();
   private joystickVector = new Phaser.Math.Vector2();
 
+  private actionGlow!: Phaser.GameObjects.Arc;
   private actionButton!: Phaser.GameObjects.Arc;
   private actionLabel!: Phaser.GameObjects.Text;
+  private radioShadow!: Phaser.GameObjects.Rectangle;
+  private radioButton!: Phaser.GameObjects.Rectangle;
+  private radioLabel!: Phaser.GameObjects.Text;
   private hintText!: Phaser.GameObjects.Text;
   private statusText!: Phaser.GameObjects.Text;
   private toastText!: Phaser.GameObjects.Text;
@@ -78,9 +91,19 @@ export class CityScene extends Phaser.Scene {
   private missionBoardLabel!: Phaser.GameObjects.Text;
   private missionTargetMarker?: Phaser.GameObjects.Arc;
   private missionTargetLabel?: Phaser.GameObjects.Text;
+  private minimapContainer!: Phaser.GameObjects.Container;
+  private minimapPlayer!: Phaser.GameObjects.Arc;
+  private minimapVehicle!: Phaser.GameObjects.Rectangle;
+  private minimapMission!: Phaser.GameObjects.Arc;
+  private playerShadow!: Phaser.GameObjects.Ellipse;
+  private carShadow!: Phaser.GameObjects.Ellipse;
+  private motionFx!: Phaser.GameObjects.Graphics;
+  private vehicleFx!: Phaser.GameObjects.Graphics;
+  private tireMarks: Phaser.GameObjects.Rectangle[] = [];
 
   private readonly missionSystem = new MissionSystem();
   private readonly policeSystem = new PoliceSystem();
+  private readonly audioSystem = new AudioSystem();
   private reputation: ReputationState = createDefaultReputation();
   private appSettings: AppSettings = SettingsSystem.load();
 
@@ -89,9 +112,16 @@ export class CityScene extends Phaser.Scene {
   private traffic: TrafficAgent[] = [];
   private pedestrians: PedestrianAgent[] = [];
   private currentEvent: CityEvent | null = null;
+  private collectedCollectibles = new Set<string>();
+  private collectibleMarkers: CollectibleMarker[] = [];
 
   private carSpeed = 0;
+  private lastCarVisualSpeed = 0;
+  private lastThrottleInput = 0;
+  private lastSteerInput = 0;
+  private lastTireMarkAt = -1000;
   private lastActionDown = false;
+  private lastRadioDown = false;
   private lastActionAt = -1000;
   private lastCarImpactAt = 0;
   private lastTrafficImpactAt = 0;
@@ -110,18 +140,26 @@ export class CityScene extends Phaser.Scene {
     this.createTextures();
     this.buildCity();
 
+    this.playerShadow = this.add.ellipse(1425, 824, 34, 16, 0x0b151b, 0.28).setDepth(26);
     this.player = this.physics.add.sprite(1420, 810, 'freistadt-player');
     this.player.setCollideWorldBounds(true).setDepth(30);
 
-    this.car = this.physics.add.sprite(1600, 825, 'freistadt-car');
+    const initialVehicle = getVehicleProfile(this.registry.get('currentVehicleId'));
+    this.carShadow = this.add.ellipse(1605, 833, initialVehicle.width * 0.88, initialVehicle.height * 0.58, 0x0b151b, 0.32).setDepth(26);
+    this.motionFx = this.add.graphics().setDepth(27);
+    this.vehicleFx = this.add.graphics().setDepth(29);
+    this.car = this.physics.add.sprite(1600, 825, 'vehicle-' + initialVehicle.id);
     this.car.setCollideWorldBounds(true).setDepth(28).setDrag(250, 250);
     this.setupBuildingCollisions();
 
     this.cursors = this.input.keyboard?.createCursorKeys();
-    this.keys = this.input.keyboard?.addKeys('W,A,S,D,E,SHIFT') as Record<string, Phaser.Input.Keyboard.Key> | undefined;
+    this.keys = this.input.keyboard?.addKeys('W,A,S,D,E,R,SHIFT') as Record<string, Phaser.Input.Keyboard.Key> | undefined;
+    this.input.keyboard?.once('keydown', () => { void this.audioSystem.unlock(); });
 
     this.createHud();
+    this.createMinimap();
     this.createPhaseThreeMarkers();
+    this.spawnCollectibles();
     this.bindPointerControls();
     this.spawnTraffic();
     this.spawnPedestrians();
@@ -173,6 +211,7 @@ export class CityScene extends Phaser.Scene {
       this.events.off(Phaser.Scenes.Events.RESUME, this.onResumeFromInterior, this);
       if (this.visibilityHandler) document.removeEventListener('visibilitychange', this.visibilityHandler);
       if (this.pageHideHandler) window.removeEventListener('pagehide', this.pageHideHandler);
+      this.audioSystem.dispose();
       this.removeDebugBridge();
     });
 
@@ -199,9 +238,12 @@ export class CityScene extends Phaser.Scene {
     if (this.policeSystem.consumeControl()) this.handlePoliceControl();
     this.progressMission(false);
     this.updateActionInput();
+    this.updateAudio();
+    this.updateActorVisuals();
     this.updateCamera();
     this.updateHint();
     this.updateStatus();
+    this.updateMinimap();
     this.updateToast();
   }
 
@@ -209,40 +251,200 @@ export class CityScene extends Phaser.Scene {
     if (this.registry.get('credits') === undefined) this.registry.set('credits', 500);
     if (this.registry.get('vehicleCondition') === undefined) this.registry.set('vehicleCondition', 100);
     if (this.registry.get('mapUnlocked') === undefined) this.registry.set('mapUnlocked', false);
+    if (this.registry.get('currentVehicleId') === undefined) this.registry.set('currentVehicleId', 'city_compact');
+    if (this.registry.get('ownedVehicleIds') === undefined) this.registry.set('ownedVehicleIds', ['city_compact']);
     if (this.registry.get('toast') === undefined) this.registry.set('toast', '');
   }
 
   private createTextures(): void {
     if (!this.textures.exists('freistadt-player')) {
       const g = this.add.graphics();
-      g.fillStyle(0xf7f7f2, 1);
-      g.fillCircle(17, 17, 14);
-      g.lineStyle(4, 0x15222c, 1);
-      g.strokeCircle(17, 17, 14);
-      g.fillStyle(0x2c83b6, 1);
-      g.fillTriangle(17, 3, 25, 17, 9, 17);
-      g.generateTexture('freistadt-player', 34, 34);
+
+      // Kleine Cartoon-Figur aus der Vogelperspektive mit klarer Silhouette.
+      g.fillStyle(0x17232d, 0.28);
+      g.fillEllipse(21, 31, 30, 14);
+      g.fillStyle(0x1c6f9d, 1);
+      g.fillRoundedRect(10, 15, 22, 20, 7);
+      g.fillStyle(0xf2c8a4, 1);
+      g.fillCircle(21, 12, 9);
+      g.fillStyle(0x2a3440, 1);
+      g.fillCircle(21, 9, 9);
+      g.fillStyle(0xf2c8a4, 1);
+      g.fillCircle(21, 13, 7);
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(18, 12, 1.8);
+      g.fillCircle(24, 12, 1.8);
+      g.fillStyle(0x173041, 1);
+      g.fillCircle(18, 12, 0.9);
+      g.fillCircle(24, 12, 0.9);
+      g.fillStyle(0xf4d24b, 1);
+      g.fillTriangle(21, 1, 26, 8, 16, 8);
+      g.lineStyle(2, 0x14212a, 0.95);
+      g.strokeRoundedRect(10, 15, 22, 20, 7);
+      g.strokeCircle(21, 12, 9);
+      g.generateTexture('freistadt-player', 42, 40);
       g.destroy();
     }
 
-    if (!this.textures.exists('freistadt-car')) {
+    for (const profile of VEHICLES) {
+      const textureKey = 'vehicle-' + profile.id;
+      if (this.textures.exists(textureKey)) continue;
+
       const g = this.add.graphics();
-      g.fillStyle(0xf0a23a, 1);
-      g.fillRoundedRect(2, 3, 78, 38, 10);
-      g.fillStyle(0x263b4c, 1);
-      g.fillRoundedRect(25, 7, 32, 30, 7);
-      g.fillStyle(0xf7f3dd, 1);
-      g.fillRect(70, 8, 8, 8);
-      g.fillRect(70, 28, 8, 8);
-      g.generateTexture('freistadt-car', 82, 44);
+      const w = profile.width;
+      const h = profile.height;
+      const bodyColor = profile.color;
+      const dark = 0x1f2a33;
+
+      // Schlagschatten.
+      g.fillStyle(0x0c151b, 0.28);
+      g.fillRoundedRect(4, 6, w - 4, h - 4, Math.min(12, h * 0.25));
+
+      // Räder.
+      g.fillStyle(0x172027, 1);
+      const wheelW = Math.max(8, w * 0.10);
+      const wheelH = Math.max(6, h * 0.16);
+      g.fillRoundedRect(8, 1, wheelW, wheelH, 3);
+      g.fillRoundedRect(w - 8 - wheelW, 1, wheelW, wheelH, 3);
+      g.fillRoundedRect(8, h - wheelH - 1, wheelW, wheelH, 3);
+      g.fillRoundedRect(w - 8 - wheelW, h - wheelH - 1, wheelW, wheelH, 3);
+
+      // Karosserie.
+      g.fillStyle(bodyColor, 1);
+      g.fillRoundedRect(3, 4, w - 8, h - 8, Math.min(12, h * 0.26));
+      g.lineStyle(2, 0x17212a, 0.75);
+      g.strokeRoundedRect(3, 4, w - 8, h - 8, Math.min(12, h * 0.26));
+
+      // Motorhaube / Heck mit dezentem Highlight.
+      g.fillStyle(0xffffff, 0.14);
+      g.fillRoundedRect(w * 0.63, 7, w * 0.23, h - 14, 5);
+      g.fillStyle(0x000000, 0.11);
+      g.fillRoundedRect(8, 7, w * 0.18, h - 14, 5);
+
+      // Kabine und Scheiben.
+      const cabinX = Math.max(21, w * 0.28);
+      const cabinW = Math.max(30, w * 0.36);
+      g.fillStyle(dark, 1);
+      g.fillRoundedRect(cabinX, 8, cabinW, h - 16, 7);
+      g.fillStyle(0x8ed3ea, 0.88);
+      g.fillRoundedRect(cabinX + 4, 11, cabinW * 0.42, h - 22, 4);
+      g.fillRoundedRect(cabinX + cabinW * 0.54, 11, cabinW * 0.36, h - 22, 4);
+
+      // Frontscheinwerfer und Rückleuchten.
+      g.fillStyle(0xfff0a8, 1);
+      g.fillRoundedRect(w - 11, 9, 7, 8, 2);
+      g.fillRoundedRect(w - 11, h - 17, 7, 8, 2);
+      g.fillStyle(0xe45b54, 1);
+      g.fillRoundedRect(4, 9, 6, 8, 2);
+      g.fillRoundedRect(4, h - 17, 6, 8, 2);
+
+      // Fahrzeugtyp-spezifische Details.
+      if (profile.id === 'taxi') {
+        g.fillStyle(0xf7efba, 1);
+        g.fillRoundedRect(w * 0.43, 2, w * 0.18, 7, 3);
+      } else if (profile.id === 'city_bus') {
+        g.fillStyle(0xdce7ee, 0.9);
+        for (let x = 19; x < w - 24; x += 18) g.fillRoundedRect(x, 10, 12, h - 20, 3);
+      } else if (profile.id === 'tow_truck') {
+        g.lineStyle(4, 0xe3bf54, 1);
+        g.lineBetween(15, h / 2, 38, h / 2);
+        g.lineBetween(15, h / 2, 9, h / 2 + 10);
+      } else if (profile.id === 'delivery_van') {
+        g.fillStyle(0x425e70, 0.85);
+        g.fillRoundedRect(13, 10, w * 0.28, h - 20, 4);
+      } else if (profile.id === 'utility_truck') {
+        g.fillStyle(0xf2bf4b, 0.95);
+        g.fillRect(13, 8, 6, h - 16);
+        g.fillRect(25, 8, 6, h - 16);
+      } else if (profile.id === 'city_sport') {
+        g.lineStyle(3, 0xffffff, 0.72);
+        g.lineBetween(w * 0.22, h / 2, w * 0.78, h / 2);
+      }
+
+      g.generateTexture(textureKey, w + 2, h + 2);
       g.destroy();
     }
+
+    const trafficPalette = [0x5e93b5, 0xc86b5d, 0xd2b85b, 0x6fa36d, 0x8f70a9, 0xe6e6e6];
+    trafficPalette.forEach((bodyColor, index) => {
+      const key = 'traffic-car-' + index;
+      if (this.textures.exists(key)) return;
+      const g = this.add.graphics();
+      g.fillStyle(0x111a20, 0.28);
+      g.fillRoundedRect(4, 6, 54, 28, 8);
+      g.fillStyle(0x172027, 1);
+      g.fillRoundedRect(7, 2, 9, 7, 3);
+      g.fillRoundedRect(44, 2, 9, 7, 3);
+      g.fillRoundedRect(7, 29, 9, 7, 3);
+      g.fillRoundedRect(44, 29, 9, 7, 3);
+      g.fillStyle(bodyColor, 1);
+      g.fillRoundedRect(2, 4, 56, 28, 9);
+      g.lineStyle(2, 0x17232d, 0.8);
+      g.strokeRoundedRect(2, 4, 56, 28, 9);
+      g.fillStyle(0x86c9df, 0.9);
+      g.fillRoundedRect(20, 8, 21, 20, 5);
+      g.fillStyle(0xffefaa, 1);
+      g.fillRect(52, 8, 5, 6);
+      g.fillRect(52, 22, 5, 6);
+      g.fillStyle(0xe45b54, 1);
+      g.fillRect(2, 8, 5, 6);
+      g.fillRect(2, 22, 5, 6);
+      g.generateTexture(key, 60, 36);
+      g.destroy();
+    });
+
+    if (!this.textures.exists('traffic-police')) {
+      const g = this.add.graphics();
+      g.fillStyle(0x111a20, 0.28);
+      g.fillRoundedRect(4, 6, 58, 30, 9);
+      g.fillStyle(0x2d5d9a, 1);
+      g.fillRoundedRect(2, 4, 58, 30, 9);
+      g.lineStyle(3, 0xffffff, 0.82);
+      g.strokeRoundedRect(2, 4, 58, 30, 9);
+      g.fillStyle(0x8bcce3, 0.95);
+      g.fillRoundedRect(21, 8, 22, 22, 5);
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(8, 17, 44, 4);
+      g.fillStyle(0xdf4c4c, 1);
+      g.fillRect(28, 2, 7, 5);
+      g.fillStyle(0x5294e5, 1);
+      g.fillRect(36, 2, 7, 5);
+      g.generateTexture('traffic-police', 64, 38);
+      g.destroy();
+    }
+
+    const peoplePalette = [0xe4745f, 0x54a57b, 0x6d78c7, 0xd59c48, 0x9a6db2];
+    peoplePalette.forEach((shirt, index) => {
+      const key = 'pedestrian-' + index;
+      if (this.textures.exists(key)) return;
+      const g = this.add.graphics();
+      g.fillStyle(0x10181d, 0.22);
+      g.fillEllipse(14, 24, 20, 9);
+      g.fillStyle(shirt, 1);
+      g.fillRoundedRect(7, 10, 14, 15, 5);
+      g.fillStyle(index % 2 === 0 ? 0xf0c7a2 : 0xb98261, 1);
+      g.fillCircle(14, 7, 6);
+      g.fillStyle(0x28323a, 1);
+      g.fillRect(8, 24, 5, 5);
+      g.fillRect(16, 24, 5, 5);
+      g.generateTexture(key, 28, 30);
+      g.destroy();
+    });
   }
 
   private buildCity(): void {
     const g = this.add.graphics();
     g.fillStyle(0x6d966b, 1);
     g.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
+    // Leichte Bodenstruktur statt einer flachen grünen Fläche.
+    g.fillStyle(0x5f8b61, 0.42);
+    for (let x = 70; x < WORLD_WIDTH; x += 145) {
+      for (let y = 55; y < WORLD_HEIGHT; y += 135) {
+        const offset = ((x + y) / 10) % 3;
+        g.fillCircle(x + offset * 7, y + (offset - 1) * 5, 5 + offset);
+      }
+    }
 
     // Vier Hauptachsen bilden bereits ein echtes Stadtviertel statt einer Teststraße.
     g.fillStyle(0x3c444b, 1);
@@ -278,12 +480,72 @@ export class CityScene extends Phaser.Scene {
     this.drawCrosswalk(g, 1095, 1615);
     this.drawCrosswalk(g, 2345, 1615);
 
+    this.addRoadPolish();
+
     this.addBuilding(480, 330, 620, 360, 0xb86f56, 'Werkstatt Westend', 'workshop');
     this.addBuilding(1650, 320, 650, 350, 0x8e6f9d, 'Café Freiraum', 'cafe');
     this.addBuilding(2830, 330, 420, 320, 0x5f8ba8, 'Kiosk 24', 'kiosk');
     this.addBuilding(480, 1210, 620, 340, 0x557a91, 'Polizeistation', 'police');
     this.addBuilding(1650, 1210, 700, 350, 0x8b806d, 'Westend Bahnhof', 'station');
     this.addBuilding(2830, 1210, 430, 320, 0xb28d55, 'Eigene Garage', 'garage');
+
+    // Ostkai erweitert die Stadt um einen zweiten klar unterscheidbaren Bereich.
+    g.fillStyle(0x3c444b, 1);
+    g.fillRect(3370, 0, 250, WORLD_HEIGHT);
+    g.fillRect(4270, 0, 250, WORLD_HEIGHT);
+    g.fillStyle(0xbdbcae, 1);
+    g.fillRect(3335, 0, 35, WORLD_HEIGHT);
+    g.fillRect(3620, 0, 35, WORLD_HEIGHT);
+    g.fillRect(4235, 0, 35, WORLD_HEIGHT);
+    g.fillRect(4520, 0, 35, WORLD_HEIGHT);
+
+    g.lineStyle(6, 0xe8db8b, 0.9);
+    for (let y = 20; y < WORLD_HEIGHT; y += 100) {
+      g.lineBetween(3495, y, 3495, y + 52);
+      g.lineBetween(4395, y, 4395, y + 52);
+    }
+
+    this.drawCrosswalk(g, 3495, 815);
+    this.drawCrosswalk(g, 4395, 815);
+    this.drawCrosswalk(g, 3495, 1615);
+    this.drawCrosswalk(g, 4395, 1615);
+
+    this.addBuilding(3860, 325, 430, 330, 0x725ca5, 'Velocity Autohaus', 'dealer');
+    this.addBuilding(4740, 325, 390, 330, 0x658a67, 'Ostkai Markt', 'supermarket');
+    this.addBuilding(3860, 1210, 430, 340, 0x4e7f91, 'MetroExpress Depot', 'metro-depot');
+    this.addBuilding(4740, 1210, 390, 340, 0xa07355, 'Kai-Café', 'harbor-cafe');
+
+    this.add.rectangle(4148, 1994, 1500, 300, 0x13242d, 0.24).setDepth(1);
+    this.add.rectangle(4140, 1985, 1500, 300, 0x397f9f, 1)
+      .setStrokeStyle(8, 0x28596f)
+      .setDepth(2);
+    const water = this.add.graphics().setDepth(2.5);
+    water.lineStyle(4, 0x8ed8ee, 0.38);
+    for (let y = 1880; y <= 2080; y += 42) {
+      for (let x = 3450; x <= 4840; x += 90) {
+        water.beginPath();
+        water.moveTo(x, y);
+        water.lineTo(x + 24, y - 5);
+        water.lineTo(x + 48, y);
+        water.lineTo(x + 72, y - 5);
+        water.strokePath();
+      }
+    }
+    this.add.text(4140, 1985, 'OSTKAI · UFERPROMENADE', {
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '29px',
+      fontStyle: 'bold',
+      color: '#e9f8ff'
+    }).setOrigin(0.5).setDepth(3);
+
+    this.add.text(3315, 715, 'OSTKAI · GTR-KIDS', {
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: '28px',
+      fontStyle: 'bold',
+      color: '#ffffff',
+      backgroundColor: '#17212acc',
+      padding: { x: 14, y: 8 }
+    }).setDepth(10);
 
     // Südlicher Park als belebter Kontrast zu den Gebäuden.
     this.add.rectangle(1580, 1970, 980, 320, 0x4f8558, 1).setStrokeStyle(8, 0x376340).setDepth(2);
@@ -294,7 +556,7 @@ export class CityScene extends Phaser.Scene {
       color: '#e7f3e7'
     }).setOrigin(0.5).setDepth(3);
 
-    this.add.text(65, 715, 'WESTEND · FREISTADT', {
+    this.add.text(65, 715, 'WESTEND · GTR-KIDS', {
       fontFamily: 'system-ui, sans-serif',
       fontSize: '28px',
       fontStyle: 'bold',
@@ -302,6 +564,8 @@ export class CityScene extends Phaser.Scene {
       backgroundColor: '#17212acc',
       padding: { x: 14, y: 8 }
     }).setDepth(10);
+
+    this.addCityDecorations();
   }
 
   private drawCrosswalk(g: Phaser.GameObjects.Graphics, x: number, y: number): void {
@@ -309,6 +573,134 @@ export class CityScene extends Phaser.Scene {
     for (let i = -3; i <= 3; i += 1) {
       g.fillRect(x - 75 + i * 22, y - 135, 12, 270);
     }
+  }
+
+  private addRoadPolish(): void {
+    const road = this.add.graphics().setDepth(2.8);
+
+    // Dunkle Asphaltkanten lassen die Fahrbahn sauberer und tiefer wirken.
+    road.lineStyle(7, 0x263038, 0.85);
+    road.lineBetween(0, 683, WORLD_WIDTH, 683);
+    road.lineBetween(0, 947, WORLD_WIDTH, 947);
+    road.lineBetween(0, 1493, WORLD_WIDTH, 1493);
+    road.lineBetween(0, 1737, WORLD_WIDTH, 1737);
+
+    for (const x of [963, 1227, 2213, 2477, 3373, 3617, 4273, 4517]) {
+      road.lineBetween(x, 0, x, WORLD_HEIGHT);
+    }
+
+    // Asphaltflicken und Gullys als kleine Details.
+    road.fillStyle(0x303940, 0.65);
+    const patches = [
+      [760, 770, 86, 34], [1740, 870, 72, 28], [2680, 1540, 92, 30],
+      [3710, 875, 74, 30], [4610, 1540, 90, 32], [1050, 1320, 34, 72],
+      [2320, 410, 34, 82], [3470, 1190, 36, 72], [4370, 520, 36, 78]
+    ];
+    for (const [x, y, w, h] of patches) {
+      road.fillRoundedRect(x - w / 2, y - h / 2, w, h, 6);
+    }
+
+    const drains = [
+      [890, 705], [1300, 927], [2120, 1515], [2545, 1716],
+      [3310, 705], [3658, 927], [4212, 1515], [4560, 1716]
+    ];
+    for (const [x, y] of drains) {
+      road.fillStyle(0x20282e, 0.95);
+      road.fillRoundedRect(x - 14, y - 7, 28, 14, 3);
+      road.lineStyle(2, 0x77838a, 0.5);
+      road.lineBetween(x - 9, y - 3, x + 9, y - 3);
+      road.lineBetween(x - 9, y + 3, x + 9, y + 3);
+    }
+
+    // Parkbuchten in beiden Stadtteilen.
+    const parkingAreas = [
+      { x: 250, y: 1022, count: 5, horizontal: true },
+      { x: 2580, y: 1022, count: 4, horizontal: true },
+      { x: 3670, y: 1040, count: 4, horizontal: true },
+      { x: 4480, y: 1040, count: 4, horizontal: true },
+      { x: 3160, y: 270, count: 4, horizontal: false }
+    ];
+
+    road.lineStyle(4, 0xe8edf0, 0.74);
+    for (const area of parkingAreas) {
+      for (let i = 0; i < area.count; i += 1) {
+        if (area.horizontal) {
+          const px = area.x + i * 92;
+          road.strokeRect(px, area.y, 78, 52);
+        } else {
+          const py = area.y + i * 82;
+          road.strokeRect(area.x, py, 52, 68);
+        }
+      }
+    }
+
+    // Pfeile geben Kreuzungen und Fahrtrichtung mehr visuelle Lesbarkeit.
+    road.lineStyle(5, 0xf2f3ee, 0.62);
+    const arrows = [
+      [610, 815, 0], [1510, 815, 0], [2840, 815, 0], [3890, 815, 0],
+      [1700, 1615, Math.PI], [2910, 1615, Math.PI], [4040, 1615, Math.PI],
+      [1095, 420, Math.PI / 2], [2345, 1190, -Math.PI / 2], [3495, 400, Math.PI / 2], [4395, 1210, -Math.PI / 2]
+    ];
+    for (const [x, y, angle] of arrows) this.drawRoadArrow(road, x, y, angle);
+
+    // Geparkte Fahrzeuge sorgen für mehr Stadtdichte, bleiben aber rein dekorativ.
+    const parkedCars = [
+      { x: 295, y: 1048, key: 'traffic-car-1', angle: 0 },
+      { x: 480, y: 1048, key: 'traffic-car-4', angle: 0 },
+      { x: 2670, y: 1048, key: 'traffic-car-2', angle: Math.PI },
+      { x: 2855, y: 1048, key: 'traffic-car-5', angle: Math.PI },
+      { x: 3760, y: 1066, key: 'traffic-car-0', angle: 0 },
+      { x: 3945, y: 1066, key: 'traffic-car-3', angle: 0 },
+      { x: 4570, y: 1066, key: 'traffic-car-4', angle: Math.PI },
+      { x: 4755, y: 1066, key: 'traffic-car-2', angle: Math.PI },
+      { x: 3186, y: 355, key: 'traffic-car-5', angle: Math.PI / 2 }
+    ];
+    for (const parked of parkedCars) {
+      this.add.ellipse(parked.x + 5, parked.y + 6, 52, 23, 0x0b141a, 0.22)
+        .setRotation(parked.angle)
+        .setDepth(14);
+      this.add.image(parked.x, parked.y, parked.key)
+        .setRotation(parked.angle)
+        .setAlpha(0.94)
+        .setDepth(15);
+    }
+
+    this.add.text(1590, 705, 'WESTEND RING', {
+      fontFamily: 'system-ui', fontSize: '17px', fontStyle: 'bold', color: '#ffffff'
+    }).setOrigin(0.5).setAlpha(0.22).setDepth(4);
+    this.add.text(3920, 705, 'OSTKAI ALLEE', {
+      fontFamily: 'system-ui', fontSize: '17px', fontStyle: 'bold', color: '#ffffff'
+    }).setOrigin(0.5).setAlpha(0.22).setDepth(4);
+
+    // Parkplatz-Schilder.
+    for (const [x, y] of [[635, 1040], [2910, 1040], [3970, 1055], [4765, 1055]]) {
+      this.add.rectangle(x + 3, y + 4, 34, 34, 0x0a1217, 0.25).setDepth(4);
+      this.add.rectangle(x, y, 32, 32, 0x367fb2, 1).setStrokeStyle(2, 0xffffff, 0.85).setDepth(5);
+      this.add.text(x, y, 'P', {
+        fontFamily: 'system-ui', fontSize: '20px', fontStyle: 'bold', color: '#ffffff'
+      }).setOrigin(0.5).setDepth(6);
+    }
+  }
+
+  private drawRoadArrow(g: Phaser.GameObjects.Graphics, x: number, y: number, angle: number): void {
+    const length = 44;
+    const back = new Phaser.Math.Vector2(-Math.cos(angle), -Math.sin(angle));
+    const side = new Phaser.Math.Vector2(-Math.sin(angle), Math.cos(angle));
+    const tip = new Phaser.Math.Vector2(x, y);
+    const tail = tip.clone().add(back.clone().scale(length));
+    g.lineBetween(tail.x, tail.y, tip.x, tip.y);
+    g.lineBetween(
+      tip.x,
+      tip.y,
+      tip.x + back.x * 15 + side.x * 11,
+      tip.y + back.y * 15 + side.y * 11
+    );
+    g.lineBetween(
+      tip.x,
+      tip.y,
+      tip.x + back.x * 15 - side.x * 11,
+      tip.y + back.y * 15 - side.y * 11
+    );
   }
 
   private addBuilding(
@@ -320,35 +712,130 @@ export class CityScene extends Phaser.Scene {
     name: string,
     placeId: string
   ): void {
-    const rect = this.add.rectangle(x, y, width, height, color, 1)
-      .setStrokeStyle(8, 0x26343d, 0.9)
-      .setDepth(8);
+    const accentByPlace: Record<string, number> = {
+      workshop: 0xf2a34b,
+      cafe: 0xe9b8d5,
+      kiosk: 0x7bc5e8,
+      police: 0x73a6d2,
+      station: 0xd2b36f,
+      garage: 0xe0aa55,
+      dealer: 0xc3a2ff,
+      supermarket: 0x91cf8f,
+      'metro-depot': 0x72c6d7,
+      'harbor-cafe': 0xe4ad87
+    };
+    const accent = accentByPlace[placeId] ?? 0xf0d278;
 
+    // Schlagschatten und Dachkörper.
+    this.add.rectangle(x + 13, y + 15, width, height, 0x13202a, 0.28)
+      .setDepth(6);
+
+    const rect = this.add.rectangle(x, y, width, height, color, 1)
+      .setStrokeStyle(7, 0x26343d, 0.92)
+      .setDepth(8);
     this.physics.add.existing(rect, true);
+
+    // Dachkante und obere Lichtkante.
+    this.add.rectangle(x, y - height * 0.42, width * 0.92, 18, accent, 0.95)
+      .setDepth(8.5);
+    this.add.rectangle(x, y - height * 0.36, width * 0.84, 7, 0xffffff, 0.13)
+      .setDepth(8.6);
+
+    // Dachfenster / Lüfter erzeugen eine lesbare Top-down-Struktur.
+    const windowCount = Math.max(2, Math.min(5, Math.floor(width / 140)));
+    for (let i = 0; i < windowCount; i += 1) {
+      const px = x - width * 0.34 + (windowCount === 1 ? 0 : i * (width * 0.68 / (windowCount - 1)));
+      this.add.rectangle(px, y + height * 0.08, Math.min(58, width * 0.11), Math.min(42, height * 0.12), 0x9bd5e8, 0.78)
+        .setStrokeStyle(3, 0x26343d, 0.65)
+        .setDepth(8.8);
+      this.add.rectangle(px - 5, y + height * 0.08 - 5, Math.min(42, width * 0.08), 4, 0xffffff, 0.22)
+        .setDepth(8.9);
+    }
+
+    // Dachtechnik als kleine Details.
+    this.add.circle(x - width * 0.36, y - height * 0.18, 13, 0x4a5660, 1)
+      .setStrokeStyle(3, 0x26343d, 0.8)
+      .setDepth(9);
+    this.add.rectangle(x + width * 0.34, y - height * 0.17, 32, 22, 0x586872, 1)
+      .setStrokeStyle(3, 0x26343d, 0.8)
+      .setDepth(9);
+
+    const signWidth = Math.min(width * 0.72, 360);
+    this.add.rectangle(x, y - height * 0.20, signWidth, 52, 0x17232d, 0.88)
+      .setStrokeStyle(3, accent, 0.9)
+      .setDepth(9.2);
 
     this.add.text(x, y - height * 0.20, name, {
       fontFamily: 'system-ui, sans-serif',
-      fontSize: '22px',
+      fontSize: Math.max(17, Math.min(23, width * 0.045)) + 'px',
       fontStyle: 'bold',
       color: '#ffffff',
       align: 'center',
-      wordWrap: { width: width * 0.82 }
-    }).setOrigin(0.5).setDepth(9);
+      wordWrap: { width: signWidth * 0.9 }
+    }).setOrigin(0.5).setDepth(9.4);
 
     const doorY = y + height / 2 + 23;
-    const marker = this.add.rectangle(x, doorY, 70, 34, 0x1f7a58, 0.95)
-      .setStrokeStyle(3, 0xffffff, 0.75)
+    this.add.ellipse(x + 5, doorY + 8, 88, 30, 0x102029, 0.30).setDepth(10);
+    const marker = this.add.rectangle(x, doorY, 82, 38, accent, 0.96)
+      .setStrokeStyle(3, 0xffffff, 0.78)
       .setDepth(12);
 
-    this.add.text(x, doorY, 'TÜR', {
+    this.add.text(x, doorY, 'REIN', {
       fontFamily: 'system-ui, sans-serif',
-      fontSize: '13px',
+      fontSize: '12px',
       fontStyle: 'bold',
-      color: '#ffffff'
+      color: '#17232d'
     }).setOrigin(0.5).setDepth(13);
 
     this.doors.push({ x, y: doorY, placeId, placeName: name, marker });
     this.buildingRects.push(rect);
+  }
+
+  private addCityDecorations(): void {
+    const addTree = (x: number, y: number, scale = 1): void => {
+      this.add.ellipse(x + 8 * scale, y + 10 * scale, 48 * scale, 26 * scale, 0x12241a, 0.22).setDepth(3);
+      this.add.circle(x, y, 18 * scale, 0x2f6f43, 1).setStrokeStyle(3, 0x214e31, 0.9).setDepth(4);
+      this.add.circle(x - 8 * scale, y - 5 * scale, 12 * scale, 0x4f9b57, 0.9).setDepth(4.1);
+      this.add.circle(x + 9 * scale, y - 3 * scale, 10 * scale, 0x65ad63, 0.85).setDepth(4.2);
+    };
+
+    const addLamp = (x: number, y: number): void => {
+      this.add.circle(x + 3, y + 5, 8, 0x101820, 0.22).setDepth(3);
+      this.add.circle(x, y, 7, 0xffe9a8, 0.94).setStrokeStyle(3, 0x38434b, 0.95).setDepth(11);
+      this.add.circle(x, y, 15, 0xffefaf, 0.08).setDepth(10);
+    };
+
+    const addBench = (x: number, y: number, rotation = 0): void => {
+      this.add.rectangle(x + 4, y + 5, 54, 15, 0x172027, 0.22).setRotation(rotation).setDepth(3);
+      this.add.rectangle(x, y, 50, 12, 0x9c6a3d, 1).setStrokeStyle(2, 0x5b3c25, 0.9).setRotation(rotation).setDepth(5);
+    };
+
+    const trees = [
+      [120, 120], [330, 110], [690, 120], [1320, 120], [1930, 120], [2660, 110], [3110, 130],
+      [1350, 1880], [1480, 2070], [1710, 1880], [1900, 2070], [2100, 1885],
+      [3260, 170], [3720, 180], [4140, 165], [4630, 160],
+      [3240, 1870], [3390, 2070], [4920, 1810]
+    ];
+    trees.forEach(([x, y], index) => addTree(x, y, 0.85 + (index % 3) * 0.08));
+
+    const lamps = [
+      [900, 620], [1285, 620], [2150, 620], [2510, 620], [3310, 620], [3650, 620], [4210, 620], [4560, 620],
+      [900, 1010], [1285, 1010], [2150, 1010], [2510, 1010], [3310, 1010], [3650, 1010], [4210, 1010], [4560, 1010],
+      [900, 1790], [1285, 1790], [2150, 1790], [2510, 1790], [3310, 1790], [3650, 1790], [4210, 1790], [4560, 1790]
+    ];
+    lamps.forEach(([x, y]) => addLamp(x, y));
+
+    addBench(1380, 1910);
+    addBench(1770, 2030, Math.PI / 2);
+    addBench(2010, 1900);
+    addBench(3820, 1835);
+    addBench(4320, 1835);
+    addBench(4770, 1835);
+
+    // Kleine Poller am Ostkai.
+    for (let x = 3440; x <= 4880; x += 120) {
+      this.add.circle(x, 1815, 6, 0x283942, 1).setStrokeStyle(2, 0xd5dde1, 0.6).setDepth(6);
+    }
   }
 
   private setupBuildingCollisions(): void {
@@ -359,15 +846,44 @@ export class CityScene extends Phaser.Scene {
   }
 
   private createTrafficSignal(): void {
-    const horizontal = this.add.circle(2292, 735, 14, 0x4caf50, 1).setDepth(20);
-    const vertical = this.add.circle(2400, 735, 14, 0xe14b4b, 1).setDepth(20);
+    const makeSignal = (x: number, y: number): {
+      red: Phaser.GameObjects.Arc;
+      amber: Phaser.GameObjects.Arc;
+      green: Phaser.GameObjects.Arc;
+    } => {
+      this.add.rectangle(x + 5, y + 7, 34, 82, 0x0a1116, 0.25).setDepth(19);
+      this.add.rectangle(x, y, 34, 82, 0x202a31, 1)
+        .setStrokeStyle(3, 0x5e6870, 0.9)
+        .setDepth(20);
+      this.add.rectangle(x, y + 58, 6, 52, 0x303a41, 1).setDepth(19.5);
+
+      const red = this.add.circle(x, y - 25, 9, 0x4e2424, 1).setDepth(21);
+      const amber = this.add.circle(x, y, 9, 0x5a4a24, 1).setDepth(21);
+      const green = this.add.circle(x, y + 25, 9, 0x204f32, 1).setDepth(21);
+
+      this.add.circle(x - 3, y - 28, 3, 0xffffff, 0.15).setDepth(22);
+      this.add.circle(x - 3, y - 3, 3, 0xffffff, 0.12).setDepth(22);
+      this.add.circle(x - 3, y + 22, 3, 0xffffff, 0.12).setDepth(22);
+
+      return { red, amber, green };
+    };
+
+    const horizontal = makeSignal(2292, 735);
+    const vertical = makeSignal(2400, 735);
 
     this.time.addEvent({
       delay: 250,
       loop: true,
       callback: () => {
-        horizontal.setFillStyle(this.horizontalSignalGreen ? 0x4caf50 : 0xe14b4b, 1);
-        vertical.setFillStyle(this.horizontalSignalGreen ? 0xe14b4b : 0x4caf50, 1);
+        const horizontalGreen = this.horizontalSignalGreen;
+        horizontal.red.setFillStyle(horizontalGreen ? 0x4e2424 : 0xe14b4b, 1);
+        horizontal.green.setFillStyle(horizontalGreen ? 0x4caf50 : 0x204f32, 1);
+        vertical.red.setFillStyle(horizontalGreen ? 0xe14b4b : 0x4e2424, 1);
+        vertical.green.setFillStyle(horizontalGreen ? 0x204f32 : 0x4caf50, 1);
+
+        const nearSwitch = this.time.now % 7000 > 6100;
+        horizontal.amber.setFillStyle(nearSwitch ? 0xf0b83e : 0x5a4a24, 1);
+        vertical.amber.setFillStyle(nearSwitch ? 0xf0b83e : 0x5a4a24, 1);
       }
     });
   }
@@ -426,6 +942,16 @@ export class CityScene extends Phaser.Scene {
         new Phaser.Math.Vector2(1015, 815),
         new Phaser.Math.Vector2(2415, 815),
         new Phaser.Math.Vector2(2415, 60)
+      ],
+      [
+        new Phaser.Math.Vector2(3260, 760),
+        new Phaser.Math.Vector2(4395, 760),
+        new Phaser.Math.Vector2(4395, 1615),
+        new Phaser.Math.Vector2(3495, 1615),
+        new Phaser.Math.Vector2(3495, 870),
+        new Phaser.Math.Vector2(4940, 870),
+        new Phaser.Math.Vector2(4940, 1540),
+        new Phaser.Math.Vector2(4395, 1540)
       ]
     ];
 
@@ -442,8 +968,7 @@ export class CityScene extends Phaser.Scene {
         const seed = (slot + 0.12 * routeIndex) / perRoute;
         const spawn = this.pointAlongRoute(route, seed);
         const i = routeIndex * perRoute + slot;
-        const sprite = this.add.rectangle(spawn.position.x, spawn.position.y, 54, 28, colors[i % colors.length], 1)
-          .setStrokeStyle(2, 0x1e2a32, 0.8)
+        const sprite = this.add.image(spawn.position.x, spawn.position.y, 'traffic-car-' + (i % colors.length))
           .setDepth(18);
 
         this.traffic.push({
@@ -458,8 +983,7 @@ export class CityScene extends Phaser.Scene {
 
     const policeRoute = routes[0];
     const policeSpawn = this.pointAlongRoute(policeRoute, 0.37);
-    const police = this.add.rectangle(policeSpawn.position.x, policeSpawn.position.y, 58, 30, 0x2d5d9a, 1)
-      .setStrokeStyle(3, 0xffffff, 0.85)
+    const police = this.add.image(policeSpawn.position.x, policeSpawn.position.y, 'traffic-police')
       .setDepth(19);
     const policeLabel = this.add.text(police.x, police.y, 'P', {
       fontFamily: 'system-ui',
@@ -552,12 +1076,8 @@ export class CityScene extends Phaser.Scene {
     if (now - this.lastTrafficImpactAt < 700) return;
 
     this.lastTrafficImpactAt = now;
-    const oldCondition = Number(this.registry.get('vehicleCondition') ?? 100);
     const damage = Phaser.Math.Clamp(Math.abs(this.carSpeed) * 0.012, 1, 7);
-    this.registry.set('vehicleCondition', Math.max(0, oldCondition - damage));
-    this.policeSystem.addHeat(7);
-    this.registry.set('toast', 'Zusammenstoß im Verkehr – Aufmerksamkeit steigt.');
-    this.carSpeed *= 0.28;
+    this.applyVehicleDamage(damage, 7, 'Zusammenstoß im Verkehr – Aufmerksamkeit steigt.', 0.28);
   }
 
   private spawnPedestrians(): void {
@@ -565,7 +1085,9 @@ export class CityScene extends Phaser.Scene {
       [new Phaser.Math.Vector2(150, 620), new Phaser.Math.Vector2(850, 620), new Phaser.Math.Vector2(850, 1010), new Phaser.Math.Vector2(150, 1010)],
       [new Phaser.Math.Vector2(1320, 620), new Phaser.Math.Vector2(2100, 620), new Phaser.Math.Vector2(2100, 1010), new Phaser.Math.Vector2(1320, 1010)],
       [new Phaser.Math.Vector2(2550, 620), new Phaser.Math.Vector2(3080, 620), new Phaser.Math.Vector2(3080, 1010), new Phaser.Math.Vector2(2550, 1010)],
-      [new Phaser.Math.Vector2(1280, 1790), new Phaser.Math.Vector2(2100, 1790), new Phaser.Math.Vector2(2100, 2110), new Phaser.Math.Vector2(1280, 2110)]
+      [new Phaser.Math.Vector2(1280, 1790), new Phaser.Math.Vector2(2100, 1790), new Phaser.Math.Vector2(2100, 2110), new Phaser.Math.Vector2(1280, 2110)],
+      [new Phaser.Math.Vector2(3260, 620), new Phaser.Math.Vector2(4140, 620), new Phaser.Math.Vector2(4140, 1010), new Phaser.Math.Vector2(3260, 1010)],
+      [new Phaser.Math.Vector2(3690, 1790), new Phaser.Math.Vector2(4890, 1790), new Phaser.Math.Vector2(4890, 2110), new Phaser.Math.Vector2(3690, 2110)]
     ];
 
     const colors = [0xf4d4b0, 0xd6b08d, 0x8f654b, 0xe2c5aa, 0xb47b5c];
@@ -580,8 +1102,7 @@ export class CityScene extends Phaser.Scene {
       const route = routes[i % routes.length];
       const progress = ((i * 0.61803398875) % 1 + 0.025 * (i % 4)) % 1;
       const spawn = this.pointAlongRoute(route, progress);
-      const sprite = this.add.circle(spawn.position.x, spawn.position.y, 10, colors[i % colors.length], 1)
-        .setStrokeStyle(2, 0x26343d, 0.8)
+      const sprite = this.add.image(spawn.position.x, spawn.position.y, 'pedestrian-' + (i % 5))
         .setDepth(24);
 
       this.pedestrians.push({
@@ -625,6 +1146,7 @@ export class CityScene extends Phaser.Scene {
       }
 
       const angle = Math.atan2(dy, dx);
+      pedestrian.sprite.setRotation(angle + Math.PI / 2);
       pedestrian.sprite.x += Math.cos(angle) * pedestrian.speed * dt;
       pedestrian.sprite.y += Math.sin(angle) * pedestrian.speed * dt;
     }
@@ -637,40 +1159,145 @@ export class CityScene extends Phaser.Scene {
       .setScrollFactor(0).setDepth(1001).setVisible(false);
 
     const actionRadius = this.appSettings.largeTouchTargets ? 68 : 56;
-    this.actionButton = this.add.circle(1100, 600, actionRadius, 0x1f7a58, 0.90)
-      .setStrokeStyle(4, 0xffffff, 0.70).setScrollFactor(0).setDepth(1000).setInteractive();
+    this.actionGlow = this.add.circle(1105, 606, actionRadius + 9, 0x071118, 0.34)
+      .setScrollFactor(0).setDepth(999);
+    this.actionButton = this.add.circle(1100, 600, actionRadius, 0xf0c94e, 0.97)
+      .setStrokeStyle(5, 0xffffff, 0.76).setScrollFactor(0).setDepth(1000).setInteractive();
     this.actionLabel = this.add.text(1100, 600, 'AKTION', {
-      fontFamily: 'system-ui, sans-serif', fontStyle: 'bold', fontSize: '16px', color: '#ffffff', align: 'center'
+      fontFamily: 'system-ui, sans-serif', fontStyle: 'bold', fontSize: '16px', color: '#17232d', align: 'center'
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(1001);
+    this.actionLabel.setShadow(0, 1, '#ffffff', 2, false, true);
+
+    this.radioShadow = this.add.rectangle(1104, 155, 132, 42, 0x05090c, 0.28)
+      .setScrollFactor(0).setDepth(999);
+    this.radioButton = this.add.rectangle(1100, 150, 128, 40, 0x263c4a, 0.96)
+      .setStrokeStyle(2, 0xf0c94e, 0.68)
+      .setScrollFactor(0)
+      .setDepth(1000)
+      .setInteractive({ useHandCursor: true });
+    this.radioLabel = this.add.text(1100, 150, 'RADIO AUS', {
+      fontFamily: 'system-ui, sans-serif', fontStyle: 'bold', fontSize: '12px', color: '#ffffff', align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(1001);
 
     this.hintText = this.add.text(18, 18, '', {
-      fontFamily: 'system-ui, sans-serif', fontSize: '16px', color: '#ffffff',
-      backgroundColor: '#0d1821d9', padding: { x: 12, y: 9 }
+      fontFamily: 'system-ui, sans-serif', fontSize: '16px', fontStyle: 'bold', color: '#ffffff',
+      backgroundColor: '#12232ee8', padding: { x: 13, y: 9 }
     }).setScrollFactor(0).setDepth(1000);
+    this.hintText.setShadow(0, 2, '#000000', 4, true, true);
 
     this.statusText = this.add.text(18, 67, '', {
       fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: '14px', color: '#dce8ef',
-      backgroundColor: '#0d1821b8', padding: { x: 10, y: 7 }
+      backgroundColor: '#101b23dc', padding: { x: 11, y: 7 }
     }).setScrollFactor(0).setDepth(1000);
 
     this.missionHudText = this.add.text(18, 112, '', {
-      fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#fff4c7',
-      backgroundColor: '#332a17d9', padding: { x: 10, y: 7 },
+      fontFamily: 'system-ui, sans-serif', fontSize: '14px', fontStyle: 'bold', color: '#fff1a6',
+      backgroundColor: '#342a14e8', padding: { x: 11, y: 8 },
       wordWrap: { width: 520 }
     }).setScrollFactor(0).setDepth(1000);
 
     this.toastText = this.add.text(0, 0, '', {
-      fontFamily: 'system-ui, sans-serif', fontSize: '16px', fontStyle: 'bold', color: '#ffffff',
-      backgroundColor: '#1f7a58e8', padding: { x: 14, y: 9 }, align: 'center'
+      fontFamily: 'system-ui, sans-serif', fontSize: '16px', fontStyle: 'bold', color: '#17232d',
+      backgroundColor: '#f0cf62f2', padding: { x: 15, y: 10 }, align: 'center'
     }).setOrigin(0.5).setScrollFactor(0).setDepth(1100).setVisible(false);
+    this.toastText.setShadow(0, 2, '#000000', 4, false, true);
 
     this.actionButton.on('pointerdown', () => this.performAction());
+  }
+
+  private createMinimap(): void {
+    const mapWidth = 190;
+    const mapHeight = 96;
+    const shadow = this.add.rectangle(5, 6, mapWidth + 8, mapHeight + 8, 0x05090c, 0.28);
+    const background = this.add.rectangle(0, 0, mapWidth, mapHeight, 0x101921, 0.93)
+      .setStrokeStyle(3, 0xf0c94e, 0.58);
+    const accent = this.add.rectangle(0, -mapHeight / 2 + 5, mapWidth - 8, 6, 0x56b9d4, 0.85);
+    const roads = this.add.graphics();
+    roads.lineStyle(5, 0x6d767d, 0.95);
+    const sx = mapWidth / WORLD_WIDTH;
+    const sy = mapHeight / WORLD_HEIGHT;
+
+    const drawLine = (x1: number, y1: number, x2: number, y2: number): void => {
+      roads.lineBetween(
+        -mapWidth / 2 + x1 * sx,
+        -mapHeight / 2 + y1 * sy,
+        -mapWidth / 2 + x2 * sx,
+        -mapHeight / 2 + y2 * sy
+      );
+    };
+
+    drawLine(0, 815, WORLD_WIDTH, 815);
+    drawLine(0, 1615, WORLD_WIDTH, 1615);
+    for (const x of [1095, 2345, 3495, 4395]) drawLine(x, 0, x, WORLD_HEIGHT);
+
+    const westendLabel = this.add.text(-mapWidth * 0.30, -mapHeight * 0.38, 'WEST', {
+      fontFamily: 'system-ui', fontSize: '9px', fontStyle: 'bold', color: '#a9c4d2'
+    }).setOrigin(0.5);
+    const ostkaiLabel = this.add.text(mapWidth * 0.29, -mapHeight * 0.38, 'OSTKAI', {
+      fontFamily: 'system-ui', fontSize: '9px', fontStyle: 'bold', color: '#a9c4d2'
+    }).setOrigin(0.5);
+
+    this.minimapPlayer = this.add.circle(0, 0, 4, 0x8ce6ff, 1).setStrokeStyle(1, 0xffffff, 1);
+    this.minimapVehicle = this.add.rectangle(0, 0, 8, 5, 0xffb34f, 1).setStrokeStyle(1, 0xffffff, 0.8);
+    this.minimapMission = this.add.circle(0, 0, 5, 0xffdf5f, 0.95)
+      .setStrokeStyle(2, 0xffffff, 0.9)
+      .setVisible(false);
+
+    this.minimapContainer = this.add.container(0, 0, [
+      shadow,
+      background,
+      accent,
+      roads,
+      westendLabel,
+      ostkaiLabel,
+      this.minimapPlayer,
+      this.minimapVehicle,
+      this.minimapMission
+    ]).setScrollFactor(0).setDepth(1002);
+  }
+
+  private updateMinimap(): void {
+    if (!this.minimapContainer) return;
+
+    const unlocked = this.registry.get('mapUnlocked') === true;
+    this.minimapContainer.setVisible(unlocked);
+    if (!unlocked) return;
+
+    const mapWidth = 190;
+    const mapHeight = 96;
+    const toLocalX = (x: number): number => -mapWidth / 2 + Phaser.Math.Clamp(x, 0, WORLD_WIDTH) / WORLD_WIDTH * mapWidth;
+    const toLocalY = (y: number): number => -mapHeight / 2 + Phaser.Math.Clamp(y, 0, WORLD_HEIGHT) / WORLD_HEIGHT * mapHeight;
+
+    this.minimapPlayer
+      .setPosition(toLocalX(this.player.x), toLocalY(this.player.y))
+      .setVisible(this.mode === 'on-foot');
+    this.minimapVehicle
+      .setPosition(toLocalX(this.car.x), toLocalY(this.car.y))
+      .setRotation(this.car.rotation)
+      .setVisible(true);
+
+    const stage = this.missionSystem.getActiveStage();
+    if (stage && typeof stage.x === 'number' && typeof stage.y === 'number') {
+      this.minimapMission.setPosition(toLocalX(stage.x), toLocalY(stage.y)).setVisible(true);
+    } else {
+      this.minimapMission.setVisible(false);
+    }
   }
 
   private bindPointerControls(): void {
     this.input.addPointer(2);
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      void this.audioSystem.unlock();
+
+      if (this.radioButton) {
+        const bounds = this.radioButton.getBounds();
+        if (Phaser.Geom.Rectangle.Contains(bounds, pointer.x, pointer.y)) {
+          void this.cycleRadio();
+          return;
+        }
+      }
+
       if (this.actionButton) {
         const actionDistance = Phaser.Math.Distance.Between(
           pointer.x,
@@ -740,6 +1367,185 @@ export class CityScene extends Phaser.Scene {
     return v;
   }
 
+  private updateActorVisuals(): void {
+    if (this.playerShadow && this.player) {
+      this.playerShadow
+        .setPosition(this.player.x + 5, this.player.y + 12)
+        .setVisible(this.mode === 'on-foot' && this.player.visible);
+    }
+
+    if (!this.carShadow || !this.car) return;
+
+    const profile = getVehicleProfile(this.registry.get('currentVehicleId'));
+    const speedRatio = Phaser.Math.Clamp(Math.abs(this.carSpeed) / Math.max(1, profile.maxForward), 0, 1);
+    const visualAcceleration = Phaser.Math.Clamp((this.carSpeed - this.lastCarVisualSpeed) / 32, -0.035, 0.035);
+    const stretch = this.appSettings.reducedMotion ? 0 : visualAcceleration;
+
+    this.car
+      .setDisplaySize(profile.width * (1 + stretch), profile.height * (1 - stretch * 0.55));
+
+    this.carShadow
+      .setPosition(this.car.x + 7, this.car.y + 9 + speedRatio * 3)
+      .setSize(profile.width * (0.88 + speedRatio * 0.03), profile.height * (0.58 - speedRatio * 0.05))
+      .setRotation(this.car.rotation)
+      .setAlpha(0.32 - speedRatio * 0.08)
+      .setVisible(true);
+
+    this.motionFx.clear();
+    if (this.mode === 'vehicle' && speedRatio > 0.58 && !this.appSettings.reducedMotion) {
+      const backAngle = this.car.rotation + Math.PI;
+      const back = new Phaser.Math.Vector2(Math.cos(backAngle), Math.sin(backAngle));
+      const side = new Phaser.Math.Vector2(-back.y, back.x);
+      const strength = Phaser.Math.Clamp((speedRatio - 0.58) / 0.42, 0, 1);
+      this.motionFx.lineStyle(3, 0xeaf6fb, 0.18 + strength * 0.22);
+
+      for (const offset of [-26, 0, 26]) {
+        const startX = this.car.x + back.x * (profile.width * 0.48) + side.x * offset;
+        const startY = this.car.y + back.y * (profile.width * 0.48) + side.y * offset;
+        const streak = 20 + strength * 42;
+        this.motionFx.lineBetween(
+          startX,
+          startY,
+          startX + back.x * streak,
+          startY + back.y * streak
+        );
+      }
+    }
+
+    this.drawVehicleLightsAndDamage(profile, speedRatio);
+    this.maybeCreateTireMarks(profile, speedRatio);
+    this.lastCarVisualSpeed = this.carSpeed;
+  }
+
+  private carLocalPoint(forwardOffset: number, sideOffset: number): Phaser.Math.Vector2 {
+    const forward = new Phaser.Math.Vector2(Math.cos(this.car.rotation), Math.sin(this.car.rotation));
+    const side = new Phaser.Math.Vector2(-forward.y, forward.x);
+    return new Phaser.Math.Vector2(
+      this.car.x + forward.x * forwardOffset + side.x * sideOffset,
+      this.car.y + forward.y * forwardOffset + side.y * sideOffset
+    );
+  }
+
+  private getVehicleDamageStage(condition: number): { level: number; label: string } {
+    if (condition <= 0) return { level: 4, label: 'FAHRUNFÄHIG' };
+    if (condition <= 25) return { level: 3, label: 'STARK BESCHÄDIGT' };
+    if (condition <= 50) return { level: 2, label: 'BESCHÄDIGT' };
+    if (condition <= 75) return { level: 1, label: 'KRATZER' };
+    return { level: 0, label: 'INTAKT' };
+  }
+
+  private drawVehicleLightsAndDamage(
+    profile: ReturnType<typeof getVehicleProfile>,
+    speedRatio: number
+  ): void {
+    this.vehicleFx.clear();
+
+    const rear = -profile.width * 0.43;
+    const front = profile.width * 0.43;
+    const sideOffset = profile.height * 0.28;
+    const braking = this.mode === 'vehicle' && this.lastThrottleInput < -0.16 && this.carSpeed > 35;
+    const reversing = this.mode === 'vehicle' && this.carSpeed < -8;
+    const indicatorOn = Math.floor(this.time.now / 330) % 2 === 0 && Math.abs(this.lastSteerInput) > 0.38;
+
+    if (braking) {
+      this.vehicleFx.fillStyle(0xff2f2f, 0.96);
+      for (const side of [-sideOffset, sideOffset]) {
+        const p = this.carLocalPoint(rear, side);
+        this.vehicleFx.fillCircle(p.x, p.y, 5.5);
+        this.vehicleFx.fillStyle(0xff5b45, 0.16);
+        this.vehicleFx.fillCircle(p.x, p.y, 11);
+        this.vehicleFx.fillStyle(0xff2f2f, 0.96);
+      }
+    }
+
+    if (reversing) {
+      this.vehicleFx.fillStyle(0xeef8ff, 0.95);
+      for (const side of [-sideOffset * 0.72, sideOffset * 0.72]) {
+        const p = this.carLocalPoint(rear + 4, side);
+        this.vehicleFx.fillCircle(p.x, p.y, 3.5);
+      }
+    }
+
+    if (indicatorOn) {
+      const blinkSide = this.lastSteerInput > 0 ? sideOffset : -sideOffset;
+      this.vehicleFx.fillStyle(0xffb52f, 1);
+      for (const longitudinal of [rear + 2, front - 2]) {
+        const p = this.carLocalPoint(longitudinal, blinkSide);
+        this.vehicleFx.fillCircle(p.x, p.y, 4.5);
+      }
+    }
+
+    const condition = Phaser.Math.Clamp(Number(this.registry.get('vehicleCondition') ?? 100), 0, 100);
+    const damage = this.getVehicleDamageStage(condition);
+    if (damage.level >= 1) {
+      const scratchA = this.carLocalPoint(profile.width * 0.10, -profile.height * 0.20);
+      const scratchB = this.carLocalPoint(profile.width * 0.25, profile.height * 0.12);
+      this.vehicleFx.lineStyle(2, 0x4c5960, 0.88);
+      this.vehicleFx.lineBetween(scratchA.x - 7, scratchA.y - 4, scratchA.x + 8, scratchA.y + 5);
+      this.vehicleFx.lineBetween(scratchB.x - 6, scratchB.y + 5, scratchB.x + 6, scratchB.y - 5);
+    }
+
+    if (damage.level >= 2) {
+      const dent = this.carLocalPoint(profile.width * 0.27, 0);
+      this.vehicleFx.lineStyle(3, 0x26323a, 0.9);
+      this.vehicleFx.strokeCircle(dent.x, dent.y, 8);
+      this.vehicleFx.lineBetween(dent.x - 10, dent.y, dent.x + 10, dent.y);
+      this.vehicleFx.lineBetween(dent.x, dent.y - 8, dent.x, dent.y + 8);
+    }
+
+    if (damage.level >= 3) {
+      const smokeOrigin = this.carLocalPoint(profile.width * 0.38, 0);
+      const phase = this.time.now / 260;
+      for (let i = 0; i < 4; i += 1) {
+        const rise = (phase + i * 0.9) % 4;
+        const alpha = Math.max(0.06, 0.30 - rise * 0.055);
+        this.vehicleFx.fillStyle(damage.level >= 4 ? 0x30383d : 0x69747a, alpha);
+        this.vehicleFx.fillCircle(
+          smokeOrigin.x + Math.sin(phase + i) * 8,
+          smokeOrigin.y - 6 - rise * 8,
+          6 + rise * 2
+        );
+      }
+    }
+
+    if (damage.level >= 4) {
+      const pulse = 0.45 + Math.sin(this.time.now / 160) * 0.18;
+      this.vehicleFx.lineStyle(4, 0xff5348, pulse);
+      this.vehicleFx.strokeCircle(this.car.x, this.car.y, Math.max(profile.width, profile.height) * 0.58);
+    }
+
+    if (this.mode !== 'vehicle' || speedRatio < 0.04) {
+      this.lastThrottleInput = 0;
+      this.lastSteerInput = 0;
+    }
+  }
+
+  private maybeCreateTireMarks(
+    profile: ReturnType<typeof getVehicleProfile>,
+    speedRatio: number
+  ): void {
+    if (this.mode !== 'vehicle') return;
+    const hardTurn = speedRatio > 0.48 && Math.abs(this.lastSteerInput) > 0.52;
+    const hardBrake = this.lastThrottleInput < -0.35 && this.carSpeed > 120;
+    if (!hardTurn && !hardBrake) return;
+    if (this.time.now - this.lastTireMarkAt < 85) return;
+    this.lastTireMarkAt = this.time.now;
+
+    const rear = -profile.width * 0.34;
+    const sideOffset = profile.height * 0.29;
+    for (const side of [-sideOffset, sideOffset]) {
+      const p = this.carLocalPoint(rear, side);
+      const mark = this.add.rectangle(p.x, p.y, 16, 3, 0x172027, 0.25)
+        .setRotation(this.car.rotation)
+        .setDepth(5);
+      this.tireMarks.push(mark);
+    }
+
+    while (this.tireMarks.length > 80) {
+      this.tireMarks.shift()?.destroy();
+    }
+  }
+
   private updatePlayer(): void {
     const input = this.getMovementInput();
     const sprinting = Boolean(this.keys?.SHIFT?.isDown);
@@ -752,19 +1558,22 @@ export class CityScene extends Phaser.Scene {
     const input = this.getMovementInput();
     const throttle = -input.y;
     const steer = input.x;
+    this.lastThrottleInput = throttle;
+    this.lastSteerInput = steer;
     const condition = Phaser.Math.Clamp(Number(this.registry.get('vehicleCondition') ?? 100), 0, 100);
     const conditionRatio = condition / 100;
     const conditionFactor = condition <= 0 ? 0 : Phaser.Math.Linear(0.38, 1, conditionRatio);
-    const maxForward = 610 * conditionFactor;
-    const maxReverse = -230 * conditionFactor;
+    const profile = getVehicleProfile(this.registry.get('currentVehicleId'));
+    const maxForward = profile.maxForward * conditionFactor;
+    const maxReverse = -profile.maxReverse * conditionFactor;
 
     if (throttle > 0.08) {
-      this.carSpeed += 560 * conditionFactor * throttle * dt;
+      this.carSpeed += profile.acceleration * conditionFactor * throttle * dt;
     } else if (throttle < -0.08) {
-      if (this.carSpeed > 45) this.carSpeed += 760 * throttle * dt;
-      else this.carSpeed += 350 * throttle * dt;
+      if (this.carSpeed > 45) this.carSpeed += profile.braking * throttle * dt;
+      else this.carSpeed += profile.acceleration * 0.62 * throttle * dt;
     } else {
-      const resistance = 270 * dt;
+      const resistance = profile.rollingResistance * dt;
       if (Math.abs(this.carSpeed) <= resistance) {
         this.carSpeed = 0;
       } else {
@@ -773,8 +1582,8 @@ export class CityScene extends Phaser.Scene {
     }
 
     this.carSpeed = Phaser.Math.Clamp(this.carSpeed, maxReverse, maxForward);
-    const speedRatio = Phaser.Math.Clamp(Math.abs(this.carSpeed) / 610, 0, 1);
-    const steeringStrength = Phaser.Math.Linear(2.65, 1.35, speedRatio);
+    const speedRatio = Phaser.Math.Clamp(Math.abs(this.carSpeed) / Math.max(1, profile.maxForward), 0, 1);
+    const steeringStrength = Phaser.Math.Linear(profile.steeringLow, profile.steeringHigh, speedRatio);
     const reverseFactor = this.carSpeed < 0 ? -1 : 1;
     if (Math.abs(this.carSpeed) > 12) this.car.rotation += steer * steeringStrength * reverseFactor * dt;
 
@@ -789,18 +1598,84 @@ export class CityScene extends Phaser.Scene {
     if (Math.abs(this.carSpeed) < 120) return;
 
     this.lastCarImpactAt = now;
-    const oldCondition = Number(this.registry.get('vehicleCondition') ?? 100);
     const damage = Phaser.Math.Clamp(Math.abs(this.carSpeed) * 0.018, 2, 10);
-    this.registry.set('vehicleCondition', Math.max(0, oldCondition - damage));
-    this.policeSystem.addHeat(4);
-    this.registry.set('toast', 'Fahrzeug beschädigt – Werkstatt kann helfen.');
-    this.carSpeed *= -0.18;
+    this.applyVehicleDamage(damage, 4, 'Fahrzeug beschädigt – Werkstatt kann helfen.', -0.18);
+  }
+
+  private applyVehicleDamage(
+    damage: number,
+    heat: number,
+    message: string,
+    speedMultiplier: number
+  ): void {
+    const oldCondition = Phaser.Math.Clamp(Number(this.registry.get('vehicleCondition') ?? 100), 0, 100);
+    const newCondition = Phaser.Math.Clamp(oldCondition - Math.max(0, damage), 0, 100);
+    const before = this.getVehicleDamageStage(oldCondition);
+    const after = this.getVehicleDamageStage(newCondition);
+
+    this.registry.set('vehicleCondition', newCondition);
+    this.policeSystem.addHeat(heat);
+    this.registry.set(
+      'toast',
+      after.level > before.level
+        ? message + ' · ' + after.label
+        : message
+    );
+
+    this.spawnImpactBurst(after.level);
+    this.carSpeed *= speedMultiplier;
+  }
+
+  private spawnImpactBurst(damageLevel: number): void {
+    const front = this.carLocalPoint(
+      getVehicleProfile(this.registry.get('currentVehicleId')).width * 0.44,
+      0
+    );
+    const offsets = [
+      [-12, -8], [9, -11], [14, 6], [-8, 12], [0, 0]
+    ];
+
+    offsets.forEach(([dx, dy], index) => {
+      const spark = this.add.circle(
+        front.x + dx,
+        front.y + dy,
+        3 + (index % 2),
+        damageLevel >= 3 ? 0xff8d3a : 0xffd25a,
+        0.92
+      ).setDepth(35);
+
+      this.tweens.add({
+        targets: spark,
+        x: spark.x + dx * 1.8,
+        y: spark.y + dy * 1.8,
+        alpha: 0,
+        scale: 1.8,
+        duration: 240 + index * 35,
+        onComplete: () => spark.destroy()
+      });
+    });
   }
 
   private updateActionInput(): void {
     const eDown = Boolean(this.keys?.E?.isDown);
     if (eDown && !this.lastActionDown) this.performAction();
     this.lastActionDown = eDown;
+
+    const radioDown = Boolean(this.keys?.R?.isDown);
+    if (radioDown && !this.lastRadioDown) void this.cycleRadio();
+    this.lastRadioDown = radioDown;
+  }
+
+  private async cycleRadio(): Promise<void> {
+    await this.audioSystem.cycleRadio();
+    if (this.radioLabel) this.radioLabel.setText(this.audioSystem.getChannelLabel());
+    this.registry.set('toast', this.audioSystem.getChannelLabel());
+  }
+
+  private updateAudio(): void {
+    const profile = getVehicleProfile(this.registry.get('currentVehicleId'));
+    const speedRatio = Phaser.Math.Clamp(Math.abs(this.carSpeed) / Math.max(1, profile.maxForward), 0, 1);
+    this.audioSystem.updateEngine(speedRatio, this.mode === 'vehicle');
   }
 
   private performAction(): void {
@@ -846,6 +1721,27 @@ export class CityScene extends Phaser.Scene {
             return;
           }
         }
+      }
+    }
+
+    const collectible = this.getNearestCollectible();
+    if (collectible && collectible.distance <= 95) {
+      const definition = collectible.marker.definition;
+      if (!this.collectedCollectibles.has(definition.id)) {
+        this.collectedCollectibles.add(definition.id);
+        collectible.marker.marker.setVisible(false);
+        collectible.marker.label.setVisible(false);
+        const credits = Number(this.registry.get('credits') ?? 500);
+        const count = this.collectedCollectibles.size;
+        const milestoneBonus = count % 4 === 0 ? 75 : 0;
+        this.registry.set('credits', credits + definition.reward + milestoneBonus);
+        this.registry.set(
+          'toast',
+          definition.label + ' gefunden · +' + definition.reward + ' CR' +
+            (milestoneBonus > 0 ? ' · Sammlerbonus +' + milestoneBonus + ' CR' : '')
+        );
+        void this.saveGame();
+        return;
       }
     }
 
@@ -973,6 +1869,13 @@ export class CityScene extends Phaser.Scene {
       return;
     }
 
+    const nearestCollectible = this.getNearestCollectible();
+    if (nearestCollectible && nearestCollectible.distance <= 95) {
+      this.hintText.setText(nearestCollectible.marker.definition.label + ' · Aktion zum Einsammeln');
+      this.actionLabel.setText('SAMMELN');
+      return;
+    }
+
     if (this.currentEvent && Phaser.Math.Distance.Between(this.player.x, this.player.y, this.currentEvent.x, this.currentEvent.y) <= 100) {
       this.hintText.setText(this.currentEvent.label + ' · Aktion zum Helfen');
       this.actionLabel.setText('HELFEN');
@@ -1023,9 +1926,11 @@ export class CityScene extends Phaser.Scene {
           ? 'VERFOLGUNG'
           : 'KONTROLLE';
     const compactHud = this.scale.width < 700;
+    const vehicleName = getVehicleProfile(this.registry.get('currentVehicleId')).name;
+    const damageStage = this.getVehicleDamageStage(condition);
     const base = compactHud
-      ? 'CR ' + credits + ' · AUTO ' + condition + '% · A ' + heatLevel + '/5 · ' + stateLabel
-      : 'CR ' + credits + ' · AUTO ' + condition + '% · AUFMERKSAMKEIT ' + heatLevel + '/5 · ' + stateLabel;
+      ? 'CR ' + credits + ' · ' + vehicleName + ' ' + condition + '% ' + damageStage.label + ' · A ' + heatLevel + '/5 · ' + stateLabel
+      : 'CR ' + credits + ' · ' + vehicleName + ' ' + condition + '% · ' + damageStage.label + ' · AUFMERKSAMKEIT ' + heatLevel + '/5 · ' + stateLabel;
     this.statusText.setText(
       this.mode === 'vehicle'
         ? base + (compactHud ? ' · ' + kmh + ' km/h' : ' · ~' + kmh + ' km/h')
@@ -1044,6 +1949,45 @@ export class CityScene extends Phaser.Scene {
     }
   }
 
+
+  private spawnCollectibles(): void {
+    this.collectibleMarkers = COLLECTIBLES.map((definition) => {
+      const marker = this.add.circle(definition.x, definition.y, 17, 0x7bd3c8, 0.96)
+        .setStrokeStyle(3, 0xffffff, 0.88)
+        .setDepth(39);
+      const label = this.add.text(definition.x, definition.y, '◆', {
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '16px',
+        fontStyle: 'bold',
+        color: '#ffffff'
+      }).setOrigin(0.5).setDepth(40);
+      return { definition, marker, label };
+    });
+    this.refreshCollectibles();
+  }
+
+  private refreshCollectibles(): void {
+    for (const collectible of this.collectibleMarkers) {
+      const visible = !this.collectedCollectibles.has(collectible.definition.id);
+      collectible.marker.setVisible(visible);
+      collectible.label.setVisible(visible);
+    }
+  }
+
+  private getNearestCollectible(): { marker: CollectibleMarker; distance: number } | null {
+    let best: { marker: CollectibleMarker; distance: number } | null = null;
+    for (const marker of this.collectibleMarkers) {
+      if (this.collectedCollectibles.has(marker.definition.id)) continue;
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x,
+        this.player.y,
+        marker.definition.x,
+        marker.definition.y
+      );
+      if (!best || distance < best.distance) best = { marker, distance };
+    }
+    return best;
+  }
 
   private createPhaseThreeMarkers(): void {
     this.missionBoard = this.add.circle(850, 1015, 28, 0x6a4b9b, 0.96)
@@ -1210,7 +2154,24 @@ export class CityScene extends Phaser.Scene {
 
   private onResumeFromInterior(): void {
     this.registry.set('vehicleCondition', Phaser.Math.Clamp(Number(this.registry.get('vehicleCondition') ?? 100), 0, 100));
+    this.registry.set('ownedVehicleIds', sanitizeOwnedVehicles(this.registry.get('ownedVehicleIds')));
+    this.applyActiveVehicleProfile();
     void this.saveGame();
+  }
+
+  private applyActiveVehicleProfile(): void {
+    if (!this.car) return;
+    const owned = sanitizeOwnedVehicles(this.registry.get('ownedVehicleIds'));
+    const requested = getVehicleProfile(this.registry.get('currentVehicleId')).id;
+    const activeId = owned.includes(requested) ? requested : 'city_compact';
+    const profile = getVehicleProfile(activeId);
+    this.registry.set('currentVehicleId', profile.id);
+    this.registry.set('ownedVehicleIds', owned);
+    this.car.setTexture('vehicle-' + profile.id);
+    this.car.setDisplaySize(profile.width, profile.height);
+    const body = this.car.body as Phaser.Physics.Arcade.Body;
+    body.setSize(profile.width * 0.82, profile.height * 0.78, true);
+    this.carSpeed = Phaser.Math.Clamp(this.carSpeed, -profile.maxReverse, profile.maxForward);
   }
 
   private layoutHud(): void {
@@ -1221,9 +2182,24 @@ export class CityScene extends Phaser.Scene {
     const height = Math.max(240, this.scale.height);
     const actionX = width - Math.max(78, width * 0.075);
     const actionY = height - Math.max(82, height * 0.12);
+    this.actionGlow.setPosition(actionX + 5, actionY + 6);
     this.actionButton.setPosition(actionX, actionY);
     this.actionLabel.setPosition(actionX, actionY);
+    const radioX = width - Math.max(76, width * 0.065);
+    const radioY = width < 700 ? 108 : 130;
+    this.radioShadow?.setPosition(radioX + 4, radioY + 5);
+    this.radioButton?.setPosition(radioX, radioY);
+    this.radioLabel?.setPosition(radioX, radioY);
     this.toastText.setPosition(width / 2, Math.max(95, height * 0.13));
+    if (this.minimapContainer) {
+      const compactMap = width < 700;
+      this.minimapContainer
+        .setScale(compactMap ? 0.78 : 1)
+        .setPosition(
+          width - (compactMap ? 86 : 110),
+          Math.max(compactMap ? 52 : 64, height * 0.09)
+        );
+    }
 
     const compact = width < 700;
     const textScale = this.appSettings.textScale;
@@ -1264,6 +2240,11 @@ export class CityScene extends Phaser.Scene {
     this.registry.set('credits', credits);
     this.registry.set('vehicleCondition', condition);
     this.registry.set('mapUnlocked', save.mapUnlocked === true);
+    this.collectedCollectibles = new Set(sanitizeCollectedIds(save.collectibles));
+    this.refreshCollectibles();
+    this.registry.set('ownedVehicleIds', sanitizeOwnedVehicles(save.garage.ownedVehicleIds));
+    this.registry.set('currentVehicleId', getVehicleProfile(save.garage.currentVehicleId).id);
+    this.applyActiveVehicleProfile();
     this.reputation = sanitizeReputation(save.reputation);
     this.policeSystem.setHeat(save.heat);
     this.missionSystem.load(save.missions);
@@ -1292,7 +2273,7 @@ export class CityScene extends Phaser.Scene {
     if (!this.player || !this.car) return;
 
     const data: FreistadtSaveData = {
-      version: 3,
+      version: 4,
       credits: Math.floor(this.finiteClamp(Number(this.registry.get('credits') ?? 500), 0, 999999999, 500)),
       mapUnlocked: this.registry.get('mapUnlocked') === true,
       mode: this.mode,
@@ -1306,6 +2287,11 @@ export class CityScene extends Phaser.Scene {
         rotation: Number.isFinite(this.car.rotation) ? Phaser.Math.Angle.Wrap(this.car.rotation) : 0,
         condition: this.finiteClamp(Number(this.registry.get('vehicleCondition') ?? 100), 0, 100, 100)
       },
+      garage: {
+        currentVehicleId: getVehicleProfile(this.registry.get('currentVehicleId')).id,
+        ownedVehicleIds: sanitizeOwnedVehicles(this.registry.get('ownedVehicleIds'))
+      },
+      collectibles: sanitizeCollectedIds([...this.collectedCollectibles]),
       reputation: sanitizeReputation(this.reputation),
       heat: this.policeSystem.getHeat(),
       missions: this.missionSystem.snapshot(),
@@ -1327,7 +2313,12 @@ export class CityScene extends Phaser.Scene {
           car: { x: scene.car.x, y: scene.car.y, rotation: scene.car.rotation, speed: scene.carSpeed },
           credits: Number(scene.registry.get('credits') ?? 0),
           condition: Number(scene.registry.get('vehicleCondition') ?? 0),
+          damageStage: scene.getVehicleDamageStage(Number(scene.registry.get('vehicleCondition') ?? 100)).label,
+          tireMarkCount: scene.tireMarks.length,
           mapUnlocked: scene.registry.get('mapUnlocked') === true,
+          currentVehicleId: scene.registry.get('currentVehicleId'),
+          ownedVehicleIds: sanitizeOwnedVehicles(scene.registry.get('ownedVehicleIds')),
+          collectibles: [...scene.collectedCollectibles],
           heat: scene.policeSystem.getHeat(),
           policeState: scene.policeSystem.getState(),
           reputation: { ...scene.reputation },
