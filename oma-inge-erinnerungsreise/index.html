@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#f6efe2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Oma Inge">
+<title>Oma Inges Erinnerungsreise</title>
+<style>
+:root{
+  --paper:#f6efe2;--cream:#fffaf1;--ink:#2b2925;--muted:#676157;--blue:#5278a8;
+  --blue-dark:#355875;--green:#6b8f5a;--gold:#d6a646;--rose:#b96b72;--line:#d7cdbd;
+  --safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;min-height:100%;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+body{min-height:100dvh;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+button,a{font:inherit}
+button{touch-action:manipulation}
+#app{min-height:100dvh;height:100dvh;padding:calc(10px + var(--safe-top)) calc(12px + var(--safe-right)) calc(10px + var(--safe-bottom)) calc(12px + var(--safe-left));display:flex;flex-direction:column;gap:10px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:46px}
+.hub,.smallbtn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;border:2px solid var(--line);border-radius:15px;background:rgba(255,250,241,.92);color:var(--ink);text-decoration:none;font-weight:800;padding:8px 12px}
+.top-actions{display:flex;gap:8px}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column}
+.card{background:var(--cream);border:2px solid var(--line);border-radius:24px;box-shadow:0 8px 24px rgba(67,55,39,.08)}
+.hero{flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(145px,.55fr);align-items:center;gap:14px;padding:18px;min-height:0}
+.hero-copy h1{font-size:clamp(2rem,8vw,3.6rem);line-height:.98;margin:0 0 10px;letter-spacing:-.04em}
+.hero-copy p{font-size:clamp(1.15rem,4.4vw,1.55rem);line-height:1.35;margin:0;color:var(--muted)}
+.primary{width:100%;min-height:76px;border:0;border-radius:22px;background:var(--blue);color:white;font-weight:900;font-size:clamp(1.35rem,5vw,1.75rem);padding:16px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.14)}
+.primary:active{transform:translateY(1px)}
+.inge{position:relative;width:min(38vw,190px);aspect-ratio:4/5;margin:auto}
+.hair{position:absolute;left:14%;top:1%;width:72%;height:43%;border-radius:48% 48% 40% 40%;background:#d8d8d8;border:4px solid #a7a7a7}
+.head{position:absolute;left:21%;top:17%;width:58%;height:50%;border-radius:44% 44% 48% 48%;background:#f2d1b3;border:3px solid #caa888}
+.glasses{position:absolute;left:24%;top:35%;width:52%;height:16%}
+.glasses:before,.glasses:after{content:"";position:absolute;width:33%;height:74%;border:3px solid #57534f;border-radius:50%}
+.glasses:before{left:0}.glasses:after{right:0}
+.bridge{position:absolute;left:45%;top:40%;width:11%;border-top:3px solid #57534f}
+.eye1,.eye2{position:absolute;top:42%;width:5%;height:5%;border-radius:50%;background:#383532}
+.eye1{left:34%}.eye2{right:34%}
+.smile{position:absolute;left:41%;top:56%;width:18%;height:9%;border-bottom:4px solid #9c5c58;border-radius:50%}
+.body{position:absolute;left:12%;bottom:0;width:76%;height:40%;border-radius:34px 34px 15px 15px;background:var(--blue);border:4px solid var(--blue-dark)}
+.name{position:absolute;left:0;right:0;bottom:12%;text-align:center;color:white;font-weight:900;font-size:clamp(.8rem,3vw,1.1rem);letter-spacing:.08em}
+.gamebox{flex:1;min-height:0;padding:14px;display:flex;flex-direction:column}
+.progress{height:12px;border-radius:999px;background:#e5dccd;overflow:hidden;flex:0 0 auto}
+.progress span{display:block;height:100%;width:0;background:var(--green);transition:width .25s ease}
+.scene-head{display:grid;grid-template-columns:82px minmax(0,1fr);gap:10px;align-items:center;margin:10px 0 6px;min-height:92px}
+.mini-inge{width:78px;height:92px;transform:scale(.52);transform-origin:top left;margin-right:-38px;margin-bottom:-44px}
+.scene-head h2{font-size:clamp(1.5rem,6vw,2.15rem);line-height:1.05;margin:0 0 4px}
+.scene-head p{font-size:clamp(1.02rem,4vw,1.25rem);line-height:1.25;margin:0;color:var(--muted)}
+.prompt{font-size:clamp(1.3rem,5vw,1.75rem);line-height:1.15;font-weight:900;margin:6px 0 10px}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;min-height:0}
+.choice{border:3px solid var(--line);border-radius:20px;background:#fffdf8;color:var(--ink);font-weight:900;min-height:92px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.choice .emoji{font-size:clamp(2.2rem,10vw,4rem);line-height:1}
+.choice .label{font-size:clamp(1rem,4vw,1.3rem)}
+.choice.good{border-color:var(--green);background:#f1f7ed}
+.choice:disabled{opacity:1;color:var(--ink)}
+.feedback{min-height:35px;font-size:clamp(1.05rem,4vw,1.3rem);font-weight:850;display:flex;align-items:center;padding:5px 2px}
+.bottomrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.garden{min-height:52px;border:2px dashed #cbbfae;border-radius:16px;padding:7px 10px;font-size:clamp(1.45rem,6vw,2.2rem);white-space:nowrap;overflow:hidden}
+.next{min-width:132px;min-height:58px;border:0;border-radius:17px;background:var(--green);color:white;font-size:1.2rem;font-weight:900;padding:10px 16px}
+.next[hidden]{display:none}
+.finish{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px}
+.finish h2{font-size:clamp(2rem,8vw,3rem);margin:0 0 8px}
+.finish p{font-size:clamp(1.15rem,4.5vw,1.5rem);line-height:1.35;margin:6px 0;color:var(--muted)}
+.big-garden{font-size:clamp(2.2rem,11vw,4.5rem);line-height:1.2;margin:14px 0}
+.hidden{display:none!important}
+.notice{font-size:.9rem;color:var(--muted);text-align:center;margin:2px 0 0}
+@media (max-width:420px){
+  #app{gap:7px;padding-top:calc(6px + var(--safe-top))}
+  .topbar{min-height:42px}.hub,.smallbtn{min-height:42px;padding:6px 9px;font-size:.9rem}
+  .hero{grid-template-columns:minmax(0,1fr) 120px;padding:14px}.primary{min-height:68px}
+  .gamebox{padding:10px}.scene-head{grid-template-columns:66px minmax(0,1fr);min-height:77px;margin:7px 0 3px}
+  .choices{gap:7px}.choice{min-height:84px;border-radius:17px}.feedback{min-height:30px}
+  .bottomrow{gap:7px}.next{min-width:114px;min-height:54px;padding:8px 12px}
+}
+@media (max-height:650px){
+  .topbar{min-height:38px}.hub,.smallbtn{min-height:38px}
+  .hero{padding:10px}.inge{width:min(28vw,135px)}.primary{min-height:58px;padding:10px}
+  .gamebox{padding:8px}.scene-head{min-height:60px;margin:4px 0}.scene-head p{display:none}
+  .prompt{margin:3px 0 6px}.choice{min-height:68px}.feedback{min-height:27px;padding:2px}
+  .garden{min-height:45px;padding:4px 8px}.next{min-height:48px}
+}
+@media (orientation:landscape) and (max-height:520px){
+  .hero{grid-template-columns:1.35fr .65fr}.hero-copy h1{font-size:2.4rem}.hero-copy p{font-size:1.05rem}
+  .gamebox{display:grid;grid-template-columns:.9fr 1.6fr;grid-template-rows:auto auto 1fr auto;column-gap:12px}
+  .progress{grid-column:1/-1}.scene-head{grid-column:1;grid-row:2}.prompt{grid-column:1;grid-row:3}.choices{grid-column:2;grid-row:2/4}
+  .feedback{grid-column:1;grid-row:4}.bottomrow{grid-column:2;grid-row:4}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <a class="hub" href="../" aria-label="Zurück zur Spielezentrale">← Spiele</a>
+    <div class="top-actions">
+      <button class="smallbtn" id="readBtn" type="button" aria-pressed="false">🔊 Vorlesen</button>
+      <button class="smallbtn" id="fullBtn" type="button">⛶ Vollbild</button>
+    </div>
+  </div>
+
+  <main class="screen" id="startScreen">
+    <section class="card hero">
+      <div class="hero-copy">
+        <div style="font-weight:900;color:var(--rose);margin-bottom:8px">Ein ruhiges Spiel nur für Inge</div>
+        <h1>Oma Inges<br>Erinnerungsreise</h1>
+        <p>Garten, Küche, Dorf und kleine Erinnerungen – ohne Zeitdruck und ohne Verlieren.</p>
+        <button class="primary" id="startBtn" type="button" style="margin-top:18px">▶ Los geht’s, Inge!</button>
+      </div>
+      <div class="inge" aria-label="Oma Inge als freundliche Zeichentrickfigur" role="img">
+        <div class="hair"></div><div class="head"></div><div class="glasses"></div><div class="bridge"></div><div class="eye1"></div><div class="eye2"></div><div class="smile"></div><div class="body"></div><div class="name">INGE</div>
+      </div>
+    </section>
+    <p class="notice">Große Tasten · kein Zeitdruck · keine falschen Punkte</p>
+  </main>
+
+  <main class="screen hidden" id="gameScreen">
+    <section class="card gamebox">
+      <div class="progress" aria-label="Spielfortschritt"><span id="bar"></span></div>
+      <div class="scene-head">
+        <div class="inge" style="width:66px" aria-hidden="true">
+          <div class="hair"></div><div class="head"></div><div class="glasses"></div><div class="bridge"></div><div class="eye1"></div><div class="eye2"></div><div class="smile"></div><div class="body"></div><div class="name">INGE</div>
+        </div>
+        <div><h2 id="sceneTitle"></h2><p id="sceneText"></p></div>
+      </div>
+      <div class="prompt" id="prompt"></div>
+      <div class="choices" id="choices"></div>
+      <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+      <div class="bottomrow">
+        <div class="garden" id="garden" aria-label="Inges gesammelte Blumen">🌱</div>
+        <button class="next" id="nextBtn" type="button" hidden>Weiter →</button>
+      </div>
+    </section>
+  </main>
+
+  <main class="screen hidden" id="finishScreen">
+    <section class="card finish">
+      <div class="inge" aria-hidden="true">
+        <div class="hair"></div><div class="head"></div><div class="glasses"></div><div class="bridge"></div><div class="eye1"></div><div class="eye2"></div><div class="smile"></div><div class="body"></div><div class="name">INGE</div>
+      </div>
+      <h2>Geschafft, Inge! 🌷</h2>
+      <p>Du bist durch alle Stationen gereist. Dein Blumengarten ist gewachsen.</p>
+      <div class="big-garden" id="finalGarden"></div>
+      <button class="primary" id="againBtn" type="button">Noch einmal spielen</button>
+    </section>
+  </main>
+</div>
+<script>
+(()=>{
+"use strict";
+const $=(s)=>document.querySelector(s);
+const startScreen=$("#startScreen"),gameScreen=$("#gameScreen"),finishScreen=$("#finishScreen");
+const sceneTitle=$("#sceneTitle"),sceneText=$("#sceneText"),prompt=$("#prompt"),choices=$("#choices"),feedback=$("#feedback"),nextBtn=$("#nextBtn"),garden=$("#garden"),finalGarden=$("#finalGarden"),bar=$("#bar");
+let step=0,flowers=[],reading=false,locked=false;
+const flowerSet=["🌷","🌼","🌹","🌻","🪻","🌸","🌺","🌷"];
+const scenes=[
+ {title:"Im Garten 🌷",text:"Der Morgen beginnt ganz ruhig im Garten.",prompt:"Findest du die Blume?",items:[["🌷","Tulpe",1],["🪨","Stein",0],["🧤","Handschuh",0],["🪣","Eimer",0]],ok:"Ja, genau! Eine schöne Tulpe."},
+ {title:"In der Küche 🍎",text:"Jetzt schauen wir uns in der Küche um.",prompt:"Welches davon kann man essen?",items:[["🍎","Apfel",1],["🧹","Besen",0],["🪑","Stuhl",0],["🧦","Socke",0]],ok:"Richtig – ein Apfel!"},
+ {title:"Früher und heute 📻",text:"Manche Dinge begleiten uns schon sehr lange.",prompt:"Was brachte Musik und Nachrichten ins Haus?",items:[["📻","Radio",1],["🧺","Korb",0],["🔨","Hammer",0],["🫖","Teekanne",0]],ok:"Genau, das Radio."},
+ {title:"Beim Spaziergang ⛪",text:"Nun machen wir einen kleinen Spaziergang durchs Dorf.",prompt:"Was könnte man dort sehen?",items:[["⛪","Kirche",1],["🚀","Rakete",0],["🐳","Wal",0],["🏝️","Tropeninsel",0]],ok:"Ja – eine Kirche passt zum Dorf."},
+ {title:"Erinnerung 💭",text:"Hier gibt es kein Richtig oder Falsch.",prompt:"Hast du früher gerne im Garten gearbeitet?",items:[["😊","Ja",2],["🙂","Manchmal",2],["🙃","Eher nicht",2],["🌷","Sehr gern",2]],ok:"Danke, Inge. Erinnerungen sind etwas Besonderes."},
+ {title:"Kaffeepause ☕",text:"Eine kleine Pause gehört dazu.",prompt:"Was passt zu einer gemütlichen Kaffeepause?",items:[["☕","Kaffee",1],["🧱","Ziegel",0],["🔧","Schraubenschlüssel",0],["⚽","Fußball",0]],ok:"Genau – eine schöne Tasse Kaffee."},
+ {title:"Natur 🐦",text:"Draußen gibt es immer etwas zu entdecken.",prompt:"Welches Tier hört man oft im Garten?",items:[["🐦","Vogel",1],["🦈","Hai",0],["🐘","Elefant",0],["🐧","Pinguin",0]],ok:"Richtig – ein Vogel."},
+ {title:"Zum Abschluss 🌞",text:"Nur noch eine kleine Aufgabe.",prompt:"Welche Jahreszeit passt zu Blumen und warmen Tagen?",items:[["🌞","Sommer",1],["⛄","Winter",0],["🌧️","Regentag",0],["🌙","Nacht",0]],ok:"Sehr schön – der Sommer!"}
+];
+function say(t){
+ if(!reading||!("speechSynthesis" in window))return;
+ window.speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(t);u.lang="de-DE";u.rate=.82;u.pitch=1;window.speechSynthesis.speak(u);
+}
+function renderGarden(){garden.textContent=flowers.length?flowers.join(" "):"🌱"}
+function render(){
+ locked=false;feedback.textContent="";nextBtn.hidden=true;
+ const s=scenes[step];
+ sceneTitle.textContent=s.title;sceneText.textContent=s.text;prompt.textContent=s.prompt;choices.innerHTML="";
+ s.items.forEach(([emoji,label,kind])=>{
+   const b=document.createElement("button");b.type="button";b.className="choice";
+   b.innerHTML='<span class="emoji" aria-hidden="true">'+emoji+'</span><span class="label">'+label+"</span>";
+   b.setAttribute("aria-label",label);
+   b.addEventListener("click",()=>choose(b,kind,s.ok));
+   choices.appendChild(b);
+ });
+ bar.style.width=Math.round((step/scenes.length)*100)+"%";
+ say(s.title+". "+s.text+" "+s.prompt);
+}
+function choose(button,kind,ok){
+ if(locked)return;
+ if(kind===1||kind===2){
+   locked=true;button.classList.add("good");
+   [...choices.children].forEach(b=>b.disabled=true);
+   feedback.textContent=ok;flowers.push(flowerSet[step%flowerSet.length]);renderGarden();nextBtn.hidden=false;say(ok+". Weiter.");
+ }else{
+   feedback.textContent="Fast! Versuch einfach noch einmal. 🙂";say("Fast. Versuch einfach noch einmal.");
+ }
+}
+function start(){
+ step=0;flowers=[];renderGarden();startScreen.classList.add("hidden");finishScreen.classList.add("hidden");gameScreen.classList.remove("hidden");render();
+}
+function advance(){
+ step++;
+ if(step>=scenes.length){
+   gameScreen.classList.add("hidden");finishScreen.classList.remove("hidden");bar.style.width="100%";finalGarden.textContent=flowers.join(" ");say("Geschafft, Inge! Dein Blumengarten ist gewachsen.");
+ }else render();
+}
+$("#startBtn").addEventListener("click",start);$("#againBtn").addEventListener("click",start);nextBtn.addEventListener("click",advance);
+$("#readBtn").addEventListener("click",()=>{
+ reading=!reading;$("#readBtn").setAttribute("aria-pressed",String(reading));$("#readBtn").textContent=reading?"🔊 Vorlesen an":"🔈 Vorlesen";
+ if(reading){const current=gameScreen.classList.contains("hidden")?"Hallo Inge. Willkommen bei deiner Erinnerungsreise.":sceneTitle.textContent+". "+prompt.textContent;say(current)}else if("speechSynthesis" in window)window.speechSynthesis.cancel();
+});
+$("#fullBtn").addEventListener("click",async()=>{
+ const b=$("#fullBtn");
+ try{
+  if(!document.fullscreenElement&&document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen();b.textContent="✕ Vollbild";}
+  else if(document.fullscreenElement&&document.exitFullscreen){await document.exitFullscreen();b.textContent="⛶ Vollbild";}
+  else{b.textContent="Zum Home-Bildschirm";setTimeout(()=>b.textContent="⛶ Vollbild",2600);}
+ }catch(e){b.textContent="Zum Home-Bildschirm";setTimeout(()=>b.textContent="⛶ Vollbild",2600);}
+});
+document.addEventListener("fullscreenchange",()=>{$("#fullBtn").textContent=document.fullscreenElement?"✕ Vollbild":"⛶ Vollbild"});
+document.addEventListener("contextmenu",e=>e.preventDefault());
+})();
+</script>
+</body>
+</html>
