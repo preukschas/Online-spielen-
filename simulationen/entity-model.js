@@ -31,6 +31,7 @@ export function validateEntity(value){
   if(typeof value.id!=="string"||!/^[A-Za-z0-9_-]{1,80}$/.test(value.id))return null;
   if(typeof value.name!=="string"||value.name.trim().length<1||value.name.trim().length>24)return null;
   if(value.kind!=="biped"&&value.kind!=="quadruped")return null;
+  if(value.kind==="biped"&&value.mass<30)return null;
   if(typeof value.color!=="string"||!/^#[0-9a-fA-F]{6}$/.test(value.color))return null;
   for(const [key,field] of Object.entries(ENTITY_FIELDS)){
     if(typeof value[key]!=="number"||!Number.isFinite(value[key])||value[key]<field[1]||value[key]>field[2])return null;
@@ -42,7 +43,8 @@ export function validateEntity(value){
 export function toBiomechanics(entity){
   const e=validateEntity(entity);if(!e)return null;
   return {preset:e.kind==="quadruped"?"quad":"walker",params:{
-    mass:e.mass,amplitude:e.amplitude,frequency:e.frequency,feedback:e.feedback,traction:e.traction
+    mass:e.mass,amplitude:e.amplitude,frequency:e.frequency,feedback:e.feedback,traction:e.traction,
+    color:e.color,torso:e.torso,limb:e.limb,head:e.head,entityName:e.name
   }};
 }
 export function toArena(entity){
@@ -51,7 +53,7 @@ export function toArena(entity){
   const shape=e.kind==="quadruped"?1.07:1;
   const massFactor=clamp(1-(e.mass-55)/400,.8,1.13);
   const speed=clamp(1.3+e.amplitude*e.frequency*1.25*e.traction*shape*massFactor,1,6);
-  return {name:e.name,speed:Math.round(speed*100)/100,stamina:e.endurance};
+  return {name:e.name,speed:Math.round(speed*100)/100,stamina:e.endurance,color:e.color,kind:e.kind};
 }
 export function safeEntityList(storage){
   try{
