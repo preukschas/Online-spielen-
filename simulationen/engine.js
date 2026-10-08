@@ -1,10 +1,11 @@
 // DMP Sim Lab – deterministische, bewusst vereinfachte Lehrmodelle
-export const VERSION="1.1.0";
+export const VERSION="1.2.0";
 export const CONFIG={
  physics:{title:"Physik-Spielwiese",presets:[["fall","Freier Fall"],["pendulum","Pendel"],["ramp","Schiefe Ebene"],["collision","Kugelkollision"]],limit:"Lehrmodell mit idealisierten Körpern, festem Zeitschritt und angenommener Reibung. Nicht für technische Nachweise."},
  crash:{title:"Crashtest",presets:[["barrier","Auto gegen Barriere"]],limit:"Feder-Dämpfer-Modell einer Knautschzone; kein realer Fahrzeugcrash, keine Verletzungsprognose und keine Sicherheitsbewertung."},
  bio:{title:"Biomechanik",presets:[["walker","Zweibeiner: Balance & Gang"],["quad","Vierbeiner: Traben lernen"]],limit:"Zweibeiner-/Vierbeinermodell mit begrenzten Gelenkmotoren und vereinfachter Fußkontaktregel. Keine anatomisch vollständige oder medizinische Simulation."},
- arena:{title:"Arena",presets:[["race","Hindernisrennen"],["sprint","Sprint ohne Hindernisse"]],limit:"Regelbasiertes Rennen vereinfachter Agenten; Sieger entstehen aus transparenten Spielregeln, nicht aus realen biomechanischen Fähigkeiten."}
+ arena:{title:"Arena",presets:[["race","Hindernisrennen"],["sprint","Sprint ohne Hindernisse"]],limit:"Regelbasiertes Rennen vereinfachter Agenten; Sieger entstehen aus transparenten Spielregeln, nicht aus realen biomechanischen Fähigkeiten."},
+ mechanics:{title:"Maschinen & Mechanik",presets:[["lever","Hebel am Drehgelenk"],["crank","Kurbel & Schubstange"],["gears","Zahnradübersetzung"]],limit:"Idealisierte 2D-Lehrmodelle. Hebel mit Trägheit und Anschlag; Kurbel und Zahnräder kinematisch vorgegeben. Kein Festigkeitsnachweis, keine Fertigungsfreigabe."}
 };
 export const FIELDS={
  fall:[["gravity","Schwerkraft",0,20,0.5,"m/s²",9.81],["height","Starthöhe",2,22,1,"m",16],["bounce","Rückprall",0,1,.05,"",.65]],
@@ -15,6 +16,9 @@ export const FIELDS={
  walker:[["mass","Körpermasse",30,120,5,"kg",70],["amplitude","Schrittweite",.2,1,.05,"",.55],["frequency","Schrittfrequenz",.7,2.6,.1,"Hz",1.5],["feedback","Balance-Regler",1,8,.25,"",4.5],["traction","Bodenhaftung",.2,1,.1,"",.8]],
  quad:[["mass","Körpermasse",10,120,5,"kg",40],["amplitude","Schrittweite",.2,1,.05,"",.65],["frequency","Schrittfrequenz",.7,2.6,.1,"Hz",1.8],["feedback","Balance-Regler",1,8,.25,"",4.5],["traction","Bodenhaftung",.2,1,.1,"",.8]],
  sprint:[["speedA","Tempo A",1,6,.2,"m/s",3.5],["speedB","Tempo B",1,6,.2,"m/s",3.3],["staminaA","Ausdauer A",.2,1,.1,"",.8],["staminaB","Ausdauer B",.2,1,.1,"",.9]],
+ lever:[["armA","Hebelarm links",.5,3,.1,"m",1.5],["armB","Hebelarm rechts",.5,3,.1,"m",2],["force","Eingangskraft",0,180,5,"N",110],["load","Lastkraft",0,180,5,"N",65],["inertia","Trägheitsmoment",.5,25,.5,"kg·m²",9],["damping","Dämpfung",0,18,.5,"N·m·s",3]],
+ crank:[["crank","Kurbelradius",.2,.9,.05,"m",.6],["rod","Pleuellänge",1.2,3,.1,"m",2],["rpm","Drehzahl",5,180,5,"U/min",55]],
+ gears:[["teethA","Zähne Eingang",12,48,2,"",24],["teethB","Zähne Ausgang",12,60,2,"",40],["rpm","Eingangsdrehzahl",10,180,5,"U/min",90],["torque","Eingangsdrehmoment",5,100,5,"N·m",30],["efficiency","Wirkungsgrad",.5,1,.05,"",.9]],
  race:[["speedA","Tempo A",1,6,.2,"m/s",3.5],["speedB","Tempo B",1,6,.2,"m/s",3.3],["staminaA","Ausdauer A",.2,1,.1,"",.8],["staminaB","Ausdauer B",.2,1,.1,"",.9],["obstacle","Hindernisschwierigkeit",0,1,.1,"",.6]]
 };
 export function initialParams(preset){return Object.fromEntries((FIELDS[preset]||[]).map(f=>[f[0],f[6]]))}
@@ -30,6 +34,11 @@ export function makeSim(mode,preset,params,seed=42){
  }
  if(mode==="crash")s.body={x:-5,v:p.velocity/3.6,force:0,maxG:0,compression:0,maxCompression:0,energy:.5*p.mass*(p.velocity/3.6)**2};
  if(mode==="bio"){p.gait=preset;s.body=makeWalker(p,r,preset);s.training={running:false,generation:0,best:null,history:[],score:-Infinity,validation:null};}
+ if(mode==="mechanics"){
+  if(preset==="lever")s.body={angle:0,omega:0,torque:0,stop:false};
+  if(preset==="crank")s.body={angle:0,position:p.crank+p.rod,velocity:0,omega:p.rpm*2*Math.PI/60};
+  if(preset==="gears")s.body={angleA:0,angleB:Math.PI/p.teethB,rpmB:-p.rpm*p.teethA/p.teethB,torqueB:p.torque*p.teethB/p.teethA*p.efficiency};
+ }
  if(mode==="arena"){s.body={racers:[{name:String(p.nameA||"Entität A").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaA,base:p.speedA,penalty:0},{name:String(p.nameB||"Entität B").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaB,base:p.speedB,penalty:0}],winner:null,seed};}
  record(s);
  return s;
@@ -103,6 +112,29 @@ export function stepSim(s,dt=1/120){
   if(s.time>12)s.finished=true;
  }
  if(s.mode==="bio"){updateWalker(b,p,dt,s.rng);if(b.fallen||s.time>22)s.finished=true;}
+ if(s.mode==="mechanics"){
+  if(s.preset==="lever"){
+   b.torque=p.force*p.armA-p.load*p.armB-p.damping*b.omega;
+   b.omega+=b.torque/p.inertia*dt;
+   b.angle+=b.omega*dt;
+   if(b.angle>=.7){b.angle=.7;if(b.omega>0)b.omega=0;b.stop=true}
+   else if(b.angle<=-.7){b.angle=-.7;if(b.omega<0)b.omega=0;b.stop=true}
+   else b.stop=false;
+  }
+  if(s.preset==="crank"){
+   b.angle+=b.omega*dt;
+   const sn=Math.sin(b.angle),co=Math.cos(b.angle);
+   const root=Math.sqrt(Math.max(0,p.rod*p.rod-p.crank*p.crank*sn*sn));
+   b.position=p.crank*co+root;
+   b.velocity=-b.omega*p.crank*sn-(b.omega*p.crank*p.crank*sn*co)/root;
+  }
+  if(s.preset==="gears"){
+   b.angleA+=p.rpm*2*Math.PI/60*dt;
+   b.angleB=-(p.teethA/p.teethB)*b.angleA+Math.PI/p.teethB;
+   b.rpmB=-p.rpm*p.teethA/p.teethB;
+   b.torqueB=p.torque*p.teethB/p.teethA*p.efficiency;
+  }
+ }
  if(s.mode==="arena"){
   for(let i=0;i<2;i++){const racer=b.racers[i];if(racer.finish!==null)continue;
    racer.v+=(racer.base*(.72+.28*racer.stamina)-racer.v)*dt*2;
@@ -125,6 +157,11 @@ export function measure(s){
  }
  if(s.mode==="crash")return{plot:b.force/1000,chart:"Kontaktkraft (kN)",read:[["Aktuelle Kraft",fmt(b.force/1000,1)+" kN"],["Spitzenlast",fmt(b.maxG,1)+" g"],["Max. Stauchung",fmt(b.maxCompression*100,0)+" cm"],["Tempo",fmt(Math.abs(b.v)*3.6,1)+" km/h"]]};
  if(s.mode==="bio")return{plot:b.x,chart:"Gelaufene Strecke (m)",read:[["Strecke",fmt(b.x,2)+" m"],["Kontakte",b.contacts+" / "+b.legs.length],["Energie (Modell)",fmt(b.energy,0)+" E"],["Training",s.training.generation+" Gen."]]};
+ if(s.mode==="mechanics"){
+  if(s.preset==="lever")return{plot:b.angle*180/Math.PI,chart:"Hebelwinkel (°)",read:[["Nettomoment",fmt(b.torque,1)+" N·m"],["Auslenkung",fmt(b.angle*180/Math.PI,1)+"°"],["Winkeltempo",fmt(b.omega,2)+" rad/s"],["Anschlag",b.stop?"Erreicht":"Frei"]]};
+  if(s.preset==="crank")return{plot:b.position,chart:"Schieberposition (m)",read:[["Schieberweg",fmt(b.position,2)+" m"],["Schiebertempo",fmt(b.velocity,2)+" m/s"],["Kurbelwinkel",fmt(b.angle*180/Math.PI%360,1)+"°"],["Drehzahl",fmt(p.rpm,0)+" U/min"]]};
+  return{plot:b.rpmB,chart:"Ausgangsdrehzahl (U/min)",read:[["Übersetzung",fmt(p.teethB/p.teethA,2)+" : 1"],["Ausgangsdrehzahl",fmt(b.rpmB,1)+" U/min"],["Ausgangsmoment",fmt(b.torqueB,1)+" N·m"],["Wirkungsgrad",fmt(100*p.efficiency,0)+" %"]]};
+ }
  const [a,c]=b.racers;return{plot:a.x-c.x,chart:"Vorsprung A − B (m)",read:[["Entität A",fmt(a.x,1)+" / 32 m"],["Entität B",fmt(c.x,1)+" / 32 m"],["Zeit",fmt(s.time,1)+" s"],["Sieger",b.winner||"–"]]};
 }
 function record(s){const m=measure(s);s.history.push({t:s.time,v:m.plot});if(s.history.length>12000)s.history.shift();}
@@ -169,6 +206,81 @@ function circle(c,x,y,r,color){c.fillStyle=color;c.beginPath();c.arc(x,y,r,0,Mat
 function box(c,x,y,w,h,color){c.fillStyle=color;c.fillRect(x,y,w,h);}
 function grid(c){let grad=c.createLinearGradient(0,0,0,560);grad.addColorStop(0,"#13293d");grad.addColorStop(1,"#0b1727");c.fillStyle=grad;c.fillRect(0,0,1000,560);c.strokeStyle="#284259";c.lineWidth=1;for(let x=0;x<1000;x+=50){c.beginPath();c.moveTo(x,0);c.lineTo(x,560);c.stroke();}for(let y=0;y<560;y+=50){c.beginPath();c.moveTo(0,y);c.lineTo(1000,y);c.stroke();}}
 function ground(c,y){box(c,0,y,1000,560-y,"#153343");line(c,0,y,1000,y,"#5ab99f",4);for(let x=0;x<1000;x+=35)line(c,x,y+10,x+15,y+22,"#2f5b68",2);}
+
+function arrow(c,x,y,dx,dy,color){
+ const tx=x+dx,ty=y+dy,dir=Math.atan2(dy,dx),sz=13;
+ line(c,x,y,tx,ty,color,5);
+ line(c,tx,ty,tx-sz*Math.cos(dir-.48),ty-sz*Math.sin(dir-.48),color,4);
+ line(c,tx,ty,tx-sz*Math.cos(dir+.48),ty-sz*Math.sin(dir+.48),color,4);
+}
+function polygonGear(c,cx,cy,teeth,r,angle,color){
+ c.save();c.translate(cx,cy);c.rotate(angle);
+ c.fillStyle=color;c.strokeStyle="#e6f5f6";c.lineWidth=2;
+ c.beginPath();
+ for(let i=0;i<teeth*4;i++){
+  const ang=(i/(teeth*4))*Math.PI*2,rad=r*(i%4===1||i%4===2?1.085:.955);
+  if(i===0)c.moveTo(Math.cos(ang)*rad,Math.sin(ang)*rad);else c.lineTo(Math.cos(ang)*rad,Math.sin(ang)*rad);
+ }
+ c.closePath();c.fill();c.stroke();
+ circle(c,0,0,r*.58,"#193044");
+ for(let i=0;i<6;i++){
+  const a=i*Math.PI/3;line(c,Math.cos(a)*r*.24,Math.sin(a)*r*.24,Math.cos(a)*r*.48,Math.sin(a)*r*.48,"#b2d6d4",8);
+ }
+ circle(c,0,0,12,"#e4f4f1");circle(c,0,0,5,"#183448");c.restore();
+}
+function drawMechanics(c,s){
+ const p=s.p,b=s.body;
+ txt(c,"MECHANIKLABOR · IDEALISIERTES 2D-MODELL",32,59,17,colors.a);
+ if(s.preset==="lever"){
+  ground(c,494);
+  const cx=500,cy=279,scale=100,ca=Math.cos(b.angle),sa=Math.sin(b.angle);
+  const left={x:cx-p.armA*scale*ca,y:cy+p.armA*scale*sa};
+  const right={x:cx+p.armB*scale*ca,y:cy-p.armB*scale*sa};
+  line(c,left.x,left.y,right.x,right.y,"#78dbbd",20);
+  c.fillStyle="#7396a9";c.beginPath();c.moveTo(cx,cy+15);c.lineTo(cx-31,462);c.lineTo(cx+31,462);c.closePath();c.fill();
+  circle(c,cx,cy,17,"#f5ce7a");circle(c,cx,cy,7,"#1d3545");
+  arrow(c,left.x,left.y-76,0,62,"#ffbe69");
+  arrow(c,right.x,right.y+77,0,-62,"#8bddeb");
+  txt(c,p.force+" N",left.x,left.y-91,17,"#ffbe69","center");
+  txt(c,p.load+" N",right.x,right.y+107,17,"#8bddeb","center");
+  txt(c,"Arm links: "+p.armA.toFixed(1)+" m",64,435,15);
+  txt(c,"Arm rechts: "+p.armB.toFixed(1)+" m",695,435,15);
+  if(b.stop)txt(c,"GELENKANSCHLAG ±40°",500,113,17,"#f5ce7a","center");
+ }
+ if(s.preset==="crank"){
+  ground(c,474);
+  const ox=250,oy=315,scale=98,theta=b.angle;
+  const crankX=ox+p.crank*scale*Math.cos(theta),crankY=oy-p.crank*scale*Math.sin(theta);
+  const endX=ox+b.position*scale;
+  line(c,ox-10,oy,950,oy,"#4b6b7c",3);
+  box(c,ox-25,oy-20,50,44,"#315065");
+  circle(c,ox,oy,17,"#f5ce7a");
+  line(c,ox,oy,crankX,crankY,"#ffbd71",14);
+  line(c,crankX,crankY,endX,oy,"#79dac1",12);
+  circle(c,crankX,crankY,12,"#edf6e9");
+  box(c,endX-36,oy-33,72,66,"#3a9d93");
+  box(c,ox+65,oy+36,725,17,"#527186");
+  circle(c,ox,oy,7,"#15273a");circle(c,endX,oy,8,"#eff9f4");
+  txt(c,"Kurbel "+p.crank.toFixed(2)+" m",65,135,16,"#ffbd71");
+  txt(c,"Schubstange "+p.rod.toFixed(2)+" m",65,169,16,colors.a);
+  txt(c,"Schieber",endX,oy-52,16,"#dbe9f4","center");
+ }
+ if(s.preset==="gears"){
+  ground(c,474);
+  const ra=p.teethA*2.4,rb=p.teethB*2.4,span=ra+rb,ox=500-span*.5,oy=286;
+  const ax=ox,bx=ox+span;
+  polygonGear(c,ax,oy,p.teethA,ra,b.angleA,"#218e80");
+  polygonGear(c,bx,oy,p.teethB,rb,b.angleB,"#b8853b");
+  txt(c,"ANTRIEB",ax,440,16,colors.a,"center");
+  txt(c,"ABTRIEB",bx,440,16,"#f5c86a","center");
+  txt(c,p.teethA+" Zähne",ax,oy-ra-30,17,colors.a,"center");
+  txt(c,p.teethB+" Zähne",bx,oy-rb-30,17,"#f5c86a","center");
+  arrow(c,ax,oy-2,ra*.65,0,"#ccf3e9");
+  arrow(c,bx,oy+2,-rb*.65,0,"#f9d5a2");
+  txt(c,"Drehmoment × "+(p.teethB/p.teethA*p.efficiency).toFixed(2),500,88,19,"#edf6f3","center");
+ }
+}
+
 export function drawScene(c,s){
  if(!s)return;grid(c);const p=s.p,b=s.body,t=s.time;
  if(s.mode==="physics"){
@@ -183,6 +295,7 @@ export function drawScene(c,s){
   if(b.compression>0){box(c,barrier,370,Math.max(2,b.compression*92),10,"#f8bc6a");}
   txt(c,"MODELLIERTER KONTAKT",35,70,15);txt(c,"Max. Stauchung: "+(b.maxCompression*100).toFixed(0)+" cm",35,100,16,colors.b);
  }
+ if(s.mode==="mechanics")drawMechanics(c,s);
  if(s.mode==="bio"){
   ground(c,480);
   const quad=b.legs.length===4,x=clamp(250+b.x*24,125,845);
