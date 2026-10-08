@@ -28,6 +28,8 @@ jobs:
         run: node simulationen/tests/joint-walker-browser.mjs
       - name: Formate und Entitäten-Editor prüfen
         run: node simulationen/tests/phase1-regression.mjs
+      - name: Höfen/Bruchgraben-Testvorschau in Chromium und WebKit prüfen
+        run: node simulationen/tests/hoefen-preview-browser.mjs
       - name: Screenshots archivieren
         if: always()
         uses: actions/upload-artifact@v4
