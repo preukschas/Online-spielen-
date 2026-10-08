@@ -22,11 +22,15 @@ await mkdir("test-artifacts",{recursive:true});
 const gait=newGaitTrainer(42,16);
 for(let i=0;i<10;i++)trainGaitGeneration(gait);
 const checkpoint=JSON.stringify(gaitSnapshot(gait));
+const rival=newGaitTrainer(104771,12);
+for(let i=0;i<9;i++)trainGaitGeneration(rival);
+const checkpointB=JSON.stringify(gaitSnapshot(rival));
 async function check(browser,label,opts){
  const context=await browser.newContext({...opts,acceptDownloads:true});
  await context.addInitScript(data=>{
-  if(!localStorage.getItem("dmp_joint_walker_v1"))localStorage.setItem("dmp_joint_walker_v1",data);
- },checkpoint);
+  if(!localStorage.getItem("dmp_joint_walker_v1"))localStorage.setItem("dmp_joint_walker_v1",data.a);
+  if(!localStorage.getItem("dmp_joint_walker_v1__rival_v1"))localStorage.setItem("dmp_joint_walker_v1__rival_v1",data.b);
+ },{a:checkpoint,b:checkpointB});
  const page=await context.newPage(),errors=[];
  page.on("pageerror",e=>errors.push(e.message));
  try{
@@ -42,6 +46,7 @@ async function check(browser,label,opts){
   const json=await page.evaluate(()=>JSON.parse(localStorage.getItem("dmp_joint_duel_v1")));
   assert.equal(json.generation,1);
   assert.equal(json.gaitA.length,256);assert.equal(json.gaitB.length,256);
+  assert.notDeepEqual(json.gaitA,json.gaitB,"A and B must import different learned brains");
   assert.equal(json.tactics.length,2);assert.equal(json.history.length,1);
   await page.locator("#play").click();
   await page.waitForTimeout(550);
