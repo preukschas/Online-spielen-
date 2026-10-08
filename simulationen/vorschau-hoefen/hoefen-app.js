@@ -1,7 +1,7 @@
 (function(){
 "use strict";
-const E=window.HoefenWater,G=window.WaterGeoData,$=id=>document.getElementById(id);
-if(!E||!G||!$("terrain"))return;
+const E=window.HoefenWater,G=window.WaterGeoData,V=window.HoefenGeoV2,$=id=>document.getElementById(id);
+if(!E||!G||!V||!$("terrain"))return;
 const STORAGE="dmp.simlab.hoefen.complete.v1",digits=(v,d=0)=>Number(v).toLocaleString("de-DE",{maximumFractionDigits:d,minimumFractionDigits:d});
 const params=["rain","duration","seal","soil","drain","storage"];
 const units={rain:" mm/h",duration:" min",seal:" %",soil:" mm/h",drain:" mm/h",storage:" mm"};
@@ -112,6 +112,24 @@ function drawMap(){
   }
   if(retained[i]>.01&&c.site){ctx.fillStyle="#3b6cb7";ctx.fillRect(x+dx*.4,y+dy*.4,dx*.2,dy*.2);}
  }
+ // Display precise OSM waterway line geometries as cartographic overlays. The simulated
+ // flow still uses the coarse 20-m cells and is not a 1D/2D hydraulic stream model.
+ if(geosource.waterways&&geosource.waterways.length){
+   const ox=E.W*E.SIZE/2,oy=E.H*E.SIZE/2;
+   for(const waterway of geosource.waterways){
+     const geom=waterway.geometry||[];
+     if(geom.length<2)continue;
+     ctx.beginPath();
+     ctx.lineWidth=waterway.isBruchgraben?Math.max(2,w/400):Math.max(1.5,w/550);
+     ctx.strokeStyle=waterway.isBruchgraben?"#c6f9ff":"#8dd1ff";
+     for(let k=0;k<geom.length;k++){
+       const p=G.localPoint(geom[k][0],geom[k][1],E.ORIGIN);
+       const x=(p.x+ox)/E.W/E.SIZE*w,y=(p.y+oy)/E.H/E.SIZE*h;
+       if(k===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+     }
+     ctx.stroke();
+   }
+ }
  // A minimal metric grid, not cadastral boundaries.
  ctx.strokeStyle="#ffffff0f";ctx.lineWidth=.5;
  for(let x=0;x<=E.W;x+=10){ctx.beginPath();ctx.moveTo(x*dx,0);ctx.lineTo(x*dx,h);ctx.stroke();}
@@ -211,6 +229,16 @@ function summarySource(){
  else txt+=(data.type.startsWith("osm")?"OSM-Abfrage "+data.date+". ":"Landnutzung schematisch. ")+
    (data.hasDgm?"Höhenraster importiert; Herkunft manuell prüfen.":"Geländehöhen künstlich.");
  info(txt);
+ if(!data.waterways||!data.waterways.length){
+   label("waterwayStatus","Bruchgraben-Verlauf nicht kartiert oder nicht bestätigt. Ein blauer schematischer Graben ist keine reale Gewässergeometrie.");
+ }else{
+   const br=data.waterways.filter(w=>w.isBruchgraben);
+   const names=[...new Set(data.waterways.map(w=>w.name).filter(Boolean))].slice(0,5);
+   label("waterwayStatus",br.length
+     ?"✓ OSM: "+br.length+" namentlich als „Bruchgraben“ markierte Gewässerabschnitte geladen – Linienführung kartiert (nicht hydraulisch kalibriert)."
+     :"OSM: "+data.waterways.length+" Wasserwegabschnitte geladen"+(names.length?" ("+names.join(", ")+")":" (ohne Namen)")+
+      ". Keiner ist als „Bruchgraben“ bestätigt. Keine automatische Namenszuordnung.");
+ }
 }
 function applyTerrain(next,source){
  const valid=E.create({...config(),cells:next,actions});
@@ -242,8 +270,15 @@ async function osmf(){
   }));
   // If the schematic waterway is preserved, identify it explicitly as fictional.
   if(useSketch)for(let i=0;i<model.length;i++)if(model[i].channel)model[i].kind="water";
+  const waterWays=data.elements.filter(e=>e.type==="way"&&e.tags?.waterway&&Array.isArray(e.geometry)&&e.geometry.length>=2);
+  const waterways=waterWays.slice(0,90).map(e=>({
+   id:e.id||null,name:typeof e.tags.name==="string"?e.tags.name.slice(0,95):"",
+   isBruchgraben:/\\bBruchgraben\\b/i.test(e.tags.name||""),
+   geometry:e.geometry.slice(0,800).filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon)).map(p=>[p.lat,p.lon])
+  }));
   const m={type:"osm",date:new Date().toISOString().slice(0,10),hasDgm:false,source:"© OpenStreetMap-Mitwirkende (ODbL)",
-   features:raster.featureCount,waterCells,streamSketch:useSketch};
+   features:raster.featureCount,waterCells,streamSketch:useSketch,
+   waterways,waterwayNames:waterways.map(w=>w.name).filter(Boolean)};
   applyTerrain(model,m);
   info("OSM geladen: "+m.features+" Objekte; "+waterCells+" Gewässerzellen. "+
     (useSketch?"Gewässerlauf weiterhin künstlich. ":"Gewässerzellen OSM-kartiert. ")+
@@ -255,15 +290,31 @@ async function osmf(){
 }
 async function importDEM(file){
  if(!file)return;
- if(file.size>30*1024*1024){info("ASC-Datei > 30 MB: zuerst räumlich zuschneiden.");return;}
+ const btn=$("demInput");btn.disabled=true;
  try{
-  const result=G.parseASC(await file.text(),E.ORIGIN,geo,E.W,E.H,E.SIZE);
+  const native=/\\.(xyz|txt)$/i.test(file.name);
+  if(!native&&file.size>30*1024*1024)throw Error("ASCII-Raster größer als 30 MB. Ausschnitt zuschneiden.");
+  info("DGM1-Höhendaten werden in 2.400 Modellzellen übernommen …");
+  const result=native
+   ?await V.readFile(file,{origin:E.ORIGIN,W:E.W,H:E.H,size:E.SIZE,base:geo,toUTM32:G.toUTM32},
+     (fraction,stats)=>{if(Math.round(fraction*100)%20===0)info("DGM1-Einlesen "+Math.round(fraction*100)+" % · "+stats.matchingPoints+" Rasterzellen belegt …");})
+   :G.parseASC(await file.text(),E.ORIGIN,geo,E.W,E.H,E.SIZE);
+  const fromXYZ=native;
   const m={...geosource,type:geosource.type.startsWith("osm")?"osm+dem":"schematic+dem",
-   hasDgm:true,demFilename:file.name,demMin:result.min,demMax:result.max,demResolution:result.spacing,date:new Date().toISOString().slice(0,10)};
+   hasDgm:true,demFilename:file.name,
+   demMin:fromXYZ?result.stats.min:result.min,
+   demMax:fromXYZ?result.stats.max:result.max,
+   demResolution:fromXYZ?"Original XYZ-Punktabstand (nicht geprüft)":result.spacing,
+   demFormat:fromXYZ?"LGL-XYZ":"ESRI ASCII",
+   demCrs:"EPSG:25832 (vom Nutzer zu prüfen)",
+   demCoverage:"2.400 von 2.400 Modellzellen belegt",
+   date:new Date().toISOString().slice(0,10)};
   applyTerrain(result.cells,m);
-  info("Importiert: "+file.name+" · "+digits(result.min,2)+"–"+digits(result.max,2)+
-    " m, Auflösung "+result.spacing+" m. CRS EPSG:25832 angenommen, Herkunft nicht automatisch verifiziert.");
- }catch(e){info("Höhenimport abgelehnt: "+String(e.message||e).slice(0,150));}
+  info("✓ Höhen importiert: "+file.name+" · "+digits(m.demMin,2)+"–"+digits(m.demMax,2)+
+    " m; "+m.demCoverage+". Projektion EPSG:25832 und Datenherkunft müssen bestätigt werden.");
+  status("Alle 2.400 Modellzellen besitzen übernommene Höhenwerte. Wasserfluss ist weiter ein Grobmodell.");
+ }catch(e){info("Höhenimport nicht durchgeführt: "+String(e.message||e).slice(0,190));}
+ finally{btn.disabled=false;}
 }
 function exportScenario(){
  const obj={format:"DMP-Hoefen-Runoff-v1",savedAt:new Date().toISOString(),
