@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {CONFIG,makeSim,measure,stepSim,arenaBatch} from "../engine.js";
-import {duelDefaultGenome,duelValidGenome,makeDuelTraining,simulateDuel,trainDuelGeneration} from "../duel-core.js";
+import {duelDefaultGenome,duelValidGenome,makeDuelTraining,simulateDuel,trainDuelGeneration,duelStyle,movementMetrics} from "../duel-core.js";
 
 test("Duell ist eine auswählbare Arena-Variante",()=>{
  assert.ok(CONFIG.arena.presets.some(([name])=>name==="duel"));
@@ -63,4 +63,43 @@ test("Mehrfachduelle mit Seitenwechsel erhalten Anzahl der Runden",()=>{
  const p={nameA:"Blau",nameB:"Gelb",duelDuration:12};
  const wins=arenaBatch(p,33,10,"duel");
  assert.equal(wins.reduce((a,b)=>a+b),10);
+});
+test("Bewegungsgene steuern physikalisch wirksame Schritte und Balance",()=>{
+ const a={...duelDefaultGenome(),stride:1,cadence:1,footwork:1,balance:1};
+ const b={...duelDefaultGenome(),stride:0,cadence:0,footwork:0,balance:0};
+ const rival=duelDefaultGenome(),params={duelDuration:12};
+ const fast=simulateDuel(params,[a,rival],812);
+ const slow=simulateDuel(params,[b,rival],812);
+ const fa=fast.fighters[0],fb=slow.fighters[0];
+ assert.ok(fa.steps>0&&fb.steps>0);
+ assert.ok(fa.energySpent>=0&&fb.energySpent>=0);
+ assert.notEqual(fa.steps,fb.steps,"Schrittfrequenz verändert die Zahl der Schritte");
+ assert.notEqual(fa.travel,fb.travel,"Bewegungsgene wirken auf tatsächlich gelaufene Strecke");
+ assert.ok(Number.isFinite(fa.pose.leftHip)&&Number.isFinite(fa.pose.rightKnee));
+});
+test("Sprungtechnik, Laufstil und Ausweichen sind trainierbare Gene",()=>{
+ const old={aggression:.59,guard:.4,jump:.3,punch:.56,kick:.41,push:.39,range:.46};
+ assert.equal(duelValidGenome(old),true,"Lernstand aus älterer Version bleibt gültig");
+ const springer={...duelDefaultGenome(),spring:1,jump:1,evade:0,range:0,aggression:0,push:0,
+  guard:0,stride:0,cadence:0,footwork:0,balance:0,recovery:0};
+ assert.equal(duelStyle(springer),"Springer");
+ assert.equal(duelValidGenome({...springer,spring:1.1}),false);
+ const state=simulateDuel({duelDuration:16},[springer,duelDefaultGenome()],11);
+ const metrics=movementMetrics(state.fighters[0]);
+ assert.ok(Number.isFinite(metrics.travel)&&Number.isFinite(metrics.energyUsed));
+ assert.ok(typeof metrics.style==="string"&&metrics.style.length>0);
+});
+test("Evolution bewertet auch Bewegungsleistung und bewahrt alle Bewegungsparameter",()=>{
+ const training=makeDuelTraining(),p={duelDuration:12};
+ training.running=true;training.targetGeneration=3;
+ for(let i=0;i<3;i++)trainDuelGeneration(training,p,18);
+ assert.equal(training.generation,3);
+ for(const g of training.genomes){
+  assert.ok(duelValidGenome(g));
+  for(const k of ["stride","cadence","footwork","evade","spring","balance","recovery"])
+   assert.ok(g[k]>=0&&g[k]<=1,k);
+ }
+ assert.ok(training.last?.movementA);
+ assert.ok(training.last?.movementB);
+ assert.ok(training.history.every(h=>Number.isFinite(h.training)));
 });
