@@ -1,6 +1,6 @@
-import {VERSION,CONFIG,FIELDS,initialParams,makeSim,stepSim,measure,trainOneGeneration,trainedToArena,arenaBatch} from "./engine.js?v=1.4.0";
-import {trainDuelGeneration,duelValidGenome,duelDefaultGenome} from "./duel-core.js?v=1.4.0";
-import {drawScene} from "./render-v2.js?v=1.4.0";
+import {VERSION,CONFIG,FIELDS,initialParams,makeSim,stepSim,measure,trainOneGeneration,trainedToArena,arenaBatch} from "./engine.js?v=1.5.0";
+import {trainDuelGeneration,duelValidGenome,duelDefaultGenome,duelStyle} from "./duel-core.js?v=1.5.0";
+import {drawScene} from "./render-v2.js?v=1.5.0";
 import {safeEntityList,findEntity,toBiomechanics,toArena} from "./entity-model.js";
 const $=id=>document.getElementById(id),canvas=$("scene"),sceneCtx=canvas.getContext("2d"),chartCtx=$("chart").getContext("2d");
 const KEY="dmp_simlab_scenarios_v1",BIOKEY="dmp_simlab_best_walker_v1",DUELKEY="dmp_duel_progress_v1";
@@ -16,16 +16,18 @@ function restoreDuel(){
  if(mode!=="arena"||preset!=="duel"||!sim.duelTraining)return;
  const saved=safeGet(duelKey(),null);
  if(saved&&Number.isInteger(saved.generation)&&saved.generation>=0&&saved.generation<=9999&&Array.isArray(saved.genomes)&&saved.genomes.length===2&&saved.genomes.every(duelValidGenome)){
-  sim.duelTraining={...sim.duelTraining,...saved,running:false,targetGeneration:Math.max(saved.targetGeneration||0,saved.generation),
+  const upgraded=saved.genomes.map(g=>({...duelDefaultGenome(),...g}));
+  sim.duelTraining={...sim.duelTraining,...saved,genomes:upgraded,running:false,
+    targetGeneration:Math.max(saved.targetGeneration||0,saved.generation),
     history:Array.isArray(saved.history)?saved.history.slice(-250):[]};
-  params.genomeA={...saved.genomes[0]};params.genomeB={...saved.genomes[1]};
+  params.genomeA={...upgraded[0]};params.genomeB={...upgraded[1]};
   sim.body.fighters[0].genome={...params.genomeA};sim.body.fighters[1].genome={...params.genomeB};
  }else{
   for(const side of ["A","B"]){
    const savedAgent=safeGet(duelAgentKey(side),null);
    const genome=savedAgent&&duelValidGenome(savedAgent.genome)?savedAgent.genome:
      duelValidGenome(params["genome"+side])?params["genome"+side]:duelDefaultGenome();
-   params["genome"+side]={...genome};
+   params["genome"+side]={...duelDefaultGenome(),...genome};
    sim.body.fighters[side==="A"?0:1].genome={...genome};
    sim.duelTraining.genomes[side==="A"?0:1]={...genome};
   }
@@ -112,7 +114,7 @@ function controls(){
    ex.append(title,field);
   }
   if(preset==="duel"){
-   const hint=document.createElement("p");hint.className="micro";hint.textContent="Die Figuren duellieren sich automatisch mit Schubsen, Schlagen, Treten, Springen und Blocken. Ihre Entscheidungen können sie über viele Generationen verbessern.";ex.append(hint);
+   const hint=document.createElement("p");hint.className="micro";hint.textContent="Die Figuren erlernen nicht nur Entscheidungen, sondern auch Schrittweite, Frequenz, Fußarbeit, Balance, Sprünge und Ausweichbewegungen. Ihre Bewegungsparameter verändern die Physik direkt.";ex.append(hint);
    const train=document.createElement("button");train.type="button";train.className="extra-button";train.id="duelTrainButton";train.textContent="🧠 Evolution starten";train.addEventListener("click",startDuelTraining);ex.append(train);
    const status=document.createElement("p");status.id="duelStatus";status.className="train-status";ex.append(status);
    const erase=document.createElement("button");erase.type="button";erase.className="secondary";erase.textContent="↺ Training dieser Paarung zurücksetzen";
@@ -165,7 +167,12 @@ function refresh(){
   $("duelStatus").textContent="Lernziel: siegen, Treffer vermeiden, Energie sparen. Generation "+tr.generation+"/"+tr.targetGeneration+
    " · Bewertung A "+(Number.isFinite(tr.scores[0])?tr.scores[0].toFixed(1):"–")+
    " · B "+(Number.isFinite(tr.scores[1])?tr.scores[1].toFixed(1):"–")+
-   " · Testduelle A/B/Remis: "+tr.wins.join("/")+" · Fortschritt wird lokal gespeichert.";
+   " · Testduelle A/B/Remis: "+tr.wins.join("/")+
+   " · Stil A: "+duelStyle(tr.genomes[0])+" / B: "+duelStyle(tr.genomes[1])+
+   (tr.last?.movementA?" · Schritte "+tr.last.movementA.steps+"/"+tr.last.movementB.steps+
+    " · Sprünge "+tr.last.movementA.jumps+"/"+tr.last.movementB.jumps+
+    " · Ausweichen "+tr.last.movementA.dodges+"/"+tr.last.movementB.dodges:"")+
+   " · Lernen wird lokal gespeichert.";
   $("duelTrainButton").textContent=tr.running?"⏸ Evolution pausieren":tr.generation>=tr.targetGeneration&&tr.generation>0?
    "🧠 Weitere "+params.evoRounds+" Generationen":tr.targetGeneration>tr.generation?
    "▶ Evolution fortsetzen":"🧠 "+params.evoRounds+" Generationen trainieren";
