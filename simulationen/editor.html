@@ -10,6 +10,7 @@
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 .catalog-panel{margin:0 0 20px}.catalog-intro{color:var(--muted);padding:12px 19px 0;font-size:12px;line-height:1.6}.catalog-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:14px 19px}.catalog-card{background:#0c2435;border:1px solid #426479;color:#f1faf7;border-radius:13px;min-width:0;min-height:162px;display:flex;flex-direction:column;align-items:stretch;gap:3px;padding:8px;text-align:left;transition:background .15s,border-color .15s}.catalog-card:hover,.catalog-card[aria-pressed="true"]{background:#204455;border-color:#6be5c1}.catalog-card svg{width:100%;height:99px;display:block;background:radial-gradient(ellipse at 50% 70%,#204458,#0b2031);border-radius:9px;overflow:visible}.catalog-card strong{font-size:12px;line-height:1.3}.catalog-card small{color:#b0c8d1;font-size:10px}.catalog-fact{margin:0 19px 16px;padding:11px 13px;background:#0b2738;border:1px solid #33566a;border-radius:10px;color:#d1e6e8;font-size:12px;line-height:1.65}.catalog-fact a{color:#9efbd5;text-decoration:underline}.catalog-label{color:#74e5c1;font-size:10px;font-weight:800;letter-spacing:.08em}.mass-inline{display:flex;align-items:center;gap:7px}.mass-inline input[type="range"]{flex:1;min-width:0}.mass-inline input[type="number"]{width:80px;min-height:36px;background:#0d2536;color:var(--text);border:1px solid #6b92a1;border-radius:8px;padding:4px 6px;font-size:12px}
 @media(max-width:950px){.catalog-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:560px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding:10px;gap:7px}.catalog-card{min-height:138px}.catalog-card svg{height:84px}.catalog-fact{margin:0 10px 12px}.catalog-card strong{font-size:11px}}
+.catalog-filter{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 19px 0}.catalog-filter label{font-weight:750;font-size:12px;color:#b5d1d8}.catalog-filter select{min-height:40px;background:#0b293b;color:#edf9f4;border:1px solid #4a7285;border-radius:9px;padding:5px 12px}.catalog-card[hidden],#combatArea[hidden],#enableCombat[hidden]{display:none!important}#combatArea{display:grid;gap:10px;padding:12px;border:1px solid #3e6b73;border-radius:12px;background:#0e2b3a}.catalog-card .skill-tag{color:#eddf9f;font-weight:700;font-size:10px}.catalog-fact{white-space:normal}
 </style>
 <link rel="stylesheet" href="./visual-v2.css">
 </head><body class="entity-studio">
@@ -18,8 +19,11 @@
 <main>
 <section class="intro"><div class="eyebrow">Deine Entitäten-Werkstatt</div><h1>Baue deinen <em>eigenen Teilnehmer.</em></h1><p>Entwirf einen Zweibeiner oder Vierbeiner. Ändere Körperform, Eigenschaften und Bewegung – und schicke deine Entität direkt in ein Biomechanik-Experiment oder in die Renn-Arena.</p></section>
 <section class="panel catalog-panel" aria-labelledby="catalogTitle">
-  <div class="head"><h2 id="catalogTitle">10 Entitäten aus Natur, Mensch &amp; Technik</h2><small>Mit eigenen SVG-Figuren</small></div>
-  <p class="catalog-intro">Wähle eine Karte, um die Entität samt Eigenschaften und Grafik zu laden. Die zehn Beispiele werden beim ersten Öffnen in deiner lokalen Bibliothek angelegt. Bereits bearbeitete Figuren bleiben unverändert. <strong>Biologische Fakten</strong> sind mit Quellen belegt, <strong>Spiel- und Bewegungsregler</strong> bleiben illustrative Annahmen.</p>
+  <div class="head"><h2 id="catalogTitle">20 Entitäten: Natur, Sportlegenden &amp; Krieger</h2><small>Mit eigenen SVG-Figuren</small></div>
+  <p class="catalog-intro">Wähle eine Karte, um die Entität samt Eigenschaften und Grafik zu laden. Die zwanzig Beispiele werden beim Öffnen in deiner lokalen Bibliothek ergänzt (solange Speicherplätze frei sind). Bereits bearbeitete Figuren bleiben unverändert. <strong>Biografische und biologische Fakten</strong> sind mit Quellen belegt, <strong>Kampf-, Spiel- und Bewegungsregler</strong> bleiben illustrative Annahmen.</p>
+  <div class="catalog-filter"><label for="catalogFilter">Katalog durchsuchen</label><select id="catalogFilter" aria-label="Kataloggruppe wählen">
+   <option value="all">Alle 20 Entitäten</option><option value="fighters">🥊 10 Kampflegenden</option><option value="other">🐆 10 Tiere, Menschen &amp; Maschinen</option>
+  </select></div>
   <div id="catalogGrid" class="catalog-grid" aria-label="Vordefinierte Entitäten"></div>
   <p id="catalogFact" class="catalog-fact" aria-live="polite">Wähle eine Entität, um Fakten und Quellen anzuzeigen.</p>
 </section>
@@ -69,8 +73,19 @@
 <option value="robot">🤖 Humanoider Roboter</option><option value="robotdog">🦾 Roboterhund</option>
 </select></div>
     <div class="group-title">Bewegungs- und Modellwerte</div><div id="modelFields" class="range-grid"></div>
+    <div id="combatArea" hidden><div class="group-title">🥊 Kampffähigkeiten (Spielmodell)</div>
+     <p class="hint">Werte 0–100 % · beeinflussen Schlag-, Tritt-, Schub-, Ausweich-, Deckungs- und Bewegungsentscheidungen der bestehenden Duell-Arena. Judo-Würfe, Bodenkampf und Schwerter sind noch nicht simuliert. Die Werte sind keine realen Leistungsdaten.</p>
+     <div class="field"><label for="fighterStyleSelect">Individuelle Figur</label><select id="fighterStyleSelect"><option value="">Neutrale Menschenfigur</option>
+      <option value="ali">Muhammad Ali</option><option value="tyson">Mike Tyson</option><option value="shields">Claressa Shields</option><option value="bruce">Bruce Lee</option><option value="oyama">Mas Oyama</option>
+      <option value="ronda">Ronda Rousey</option><option value="riner">Teddy Riner</option><option value="saenchai">Saenchai</option><option value="khabib">Khabib Nurmagomedov</option><option value="musashi">Miyamoto Musashi</option>
+     </select></div>
+     <div id="combatFields" class="range-grid"></div>
+     <p id="combatSummary" class="hint" aria-live="polite"></p>
+     <button id="clearCombat" class="btn" type="button">Kampfprofil entfernen</button>
+    </div>
+    <button id="enableCombat" class="btn" type="button">🥊 Kampffähigkeiten für diese Entität aktivieren</button>
     <div class="group-title">Grafische Proportionen</div><div id="visualFields" class="range-grid"></div>
-    <p class="hint">Die 10 Beispielmassen orientieren sich (bei Tieren) an Artprofilen; Zahleneingabe für große Massen bis 650 kg. Masse, Schrittweite, Frequenz, Balance und Haftung gehen in den vereinfachten Biomechanik-Simulator ein. Arena-Tempo wird nach einer offenen Spielregel daraus abgeleitet. Kopf, Rumpf, Beine und Farbe verändern zunächst die Darstellung.</p>
+    <p class="hint">Tiermassen orientieren sich an Artprofilen; Kämpfer-Massen sind illustrative Gewichtswerte, keine exakten historischen Messungen; Zahleneingabe für große Massen bis 650 kg. Masse, Schrittweite, Frequenz, Balance und Haftung gehen in den vereinfachten Biomechanik-Simulator ein. Arena-Tempo wird nach einer offenen Spielregel daraus abgeleitet. Kopf, Rumpf, Beine und Farbe verändern zunächst die Darstellung.</p>
     <div class="actions"><button id="save" class="btn primary" type="button">💾 Entität speichern</button><button id="new" class="btn" type="button">＋ Neue Entität</button><button id="export" class="btn" type="button">↓ JSON exportieren</button><button id="import" class="btn" type="button">↑ JSON importieren</button></div>
     <input id="importFile" type="file" accept=".json,application/json" class="visually-hidden">
     <p id="message" class="message" role="status" aria-live="polite"></p>
@@ -78,14 +93,14 @@
   </section>
   <section class="panel transfer" aria-labelledby="transferTitle">
    <h2 id="transferTitle" style="margin:0;font-size:18px">Im Simulator einsetzen</h2>
-   <p>Deine Entität wird beim Start automatisch im Browser gespeichert. Der Körperaufbau bestimmt, ob im Biomechanik-Labor der Zweibeiner oder Vierbeiner geladen wird. In der Arena erhält die Entität eigene Namen-, Tempo-, Ausdauer- und Farbwerte.</p>
+   <p>Deine Entität wird beim Start automatisch im Browser gespeichert. Der Körperaufbau bestimmt, ob im Biomechanik-Labor der Zweibeiner oder Vierbeiner geladen wird. In der Arena erhält die Entität eigene Namen-, Tempo-, Ausdauer-, Farb- und – bei Kampfprofilen – anfängliche Kampf- und Bewegungsgene.</p>
    <div class="transfer-buttons"><button id="bio" class="btn primary" type="button">🦿 Biomechanik öffnen</button><button id="arenaA" class="btn" type="button">🏁 Als Arena A</button><button id="arenaB" class="btn" type="button">🏁 Als Arena B</button></div>
   </section>
  </div>
 </div>
 <aside class="note"><strong>Modellgrenze:</strong> Dieser Editor erstellt grafische Körperentwürfe und überträgt unterstützte Parameter in bestehende vereinfachte Lehrsimulationen. Es gibt noch keine frei einstellbaren Gelenktopologien, kein Training aus der sichtbaren Körpergeometrie und keine verlässliche Vorhersage realer Laufleistung oder Sicherheit.</aside>
 </main>
-<footer class="footer">DMP SIM LAB · Entitäten-Editor · Artenkatalog v1</footer>
+<footer class="footer">DMP SIM LAB · Entitäten-Editor · Arten & Kampflegenden v2</footer>
 </div>
 <script type="module" src="./entity-editor.js"></script>
 </body></html>
