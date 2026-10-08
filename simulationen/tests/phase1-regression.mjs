@@ -74,6 +74,14 @@ async function run(browser,name,settings){
   });
   await check(name+" Entitäten-Editor: zeichnen, speichern, löschen, JSON wieder importieren",async()=>{
    await page.goto(base+"/editor.html",{waitUntil:"networkidle"});
+   assert.equal(await page.locator(".catalog-card").count(),10);
+   assert.equal(await page.locator("#saved option").count(),11);
+   await page.locator('.catalog-card[data-key="cheetah"]').click();
+   assert.equal(await page.locator("#name").inputValue(),"Gepard");
+   assert.equal(await page.locator("#appearance").inputValue(),"cheetah");
+   assert.ok(await page.locator("#bodyDrawing > *").count()>20);
+   await page.locator('.catalog-card[data-key="horse"]').click();
+   assert.equal(await page.locator("#massNumber").inputValue(),"500");
    await page.locator("#template").selectOption("animal");
    await page.locator("#name").fill("Phase1 Testfuchs");
    await page.locator("#r_mass").evaluate(el=>{el.value="50";el.dispatchEvent(new Event("input",{bubbles:true}));});
@@ -86,7 +94,7 @@ async function run(browser,name,settings){
    assert.equal(await page.locator("#animate").getAttribute("aria-pressed"),"false");
    await page.locator("#save").click();
    assert.match(await page.locator("#message").innerText(),/gespeichert/);
-   assert.equal(await page.locator("#saved option").count(),2);
+   assert.equal(await page.locator("#saved option").count(),12);
    const dlPending=page.waitForEvent("download");
    await page.locator("#export").click();
    const file=await readFile(await (await dlPending).path());
@@ -94,7 +102,7 @@ async function run(browser,name,settings){
    await page.locator("#saved").selectOption({index:1});
    page.once("dialog",d=>d.accept());
    await page.locator("#delete").click();
-   assert.equal(await page.locator("#saved option").count(),1);
+   assert.equal(await page.locator("#saved option").count(),11);
    await page.locator("#importFile").setInputFiles({name:"entity.json",mimeType:"application/json",buffer:file});
    await page.waitForFunction(()=>document.querySelector("#message")?.textContent?.includes("importiert"));
    assert.equal(await page.locator("#saved option").count(),2);
