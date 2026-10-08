@@ -66,8 +66,9 @@ async function readFile(file,opts,onProgress){
  if(!file||typeof file.size!=="number"||file.size>110*1024*1024)
   throw new Error("DGM1-Datei zu groß (max. 110 MB). Bitte einen kleineren XYZ-Ausschnitt entpacken.");
  const sampler=start(opts);
- const MAXLINE=300,decoder=new TextDecoder("utf-8");
+ const MAXLINE=300;
  let buffer="",completed=0;
+ const decoder=typeof TextDecoder==="function"?new TextDecoder("utf-8"):null;
  function append(text){
   buffer+=text;
   let pos;
@@ -78,7 +79,7 @@ async function readFile(file,opts,onProgress){
   }
   if(buffer.length>MAXLINE)throw new Error("Ungültiges XYZ-Datensatzformat.");
  }
- if(file.stream&&typeof file.stream==="function"){
+ if(decoder&&file.stream&&typeof file.stream==="function"){
   const reader=file.stream().getReader();
   try{
    for(;;){
