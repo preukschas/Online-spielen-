@@ -10,7 +10,7 @@ async function download(url,timeout=65000){
  const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),timeout);
  try{
   const r=await fetch(url,{signal:abort.signal,headers:{"Accept":"application/xml,image/tiff,image/geotiff,*/*"}});
-  if(!r.ok)throw Error("HTTP "+r.status);
+  if(!r.ok){let details="";try{details=(await r.text()).slice(0,900);}catch(e){}throw Error("HTTP "+r.status+": "+details.replace(/\s+/g," "));}
   const data=await r.arrayBuffer();
   if(data.byteLength>35000000)throw Error("Dataset too large");
   return data;
