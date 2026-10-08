@@ -11,7 +11,7 @@ function storage(items=[]){
 }
 test("Zwanzig unterschiedliche Figuren inklusive Tiermassen und Kampfsportlegenden",()=>{
  assert.equal(ENTITY_CATALOG.length,20);
- assert.equal(new Set(ENTITY_CATALOG.map(x=>x.key)).size,10);
+ assert.equal(new Set(ENTITY_CATALOG.map(x=>x.key)).size,20);
  for(const item of ENTITY_CATALOG){
   const e=catalogEntity(item);assert.ok(e,item.key);
   assert.equal(e.appearance,item.appearance);
