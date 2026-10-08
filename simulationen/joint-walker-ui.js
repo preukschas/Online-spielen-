@@ -228,13 +228,13 @@ function progressPair(m){
  const ra=m.resultA,rb=m.resultB;
  const result=m.contest;
  contestSummary="Gegeneinander auf Trainingsboden: "+
-  (result.winner===0?"A gewinnt":result.winner===1?"B gewinnt":"Unentschieden")+
+  (result.winner===1?"A gewinnt":result.winner===-1?"B gewinnt":"Unentschieden")+
   " · "+fmt(result.distanceA,2)+" / "+fmt(result.distanceB,2)+" m.";
  el("trainingBar").style.width=Math.round(100*m.done/m.goal)+"%";
  el("trainingStatus").textContent=m.done+"/"+m.goal+" Runden · A Gen. "+trainer.generation+
   " (Test "+fmt(ra?.validation??trainer.history.at(-1)?.validation)+")"+
   " · B Gen. "+rival.generation+" (Test "+fmt(rb?.validation??rival.history.at(-1)?.validation)+")"+
-  " · direkter Vergleich: "+(result.winner===0?"A":result.winner===1?"B":"Remis");
+  " · direkter Vergleich: "+(result.winner===1?"A":result.winner===-1?"B":"Remis");
  el("contestInfo").textContent=contestSummary;
 }
 function finishTraining(stopped){
