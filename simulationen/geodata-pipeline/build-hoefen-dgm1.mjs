@@ -23,6 +23,14 @@ const ids=[...cap.matchAll(/<(?:[\w-]+:)?CoverageId\b[^>]*>([^<]+)</g)].map(x=>x
 console.log("LGL Coverage IDs",ids.slice(0,30));
 const id=ids.find(x=>/dgm1/i.test(x))||(ids.length===1?ids[0]:null);
 if(!id)throw Error("Unidentified DGM1 CoverageId");
+console.log("Advertised WCS formats",cap.match(/<(?:[\\w-]+:)?formatSupported[^>]*>[^<]+/g)?.slice(0,20));
+try{
+ const descUrl=SERVICE+"?"+new URLSearchParams({service:"WCS",version:"2.0.1",request:"DescribeCoverage",coverageId:id});
+ const detail=asText(await download(descUrl));
+ console.log("DescribeCoverage axis labels",detail.match(/<(?:[\\w-]+:)?axisLabels[^>]*>[^<]+/g)?.slice(0,10));
+ console.log("DescribeCoverage envelope",detail.slice(Math.max(0,detail.indexOf("boundedBy")),detail.indexOf("boundedBy")+1200).replace(/\\s+/g," "));
+}catch(e){console.log("DescribeCoverage failure:",e.message);}
+
 const locations=E.BASE.map(cell=>V.centroid(cell.x,cell.y,E.ORIGIN,E.W,E.H,E.SIZE,G.toUTM32));
 const bounds={xmin:Math.floor(Math.min(...locations.map(p=>p.east))-16),
  xmax:Math.ceil(Math.max(...locations.map(p=>p.east))+16),
@@ -32,7 +40,7 @@ console.log("Raster request EPSG:25832",bounds,"CoverageId",id);
 let tiff,problem;
 for(const format of ["image/tiff","image/geotiff"]){
  const q=new URLSearchParams({service:"WCS",version:"2.0.1",request:"GetCoverage",
- coverageId:id,format,subsettingcrs:"EPSG:25832",outputCRS:"EPSG:25832"});
+ coverageId:id,format,subsettingcrs:"http://www.opengis.net/def/crs/EPSG/0/25832",outputCRS:"http://www.opengis.net/def/crs/EPSG/0/25832"});
  q.append("subset","E("+bounds.xmin+","+bounds.xmax+")");
  q.append("subset","N("+bounds.ymin+","+bounds.ymax+")");
  try{
