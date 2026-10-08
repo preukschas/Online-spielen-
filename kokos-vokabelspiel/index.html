@@ -122,7 +122,32 @@ function canvasAim(e){const r=cv.getBoundingClientRect();s.aim.x=clamp((e.client
 root.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT','BUTTON'].includes(e.target.tagName))return;const k=e.key.toLowerCase();let handled=false;if(e.key==='ArrowLeft'||k==='a'){s.keys.l=true;handled=true}if(e.key==='ArrowRight'||k==='d'){s.keys.r=true;handled=true}if(e.key==='ArrowUp'||k==='w'){s.keys.u=true;handled=true}if(e.key==='ArrowDown'||k==='s'){s.keys.d=true;handled=true}if(e.code==='Space'){s.keys.f=true;handled=true}if(k==='e'){tornado();handled=true}if(handled)e.preventDefault()});
 root.addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(e.key==='ArrowLeft'||k==='a')s.keys.l=false;if(e.key==='ArrowRight'||k==='d')s.keys.r=false;if(e.key==='ArrowUp'||k==='w')s.keys.u=false;if(e.key==='ArrowDown'||k==='s')s.keys.d=false;if(e.code==='Space')s.keys.f=false});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){Object.keys(s.keys).forEach(k=>s.keys[k]=false);releaseJoy();if(s.running&&!s.paused){s.paused=true;$('pause').textContent='Weiter';hud()}}});window.addEventListener('blur',()=>{Object.keys(s.keys).forEach(k=>s.keys[k]=false);releaseJoy();if(s.running&&!s.paused){s.paused=true;$('pause').textContent='Weiter';hud()}});
+/* Gemeinsame Vokabelliste; Offline-Fallback und pausierte Familienwörter. */
+const MOE_CENTRAL_URL="https://preukschas.github.io/Online-spielen-/shared/moe-vocab.json";
+const MOE_PAUSED=new Set(['dad','father','mum','mother','parents','parents (pl)','sister','brother','aunt','uncle','grandmother','grandfather']);
+function moeKey(value){return String(value||'').toLowerCase().replace(/…/g,'...').replace(/\(=.+?\)|\(pl\)|\(pl only\)/g,'').replace(/[^a-z0-9']+/g,' ').trim();}
+function moeRebuildDeck(){learnDeck=shuffle(vocab.slice());learnCursor=0;lastLearnWord='';}
+function moeLocalFallback(){vocab.splice(0,vocab.length,...vocab.filter(v=>!MOE_PAUSED.has(moeKey(v[1]))));moeRebuildDeck();}
+async function moeRefreshVocabulary(){
+ try{
+  const reply=await fetch(MOE_CENTRAL_URL,{cache:'no-store'});
+  if(!reply.ok)return;
+  const data=await reply.json();
+  if(data.schema!==1||!Array.isArray(data.words)||data.words.length<12)return;
+  const next=[],seen=new Set();
+  for(const row of data.words){
+   if(!row||!row.en||!row.de||MOE_PAUSED.has(moeKey(row.en)))continue;
+   const key=moeKey(row.en);if(seen.has(key))continue;seen.add(key);
+   next.push([String(row.de),String(row.en)]);
+  }
+  if(next.length<12)return;
+  vocab.splice(0,vocab.length,...next);
+  if(!s.learn)moeRebuildDeck();
+ }catch(_error){/* Offline die integrierte Wortliste benutzen. */}
+}
+moeLocalFallback();
 resetRound();
+moeRefreshVocabulary();
 })();
 </script>
 </body>
