@@ -24,6 +24,8 @@ jobs:
         run: npx playwright install --with-deps chromium webkit
       - name: Desktop und Mobile Browser testen
         run: node simulationen/tests/browser-smoke.mjs
+      - name: Gelenk-Lernarena in Chromium, WebKit iPhone und iPad testen
+        run: node simulationen/tests/joint-walker-browser.mjs
       - name: Formate und Entitäten-Editor prüfen
         run: node simulationen/tests/phase1-regression.mjs
       - name: Screenshots archivieren
