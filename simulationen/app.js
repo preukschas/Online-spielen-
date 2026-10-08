@@ -1,10 +1,10 @@
-import {VERSION,CONFIG,FIELDS,initialParams,makeSim,stepSim,measure,trainOneGeneration,trainedToArena,arenaBatch} from "./engine.js?v=1.5.0";
-import {trainDuelGeneration,duelValidGenome,duelDefaultGenome,duelStyle} from "./duel-core.js?v=1.5.0";
-import {drawScene} from "./render-v2.js?v=1.5.0";
+import {VERSION,CONFIG,FIELDS,initialParams,makeSim,stepSim,measure,trainOneGeneration,trainedToArena,arenaBatch} from "./engine.js?v=1.6.0";
+import {trainDuelGeneration,duelValidGenome,duelDefaultGenome,duelStyle} from "./duel-core.js?v=1.6.0";
+import {drawScene} from "./render-v2.js?v=1.6.0";
 import {safeEntityList,findEntity,toBiomechanics,toArena} from "./entity-model.js";
 const $=id=>document.getElementById(id),canvas=$("scene"),sceneCtx=canvas.getContext("2d"),chartCtx=$("chart").getContext("2d");
 const KEY="dmp_simlab_scenarios_v1",BIOKEY="dmp_simlab_best_walker_v1",DUELKEY="dmp_duel_progress_v1";
-let mode="physics",preset="fall",params=initialParams(preset),seed=42,sim=makeSim(mode,preset,params,seed),playing=false,accum=0,lastFrame=0,dialog=$("helpDialog"),renderTick=0,lastSceneRender=0,sceneDirty=true;
+let mode="physics",preset="fall",params=initialParams(preset),seed=42,sim=makeSim(mode,preset,params,seed),playing=false,accum=0,lastFrame=0,dialog=$("helpDialog"),renderTick=0,lastSceneRender=0,sceneDirty=true,arenaTournamentToken=0,arenaTournamentBusy=false,arenaQuickMessage="";
 function formatValue(v,f){return String(Number(v.toFixed(3))).replace(".",",")+(f[5]?" "+f[5]:"")}
 function note(message,error=false){const n=$("notice");n.textContent=message;n.style.color=error?"#ff9e9e":"#55dbb4";}
 function safeGet(key,defaultValue){try{return JSON.parse(localStorage.getItem(key))??defaultValue}catch{return defaultValue}}
@@ -33,11 +33,59 @@ function restoreDuel(){
   }
  }
 }
+function updateDuelQuickbar(){
+ const active=mode==="arena"&&preset==="duel",bar=$("duelQuickbar");
+ if(!bar)return;
+ bar.hidden=!active;if(!active)return;
+ const tr=sim.duelTraining;
+ $("duelQuickGeneration").textContent=tr?"Generation "+tr.generation+" / "+Math.max(tr.targetGeneration,tr.generation):"Generation 0";
+ $("duelQuickResult").textContent=arenaQuickMessage||"Hier trainieren (+1 / +100) oder 10 bzw. 50 Duelle auswerten.";
+ for(const id of ["duelCompare10","duelCompare50"])$(id).disabled=arenaTournamentBusy;
+}
+function queueDuelGenerations(count){
+ if(mode!=="arena"||preset!=="duel"||![1,100].includes(count))return;
+ const tr=sim.duelTraining;
+ tr.targetGeneration=Math.max(tr.targetGeneration,tr.generation)+count;
+ tr.running=true;playing=false;$("play").textContent="▶ Start";
+ arenaQuickMessage="🧠 +"+count+" Generation"+(count===1?"":"en")+" hinzugefügt · Ziel "+tr.targetGeneration+". Training läuft.";
+ $("overlay").classList.add("hidden");note(arenaQuickMessage);refresh();
+}
+function runArenaComparison(total){
+ if(mode!=="arena"||preset!=="duel"||![10,50].includes(total))return;
+ if(arenaTournamentBusy){arenaQuickMessage="Bitte die laufende Auswertung erst abschließen lassen.";updateDuelQuickbar();return;}
+ arenaTournamentBusy=true;
+ const token=++arenaTournamentToken;
+ const snapshot=JSON.parse(JSON.stringify(params)),fixedSeed=seed,win=[0,0,0];
+ let completed=0;
+ arenaQuickMessage="🥊 Duelle werden berechnet: 0 / "+total+" …";
+ updateDuelQuickbar();
+ // Zwei Duelle je Browser-Aufgabe: iPad bleibt bedienbar. Identische Seeds und Seitenwechsel.
+ function processChunk(){
+  if(token!==arenaTournamentToken||mode!=="arena"||preset!=="duel")return;
+  try{
+   const count=Math.min(2,total-completed);
+   const part=arenaBatch(snapshot,fixedSeed,count,"duel",completed);
+   part.forEach((value,index)=>win[index]+=value);
+   completed+=count;
+   arenaQuickMessage=completed<total?"🥊 Duelle werden berechnet: "+completed+" / "+total+" …":
+    "🏆 "+total+" Duelle: Entität A "+win[0]+" Siege · Entität B "+win[1]+" Siege · "+win[2]+" Unentschieden.";
+   if(completed>=total){arenaTournamentBusy=false;note(arenaQuickMessage);}
+   updateDuelQuickbar();
+   if(completed<total)setTimeout(processChunk,0);
+  }catch(err){
+   arenaTournamentBusy=false;
+   arenaQuickMessage="Auswertung fehlgeschlagen: "+String(err?.message||err);
+   note(arenaQuickMessage,true);updateDuelQuickbar();
+  }
+ }
+ setTimeout(processChunk,0);
+}
 function startDuelTraining(){
  const tr=sim.duelTraining;if(!tr)return;
  if(tr.running){tr.running=false;note("Duell-Evolution pausiert nach Generation "+tr.generation+".");}
  else{if(tr.targetGeneration<=tr.generation)tr.targetGeneration=tr.generation+params.evoRounds;
   tr.running=true;playing=false;$("play").textContent="▶ Start";note("Beide Entitäten trainieren selbstständig in simulierten Duellen.");}
+ arenaQuickMessage=tr.running?"🧠 Evolution läuft: "+tr.generation+" / "+tr.targetGeneration:"⏸ Evolution pausiert bei Generation "+tr.generation;
  $("overlay").classList.add("hidden");refresh();
 }
 function addEntityPicker(container,slot=null){
@@ -124,10 +172,12 @@ function controls(){
    imp.addEventListener("click",()=>{const best=safeGet(BIOKEY,null);if(!best){note("Noch kein trainierter Zweibeiner oder Vierbeiner gespeichert.",true);return;}
     params.speedA=trainedToArena(best.genome);resetSim();controls();note("Trainierter Läufer für A übernommen.");});ex.append(imp);
   }
+  if(preset!=="duel"){
   const bat=document.createElement("button");bat.type="button";bat.className="extra-button";bat.textContent=preset==="duel"?"🥊 10 Duelle vergleichen":"🏁 10 Durchläufe vergleichen";
   bat.addEventListener("click",()=>{const w=arenaBatch(params,seed,10,preset);note("10 "+(preset==="duel"?"Duelle":"Rennen")+" · A "+w[0]+" Siege · B "+w[1]+" Siege · "+w[2]+" Unentschieden.");});ex.append(bat);
   const tournament=document.createElement("button");tournament.type="button";tournament.className="extra-button";tournament.textContent="🏆 50 Runden auswerten";
   tournament.addEventListener("click",()=>{const w=arenaBatch(params,seed,50,preset);note("50 Runden · A "+w[0]+" Siege · B "+w[1]+" Siege · "+w[2]+" Gleichstand.");});ex.append(tournament);
+  }
  }
  if(mode==="crash"&&preset==="barrier"){
   const cmp=document.createElement("button");cmp.type="button";cmp.className="extra-button";cmp.textContent="📊 Knautschzone A/B vergleichen";
@@ -136,10 +186,10 @@ function controls(){
    const a=run(params.stiffness*.7),b=run(params.stiffness*1.3);note("A (weicher): "+a.g.toFixed(1)+" g, "+(100*a.c).toFixed(0)+" cm · B (härter): "+b.g.toFixed(1)+" g, "+(100*b.c).toFixed(0)+" cm. Nur Lehrmodell.");
   });ex.append(cmp);
  }
- $("configTag").textContent=mode.toUpperCase();
+ $("configTag").textContent=mode.toUpperCase();updateDuelQuickbar();
 }
-function resetSim(){playing=false;accum=0;sceneDirty=true;sim=makeSim(mode,preset,params,seed);restoreDuel();$("play").textContent="▶ Start";$("overlay").textContent="Drücke Start, um die Simulation auszuführen.";$("overlay").classList.remove("hidden");refresh();}
-function switchMode(next){if(!CONFIG[next])return;mode=next;preset=CONFIG[next].presets[0][0];params=initialParams(preset);document.querySelectorAll(".module").forEach(b=>{const active=b.dataset.mode===next;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active));});controls();resetSim();note("");}
+function resetSim(){arenaTournamentToken++;arenaTournamentBusy=false;playing=false;accum=0;sceneDirty=true;sim=makeSim(mode,preset,params,seed);restoreDuel();$("play").textContent="▶ Start";$("overlay").textContent="Drücke Start, um die Simulation auszuführen.";$("overlay").classList.remove("hidden");refresh();}
+function switchMode(next){if(!CONFIG[next])return;arenaQuickMessage="";mode=next;preset=CONFIG[next].presets[0][0];params=initialParams(preset);document.querySelectorAll(".module").forEach(b=>{const active=b.dataset.mode===next;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active));});controls();resetSim();note("");}
 function togglePlay(){if(sim.finished){resetSim()}playing=!playing;$("play").textContent=playing?"❚❚ Pause":"▶ Fortsetzen";if(playing)$("overlay").classList.add("hidden");refresh();}
 function doStep(){playing=false;$("play").textContent="▶ Fortsetzen";if(!sim.finished)stepSim(sim,1/120);$("overlay").classList.add("hidden");refresh();}
 function startTraining(){
@@ -177,6 +227,7 @@ function refresh(){
    "🧠 Weitere "+params.evoRounds+" Generationen":tr.targetGeneration>tr.generation?
    "▶ Evolution fortsetzen":"🧠 "+params.evoRounds+" Generationen trainieren";
  }
+ updateDuelQuickbar();
  drawChart();
 }
 function drawChart(){
@@ -269,6 +320,8 @@ function frame(now){
   sceneDirty=true;
   if(!tr.running){
    resetSim();
+   arenaQuickMessage="✅ Evolution abgeschlossen: "+tr.generation+" Generationen. Weitere Generationen jederzeit möglich.";
+   updateDuelQuickbar();
    note("Evolution abgeschlossen: "+tr.generation+" Generationen. Beide Entitäten haben ihre verbesserten Strategien übernommen.");
    $("overlay").textContent="Training abgeschlossen. Starte das Duell der verbesserten Entitäten!";
    $("overlay").classList.remove("hidden");
@@ -279,6 +332,10 @@ function frame(now){
  if(activeAtStart||sceneDirty||now-lastSceneRender>=1000){drawScene(sceneCtx,sim);lastSceneRender=now;sceneDirty=false;}
  if(now-renderTick>(activeAtStart?90:600)){refresh();renderTick=now;}
  requestAnimationFrame(frame);
+}
+for(const [id,action] of [["duelAdd1",()=>queueDuelGenerations(1)],["duelAdd100",()=>queueDuelGenerations(100)],
+ ["duelCompare10",()=>runArenaComparison(10)],["duelCompare50",()=>runArenaComparison(50)]]){
+ $(id).addEventListener("click",action);
 }
 function scenarios(){const items=safeGet(KEY,[]);return Array.isArray(items)?items.filter(x=>x&&typeof x.name==="string").slice(0,100):[];}
 function showSaved(){const p=$("saved");p.replaceChildren();let o=document.createElement("option");o.value="";o.textContent="– Bitte auswählen –";p.append(o);scenarios().forEach((item,i)=>{let o=document.createElement("option");o.value=String(i);o.textContent=item.name+" · "+(CONFIG[item.mode]?.title||"?");p.append(o);});}
@@ -303,7 +360,7 @@ function loadScenario(s){
  document.querySelectorAll(".module").forEach(b=>{const yes=b.dataset.mode===mode;b.classList.toggle("active",yes);b.setAttribute("aria-pressed",String(yes));});controls();resetSim();$("scenarioName").value=s.name;note("Experiment geladen. Mit Start wiederholen.");
 }
 $("modules").addEventListener("click",e=>{const btn=e.target.closest("[data-mode]");if(btn)switchMode(btn.dataset.mode);});
-$("preset").addEventListener("change",e=>{
+$("preset").addEventListener("change",e=>{arenaQuickMessage="";
  const prev={...params};preset=e.target.value;params=initialParams(preset);
  if(mode==="arena"){
   for(const key of ["nameA","nameB","colorA","colorB","kindA","kindB","entityA","entityB","speedA","speedB","staminaA","staminaB","genomeA","genomeB"]){
