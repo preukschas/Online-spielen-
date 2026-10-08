@@ -295,6 +295,49 @@ async function loadBundledOSM(){
      info("Schematische Startkarte: kein geprüfter Ortsdatensatz verfügbar ("+String(e.message||e).slice(0,100)+"). OSM-Abruf ist über den Button möglich.");
  }
 }
+async function loadBundledDGM(){
+ // Height values must be a demonstrably sourced official terrain snapshot
+ // bundled in the same deployment. No external elevation API, no guesses.
+ if(geosource.hasDgm)return;
+ try{
+  const signal=typeof AbortSignal!=="undefined"&&AbortSignal.timeout?AbortSignal.timeout(9000):undefined;
+  const response=await fetch("./hoefen-dgm1.json",{cache:"no-store",signal});
+  if(!response.ok)throw Error("HTTP "+response.status);
+  const data=await response.json();
+  if(data.schema!=="dmp-hoefen-dgm1-v1"||data.municipality!=="Schutterwald"||data.district!=="Höfen"||
+    data.epsg!==25832||data.grid?.width!==E.W||data.grid?.height!==E.H||
+    data.grid?.sizeM!==E.SIZE||Math.abs(data.origin?.lat-E.ORIGIN.lat)>.000001||
+    Math.abs(data.origin?.lon-E.ORIGIN.lon)>.000001||
+    !Array.isArray(data.heightM)||data.heightM.length!==E.N||
+    !data.source?.includes("LGL")||!data.attribution?.includes("LGL"))
+      throw Error("Unpassender oder nicht belegter LGL-DGM1-Datensatz");
+  if(data.heightM.some(v=>typeof v!=="number"||!Number.isFinite(v)||v<100||v>230))
+      throw Error("Ungültige amtliche Zellhöhen");
+  if(state.time>0||active){
+    info("Amtliches Höhenraster verfügbar. Für den aktuellen Lauf unverändert; bitte Seite neu laden.");
+    return;
+  }
+  const cells=geo.map((c,i)=>({...c,elevation:data.heightM[i]}));
+  const m={...geosource,
+   type:geosource.type.startsWith("osm")?"osm+dem":"schematic+dem",hasDgm:true,
+   demFilename:"hoefen-dgm1.json",demFormat:"LGL DGM1 WCS GeoTIFF, 20m sampled",
+   demCoverage:"2.400/2.400 Modellzellen",demMin:data.minM,demMax:data.maxM,
+   demCrs:"EPSG:25832",demSource:data.source,demCoverageId:data.coverageId,
+   demAcquiredAt:data.acquiredAt,demLicense:data.licence};
+  applyTerrain(cells,m);
+  info("✓ Amtliche LGL-DGM1-Höhen automatisch eingebunden ("+data.acquiredAt.slice(0,10)+
+    "): "+digits(data.minM,2)+"–"+digits(data.maxM,2)+
+    " m. 2.400 Rasterzellen; Karten-/Abflussmodell bleibt didaktisch und unkalibriert.");
+  status("Schutterwald-Höfen: verfügbare amtliche Höhendaten geladen. Maßnahmen und A/B-Versuch sind bereit.");
+ }catch(e){
+  if(geosource.type==="osm")
+    info("✓ Reale OSM-Ortsgeometrie geladen; Geländehöhen weiterhin künstlich (amtliches DGM1 noch nicht als geprüfter lokaler Datensatz hinterlegt).");
+ }
+}
+async function initializeGeodata(){
+ await loadBundledOSM();
+ await loadBundledDGM();
+}
 async function osmf(){
  const btn=$("getOsm");btn.disabled=true;info("OpenStreetMap/Overpass wird abgefragt …");
  try{
@@ -398,6 +441,6 @@ let resizeTimer;window.addEventListener("resize",()=>{clearTimeout(resizeTimer);
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stop();status("Im Hintergrund automatisch pausiert.");}});
 read();reflectInputs();refreshPresets();refreshTools();refreshActions();clearResults();restart();summarySource();
 if(warning)status(warning);
-loadBundledOSM();
+initializeGeodata();
 window.HoefenApp=Object.freeze({getState:()=>state,getTerrain:()=>geo,getSource:()=>geosource,runAB:()=>E.compare({...slotA,cells:geo},{...slotB,cells:geo},config())});
 })();
