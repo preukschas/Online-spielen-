@@ -284,6 +284,43 @@ async function testViewport(browser,name,opts){
    assert.equal(await builder.getByRole("spinbutton",{name:"Start-Vx (m/s)"}).inputValue(),"220");
    await ctx.close();
  });
+
+ await check(name+" Dreierkontakt überträgt Impuls und zeigt die Energiebilanz",async()=>{
+  const ctx=await browser.newContext({...opts,acceptDownloads:true});
+  const builder=await ctx.newPage();const faults=[];
+  builder.on("pageerror",e=>faults.push(e.message));
+  await builder.goto(base+"/builder.html",{waitUntil:"networkidle"});
+  await builder.locator("#template").selectOption("chain");
+  assert.equal(await builder.locator("#bodyList .chip").count(),3);
+  assert.match(await builder.locator("#energyTotal").innerText(),/ J$/);
+  await builder.locator("#step").click();
+  await builder.locator("#step").click();
+  const active=Number(await builder.locator("#contactsNow").innerText());
+  assert.ok(active>=2,"Kontaktkette nicht erkannt: "+active);
+  const energy=await builder.locator("#energyChange").innerText();
+  assert.match(energy,/ J$/);
+  assert.deepEqual(faults,[]);
+  await ctx.close();
+ });
+ await check(name+" motorisiertes Viergelenk bleibt im Browser bedienbar",async()=>{
+  const ctx=await browser.newContext({...opts,acceptDownloads:true});
+  const builder=await ctx.newPage();const faults=[];
+  builder.on("pageerror",e=>faults.push(e.message));
+  await builder.goto(base+"/builder.html",{waitUntil:"networkidle"});
+  await builder.locator("#template").selectOption("fourbar");
+  assert.equal(await builder.locator("#bodyList .chip").count(),4);
+  assert.equal(await builder.locator("#jointList .chip").count(),5);
+  await builder.locator("#play").click();
+  await builder.waitForTimeout(260);
+  await builder.locator("#play").click();
+  assert.notEqual(await builder.locator("#time").innerText(),"0,00 s");
+  assert.match(await builder.locator("#energyTotal").innerText(),/ J$/);
+  assert.equal(await builder.locator("#ccd").isChecked(),true);
+  const bounds=await builder.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth}));
+  assert.ok(bounds.scroll<=bounds.width+3,JSON.stringify(bounds));
+  assert.deepEqual(faults,[]);
+  await ctx.close();
+ });
  await check(name+" all scripts clean",async()=>{assert.equal(errors.length,0,JSON.stringify(errors));});
  await page.screenshot({path:"test-artifacts/"+name.replace(/\W+/g,"-")+".png",fullPage:true});
  await context.close();
