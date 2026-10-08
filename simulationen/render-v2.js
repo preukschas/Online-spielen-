@@ -123,7 +123,7 @@ function drawPhysics(c,s){
   textChip(c,"LÄNGE  "+p.length.toFixed(1)+" m",32,157,C.gold,196);
  }
  else if(s.preset==="ramp"){
-  ground(c,491);const ang=p.angle*PI/180,x0=135,y0=446,len=Math.min(696,330/Math.tan(ang)),y1=y0-Math.tan(ang)*len;
+  ground(c,491);const ang=p.angle*PI/180,x0=285,y0=446,len=Math.min(610,330/Math.tan(ang)),y1=y0-Math.tan(ang)*len;
   c.fillStyle="#234554";c.beginPath();c.moveTo(x0,y1);c.lineTo(x0+len,y0);c.lineTo(x0,y0);c.closePath();c.fill();
   c.fillStyle="#31657770";c.beginPath();c.moveTo(x0+12,y1+9);c.lineTo(x0+len,y0);c.lineTo(x0+12,y0);c.closePath();c.fill();
   stroke(c,x0,y1,x0+len,y0,"#a8d4cd",10);stroke(c,x0,y1-3,x0+len,y0-3,"#e4f8e6",2);
