@@ -33,7 +33,10 @@ async function run(browser,name,opts){
   await page.waitForFunction(()=>document.querySelector("#mapKind")?.textContent.includes("OSM"),{timeout:15000});
   assert.match(await page.locator("#waterwayStatus").textContent(),/Bruchgraben/);
   const initial=await page.evaluate(()=>window.HoefenApp.getSource());
-  assert.equal(initial.type,"osm");
+  assert.ok(["osm","osm+dem"].includes(initial.type),"Expected verified bundled OSM geometry");
+  // The optional official WCS DGM1 snapshot is validated and versioned too.
+  // It must never be silently synthesized when the file is unavailable.
+  if(initial.hasDgm)assert.match(await page.locator("#mapKind").textContent(),/IMPORTIERTE HÖHEN/);
   assert.ok(initial.features>=10,"No map features loaded from committed snapshot");
 
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
