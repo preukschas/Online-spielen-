@@ -1,4 +1,6 @@
-import {ENTITY_KEY,ENTITY_LIMIT,ENTITY_FIELDS,newEntity,validateEntity,toBiomechanics,toArena,safeEntityList,findEntity} from "./entity-model.js";
+import {ENTITY_KEY,ENTITY_LIMIT,ENTITY_FIELDS,ENTITY_APPEARANCES,newEntity,validateEntity,toBiomechanics,toArena,safeEntityList,findEntity} from "./entity-model.js";
+import {ENTITY_CATALOG,catalogEntity,installCatalog} from "./entity-catalog.js";
+import {drawCharacter,characterThumbnail} from "./entity-art.js";
 const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";
 let draft,selected=null,playing=false,phase=0,last=0;
 const names={mass:"Masse",amplitude:"Schrittweite",frequency:"Schrittfrequenz",feedback:"Balance-Regler",traction:"Bodenhaftung",endurance:"Ausdauer",torso:"Rumpfgröße",limb:"Beinlänge",head:"Kopfgröße"};
@@ -8,11 +10,49 @@ function library(){return safeEntityList(localStorage);}
 function write(data){try{localStorage.setItem(ENTITY_KEY,JSON.stringify(data));return true;}catch{notice("Browser-Speicher nicht verfügbar. Exportiere deine Entität als JSON.",true);return false;}}
 function valueText(k){return draft[k].toLocaleString("de-DE",{maximumFractionDigits:2})+(ENTITY_FIELDS[k][4]?" "+ENTITY_FIELDS[k][4]:"");}
 function newDraft(type="human"){setDraft(newEntity(type,id()),false);$("template").value=type;notice("Neuer Entwurf: zum dauerhaften Speichern auf „Entität speichern“ klicken.");}
-function setDraft(e,saved=false){draft={...e};selected=saved?draft.id:null;sync();showSaved();}
+function setDraft(e,saved=false){draft={...e,appearance:e.appearance||"generic"};selected=saved?draft.id:null;sync();showSaved();selectCard();}
+function selectCard(){
+ document.querySelectorAll(".catalog-card").forEach(card=>card.setAttribute("aria-pressed",String(draft.id==="catalog-"+card.dataset.key)));
+ const item=ENTITY_CATALOG.find(i=>i.key===draft.id.replace(/^catalog-/,""));
+ if(item)showCatalogFact(item);
+}
+function showCatalogFact(item){
+ const box=$("catalogFact");box.replaceChildren();
+ const caption=document.createElement("strong");caption.textContent=item.emoji+" "+item.name+" · "+item.type+". ";
+ box.append(caption,document.createTextNode(item.fact+" "));
+ if(item.source){
+  const link=document.createElement("a");link.href=item.source;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Artprofil und Quelle ↗";box.append(link);
+ }else{
+  const label=document.createElement("span");label.className="catalog-label";label.textContent=" Konstruktions-/Spielannahme";box.append(label);
+ }
+}
+function renderCatalog(){
+ const grid=$("catalogGrid");grid.replaceChildren();
+ for(const item of ENTITY_CATALOG){
+  const example=catalogEntity(item),button=document.createElement("button");
+  button.className="catalog-card";button.type="button";button.dataset.key=item.key;button.setAttribute("aria-pressed","false");
+  button.setAttribute("aria-label",item.name+" als Figur laden");
+  button.append(characterThumbnail(example));
+  const title=document.createElement("strong");title.textContent=item.emoji+" "+item.name;
+  const desc=document.createElement("small");desc.textContent=item.mass.toLocaleString("de-DE")+" kg · "+(item.kind==="biped"?"2 Beine":"4 Beine");
+  button.append(title,desc);
+  button.addEventListener("click",()=>{
+   const existing=findEntity(localStorage,example.id);
+   setDraft(existing||example,!!existing);
+   showCatalogFact(item);
+   notice("„"+item.name+"“ geladen. Alle Modellwerte und die Grafik kannst du anpassen.");
+  });
+  grid.append(button);
+ }
+}
 function sync(){
  $("name").value=draft.name;$("kind").value=draft.kind;$("color").value=draft.color;
+ $("appearance").value=draft.appearance||"generic";
+ $("r_mass").min=draft.kind==="biped"?30:3;
+ $("r_mass").max=draft.mass>120?650:120;
  Object.keys(ENTITY_FIELDS).forEach(k=>{$("r_"+k).value=draft[k];$("v_"+k).textContent=valueText(k);});
- $("r_mass").min=draft.kind==="biped"?30:10;draw();
+ $("massNumber").value=String(draft.mass);
+ draw();
 }
 function sliders(){
  Object.entries(ENTITY_FIELDS).forEach(([k,v])=>{
@@ -20,8 +60,23 @@ function sliders(){
   const lab=document.createElement("label");lab.htmlFor="r_"+k;lab.textContent=names[k];
   const output=document.createElement("output");output.id="v_"+k;lab.append(output);
   const control=document.createElement("input");control.type="range";control.id="r_"+k;control.min=v[1];control.max=v[2];control.step=v[3];
-  control.addEventListener("input",()=>{draft[k]=Number(control.value);output.textContent=valueText(k);draw();});
-  block.append(lab,control);$(["torso","limb","head"].includes(k)?"visualFields":"modelFields").append(block);
+  control.addEventListener("input",()=>{
+   draft[k]=Number(control.value);output.textContent=valueText(k);
+   if(k==="mass")$("massNumber").value=String(draft.mass);
+   draw();
+  });
+  if(k==="mass"){
+   const row=document.createElement("div");row.className="mass-inline";row.append(control);
+   const number=document.createElement("input");number.type="number";number.id="massNumber";
+   number.setAttribute("aria-label","Masse in Kilogramm");number.min="3";number.max="650";number.step=".5";
+   number.addEventListener("change",()=>{
+     const n=Number(number.value),min=draft.kind==="biped"?30:3;
+     if(!Number.isFinite(n)||n<min||n>650){notice("Masse muss zwischen "+min+" und 650 kg liegen.",true);sync();return;}
+     draft.mass=n;sync();
+   });
+   row.append(number);block.append(lab,row);
+  }else block.append(lab,control);
+  $(["torso","limb","head"].includes(k)?"visualFields":"modelFields").append(block);
  });
 }
 function showSaved(){
@@ -83,6 +138,7 @@ function draw(){
  $("staminaStat").textContent=Math.round(draft.endurance*100)+" %";
  $("bodyPreview").setAttribute("aria-label",(draft.name||"Entität")+", "+(draft.kind==="biped"?"Zweibeiner":"Vierbeiner")+", schematische Vorschau");
  const c=draft.color,move=playing?Math.sin(phase):0;
+ if(!drawCharacter($("bodyDrawing"),draft,move)){
  if(draft.kind==="biped"){
   const x=280,hip=277,top=hip-100*draft.torso,a=46*draft.limb,b=52*draft.limb;
   [-1,1].forEach((side,i)=>{
@@ -103,6 +159,7 @@ function draw(){
   limb(start+w-5,y-5,start+w+36,y-40,c,21);
   ball(start+w+54,y-53,21*draft.head,c,"head");
   ball(start+w+60,y-57,3,"#123143");
+ }
  }
  const label=svg("text",{x:25,y:37,fill:"#98dfc5","font-size":15,"font-family":"system-ui"});
  label.textContent=(draft.kind==="biped"?"ZWEIBEINER":"VIERBEINER")+" · "+draft.name.slice(0,24).toUpperCase();
@@ -137,10 +194,25 @@ function send(mode,slot){
  if(mode==="arena")query.set("slot",slot);
  location.assign("./lab.html?"+query.toString());
 }
-sliders();newDraft();
+sliders();renderCatalog();
+const seeded=installCatalog(localStorage);
+const first=findEntity(localStorage,"catalog-cheetah")||catalogEntity("cheetah");
+setDraft(first,!!findEntity(localStorage,"catalog-cheetah"));
+notice(seeded.ok?(seeded.added+" neue Katalog-Entitäten lokal gespeichert. "+(seeded.skipped?seeded.skipped+" wegen 40er-Grenze nicht gespeichert.":"10 Beispiel-Figuren auswählbar.")):"Browser-Speicher nicht verfügbar; Katalog kann trotzdem geladen werden.",!seeded.ok);
 $("name").addEventListener("input",ev=>{draft.name=ev.target.value;draw();});
 $("color").addEventListener("input",ev=>{draft.color=ev.target.value;draw();});
-$("kind").addEventListener("change",ev=>{draft.kind=ev.target.value;if(draft.kind==="biped"&&draft.mass<30)draft.mass=30;sync();});
+$("kind").addEventListener("change",ev=>{
+ draft.kind=ev.target.value;
+ if(ENTITY_APPEARANCES[draft.appearance]!==draft.kind)draft.appearance="generic";
+ if(draft.kind==="biped"&&draft.mass<30)draft.mass=30;sync();
+});
+$("appearance").addEventListener("change",ev=>{
+ draft.appearance=ev.target.value;
+ const kind=ENTITY_APPEARANCES[draft.appearance];
+ if(kind&&kind!=="neutral")draft.kind=kind;
+ if(draft.kind==="biped"&&draft.mass<30)draft.mass=30;
+ sync();
+});
 $("template").addEventListener("change",ev=>newDraft(ev.target.value));
 $("save").addEventListener("click",()=>{if(store())notice("Entität gespeichert und bereit für die Simulation.");});
 $("new").addEventListener("click",()=>newDraft($("template").value));
