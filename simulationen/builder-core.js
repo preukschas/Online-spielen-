@@ -58,7 +58,7 @@ export function sample(name="pendulum"){
  if(name==="fast"){
   s.name="Schneller Radstoß (CCD)";s.gravity=0;
   addBody(s,"wheel",{name:"Schneller Ball",length:.8,mass:2,x:-1.6,y:-.8,startVx:220});
-  addBody(s,"wheel",{name:"Zielrad",length:.8,mass:2,x:.4,y:-.8});
+  addBody(s,"wheel",{name:"Zielrad",length:.8,mass:2,x:-.7,y:-.8});
  }else if(name==="collision"){
   s.name="Kollision: zwei Räder";
   addBody(s,"wheel",{name:"Rad A",length:1.2,mass:2,x:-1,y:-1.4,angle:0});
