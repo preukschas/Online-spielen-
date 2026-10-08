@@ -182,4 +182,16 @@ $("help").addEventListener("click",()=>dialog.showModal());
 $("closeHelp").addEventListener("click",()=>dialog.close());
 document.addEventListener("keydown",e=>{if(e.code==="Space"&&!["INPUT","SELECT","BUTTON","TEXTAREA"].includes(document.activeElement.tagName)&&!dialog.open){e.preventDefault();togglePlay();}});
 document.querySelectorAll(".module").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===mode)));
-controls();showSaved();refresh();requestAnimationFrame(frame);
+const entry = new URLSearchParams(window.location.search);
+const requestedSaved = entry.get("saved");
+const stored = scenarios();
+const savedIndex = requestedSaved !== null && /^(0|[1-9]\d*)$/.test(requestedSaved) ? Number(requestedSaved) : -1;
+const requestedMode = entry.get("mode");
+if (savedIndex >= 0 && savedIndex < stored.length && validScenario(stored[savedIndex])) {
+  loadScenario(stored[savedIndex]);
+} else if (requestedMode && CONFIG[requestedMode]) {
+  switchMode(requestedMode);
+} else {
+  controls();
+}
+showSaved();refresh();requestAnimationFrame(frame);
