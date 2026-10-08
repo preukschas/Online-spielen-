@@ -124,11 +124,11 @@ function scenario(){return{format:"DMP_SIM_SCENARIO",version:VERSION,name:$("sce
 function validScenario(o){
  if(!o||o.format!=="DMP_SIM_SCENARIO"||!CONFIG[o.mode]||!CONFIG[o.mode].presets.some(x=>x[0]===o.preset)||!o.params||typeof o.params!=="object")return false;
  if(!Number.isSafeInteger(o.seed)||o.seed<1||o.seed>2147483647||typeof o.name!=="string"||o.name.length>60)return false;
- return FIELDS[o.preset].every(f=>Number.isFinite(o.params[f[0]])&&o.params[f[0]]>=f[2]&&o.params[f[0]]<=f[3]);
+ return FIELDS[o.preset].every(f=>Number.isFinite(o.params[f[0]])&&o.params[f[0]]>=f[2]&&o.params[f[0]]<=f[3])&&["nameA","nameB"].every(key=>o.params[key]===undefined||(typeof o.params[key]==="string"&&o.params[key].length<=24));
 }
 function loadScenario(s){
  if(!validScenario(s)){note("Datei enthält kein gültiges Simulationsszenario.",true);return;}
- mode=s.mode;preset=s.preset;params=Object.fromEntries(FIELDS[preset].map(f=>[f[0],s.params[f[0]]]));seed=s.seed;
+ mode=s.mode;preset=s.preset;params=Object.fromEntries(FIELDS[preset].map(f=>[f[0],s.params[f[0]]]));if(mode==="arena"){for(const key of ["nameA","nameB"]){const value=s.params[key];if(typeof value==="string")params[key]=value.trim().slice(0,24)}}seed=s.seed;
  document.querySelectorAll(".module").forEach(b=>{const yes=b.dataset.mode===mode;b.classList.toggle("active",yes);b.setAttribute("aria-pressed",String(yes));});controls();resetSim();$("scenarioName").value=s.name;note("Experiment geladen. Mit Start wiederholen.");
 }
 $("modules").addEventListener("click",e=>{const btn=e.target.closest("[data-mode]");if(btn)switchMode(btn.dataset.mode);});
