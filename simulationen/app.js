@@ -1,4 +1,5 @@
 import {VERSION,CONFIG,FIELDS,initialParams,makeSim,stepSim,measure,drawScene,trainOneGeneration,trainedToArena,arenaBatch} from "./engine.js";
+import {safeEntityList,findEntity,toBiomechanics,toArena} from "./entity-model.js";
 const $=id=>document.getElementById(id),canvas=$("scene"),sceneCtx=canvas.getContext("2d"),chartCtx=$("chart").getContext("2d");
 const KEY="dmp_simlab_scenarios_v1",BIOKEY="dmp_simlab_best_walker_v1";
 let mode="physics",preset="fall",params=initialParams(preset),seed=42,sim=makeSim(mode,preset,params,seed),playing=false,accum=0,lastFrame=0,dialog=$("helpDialog"),renderTick=0;
@@ -6,6 +7,39 @@ function formatValue(v,f){return String(Number(v.toFixed(3))).replace(".",",")+(
 function note(message,error=false){const n=$("notice");n.textContent=message;n.style.color=error?"#ff9e9e":"#55dbb4";}
 function safeGet(key,defaultValue){try{return JSON.parse(localStorage.getItem(key))??defaultValue}catch{return defaultValue}}
 function safeSet(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch{note("Browser-Speicher nicht verfügbar. Bitte JSON exportieren.",true);return false}}
+
+function addEntityPicker(container,slot=null){
+ const block=document.createElement("div");block.className="entity-picker";
+ const title=document.createElement("label");title.className="field-label";title.textContent=slot?"Entität "+slot+" aus dem Editor":"Gespeicherten Körper laden";
+ const select=document.createElement("select");select.className="full";select.setAttribute("aria-label",title.textContent);
+ const placeholder=document.createElement("option");placeholder.value="";placeholder.textContent="– Entität auswählen –";select.append(placeholder);
+ const items=safeEntityList(localStorage);
+ for(const entity of items){const o=document.createElement("option");o.value=entity.id;o.textContent=entity.name+" · "+(entity.kind==="biped"?"2 Beine":"4 Beine");select.append(o);}
+ const active=slot?params["entity"+slot]:params.entityId;
+ if(active&&items.some(e=>e.id===active))select.value=active;
+ const btn=document.createElement("button");btn.type="button";btn.className="extra-button";btn.textContent=slot?"Entität "+slot+" übernehmen":"Körperwerte übernehmen";
+ btn.disabled=items.length===0;
+ btn.addEventListener("click",()=>{const e=findEntity(localStorage,select.value);if(!e){note("Bitte eine gespeicherte Entität auswählen.",true);return;}applyEntityToLab(e,slot?"arena":"bio",slot||"A");});
+ const editor=document.createElement("a");editor.href="./editor.html";editor.textContent="✎ Entität im Editor gestalten ↗";editor.className="entity-editor-link";
+ title.append();block.append(title,select,btn,editor);container.append(block);
+}
+function applyEntityToLab(entity,target,slot="A"){
+ if(target==="bio"){
+  const converted=toBiomechanics(entity);if(!converted){note("Entität kann nicht übernommen werden.",true);return;}
+  mode="bio";preset=converted.preset;params={...initialParams(preset),...converted.params,entityId:entity.id};
+ } else if(target==="arena"){
+  const converted=toArena(entity);if(!converted){note("Entität kann nicht übernommen werden.",true);return;}
+  if(mode!=="arena"){mode="arena";preset="race";params=initialParams(preset);}
+  const side=slot==="B"?"B":"A";
+  params["speed"+side]=converted.speed;params["stamina"+side]=converted.stamina;
+  params["name"+side]=converted.name;params["color"+side]=converted.color;
+  params["kind"+side]=converted.kind;params["entity"+side]=entity.id;
+ }else return;
+ document.querySelectorAll(".module").forEach(b=>{const active=b.dataset.mode===mode;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active));});
+ controls();resetSim();
+ $("scenarioName").value=entity.name+(mode==="bio"?" · Gangversuch":" · Arena");
+ note("Entität „"+entity.name+"“ als "+(mode==="bio"?"Biomechanik-Körper":"Arena "+(slot==="B"?"B":"A"))+" übernommen. Vereinfachtes Lehrmodell.");
+}
 function controls(){
  $("sceneTitle").textContent=CONFIG[mode].title;
  $("sceneSubtitle").textContent=CONFIG[mode].presets.find(x=>x[0]===preset)?.[1]||"";
@@ -31,6 +65,7 @@ function controls(){
   const btn=document.createElement("button");btn.className="extra-button";btn.type="button";btn.id="trainButton";btn.textContent="🧠 25 Generationen trainieren";
   btn.addEventListener("click",startTraining);ex.append(btn);
   const s=document.createElement("p");s.id="trainStatus";s.className="train-status";s.textContent="Der Regler wird durch Evolution mit getrenntem Testlauf optimiert.";ex.append(s);
+  addEntityPicker(ex,null);
  }
  if(mode==="mechanics"){
   const link=document.createElement("a");link.className="extra-button";link.href="./builder.html";link.textContent="🧩 Freien Maschinenbaukasten öffnen ↗";
@@ -38,6 +73,7 @@ function controls(){
   const hint=document.createElement("p");hint.className="micro";hint.textContent="Beliebige Stangen und Räder konstruieren, mit Drehgelenken verbinden und Motoren hinzufügen.";ex.append(hint);
  }
  if(mode==="arena"){
+  addEntityPicker(ex,"A");addEntityPicker(ex,"B");
   for(const [key,label,fallback] of [["nameA","Entität A benennen","Entität A"],["nameB","Entität B benennen","Entität B"]]){
    const title=document.createElement("label");title.className="field-label";title.textContent=label;title.htmlFor=key;
    const field=document.createElement("input");field.id=key;field.className="full";field.maxLength=24;field.value=String(params[key]||fallback);field.setAttribute("aria-label",label);
@@ -131,11 +167,19 @@ function scenario(){return{format:"DMP_SIM_SCENARIO",version:VERSION,name:$("sce
 function validScenario(o){
  if(!o||o.format!=="DMP_SIM_SCENARIO"||!CONFIG[o.mode]||!CONFIG[o.mode].presets.some(x=>x[0]===o.preset)||!o.params||typeof o.params!=="object")return false;
  if(!Number.isSafeInteger(o.seed)||o.seed<1||o.seed>2147483647||typeof o.name!=="string"||o.name.length>60)return false;
- return FIELDS[o.preset].every(f=>Number.isFinite(o.params[f[0]])&&o.params[f[0]]>=f[2]&&o.params[f[0]]<=f[3])&&["nameA","nameB"].every(key=>o.params[key]===undefined||(typeof o.params[key]==="string"&&o.params[key].length<=24));
+ const fieldsValid=FIELDS[o.preset].every(f=>Number.isFinite(o.params[f[0]])&&o.params[f[0]]>=f[2]&&o.params[f[0]]<=f[3]);
+ const namesValid=["nameA","nameB","entityName"].every(key=>o.params[key]===undefined||(typeof o.params[key]==="string"&&o.params[key].length<=24));
+ const colorsValid=["color","colorA","colorB"].every(key=>o.params[key]===undefined||(typeof o.params[key]==="string"&&/^#[a-fA-F0-9]{6}$/.test(o.params[key])));
+ const kindsValid=["kindA","kindB"].every(key=>o.params[key]===undefined||o.params[key]==="biped"||o.params[key]==="quadruped");
+ const idsValid=["entityId","entityA","entityB"].every(key=>o.params[key]===undefined||(typeof o.params[key]==="string"&&/^[a-zA-Z0-9_-]{1,80}$/.test(o.params[key])));
+ const shapeValid=["torso","limb","head"].every(key=>o.params[key]===undefined||(typeof o.params[key]==="number"&&Number.isFinite(o.params[key])&&o.params[key]>=.5&&o.params[key]<=1.6));
+ return fieldsValid&&namesValid&&colorsValid&&kindsValid&&idsValid&&shapeValid;
 }
 function loadScenario(s){
  if(!validScenario(s)){note("Datei enthält kein gültiges Simulationsszenario.",true);return;}
- mode=s.mode;preset=s.preset;params=Object.fromEntries(FIELDS[preset].map(f=>[f[0],s.params[f[0]]]));if(mode==="arena"){for(const key of ["nameA","nameB"]){const value=s.params[key];if(typeof value==="string")params[key]=value.trim().slice(0,24)}}seed=s.seed;
+ mode=s.mode;preset=s.preset;params=Object.fromEntries(FIELDS[preset].map(f=>[f[0],s.params[f[0]]]));if(mode==="arena"){for(const key of ["nameA","nameB","colorA","colorB","kindA","kindB","entityA","entityB"]){if(s.params[key]!==undefined)params[key]=s.params[key];}}
+ if(mode==="bio"){for(const key of ["entityId","entityName","color","torso","limb","head"]){if(s.params[key]!==undefined)params[key]=s.params[key];}}
+ seed=s.seed;
  document.querySelectorAll(".module").forEach(b=>{const yes=b.dataset.mode===mode;b.classList.toggle("active",yes);b.setAttribute("aria-pressed",String(yes));});controls();resetSim();$("scenarioName").value=s.name;note("Experiment geladen. Mit Start wiederholen.");
 }
 $("modules").addEventListener("click",e=>{const btn=e.target.closest("[data-mode]");if(btn)switchMode(btn.dataset.mode);});
@@ -198,5 +242,11 @@ if (savedIndex >= 0 && savedIndex < stored.length && validScenario(stored[savedI
   switchMode(requestedMode);
 } else {
   controls();
+}
+const entityRequested = entry.get("entity");
+if(entityRequested && (mode==="arena"||mode==="bio")){
+ const found=findEntity(localStorage,entityRequested);
+ if(found)applyEntityToLab(found,mode,entry.get("slot")==="B"?"B":"A");
+ else note("Entität in diesem Browser nicht gefunden. Erstelle sie im Editor oder importiere JSON.",true);
 }
 showSaved();refresh();requestAnimationFrame(frame);
