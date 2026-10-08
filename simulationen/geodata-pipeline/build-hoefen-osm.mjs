@@ -20,6 +20,7 @@ const services=[
  "https://overpass.nchc.org.tw/api/interpreter"
 ];
 const maxResponse=16*1024*1024;
+const allowedTags=["highway","building","waterway","natural","water","landuse","leisure","name"];
 async function request(url){
  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),45000);
  try{
@@ -90,7 +91,7 @@ if(!json){
 }
 if(!json)throw Error("No real OSM available. NOT creating snapshot: "+(error?.message||"unknown"));
 const sanity=p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&p.lat>48.3&&p.lat<48.6&&p.lon>7.6&&p.lon<8.1;
-const allowedTags=["highway","building","waterway","natural","water","landuse","leisure","name"];
+
 const unique=new Set(),ways=[];
 for(const way of json.elements||[]){
  if(way.type!=="way"||!Number.isSafeInteger(way.id)||unique.has(way.id)||!way.tags||!Array.isArray(way.geometry)||way.geometry.length<2||way.geometry.length>5000)continue;
