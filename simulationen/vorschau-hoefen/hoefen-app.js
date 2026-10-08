@@ -244,6 +244,57 @@ function applyTerrain(next,source){
  const valid=E.create({...config(),cells:next,actions});
  geo=valid.cells;geosource=source;clearResults();restart();summarySource();store();
 }
+function applyOSMData(data,{source,date}={}){
+ if(!data||!Array.isArray(data.elements)||data.elements.length<2)throw Error("Unvollständige OSM-Geometriedaten");
+ const raster=G.rasterizeOSM(data,E.ORIGIN,E.BASE,E.W,E.H,E.SIZE);
+ const waterCells=raster.cells.filter(c=>c.kind==="water").length;
+ const useSketch=waterCells===0;
+ const keepHeight=geosource.hasDgm;
+ const model=raster.cells.map((cell,i)=>({...cell,
+   elevation:keepHeight?geo[i].elevation:E.BASE[i].elevation,
+   channel:useSketch?E.BASE[i].channel:cell.kind==="water",
+   site:!cell.channel&&E.BASE[i].site,
+   origin:"OSM geometry; "+(keepHeight?"user-imported DGM":"synthetic elevation")
+ }));
+ if(useSketch)for(let i=0;i<model.length;i++)if(model[i].channel)model[i].kind="water";
+ const waterways=data.elements.filter(e=>e.type==="way"&&e.tags?.waterway&&Array.isArray(e.geometry)&&e.geometry.length>=2).slice(0,160)
+ .map(e=>({
+  id:e.id||null,name:typeof e.tags.name==="string"?e.tags.name.slice(0,95):"",
+  isBruchgraben:/\bBruchgraben\b/i.test(e.tags.name||""),
+  geometry:e.geometry.slice(0,800).filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon)).map(p=>[p.lat,p.lon])
+ }));
+ const m={...geosource,type:keepHeight?"osm+dem":"osm",date:date||new Date().toISOString().slice(0,10),
+  hasDgm:!!keepHeight,source:source||"OpenStreetMap",attribution:"© OpenStreetMap-Mitwirkende (ODbL)",
+  features:raster.featureCount,waterCells,streamSketch:useSketch,
+  waterways,waterwayNames:waterways.map(w=>w.name).filter(Boolean)};
+ applyTerrain(model,m);
+ return m;
+}
+async function loadBundledOSM(){
+ // An independently fetched, committed dataset can be used immediately offline.
+ // If it is absent, silently retain the honestly labelled schematic fallback.
+ if(geosource.hasDgm||geosource.type==="osm"||geosource.type==="osm+dem")return;
+ try{
+  const timeout=AbortSignal.timeout?AbortSignal.timeout(9000):undefined;
+  const response=await fetch("./hoefen-ortsdaten.json",{cache:"no-store",signal:timeout});
+  if(!response.ok)throw Error("HTTP "+response.status);
+  const snapshot=await response.json();
+  if(snapshot.schema!=="dmp-hoefen-osm-v1"||snapshot.municipality!=="Schutterwald"||
+     snapshot.district!=="Höfen"||!snapshot.valid||!Array.isArray(snapshot.elements)||
+     snapshot.elements.length<10||Math.abs(snapshot.origin?.lat-E.ORIGIN.lat)>.000001||
+     Math.abs(snapshot.origin?.lon-E.ORIGIN.lon)>.000001)
+    throw Error("Geodatensatz nicht korrekt geprüft");
+  const m=applyOSMData({elements:snapshot.elements},{source:"Versionierter OSM-Snapshot",date:snapshot.generatedAt?.slice(0,10)});
+  info("✓ Ortsdaten automatisch geladen ("+m.date+"): "+m.features+
+    " echte OSM-Objekte. "+(m.streamSketch?"Bruchgraben im Raster schematisch. ":"Gewässerkartierung aus OSM. ")+
+    "Geländehöhen bleiben bis zum DGM-Import künstlich.");
+  status("Schutterwald/Höfen: kartierte OSM-Landschaft geladen. Mit Regen und Maßnahmen experimentieren.");
+ }catch(e){
+   // Fail closed: never relabel schematic terrain as verified maps.
+   if(!geosource.hasDgm&&geosource.type==="schematic")
+     info("Schematische Startkarte: kein geprüfter Ortsdatensatz verfügbar ("+String(e.message||e).slice(0,100)+"). OSM-Abruf ist über den Button möglich.");
+ }
+}
 async function osmf(){
  const btn=$("getOsm");btn.disabled=true;info("OpenStreetMap/Overpass wird abgefragt …");
  try{
@@ -258,32 +309,11 @@ async function osmf(){
    }catch(e){error=e;}finally{clearTimeout(timer);}
   }
   if(!data)throw error||Error("OSM antwortet nicht");
-  const raster=G.rasterizeOSM(data,E.ORIGIN,E.BASE,E.W,E.H,E.SIZE);
-  // Incomplete waterway mapping must not silently erase the visible schematic stream.
-  const waterCells=raster.cells.filter(c=>c.kind==="water").length;
-  const useSketch=waterCells===0;
-  const model=raster.cells.map((cell,i)=>({...cell,
-   elevation:E.BASE[i].elevation,
-   channel:useSketch?E.BASE[i].channel:cell.kind==="water",
-   site:!cell.channel&&E.BASE[i].site,
-   origin:"OSM-geometry/artificial-height"
-  }));
-  // If the schematic waterway is preserved, identify it explicitly as fictional.
-  if(useSketch)for(let i=0;i<model.length;i++)if(model[i].channel)model[i].kind="water";
-  const waterWays=data.elements.filter(e=>e.type==="way"&&e.tags?.waterway&&Array.isArray(e.geometry)&&e.geometry.length>=2);
-  const waterways=waterWays.slice(0,90).map(e=>({
-   id:e.id||null,name:typeof e.tags.name==="string"?e.tags.name.slice(0,95):"",
-   isBruchgraben:/\bBruchgraben\b/i.test(e.tags.name||""),
-   geometry:e.geometry.slice(0,800).filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon)).map(p=>[p.lat,p.lon])
-  }));
-  const m={type:"osm",date:new Date().toISOString().slice(0,10),hasDgm:false,source:"© OpenStreetMap-Mitwirkende (ODbL)",
-   features:raster.featureCount,waterCells,streamSketch:useSketch,
-   waterways,waterwayNames:waterways.map(w=>w.name).filter(Boolean)};
-  applyTerrain(model,m);
-  info("OSM geladen: "+m.features+" Objekte; "+waterCells+" Gewässerzellen. "+
-    (useSketch?"Gewässerlauf weiterhin künstlich. ":"Gewässerzellen OSM-kartiert. ")+
-    "Höhen, Boden, Kanal und Retention weiter modellhaft.");
-  status("Geometrie aus OSM eingespielt. A/B-Szenarien bleiben mit identischem Kartenstand vergleichbar.");
+  const m=applyOSMData(data,{source:"Live-OSM/Overpass",date:new Date().toISOString().slice(0,10)});
+  info("✓ OSM-Livekarte: "+m.features+" Objekte, "+m.waterCells+" Wasser-Rasterzellen. "+
+   (m.streamSketch?"Gewässer im Raster weiterhin schematisch. ":"Gewässer aus OSM. ")+
+   (m.hasDgm?"DGM-Höhen unverändert erhalten.":"Geländehöhen weiterhin künstlich."));
+  status("Echte OSM-Geometrie neu geladen. Der aktuelle A/B-Vergleich muss erneut berechnet werden.");
  }catch(e){
   info("OSM-Abruf fehlgeschlagen: "+String(e.message||e).slice(0,110)+". Bisherige Kartenbasis bleibt unverändert.");
  }finally{btn.disabled=false;}
@@ -368,5 +398,6 @@ let resizeTimer;window.addEventListener("resize",()=>{clearTimeout(resizeTimer);
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stop();status("Im Hintergrund automatisch pausiert.");}});
 read();reflectInputs();refreshPresets();refreshTools();refreshActions();clearResults();restart();summarySource();
 if(warning)status(warning);
+loadBundledOSM();
 window.HoefenApp=Object.freeze({getState:()=>state,getTerrain:()=>geo,getSource:()=>geosource,runAB:()=>E.compare({...slotA,cells:geo},{...slotB,cells:geo},config())});
 })();
