@@ -1,10 +1,11 @@
 // DMP Sim Lab – deterministische, bewusst vereinfachte Lehrmodelle
-export const VERSION="1.3.0";
+import {makeDuel,stepDuel,makeDuelTraining,duelDefaultGenome,simulateDuel} from "./duel-core.js?v=1.4.0";
+export const VERSION="1.4.0";
 export const CONFIG={
  physics:{title:"Physik-Spielwiese",presets:[["fall","Freier Fall"],["pendulum","Pendel"],["ramp","Schiefe Ebene"],["collision","Kugelkollision"]],limit:"Lehrmodell mit idealisierten Körpern, festem Zeitschritt und angenommener Reibung. Nicht für technische Nachweise."},
  crash:{title:"Crashtest",presets:[["barrier","Auto gegen Betonbarriere"],["gate","Auto gegen Schranke"],["jump","Auto über Sprungrampe"]],limit:"Vereinfachte Kontakt-, Bruch- und Flugmodelle. Schadensstufen sind illustrative Werte aus Belastung und Verformung, keine realen Fahrzeug- oder Verletzungsprognosen."},
  bio:{title:"Biomechanik",presets:[["walker","Zweibeiner: Balance & Gang"],["quad","Vierbeiner: Traben lernen"]],limit:"Zweibeiner-/Vierbeinermodell mit begrenzten Gelenkmotoren und vereinfachter Fußkontaktregel. Keine anatomisch vollständige oder medizinische Simulation."},
- arena:{title:"Arena",presets:[["race","Hindernisrennen"],["sprint","Sprint ohne Hindernisse"]],limit:"Regelbasiertes Rennen vereinfachter Agenten; Sieger entstehen aus transparenten Spielregeln, nicht aus realen biomechanischen Fähigkeiten."},
+ arena:{title:"Arena",presets:[["race","Hindernisrennen"],["sprint","Sprint ohne Hindernisse"],["duel","Duell-Arena: Schubsen, Springen, Schlagen & Treten"]],limit:"Rennen und stilisierte 2D-Duelle. Kräfte, Treffer und Lernstrategien sind Spielregeln; keine realen Körper- oder Verletzungsmodelle."},
  mechanics:{title:"Maschinen & Mechanik",presets:[["lever","Hebel am Drehgelenk"],["crank","Kurbel & Schubstange"],["gears","Zahnradübersetzung"]],limit:"Idealisierte 2D-Lehrmodelle. Hebel mit Trägheit und Anschlag; Kurbel und Zahnräder kinematisch vorgegeben. Kein Festigkeitsnachweis, keine Fertigungsfreigabe."}
 };
 export const FIELDS={
@@ -21,6 +22,7 @@ export const FIELDS={
  lever:[["armA","Hebelarm links",.5,3,.1,"m",1.5],["armB","Hebelarm rechts",.5,3,.1,"m",2],["force","Eingangskraft",0,180,5,"N",110],["load","Lastkraft",0,180,5,"N",65],["inertia","Trägheitsmoment",.5,25,.5,"kg·m²",9],["damping","Dämpfung",0,18,.5,"N·m·s",3]],
  crank:[["crank","Kurbelradius",.2,.9,.05,"m",.6],["rod","Pleuellänge",1.2,3,.1,"m",2],["rpm","Drehzahl",5,180,5,"U/min",55]],
  gears:[["teethA","Zähne Eingang",12,48,2,"",24],["teethB","Zähne Ausgang",12,60,2,"",40],["rpm","Eingangsdrehzahl",10,180,5,"U/min",90],["torque","Eingangsdrehmoment",5,100,5,"N·m",30],["efficiency","Wirkungsgrad",.5,1,.05,"",.9]],
+ duel:[["speedA","Bewegungstempo A",1,6,.2,"m/s",3.5],["speedB","Bewegungstempo B",1,6,.2,"m/s",3.3],["staminaA","Ausdauer A",.2,1,.1,"",.8],["staminaB","Ausdauer B",.2,1,.1,"",.9],["duelDuration","Dauer pro Duell",12,36,6,"s",24],["evoRounds","Generationen je Lernrunde",5,25,5,"",10]],
  race:[["speedA","Tempo A",1,6,.2,"m/s",3.5],["speedB","Tempo B",1,6,.2,"m/s",3.3],["staminaA","Ausdauer A",.2,1,.1,"",.8],["staminaB","Ausdauer B",.2,1,.1,"",.9],["obstacle","Hindernisschwierigkeit",0,1,.1,"",.6]]
 };
 export function initialParams(preset){return Object.fromEntries((FIELDS[preset]||[]).map(f=>[f[0],f[6]]))}
@@ -41,7 +43,12 @@ export function makeSim(mode,preset,params,seed=42){
   if(preset==="crank")s.body={angle:0,position:p.crank+p.rod,velocity:0,omega:p.rpm*2*Math.PI/60};
   if(preset==="gears")s.body={angleA:0,angleB:Math.PI/p.teethB,rpmB:-p.rpm*p.teethA/p.teethB,torqueB:p.torque*p.teethB/p.teethA*p.efficiency};
  }
- if(mode==="arena"){const appearance=(side,fallback)=>({color:/^#[a-fA-F0-9]{6}$/.test(p["color"+side]||"")?p["color"+side]:fallback,kind:p["kind"+side]==="quadruped"?"quadruped":"biped"});s.body={racers:[{name:String(p.nameA||"Entität A").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaA,base:p.speedA,penalty:0,...appearance("A","#53deb6")},{name:String(p.nameB||"Entität B").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaB,base:p.speedB,penalty:0,...appearance("B","#f8bc6a")}],winner:null,seed};}
+ if(mode==="arena"&&preset==="duel"){
+  s.body=makeDuel(p,[p.genomeA||duelDefaultGenome(),p.genomeB||duelDefaultGenome()],seed);
+  s.duelTraining=makeDuelTraining();
+  s.duelTraining.genomes=[{...s.body.fighters[0].genome},{...s.body.fighters[1].genome}];
+ }
+ if(mode==="arena"&&preset!=="duel"){const appearance=(side,fallback)=>({color:/^#[a-fA-F0-9]{6}$/.test(p["color"+side]||"")?p["color"+side]:fallback,kind:p["kind"+side]==="quadruped"?"quadruped":"biped"});s.body={racers:[{name:String(p.nameA||"Entität A").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaA,base:p.speedA,penalty:0,...appearance("A","#53deb6")},{name:String(p.nameB||"Entität B").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaB,base:p.speedB,penalty:0,...appearance("B","#f8bc6a")}],winner:null,seed};}
  record(s);
  return s;
 }
@@ -174,7 +181,8 @@ export function stepSim(s,dt=1/120){
    b.torqueB=p.torque*p.teethB/p.teethA*p.efficiency;
   }
  }
- if(s.mode==="arena"){
+ if(s.mode==="arena"&&s.preset==="duel"){stepDuel(b,dt);if(b.finished)s.finished=true;}
+ if(s.mode==="arena"&&s.preset!=="duel"){
   for(let i=0;i<2;i++){const racer=b.racers[i];if(racer.finish!==null)continue;
    racer.v+=(racer.base*(.72+.28*racer.stamina)-racer.v)*dt*2;
    racer.x+=racer.v*dt;
@@ -200,6 +208,10 @@ export function measure(s){
   if(s.preset==="lever")return{plot:b.angle*180/Math.PI,chart:"Hebelwinkel (°)",read:[["Nettomoment",fmt(b.torque,1)+" N·m"],["Auslenkung",fmt(b.angle*180/Math.PI,1)+"°"],["Winkeltempo",fmt(b.omega,2)+" rad/s"],["Anschlag",b.stop?"Erreicht":"Frei"]]};
   if(s.preset==="crank")return{plot:b.position,chart:"Schieberposition (m)",read:[["Schieberweg",fmt(b.position,2)+" m"],["Schiebertempo",fmt(b.velocity,2)+" m/s"],["Kurbelwinkel",fmt(b.angle*180/Math.PI%360,1)+"°"],["Drehzahl",fmt(p.rpm,0)+" U/min"]]};
   return{plot:b.rpmB,chart:"Ausgangsdrehzahl (U/min)",read:[["Übersetzung",fmt(p.teethB/p.teethA,2)+" : 1"],["Ausgangsdrehzahl",fmt(b.rpmB,1)+" U/min"],["Ausgangsmoment",fmt(b.torqueB,1)+" N·m"],["Wirkungsgrad",fmt(100*p.efficiency,0)+" %"]]};
+ }
+ if(s.mode==="arena"&&s.preset==="duel"){
+  const [a,c]=b.fighters;
+  return{plot:a.points-c.points,chart:"Punkte A − B",read:[["Entität A",a.name+" · "+a.hp.toFixed(0)+" HP"],["Entität B",c.name+" · "+c.hp.toFixed(0)+" HP"],["Punkte",a.points+" : "+c.points],["Aktionen",a.action+" / "+c.action],["Sieger",b.winner||"Noch offen"]]};
  }
  const [a,c]=b.racers;return{plot:a.x-c.x,chart:"Vorsprung A − B (m)",read:[["Entität A",fmt(a.x,1)+" / 32 m"],["Entität B",fmt(c.x,1)+" / 32 m"],["Zeit",fmt(s.time,1)+" s"],["Sieger",b.winner||"–"]]};
 }
@@ -236,6 +248,19 @@ export function trainOneGeneration(s){
 export function trainedToArena(genome){return clamp(1.8+genome.amplitude*genome.frequency*1.15,1,6);}
 export function arenaBatch(params,seed=42,count=10,preset="race"){
  let wins=[0,0,0];
+ if(preset==="duel"){
+  for(let i=0;i<count;i++){
+   const flipped=i%2===1,ga=params.genomeA||duelDefaultGenome(),gb=params.genomeB||duelDefaultGenome();
+   const q=flipped?{...params,nameA:params.nameB,nameB:params.nameA,colorA:params.colorB,colorB:params.colorA,
+    kindA:params.kindB,kindB:params.kindA,speedA:params.speedB,speedB:params.speedA,staminaA:params.staminaB,staminaB:params.staminaA}:params;
+   const match=simulateDuel(q,flipped?[gb,ga]:[ga,gb],seed+Math.floor(i/2)*1597);
+   const [a,b]=match.fighters,sa=a.hp+a.points*.72,sb=b.hp+b.points*.72;
+   let win=Math.abs(sa-sb)<.3?2:sa>sb?0:1;
+   if(flipped&&win<2)win=1-win;wins[win]++;
+  }
+  return wins;
+ }
+
  for(let i=0;i<count;i++){
   const q=i%2?{...params,speedA:params.speedB,speedB:params.speedA,staminaA:params.staminaB,staminaB:params.staminaA}:params;
   const s=makeSim("arena",preset,q,seed+Math.floor(i/2));
