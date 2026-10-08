@@ -284,7 +284,15 @@ function loadScenario(s){
  document.querySelectorAll(".module").forEach(b=>{const yes=b.dataset.mode===mode;b.classList.toggle("active",yes);b.setAttribute("aria-pressed",String(yes));});controls();resetSim();$("scenarioName").value=s.name;note("Experiment geladen. Mit Start wiederholen.");
 }
 $("modules").addEventListener("click",e=>{const btn=e.target.closest("[data-mode]");if(btn)switchMode(btn.dataset.mode);});
-$("preset").addEventListener("change",e=>{preset=e.target.value;params=initialParams(preset);controls();resetSim();});
+$("preset").addEventListener("change",e=>{
+ const prev={...params};preset=e.target.value;params=initialParams(preset);
+ if(mode==="arena"){
+  for(const key of ["nameA","nameB","colorA","colorB","kindA","kindB","entityA","entityB","speedA","speedB","staminaA","staminaB","genomeA","genomeB"]){
+   if(prev[key]!==undefined)params[key]=prev[key];
+  }
+ }
+ controls();resetSim();
+});
 $("play").addEventListener("click",togglePlay);
 $("step").addEventListener("click",doStep);
 $("reset").addEventListener("click",resetSim);
