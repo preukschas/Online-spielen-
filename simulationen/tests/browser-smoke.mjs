@@ -126,7 +126,7 @@ async function testViewport(browser,name,opts){
    await page.locator("#duelTrainButton").click();
    await page.waitForFunction(()=>document.querySelector("#duelStatus")?.textContent?.includes("Generation 5/5"),null,{timeout:40000});
    const progress=await page.evaluate(()=>Object.keys(localStorage).filter(k=>k.startsWith("dmp_duel_progress_v1_")).map(k=>JSON.parse(localStorage.getItem(k))));
-   assert.ok(progress.some(p=>p.generation>=5&&p.genomes.length===2));
+   assert.ok(progress.some(p=>p.generation>=5&&Array.isArray(p.genomes)&&p.genomes.length===2));
    await page.locator("#play").click();await page.waitForTimeout(350);await page.locator("#reset").click();
    assert.match(await page.locator("#readouts").innerText(),/Punkte/);
  });
