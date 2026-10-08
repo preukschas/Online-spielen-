@@ -105,7 +105,7 @@ async function run(browser,name,settings){
    assert.equal(await page.locator("#saved option").count(),11);
    await page.locator("#importFile").setInputFiles({name:"entity.json",mimeType:"application/json",buffer:file});
    await page.waitForFunction(()=>document.querySelector("#message")?.textContent?.includes("importiert"));
-   assert.equal(await page.locator("#saved option").count(),2);
+   assert.equal(await page.locator("#saved option").count(),12);
    assert.equal(await page.locator("#name").inputValue(),"Phase1 Testfuchs");
   });
   await check(name+" Entität: Übergabe an Biomechanik und Arena B",async()=>{
