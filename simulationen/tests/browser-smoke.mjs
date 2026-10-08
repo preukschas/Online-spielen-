@@ -95,7 +95,7 @@ async function testViewport(browser,name,opts){
  await check(name+" biologic training completes",async()=>{
   await page.locator('.module[data-mode="bio"]').click();
   await page.locator("#trainButton").click();
-  await page.waitForFunction(()=>document.querySelector("#trainStatus")?.textContent?.includes("25/25"),{timeout:15000});
+  await page.waitForFunction(()=>document.querySelector("#trainStatus")?.textContent?.includes("25/25"),null,{timeout:15000});
   const best=await page.evaluate(()=>localStorage.getItem("dmp_simlab_best_walker_v1"));
   assert.ok(best&&JSON.parse(best).genome);
  });
@@ -104,7 +104,7 @@ async function testViewport(browser,name,opts){
    await page.locator("#preset").selectOption("quad");
    assert.equal(await page.locator("#preset").inputValue(),"quad");
    await page.locator("#trainButton").click();
-   await page.waitForFunction(()=>document.querySelector("#trainStatus")?.textContent?.includes("25/25"),{timeout:15000});
+   await page.waitForFunction(()=>document.querySelector("#trainStatus")?.textContent?.includes("25/25"),null,{timeout:15000});
    const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem("dmp_simlab_best_walker_v1")));
    assert.ok(saved?.genome?.feedback);
    await page.locator("#play").click();await page.waitForTimeout(160);await page.locator("#reset").click();
