@@ -174,9 +174,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&gameRunnin
 $('#startBtn').addEventListener('click',startQuiz);$('#checkBtn').addEventListener('click',check);$('#hintBtn').addEventListener('click',hint);$('#nextBtn').addEventListener('click',next);$('#againBtn').addEventListener('click',newRound);$('#playBtn').addEventListener('click',startGame);$('#secondGameBtn').addEventListener('click',startGame);$('#learnAgainBtn').addEventListener('click',newRound);$('#resetBtn').addEventListener('click',reset);$('#scope').addEventListener('change',renderLearning);$('#answer').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(e.repeat)return;if(!$('#checkBtn').disabled)check();else if(!$('#nextBtn').classList.contains('hidden'))next()}});
 /* Google-Vokabelbibliothek: nur freigegebene Wörter, mit Offline-Fallback. */
 const MOE_CENTRAL_URL="https://preukschas.github.io/Online-spielen-/shared/moe-vocab.json";
-const MOE_PAUSED=new Set(['dad','father','mum','mother','parents','parents (pl)','sister','brother','aunt','uncle','grandmother','grandfather']);
 function moeKey(value){return String(value||'').toLowerCase().replace(/…/g,'...').replace(/\(=.+?\)|\(pl\)|\(pl only\)/g,'').replace(/[^a-z0-9']+/g,' ').trim();}
-function moeLocalFallback(){const safe=VOCAB.filter(v=>!MOE_PAUSED.has(moeKey(v.en)));VOCAB.splice(0,VOCAB.length,...safe);}
 async function moeRefreshVocabulary(){
  try{
   const reply=await fetch(MOE_CENTRAL_URL,{cache:'no-store'});
@@ -186,7 +184,7 @@ async function moeRefreshVocabulary(){
   const original=new Map(VOCAB.map(v=>[moeKey(v.en),v]));
   const next=[],seen=new Set();
   for(const row of data.words){
-   if(!row||!row.en||!row.de||MOE_PAUSED.has(moeKey(row.en)))continue;
+   if(!row||!row.en||!row.de)continue;
    const key=moeKey(row.en);if(seen.has(key))continue;seen.add(key);
    const older=original.get(key);
    next.push({en:String(row.en),de:String(row.de),core:older?older.core:1,a:older?(older.a||[]):[]});
@@ -196,7 +194,6 @@ async function moeRefreshVocabulary(){
   renderLearning();
  }catch(_error){/* Keine Netzverbindung: lokale Vokabeln bleiben spielbar. */}
 }
-moeLocalFallback();
 load();
 moeRefreshVocabulary();
 </script>
