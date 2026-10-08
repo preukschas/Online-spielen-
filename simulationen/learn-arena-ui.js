@@ -5,7 +5,7 @@ const STORE="dmp_neuroarena_training_v1";
 let trainer;
 try{trainer=restoreTrainer(JSON.parse(localStorage.getItem(STORE)));}catch{trainer=newTrainer(42);}
 el("seed").value=String(trainer.seed);
-let courseSeed=trainer.seed+15001,race=null,playing=false,lastFrame=0,accumulator=0,training=false,stopRequested=false,drawTime=0;
+let courseSeed=trainer.seed+30001,race=null,playing=false,lastFrame=0,accumulator=0,training=false,stopRequested=false,drawTime=0;
 function fmt(v,d=1){return Number.isFinite(v)?v.toFixed(d).replace(".",","):"–";}
 function notice(s,error=false){el("notice").textContent=s;el("notice").classList.toggle("error",error);}
 function store(){try{localStorage.setItem(STORE,JSON.stringify(snapshot(trainer)));}catch{notice("Lokaler Speicher nicht verfügbar. Bitte das Training als JSON exportieren.",true);}}
@@ -191,7 +191,7 @@ el("clear").addEventListener("click",()=>{
  if(!confirm("Alle gespeicherten Generationen und Modellgewichte dieses Trainings ersetzen? Exportiere bei Bedarf vorher eine Datei."))return;
  const seed=Number(el("seed").value);
  if(!Number.isInteger(seed)||seed<1||seed>1e9){notice("Bitte einen ganzzahligen Startwert zwischen 1 und 1.000.000.000 eingeben.",true);return;}
- trainer=newTrainer(seed);courseSeed=seed+15001;store();updateTraining();compareStart();
+ trainer=newTrainer(seed);courseSeed=seed+30001;store();updateTraining();compareStart();
  el("trainingStatus").textContent="Neuer Trainingslauf bereit. Der bisherige Fortschritt wurde ersetzt.";
  notice("Neues Training mit Startwert "+seed+" angelegt.");
 });
@@ -208,7 +208,7 @@ el("importFile").addEventListener("change",async(e)=>{
  if(file.size>1000000){notice("Datei zu groß (maximal 1 MB).",true);return;}
  try{
   const loaded=restoreTrainer(JSON.parse(await file.text()));
-  trainer=loaded;el("seed").value=String(trainer.seed);courseSeed=trainer.seed+15001;
+  trainer=loaded;el("seed").value=String(trainer.seed);courseSeed=trainer.seed+30001;
   store();updateTraining();compareStart();notice("Training importiert: Generation "+trainer.generation+".");
  }catch(err){notice("Import abgelehnt: "+err.message,true);}
 });
