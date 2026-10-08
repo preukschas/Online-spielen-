@@ -57,6 +57,7 @@ function makeField(container,label,key,value,min,max,stepVal,context){
 function renderUI(){
  $("sceneName").textContent=scene.name;$("filename").value=scene.name;$("gravity").value=scene.gravity;
  $("collisions").checked=scene.collisions!==false;
+ $("ccd").checked=scene.ccd!==false;
  $("restitution").value=scene.restitution??.05;
  $("friction").value=scene.friction??.35;
  $("bodyCount").textContent=scene.bodies.length;$("jointCount").textContent=scene.joints.length;
@@ -79,6 +80,8 @@ function renderUI(){
   makeField(grid,"Position X (m)","x",bod.x,-4.6,4.6,.1,"body");
   makeField(grid,"Position Y (m)","y",bod.y,-3.2,2.1,.1,"body");
   makeField(grid,"Winkel (°)","angle",bod.angle*180/PI,-360,360,5,"body");
+  makeField(grid,"Start-Vx (m/s)","startVx",bod.startVx||0,-500,500,10,"body");
+  makeField(grid,"Start-Vy (m/s)","startVy",bod.startVy||0,-500,500,10,"body");
   props.append(grid);
   const remove=document.createElement("button");remove.className="btn full";remove.style.marginTop="9px";remove.textContent="− Körper entfernen";remove.addEventListener("click",()=>{
    deleteBody(scene,bod.id);selectedBody=scene.bodies[0]?.id||null;selectedJoint=null;sync();reset();
@@ -203,6 +206,7 @@ function stats(){
  $("time").textContent=number(clock)+" s";$("bodyCount").textContent=scene.bodies.length;
  $("jointCount").textContent=scene.joints.length;$("residual").textContent=number(1000*residual)+" mm";
  $("contactsNow").textContent=scene.collisions===false?"Aus":String(scene.contactsNow||0);
+ $("ccdSubsteps").textContent=scene.collisions===false||scene.ccd===false?"Aus":String(scene.ccdSubsteps||1);
  drawChart();
 }
 function record(){
@@ -246,6 +250,7 @@ $("addJoint").addEventListener("click",()=>{
 });
 $("gravity").addEventListener("change",()=>{scene.gravity=clamp(Number($("gravity").value)||0,0,20);sync();reset()});
 $("collisions").addEventListener("change",e=>{scene.collisions=e.target.checked;sync();reset();notify(scene.collisions?"Kontakte aktiv.":"Kontakte deaktiviert.")});
+$("ccd").addEventListener("change",e=>{scene.ccd=e.target.checked;sync();reset();notify(scene.ccd?"Kontinuierliche Kontaktprüfung aktiviert.":"CCD ausgeschaltet: schnelle Objekte können durch andere hindurchfliegen.")});
 for(const [id,min,max] of [["restitution",0,.8],["friction",0,1]]){
  $(id).addEventListener("change",()=>{
   const value=Number($(id).value);
