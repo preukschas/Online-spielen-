@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#091624">
 <meta name="description" content="DMP Gelenk-Lernarena: zweibeinige Roboter lernen mit beweglichen Hüft- und Kniegelenken laufen.">
-<title>Gelenk-Lernarena | DMP SIM LAB</title>
+<title>Zwei lernende Roboter | DMP SIM LAB</title>
 <style>
 :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:dark;--ink:#ebfbfc;--muted:#a0bbc5;--border:#34566a;--blue:#73a8ff;--green:#76edbf;--gold:#ffc67d}
 *{box-sizing:border-box}body{margin:0;color:var(--ink);background:radial-gradient(ellipse 900px 580px at 75% -180px,#194d59,transparent 78%),radial-gradient(ellipse 550px 650px at -7% 100%,#133c4d,transparent 83%),#091624}button,input,select{font:inherit}button,a,select{touch-action:manipulation}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #a6f8d4;outline-offset:3px}h1,h2,h3,p{margin-top:0}.shell{max-width:1480px;margin:0 auto;padding:0 clamp(14px,3vw,50px)}
@@ -27,49 +27,55 @@ main{padding-bottom:60px}.hero{padding:46px 0 30px;display:flex;justify-content:
 </div></header>
 <main class="shell">
 <section class="hero"><div><div class="eyebrow">PHASE 3 / GELENK-LERNEN</div>
-<h1>Vier Gelenke.<br><span>Ein Lernziel: Gehen.</span></h1>
-<p class="intro">24 zweibeinige Roboter mit beweglichen Hüften und Knien lernen selbstständig, sieben Meter zurückzulegen. Ein neuronales Netz steuert vier Gelenkmotoren – ohne vorgegebene Schrittfolge. Wir messen Stürze, Bodenkontakte und Fortschritte auf voneinander getrennten Trainings- und Testböden.</p></div><div class="pill"><i class="pulse"></i><span>2D GELENKPHYSIK · EVOLUTION</span></div></section>
+<h1>Zwei Roboter.<br><span>Beide lernen. Beide treten an.</span></h1>
+<p class="intro">Zwei unabhängig lernende Roboter mit je 24 neuronalen Kandidaten treten auf denselben Böden gegeneinander an. Beide verbessern ihre Hüft- und Kniebewegungen: Sieg oder Niederlage im direkten Vergleich beeinflusst die Evolution. Für jeden gibt es getrennte Generationen, Lernkurven und gespeicherte Gewichte. Auch eigene zweibeinige oder vierbeinige Entitäten können antreten.</p></div><div class="pill"><i class="pulse"></i><span>2D GELENKPHYSIK · EVOLUTION</span></div></section>
 <section class="metrics" aria-label="Trainingskennzahlen">
-<div class="metric"><small>Trainierte Generationen</small><strong id="generation">0</strong><span>Evolutionäre Trainingsrunden</span></div>
-<div class="metric"><small>Beste Trainingswertung</small><strong id="best">–</strong><span>6 Trainingsböden / Gen.</span></div>
-<div class="metric"><small>Unabhängige Prüfstrecken</small><strong id="validation">–</strong><span>5 feste Testböden</span></div>
-<div class="metric"><small>Ankunftsquote im Test</small><strong id="success">–</strong><span>7 m geschafft / 5 Läufe</span></div>
+<div class="metric"><small>🔵 A · Generationen</small><strong id="generation">0</strong><span>Eigenständige Population</span></div>
+<div class="metric"><small>🟢 B · Generationen</small><strong id="generationB">0</strong><span>Eigenständige Population</span></div>
+<div class="metric"><small>🔵 A · bester Trainingswert</small><strong id="best">–</strong><span>Prüfung: <b id="validation">–</b> · Ankunft <b id="success">–</b></span></div>
+<div class="metric"><small>🟢 B · bester Trainingswert</small><strong id="bestB">–</strong><span>Prüfung: <b id="validationB">–</b> · Ankunft <b id="successB">–</b></span></div>
 </section>
 <div class="grid">
 <section class="panel viewer" aria-label="Roboter in der Lernarena">
-<div class="head"><h2>LIVE · Zwei Zweibeiner, gleicher Boden</h2><small id="courseLabel">Boden-Testlauf</small></div>
+<div class="head"><h2>LIVE · Roboter A gegen Roboter B · gleicher Boden</h2><small id="courseLabel">Boden-Testlauf</small></div>
 <div class="canvas-wrap"><canvas id="arena" width="1080" height="570" role="img" aria-label="Vergleich zweier Gelenkroboter beim Laufen auf dem gleichen Boden."></canvas><div id="overlay" class="overlay">▶ Vergleich starten</div></div>
-<div class="legend"><span><i class="swatch blue"></i>Untrainiertes neuronales Netz</span><span><i class="swatch green"></i>Champion: trainierte Gelenke</span><span><i class="swatch gold"></i>Boden und Kontaktpunkte</span></div>
+<div class="legend"><span><i class="swatch blue"></i>🔵 Roboter A · lernt selbst</span><span><i class="swatch green"></i>🟢 Roboter B · lernt selbst</span><span><i class="swatch gold"></i>Boden und Kontaktpunkte</span></div>
 <div class="controls">
 <button type="button" class="btn primary" id="play">▶ Vergleich starten</button>
 <button type="button" class="btn" id="restart">↺ Wiederholen</button>
 <button type="button" class="btn" id="newCourse">↗ Neuer Prüf-Boden</button>
 <label class="control-spacer" for="speed">Tempo</label><select class="select" id="speed"><option value="1">1×</option><option value="4">4×</option><option value="12">12×</option></select>
 </div>
-<div class="legend" id="raceStatus" role="status">Jeder Zweibeiner besitzt unabhängig steuerbare Hüft- und Kniegelenke. Starte die Evolution.</div>
+<div class="legend" id="raceStatus" role="status">A und B besitzen unabhängige neuronale Steuerungen. Starte die Evolution.</div>
 </section>
 <aside class="panel right" aria-label="Training und Speicherung">
 <div class="head"><h2>🧠 Trainingssteuerung</h2><small>Neuroevolution v1</small></div>
 <div class="body">
-<div><h3>Evolution starten</h3><p>Das Netz regelt Zielwinkel für zwei Hüften und zwei Knie. Bodenreaktion, Reibung und Schwerkraft bestimmen die Bewegung. Erfolgreiche Steuerungen werden durch Mutation und Selektion weiterentwickelt.</p>
-<div class="group"><button class="btn primary" id="train5">+ 5 Generationen</button><button class="btn alt" id="train25">+ 25 Generationen</button><button class="btn wide" id="stop" disabled>⏸ Nach aktuellem Modell anhalten</button></div>
-<div class="statline" id="trainingStatus" role="status">Bereit. 24 Roboter pro Generation · sechs Trainingsböden.</div><div class="progress" aria-hidden="true"><i id="trainingBar"></i></div></div>
+<div><h3>Entität aus dem Generator</h3>
+<label for="entitySelect">Wähle deinen Zweibeiner oder Vierbeiner</label>
+<select id="entitySelect" class="select" style="width:100%;margin-bottom:8px"><option value="">🤖 Standard-Zweibeiner</option></select>
+<button class="btn" type="button" id="reloadEntities">↻ Entitäten aktualisieren</button>
+<p style="margin-top:10px">Für die gewählte Entität trainieren Roboter A und B zwei getrennte Populationen und neuronale Gewichte. Beide werden unabhängig gespeichert. <a href="./editor.html" style="color:#85f1c9;text-decoration:underline">Entität erstellen oder verändern ↗</a></p></div>
+<hr class="divider">
+<div><h3>Gemeinsame Evolution · beide lernen</h3><p>Jeder Roboter hat sein eigenes Netz, eigene Mutationen und einen eigenen Champion. Ergebnisse des Duells beeinflussen die Auswahl der nächsten Generation – zusätzlich zu Fortschritt, Balance und eigenständigen Prüfwerten.</p>
+<div class="group"><button class="btn primary" id="train5">+ 5 Generationen für A &amp; B</button><button class="btn alt" id="train25">+ 25 Generationen für A &amp; B</button><button class="btn wide" id="train100">+ 100 Generationen für beide</button><button class="btn" id="trainA">+ 1 nur A</button><button class="btn" id="trainB">+ 1 nur B</button><button class="btn wide" id="stop" disabled>⏸ Beide nach der Generation anhalten</button></div>
+<div class="statline" id="trainingStatus" role="status">Bereit: je 24 Modelle und eine eigene Evolution für A und B.</div><div class="progress" aria-hidden="true"><i id="trainingBar"></i></div><p class="small-note" id="contestInfo">Siege, Niederlagen und Fortschritte beeinflussen die nächste Generation.</p></div>
 <hr class="divider">
 <div><h3>Messung &amp; Reproduzierbarkeit</h3><p>Sechs Trainingsböden und fünf getrennte Prüfläufe nutzen feste Zufallsstarts. Neue Prüf-Böden zeigen, ob das Modell unter anderen Startbedingungen und Reibwerten zurechtkommt.</p><label for="seed">Zufallsstartwert für neues Training</label><input type="number" id="seed" min="1" max="1000000000" value="42"><div class="small-note">Eine Änderung wird erst mit „Neues Training“ aktiv. Für identische Ergebnisse dieselbe Version und denselben Startwert verwenden.</div></div>
 <hr class="divider">
-<div><h3>Fortschritt sichern</h3><div class="group"><button class="btn" id="export">↓ Training exportieren</button><button class="btn" id="import">↑ Training importieren</button><button class="btn wide" id="clear">↺ Neues Training beginnen</button></div><input id="importFile" type="file" accept=".json,application/json" hidden><p>Alle Gelenk-Steuerungen der Population werden auf diesem Gerät gespeichert. Für ein anderes Gerät kannst du sie als JSON exportieren.</p></div>
+<div><h3>Fortschritt sichern</h3><div class="group"><button class="btn" id="export">↓ A exportieren</button><button class="btn" id="import">↑ A importieren</button><button class="btn" id="exportB">↓ B exportieren</button><button class="btn" id="importB">↑ B importieren</button><button class="btn" id="exportPair">↓ Beide exportieren</button><button class="btn" id="importPair">↑ Beide importieren</button><button class="btn wide" id="clear">↺ Beide Trainings neu beginnen</button></div><input id="importFile" type="file" accept=".json,application/json" hidden><input id="importFileB" type="file" accept=".json,application/json" hidden><input id="importFilePair" type="file" accept=".json,application/json" hidden><p>Roboter A behält den bisherigen Einzel-Export; Roboter B und die gesamte Paarung kannst du ebenfalls separat sichern und übertragen. Beide lernen unabhängig voneinander.</p></div>
 <p id="notice" class="status" role="status"></p>
 </div>
 </aside>
 </div>
 <div class="lower">
-<section class="panel"><div class="head"><h2>Lernkurve · Generationen</h2><small>Keine garantierte Verbesserung</small></div>
+<section class="panel"><div class="head"><h2>Vier Lernkurven · A und B</h2><small>Zwei unabhängige Champions und zwei separate Prüfungen</small></div>
 <canvas id="chart" class="chart" width="860" height="270" aria-label="Diagramm der mittleren Trainingswertung, besten Trainingswertung und unabhängigen Testwertung"></canvas>
-<div class="chart-legend"><span><i style="background:#7c9ee9"></i>Populationsmittel</span><span><i style="background:#7eebc0"></i>Bester Trainingswert</span><span><i style="background:#ffd28c"></i>Unabhängiger Test</span></div></section>
+<div class="chart-legend"><span><i style="background:#7da8f6"></i>Training A</span><span><i style="background:#7beac1"></i>Training B</span><span><i style="background:#c4b8ff"></i>Prüfung A</span><span><i style="background:#ffd28c"></i>Prüfung B</span></div></section>
 <section class="panel"><div class="head"><h2>Generationenprotokoll</h2><small>Letzte 9 Generationen</small></div>
-<div class="tablebox"><table><thead><tr><th>Generation</th><th>Ø Training</th><th>Bestwert</th><th>Test</th><th>Ankunft</th></tr></thead><tbody id="history"><tr><td colspan="5">Noch keine Trainingsdaten</td></tr></tbody></table></div></section>
+<div class="tablebox"><table><thead><tr><th>Gen.</th><th>Fit A</th><th>Fit B</th><th>Prüfung A</th><th>Prüfung B</th></tr></thead><tbody id="history"><tr><td colspan="5">Noch keine Trainingsdaten</td></tr></tbody></table></div></section>
 </div>
-<div class="details"><strong>Was hier wirklich lernt:</strong> Ein neuronales Netz mit 16 Sensorwerten, 12 versteckten Neuronen und 4 Ausgängen (256 Gewichte) steuert die Hüft- und Kniegelenke. Die Bewegung ergibt sich aus begrenzten Gelenkmotoren und vereinfachten Fuß-Boden-Kräften. Zum Bestehen braucht der Roboter mindestens vier neue Bodenkontakte und 30 % Kontaktzeit – ein einzelner Weitsprung reicht nicht. <strong>Grenzen:</strong> Reduziertes Lehrmodell, kein vollständiger Mehrkörper-Solver, keine reale Biomechanik. Die Testwertung wird nicht zur Selektion benutzt. Die Gewichte sind derzeit noch nicht direkt in die separate Duell-Arena übertragbar.</div>
+<div class="details"><strong>Was hier wirklich lernt:</strong> Zwei getrennte neuronale Netze mit je 16 Sensorwerten, 12 versteckten Neuronen und 4 Ausgängen (256 Gewichte) steuern bei Zweibeinern vier Gelenke und bei Vierbeinern diagonal gekoppelte Beinpaare. Die beiden Populationen trainieren unabhängig und berücksichtigen einen gemeinsamen Wettkampf auf Trainingsböden. Die Bewegung ergibt sich aus begrenzten Gelenkmotoren und vereinfachten Fuß-Boden-Kräften. Zum Bestehen braucht die Entität mindestens vier neue Bodenkontakte und 30 % Kontaktzeit – ein einzelner Weitsprung reicht nicht. <strong>Grenzen:</strong> Reduziertes Lehrmodell, kein vollständiger Mehrkörper-Solver, keine reale Biomechanik. Die Testwertung wird nicht zur Selektion benutzt. Masse, Haftung, Schrittlänge und Frequenz werden im Modell vereinfacht berücksichtigt. Keine exakte Tier- oder Humanbiomechanik. Die Gewichte sind noch nicht direkt in die separate Duell-Arena übertragbar.</div>
 </main>
-<script type="module" src="./joint-walker-ui.js?v=1"></script>
+<script type="module" src="./joint-walker-ui.js?v=3"></script>
 </body></html>
