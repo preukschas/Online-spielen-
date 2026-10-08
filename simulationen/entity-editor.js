@@ -47,6 +47,7 @@ function renderCatalog(){
 }
 function sync(){
  $("name").value=draft.name;$("kind").value=draft.kind;$("color").value=draft.color;
+ $("template").value=draft.appearance==="robot"||draft.appearance==="robotdog"?"robot":draft.kind==="quadruped"||draft.appearance==="ostrich"?"animal":"human";
  $("appearance").value=draft.appearance||"generic";
  $("r_mass").min=draft.kind==="biped"?30:3;
  $("r_mass").max=draft.mass>120?650:120;
