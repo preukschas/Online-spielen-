@@ -269,6 +269,78 @@ function drawArena(c,s){
  label(c,"START",47,461,13,C.muted);
  label(c,"ZIEL",909,461,13,C.gold);
 }
+
+function gear(c,x,y,r,teeth,angle,color){
+ c.save();c.translate(x,y);c.rotate(angle);
+ c.shadowColor=color;c.shadowBlur=23;c.shadowOffsetY=6;
+ c.beginPath();
+ for(let k=0;k<teeth*4;k++){
+  const a=(k/(teeth*4))*2*PI,rad=r*(k%4===1||k%4===2?1.09:.96);
+  if(k===0)c.moveTo(Math.cos(a)*rad,Math.sin(a)*rad);else c.lineTo(Math.cos(a)*rad,Math.sin(a)*rad);
+ }
+ c.closePath();const g=c.createLinearGradient(-r,-r,r,r);
+ g.addColorStop(0,"#d7fff2");g.addColorStop(.16,color);g.addColorStop(.8,"#34657a");g.addColorStop(1,"#162f43");
+ c.fillStyle=g;c.fill();c.shadowBlur=0;c.strokeStyle="#c7f1e5";c.lineWidth=2;c.stroke();
+ disc(c,0,0,r*.68,"#21495b","#8bc7c9");
+ for(let i=0;i<6;i++){
+  const a=i*PI/3;stroke(c,Math.cos(a)*r*.2,Math.sin(a)*r*.2,Math.cos(a)*r*.55,Math.sin(a)*r*.55,color,r*.11);
+ }
+ disc(c,0,0,14,"#e4f6ed","#56777f");disc(c,0,0,5,"#183849");
+ c.restore();
+}
+function mechanicsScene(c,s){
+ const p=s.p,b=s.body;
+ ground(c,481);
+ if(s.preset==="lever"){
+  const cx=510,cy=283,a=b.angle,l=p.armA*97,r=p.armB*97;
+  const lx=cx-l*Math.cos(a),ly=cy+l*Math.sin(a),rx=cx+r*Math.cos(a),ry=cy-r*Math.sin(a);
+  c.save();c.beginPath();c.moveTo(cx,cy+12);c.lineTo(cx-56,440);c.lineTo(cx+56,440);c.closePath();
+  const g=c.createLinearGradient(460,285,550,441);g.addColorStop(0,"#73959f");g.addColorStop(1,"#244457");c.fillStyle=g;c.fill();c.strokeStyle="#bbd9d8";c.lineWidth=2;c.stroke();c.restore();
+  stroke(c,cx-320,cy,cx+315,cy,"#85a9b851",1,[5,8]);
+  stroke(c,lx,ly,rx,ry,"#153543",29);
+  stroke(c,lx,ly,rx,ry,C.mint,19);
+  stroke(c,lx,ly-4,rx,ry-4,"#d5fff27a",3);
+  joint(c,cx,cy,17);
+  disc(c,lx,ly,13,C.gold);disc(c,rx,ry,13,C.aqua);
+  stroke(c,lx,ly+13,lx,ly+53,"#b9dadc",5);fill(c,lx-27,ly+53,54,48,"#d6a66c",8);
+  stroke(c,rx,ry+13,rx,ry+53,"#b9dadc",5);fill(c,rx-27,ry+53,54,48,"#719fb4",8);
+  label(c,"KRAFT",lx,ly+118,13,C.gold,"center");
+  label(c,"LAST",rx,ry+118,13,C.aqua,"center");
+  textChip(c,"DREHMOMENT  "+b.torque.toFixed(1)+" Nm",42,103,C.gold,248);
+  textChip(c,"WINKEL  "+(a*180/PI).toFixed(1)+"°",42,144,C.mint,210);
+ }
+ else if(s.preset==="crank"){
+  const cx=265,cy=308,r=p.crank*118,px=cx+Math.cos(b.angle)*r,py=cy+Math.sin(b.angle)*r,sliderX=cx+b.position*118;
+  fill(c,152,432,720,12,"#4d8292",5);fill(c,154,441,716,7,"#163645",4);
+  for(let x=167;x<856;x+=46)stroke(c,x,442,x-11,465,"#8eb6ba66",2);
+  ring(c,cx,cy,r+15,C.mint,.20);disc(c,cx,cy,r,"#356c7b","#c4fcf0");
+  for(let i=0;i<8;i++){
+   const a=b.angle+i*2*PI/8;stroke(c,cx,cy,cx+Math.cos(a)*r*.78,cy+Math.sin(a)*r*.78,"#20485b",8);
+  }
+  stroke(c,px,py,sliderX,cy,"#174255",17);stroke(c,px,py,sliderX,cy,C.gold,10);
+  disc(c,cx,cy,15,"#badbd9");joint(c,px,py,12);
+  fill(c,sliderX-50,cy-32,100,64,"#7bc8b7",14);
+  fill(c,sliderX-36,cy-20,72,39,"#174557",7);
+  joint(c,sliderX,cy,10);
+  textChip(c,"DREHZAHL  "+p.rpm+" U/MIN",43,103,C.mint,216);
+  textChip(c,"SCHIEBER  "+b.position.toFixed(2)+" m",43,144,C.gold,231);
+ }
+ else if(s.preset==="gears"){
+  const ra=Math.min(139,p.teethA*3.1),rb=Math.min(154,p.teethB*3.1),distance=ra+rb;
+  const ax=500-distance/2,bx=500+distance/2,y=303;
+  shadow(c,ax,473,ra*.9,12);shadow(c,bx,473,rb*.9,12);
+  gear(c,ax,y,ra,p.teethA,b.angleA,C.mint);
+  gear(c,bx,y,rb,p.teethB,b.angleB,C.gold);
+  label(c,p.teethA+" ZÄHNE",ax,105,16,C.mint,"center");
+  label(c,p.teethB+" ZÄHNE",bx,105,16,C.gold,"center");
+  textChip(c,"ÜBERSETZUNG  "+(p.teethB/p.teethA).toFixed(2)+" : 1",35,155,C.mint,238);
+  textChip(c,"AUSGANG  "+b.rpmB.toFixed(1)+" U/min",35,196,C.gold,249);
+  textChip(c,"WIRKUNGSGRAD  "+(p.efficiency*100).toFixed(0)+" %",716,154,C.aqua,237);
+  label(c,"ANTRIEB",ax,476,14,C.mint,"center");
+  label(c,"ABTRIEB",bx,476,14,C.gold,"center");
+ }
+}
+
 function mechanicsOverlay(c,s){
  const p=s.p,b=s.body;
  const kind={lever:"HEBEL & KRAFT",crank:"KURBEL & SCHUBSTANGE",gears:"ZAHNRAD-ÜBERSETZUNG"}[s.preset]||"MECHANIK";
@@ -284,7 +356,7 @@ function mechanicsOverlay(c,s){
 }
 export function drawScene(c,s){
  if(!s)return;
- if(s.mode==="mechanics"){legacyDraw(c,s);c.save();mechanicsOverlay(c,s);c.restore();return;}
+ if(s.mode==="mechanics"){c.save();bg(c,"mechanics");if(["lever","crank","gears"].includes(s.preset))mechanicsScene(c,s);else legacyDraw(c,s);hud(c,s.mode,s);footer(c,s);c.restore();return;}
  c.save();bg(c,s.mode);
  if(s.mode==="physics")drawPhysics(c,s);
  else if(s.mode==="crash")drawCrash(c,s);
