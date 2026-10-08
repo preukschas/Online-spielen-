@@ -1,4 +1,4 @@
-import {GAIT_GOAL as GOAL, GAIT_DT as DT, GAIT_POPULATION, newGaitTrainer as newTrainer, trainGaitGeneration as trainGeneration, makeGaitWorld as makeEpisode, gaitStep as stepEpisode, gaitSnapshot as snapshot, restoreGaitTrainer as restoreTrainer, gaitRivalTrial, footPosition, groundHeight} from "./joint-walker-core.js?v=2";
+import {GAIT_GOAL as GOAL, GAIT_DT as DT, GAIT_POPULATION, newGaitTrainer as newTrainer, trainGaitGeneration as trainGeneration, makeGaitWorld as makeEpisode, gaitStep as stepEpisode, gaitSnapshot as snapshot, restoreGaitTrainer as restoreTrainer, gaitRivalTrial, footPosition, groundHeight} from "./joint-walker-core.js?v=3";
 import {ENTITY_KEY, ENTITY_LIMIT, safeEntityList,findEntity} from "./entity-model.js";
 const el=id=>document.getElementById(id);
 const canvas=el("arena"),ctx=canvas.getContext("2d"),chart=el("chart"),graph=chart.getContext("2d");
