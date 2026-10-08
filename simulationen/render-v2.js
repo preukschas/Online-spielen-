@@ -1,6 +1,7 @@
 /* DMP SIM LAB · Canvas renderer 2.0
    Presentation-only layer: all movement, physics and outcomes come from engine.js. */
-import {drawScene as legacyDraw} from "./engine.js?v=1.4.0";
+import {drawScene as legacyDraw} from "./engine.js?v=1.5.0";
+import {duelStyle} from "./duel-core.js?v=1.5.0";
 const W=1000,H=560,PI=Math.PI;
 const C={mint:"#79eac7",aqua:"#88cfea",gold:"#f1c879",coral:"#f3a48c",ink:"#0a2232",white:"#f0faf6",muted:"#9db9c8"};
 const clamp=(x,min,max)=>Math.min(max,Math.max(min,x));
@@ -301,25 +302,36 @@ function drawDuel(c,s){
   const dir=e.facing||1;
   shadow(c,x,429,45,8);
   c.save();c.translate(x,y);c.scale(dir,1);
-  const phase=s.time*8+i*PI;
+  const phase=e.gaitPhase||0,pose=e.pose||{leftHip:0,rightHip:0,leftKnee:.15,rightKnee:.15,lean:0,stance:1};
   const contact=e.actionTime>0,action=e.action;
   const jump=e.y>.1;
+  // Animierte Hüfte/Knie und Bodenkontakt kommen aus der simulierten Bewegung,
+  // nicht aus einer unabhängigen Deko-Animation.
   if(e.kind==="quadruped"){
-   stroke(c,-23,0,22,0,col,19);stroke(c,19,-1,40,-21,col,10);
-   disc(c,47,-25,13,col);
-   for(const dx of [-17,15])for(const off of [0,12]){
-    stroke(c,dx+off/2,7,dx+off/2+Math.sin(phase+off)*5,27,col,7);
+   const lean=pose.lean*14;
+   stroke(c,-23,0,22+lean,0,col,19);stroke(c,19+lean,-1,40+lean,-21,col,10);
+   disc(c,47+lean,-25,13,col);
+   for(let k=0;k<4;k++){
+    const root=-19+k*13,offset=k%2?PI:0,angle=Math.sin(phase+offset)*(.25+e.genome.stride*.6);
+    const kx=root+Math.sin(angle)*11,ky=13+Math.max(0,Math.cos(angle))*3;
+    const fy=30-Math.max(0,Math.sin(phase+offset))*9;
+    stroke(c,root,4,kx,ky,col,7);stroke(c,kx,ky,kx+Math.sin(angle-.3)*10,fy,col,6);
    }
    if(contact&&["Schlagen","Treten","Schubsen"].includes(action))stroke(c,18,0,58,2,C.gold,9);
   }else{
-   const stride=jump?6:Math.sin(phase)*12;
-   stroke(c,0,-30,0,7,col,19);disc(c,0,-46,15,col);
-   stroke(c,-3,8,-18+stride,32,col,10);
-   if(contact&&action==="Treten")stroke(c,2,8,49,5,C.gold,12);
-   else stroke(c,3,8,17-stride,32,col,10);
+   const bodyLean=pose.lean*21;
+   stroke(c,0,-30,bodyLean,7,col,19);disc(c,-pose.lean*18,-46,15,col);
+   for(const [index,hip,knee] of [[0,pose.leftHip,pose.leftKnee],[1,pose.rightHip,pose.rightKnee]]){
+    const root=index===0?-4:4,kx=root+Math.sin(hip)*20,ky=19-Math.cos(hip)*4;
+    const fx=kx+Math.sin(hip-knee)*21,fy=33-Math.max(0,Math.sin(hip))*(e.landed?4:11);
+    stroke(c,root,7,kx,ky,col,10);stroke(c,kx,ky,fx,fy,index?C.gold:col,9);
+    joint(c,kx,ky,4);
+   }
+   if(contact&&action==="Treten")stroke(c,3,8,49,5,C.gold,12);
    stroke(c,-4,-22,-27,-1,col,8);
    if(contact&&action==="Schlagen")stroke(c,6,-21,52,-24,C.gold,10);
    else if(contact&&action==="Schubsen"){stroke(c,5,-15,49,-9,C.aqua,10);stroke(c,1,-8,42,-2,C.aqua,8);}
+   else if(contact&&action==="Ausweichen"){stroke(c,2,-19,-20,-33,C.aqua,8);ring(c,-6,0,35,C.aqua,.45);}
    else stroke(c,4,-22,25,-3,col,8);
   }
   if(contact&&action==="Blocken"){
@@ -339,18 +351,19 @@ function drawDuel(c,s){
  const [a,d]=who;
  for(const [i,e] of who.entries()){
   const x=i?543:34,col=i?C.gold:C.mint;
-  fill(c,x,80,421,126,"#0b2b3dbf",15);
+  fill(c,x,80,421,141,"#0b2b3dbf",15);
   label(c,e.name,x+14,103,18,col,"left",800);
   label(c,e.hp.toFixed(0)+" / 100 HP",x+14,125,12,C.white);
   gauge(c,x+14,133,384,15,e.hp/100,col);
   label(c,"ENERGIE",x+14,169,11,C.muted);
   gauge(c,x+85,158,312,9,e.energy/100,C.aqua);
   label(c,"TREFFER "+e.hits+"  ·  BLOCKS "+e.blocks+"  ·  RINGAUS "+e.ringouts,x+14,191,11,C.muted);
+  label(c,"STIL "+duelStyle(e.genome)+"  ·  SCHRITTE "+e.steps+"  ·  SPRÜNGE "+e.jumps,x+14,208,11,col);
  }
  textChip(c,"DUELL · "+Math.ceil(Math.max(0,b.limit-b.elapsed))+" s",380,217,C.gold,240);
  if(b.winner)textChip(c,"SIEGER: "+b.winner,350,352,C.gold,330);
  const tr=s.duelTraining;
- if(tr&&tr.generation)label(c,"EVOLUTION · GEN "+tr.generation,500,506,13,C.mint,"center",800);
+ if(tr&&tr.generation)label(c,"EVOLUTION · GEN "+tr.generation+" · ERLERNTE BEWEGUNGEN",500,506,13,C.mint,"center",800);
 }
 function drawArena(c,s){
  const b=s.body,p=s.p;
