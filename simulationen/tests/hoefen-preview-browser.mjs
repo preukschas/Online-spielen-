@@ -28,6 +28,14 @@ async function run(browser,name,opts){
   assert.match(await page.title(),/Höfen/);
   assert.equal(await page.locator("#terrain").count(),1);
   assert.equal(await page.locator("#start").count(),1);
+  // GitHub Pages serves an independently fetched, versioned 468-way OSM
+  // snapshot. The fresh browser must load it automatically, without clicks.
+  await page.waitForFunction(()=>document.querySelector("#mapKind")?.textContent.includes("OSM"),{timeout:15000});
+  assert.match(await page.locator("#waterwayStatus").textContent(),/Bruchgraben/);
+  const initial=await page.evaluate(()=>window.HoefenApp.getSource());
+  assert.equal(initial.type,"osm");
+  assert.ok(initial.features>=10,"No map features loaded from committed snapshot");
+
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
   assert.ok(overflow<=4,"horizontal overflow "+overflow);
   await page.locator("#step").click();
