@@ -117,8 +117,8 @@ function draw(){
  const leader=svg("path",{d:"M"+(centerX+25)+" "+centerY+" L410 "+(centerY-38)+" H488",fill:"none",stroke:"#9bd5d1",opacity:.7,"stroke-width":1.6});
  leader.setAttribute("pointer-events","none");
  const massText=svg("text",{x:414,y:centerY-45,fill:"#d5f8e9","font-size":11,"font-family":"system-ui","font-weight":700});massText.textContent="SCHWERPUNKT";
- const detail=svg("text",{x:26,y:439,fill:"#a4cbd2","font-size":11,"font-family":"system-ui"});detail.textContent="SEGMENTE + GELENKE  ·  "+(draft.kind==="biped"?"2 BEINE":"4 BEINE")+"  ·  "+draft.mass+" kg";
- const sub=svg("text",{x:26,y:459,fill:"#7caab9","font-size":10,"font-family":"system-ui"});sub.textContent="SCHEMATISCHE KÖRPERANSICHT  /  KEIN ANATOMISCHES MODELL";
+ const detail=svg("text",{x:26,y:60,fill:"#a4cbd2","font-size":11,"font-family":"system-ui"});detail.textContent="SEGMENTE + GELENKE  ·  "+(draft.kind==="biped"?"2 BEINE":"4 BEINE")+"  ·  "+draft.mass+" kg";
+ const sub=svg("text",{x:26,y:80,fill:"#7caab9","font-size":10,"font-family":"system-ui"});sub.textContent="SCHEMATISCHE KÖRPERANSICHT  /  KEIN ANATOMISCHES MODELL";
 
 }
 function exportJSON(){
