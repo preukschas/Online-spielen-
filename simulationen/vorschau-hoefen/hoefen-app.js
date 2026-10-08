@@ -292,7 +292,7 @@ async function importDEM(file){
  if(!file)return;
  const btn=$("demInput");btn.disabled=true;
  try{
-  const native=/\\.(xyz|txt)$/i.test(file.name);
+  const native=/\.(xyz|txt)$/i.test(file.name);
   if(!native&&file.size>30*1024*1024)throw Error("ASCII-Raster größer als 30 MB. Ausschnitt zuschneiden.");
   info("DGM1-Höhendaten werden in 2.400 Modellzellen übernommen …");
   const result=native
