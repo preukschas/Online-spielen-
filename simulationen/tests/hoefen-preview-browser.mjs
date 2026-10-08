@@ -51,13 +51,31 @@ async function run(browser,name,opts){
   assert.equal(await page.locator("#rain").inputValue(),String(data.config.rain));
   await page.locator("#terrain").click({position:{x:125,y:120}});
   assert.match(await page.locator("#actionStatus").textContent(),/1 Eingriffe/);
-  const osm={elements:[{type:"way",tags:{highway:"residential"},geometry:[
-   {lat:48.4429,lon:7.87},{lat:48.4429,lon:7.884}
-  ]}]};
+  const osm={elements:[
+   {type:"way",tags:{highway:"residential"},geometry:[
+    {lat:48.4429,lon:7.87},{lat:48.4429,lon:7.884}
+   ]},
+   {type:"way",id:190027,tags:{waterway:"ditch",name:"Bruchgraben"},geometry:[
+    {lat:48.4427,lon:7.872},{lat:48.44275,lon:7.880},{lat:48.4428,lon:7.883}
+   ]}
+  ]};
   await page.route("**/api/interpreter?*",r=>r.fulfill({status:200,contentType:"application/json",body:JSON.stringify(osm)}));
   await page.locator("#getOsm").click();
   await page.waitForFunction(()=>document.querySelector("#geoStatus")?.textContent.includes("OSM geladen"));
   assert.match(await page.locator("#mapKind").textContent(),/OSM/);
+  assert.match(await page.locator("#waterwayStatus").textContent(),/Bruchgraben.*markierte|Bruchgraben.*geladen/);
+  // Generate a complete synthetic EPSG:25832 XYZ fixture to test native-file loading.
+  // Values below are test fixture heights, NOT genuine LGL elevation measurements.
+  const xyz=await page.evaluate(()=>{
+    const E=window.HoefenWater,G=window.WaterGeoData,V=window.HoefenGeoV2;
+    return E.BASE.map(c=>{
+      const p=V.centroid(c.x,c.y,E.ORIGIN,E.W,E.H,E.SIZE,G.toUTM32);
+      return p.east.toFixed(3)+" "+p.north.toFixed(3)+" "+(150+.02*c.x+.01*c.y).toFixed(3);
+    }).join("\\n");
+  });
+  await page.locator("#demInput").setInputFiles({name:"fixture.xyz",mimeType:"text/plain",buffer:Buffer.from(xyz)});
+  await page.waitForFunction(()=>document.querySelector("#geoStatus")?.textContent.includes("Höhen importiert"),{timeout:20000});
+  assert.match(await page.locator("#mapKind").textContent(),/IMPORTIERTE HÖHEN/);
   await page.locator("#restoreMap").click();
   assert.match(await page.locator("#mapKind").textContent(),/SCHEMATISCH/);
   await page.screenshot({path:"test-artifacts/hoefen-"+name+".png",fullPage:true});
