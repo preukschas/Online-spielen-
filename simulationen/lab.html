@@ -30,6 +30,16 @@
   <section class="viewer">
    <div class="viewer-head"><div><span class="status-dot"></span><strong id="sceneTitle">Freier Fall</strong><span id="sceneSubtitle" class="viewer-sub"></span></div><span class="scene-tag" id="sceneTag">2D · MODELL</span></div>
    <div class="canvas-wrap"><canvas id="scene" aria-label="Animierte Simulation" width="1000" height="560"></canvas><div class="overlay-message" id="overlay">Drücke Start, um die Simulation auszuführen.</div></div>
+   <section id="duelQuickbar" class="duel-quickbar" aria-label="Duell-Arena Schnellaktionen" hidden>
+    <div class="duel-quick-title"><strong>🧠 Duell-Arena</strong><span id="duelQuickGeneration">Generation 0</span></div>
+    <div class="duel-quick-buttons">
+     <button id="duelAdd1" type="button" class="duel-quick-btn duel-plus">+1 Generation</button>
+     <button id="duelAdd100" type="button" class="duel-quick-btn duel-plus">+100 Generationen</button>
+     <button id="duelCompare10" type="button" class="duel-quick-btn">🥊 10 Duelle vergleichen</button>
+     <button id="duelCompare50" type="button" class="duel-quick-btn">🏆 50 Runden auswerten</button>
+    </div>
+    <p id="duelQuickResult" class="duel-quick-result" role="status" aria-live="polite">Bereit für Training oder Vergleich.</p>
+   </section>
    <div class="playbar">
     <button id="play" type="button" class="primary">▶ Start</button>
     <button id="step" type="button" class="secondary">⏭ Einzelschritt</button>
@@ -60,5 +70,5 @@
  <section class="bottom-info"><strong>Hinweis:</strong> Diese interaktiven Demonstratoren nutzen vereinfachte Modelle für Bildung und Experimente. Sie sind keine sicherheitstechnischen, medizinischen oder ingenieurwissenschaftlichen Nachweise.</section>
 </main>
 <dialog id="helpDialog"><h2>So funktioniert die Simulationswerkstatt</h2><p>1. Modul und Versuch wählen. 2. Werte einstellen. 3. Start drücken. 4. Messungen beobachten. 5. Szenario speichern oder exportieren.</p><p>Die Simulation läuft mit festem Zeitschritt unabhängig von der Bildwiederholrate. Einzelschritt bewegt den Zustand um 1/120 Sekunde weiter. Parameteränderungen setzen den Versuch zurück.</p><p>Die Modelle sind bewusst vereinfacht. Besonders Crashtest, Biomechanik, Arena und Mechanik liefern keine realen Prognosen.</p><button id="closeHelp" class="primary" type="button">Schließen</button></dialog>
-<script type="module" src="./app.js?v=1.5.0"></script>
+<script type="module" src="./app.js?v=1.6.0"></script>
 </body></html>
