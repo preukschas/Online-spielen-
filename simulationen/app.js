@@ -11,6 +11,7 @@ function safeGet(key,defaultValue){try{return JSON.parse(localStorage.getItem(ke
 function safeSet(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch{note("Browser-Speicher nicht verfügbar. Bitte JSON exportieren.",true);return false}}
 
 function duelKey(){return DUELKEY+"_"+encodeURIComponent(String(params.entityA||params.nameA||"Entität A").slice(0,80)+"|"+String(params.entityB||params.nameB||"Entität B").slice(0,80));}
+function duelAgentKey(side){return DUELKEY+"_agent_"+encodeURIComponent(String(params["entity"+side]||params["name"+side]||"Entität "+side).slice(0,80));}
 function restoreDuel(){
  if(mode!=="arena"||preset!=="duel"||!sim.duelTraining)return;
  const saved=safeGet(duelKey(),null);
@@ -19,6 +20,15 @@ function restoreDuel(){
     history:Array.isArray(saved.history)?saved.history.slice(-250):[]};
   params.genomeA={...saved.genomes[0]};params.genomeB={...saved.genomes[1]};
   sim.body.fighters[0].genome={...params.genomeA};sim.body.fighters[1].genome={...params.genomeB};
+ }else{
+  for(const side of ["A","B"]){
+   const savedAgent=safeGet(duelAgentKey(side),null);
+   const genome=savedAgent&&duelValidGenome(savedAgent.genome)?savedAgent.genome:
+     duelValidGenome(params["genome"+side])?params["genome"+side]:duelDefaultGenome();
+   params["genome"+side]={...genome};
+   sim.body.fighters[side==="A"?0:1].genome={...genome};
+   sim.duelTraining.genomes[side==="A"?0:1]={...genome};
+  }
  }
 }
 function startDuelTraining(){
@@ -106,7 +116,7 @@ function controls(){
    const train=document.createElement("button");train.type="button";train.className="extra-button";train.id="duelTrainButton";train.textContent="🧠 Evolution starten";train.addEventListener("click",startDuelTraining);ex.append(train);
    const status=document.createElement("p");status.id="duelStatus";status.className="train-status";ex.append(status);
    const erase=document.createElement("button");erase.type="button";erase.className="secondary";erase.textContent="↺ Training dieser Paarung zurücksetzen";
-   erase.addEventListener("click",()=>{try{localStorage.removeItem(duelKey());}catch{}delete params.genomeA;delete params.genomeB;resetSim();note("Evolution dieser beiden Entitäten zurückgesetzt.");});ex.append(erase);
+   erase.addEventListener("click",()=>{try{localStorage.removeItem(duelKey());localStorage.removeItem(duelAgentKey("A"));localStorage.removeItem(duelAgentKey("B"));}catch{}delete params.genomeA;delete params.genomeB;resetSim();note("Evolution dieser beiden Entitäten zurückgesetzt.");});ex.append(erase);
   }else{
    const imp=document.createElement("button");imp.type="button";imp.className="extra-button";imp.textContent="🦿 Besten Läufer als Entität A laden";
    imp.addEventListener("click",()=>{const best=safeGet(BIOKEY,null);if(!best){note("Noch kein trainierter Zweibeiner oder Vierbeiner gespeichert.",true);return;}
@@ -247,6 +257,8 @@ function frame(now){
   trainDuelGeneration(tr,sim.p,seed);
   params.genomeA={...tr.genomes[0]};params.genomeB={...tr.genomes[1]};
   safeSet(duelKey(),{...tr,running:false});
+  safeSet(duelAgentKey("A"),{genome:tr.genomes[0],generation:tr.generation});
+  safeSet(duelAgentKey("B"),{genome:tr.genomes[1],generation:tr.generation});
   sceneDirty=true;
   if(!tr.running){
    resetSim();
