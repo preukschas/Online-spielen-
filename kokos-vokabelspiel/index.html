@@ -109,7 +109,7 @@ function start(){if(s.running)return;$('overlay').classList.add('hidden');s.runn
 function finishRound(){if(!s.running)return;s.running=false;cancelAnimationFrame(s.raf);hud();$('resultScore').textContent=s.score-s.levelStartScore;$('resultHits').textContent=s.hits;$('resultCombo').textContent='x'+s.maxCombo;$('gamePanel').classList.add('hidden');$('resultPanel').classList.remove('hidden')}
 function words(){const a=[],seen=new Set();while(a.length<Math.min(12,vocab.length)){const v=nextLearnWord(),id=v[1];if(seen.has(id))continue;seen.add(id);a.push(v)}return a}
 function startLearn(){s.learnToken++;$('resultPanel').classList.add('hidden');$('learnPanel').classList.remove('hidden');$('nextLevel').textContent=s.level+1;const items=words().map((v,i)=>({de:v[0],en:v[1],done:false,id:i}));s.learn={items,queue:shuffle(items.slice()),done:0,current:null};question()}
-function question(){const L=s.learn;if(!L)return;if(L.done>=12){$('done').textContent='12';$('learnBar').style.width='100%';$('learnPanel').classList.add('hidden');$('unlock').classList.remove('hidden');return}if(!L.queue.length)L.queue=shuffle(L.items.filter(x=>!x.done));const c=L.queue.shift();L.current=c;$('prompt').textContent=c.de;$('done').textContent=L.done;$('learnBar').style.width=(L.done/12*100)+'%';$('feedback').textContent='';const pool=shuffle(vocab.filter(v=>v[1]!==c.en).map(v=>v[1])),opts=shuffle([c.en,...pool.slice(0,3)]);$('choices').innerHTML='';opts.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='choice';b.textContent=o;b.addEventListener('click',()=>answer(o));$('choices').appendChild(b)})}
+function question(){const L=s.learn;if(!L)return;if(L.done>=12){$('done').textContent='12';$('learnBar').style.width='100%';$('learnPanel').classList.add('hidden');$('unlock').classList.remove('hidden');return}if(!L.queue.length)L.queue=shuffle(L.items.filter(x=>!x.done));const c=L.queue.shift();L.current=c;$('prompt').textContent=c.de;$('done').textContent=L.done;$('learnBar').style.width=(L.done/12*100)+'%';$('feedback').textContent='';const pool=shuffle(vocab.filter(v=>v[1]!==c.en&&!moeSameFamily(v[1],c.en)).map(v=>v[1])),opts=shuffle([c.en,...pool.slice(0,3)]);$('choices').innerHTML='';opts.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='choice';b.textContent=o;b.addEventListener('click',()=>answer(o));$('choices').appendChild(b)})}
 function delayedQuestion(ms){const token=++s.learnToken;setTimeout(()=>{if(token===s.learnToken)question()},ms)}
 function answer(o){const L=s.learn,c=L&&L.current;if(!L||!c||c.done)return;[...$('choices').children].forEach(b=>b.disabled=true);if(o===c.en){c.done=true;L.done++;s.score+=100;$('feedback').textContent='✅ Richtig!';delayedQuestion(330)}else{L.queue.push(c);$('feedback').textContent='❌ '+c.en+' — kommt später wieder.';delayedQuestion(760)}}
 function hold(id,key){const b=$(id);const on=e=>{e.preventDefault();s.keys[key]=true;b.setPointerCapture?.(e.pointerId)};const off=e=>{e.preventDefault();s.keys[key]=false};b.addEventListener('pointerdown',on);['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,off))}
@@ -125,6 +125,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){Object.key
 /* Gemeinsame Vokabelliste; Offline-Fallback und pausierte Familienwörter. */
 const MOE_CENTRAL_URL="https://preukschas.github.io/Online-spielen-/shared/moe-vocab.json";
 function moeKey(value){return String(value||'').toLowerCase().replace(/…/g,'...').replace(/\(=.+?\)|\(pl\)|\(pl only\)/g,'').replace(/[^a-z0-9']+/g,' ').trim();}
+function moeSameFamily(a,b){const families=[['mum','mother'],['dad','father']];const x=moeKey(a),y=moeKey(b);return families.some(words=>words.includes(x)&&words.includes(y));}
 function moeRebuildDeck(){learnDeck=shuffle(vocab.slice());learnCursor=0;lastLearnWord='';}
 async function moeRefreshVocabulary(){
  try{
@@ -135,6 +136,9 @@ async function moeRefreshVocabulary(){
   const next=[],seen=new Set();
   for(const row of data.words){
    if(!row||!row.en||!row.de)continue;
+   // Nur die 104 freigegebenen Vokabeln der ersten vier Seiten.
+   const approvedId=Number(String(row.id||'').replace(/^MOE-/,''));
+   if(!Number.isInteger(approvedId)||approvedId<1||approvedId>104)continue;
    const key=moeKey(row.en);if(seen.has(key))continue;seen.add(key);
    next.push([String(row.de),String(row.en)]);
   }
