@@ -42,9 +42,17 @@ export function touchingContact(a,b){
  let delta=sub(q,p),len=Math.hypot(delta.x,delta.y);
  if(len>=radius(a)+radius(b))return null;
  if(len<1e-8){
-  delta=sub(b,a);len=Math.hypot(delta.x,delta.y);
-  // If both centers coincide choose a perpendicular to first bar, or x-axis.
-  if(len<1e-8){const theta=isWheel(a)?0:a.angle+Math.PI/2;delta={x:Math.cos(theta),y:Math.sin(theta)};len=1;}
+  // Collinear or intersecting capsule centerlines: move along a surface normal,
+  // not along the length of the bar (which would make the bodies slide apart).
+  if(!isWheel(a)||!isWheel(b)){
+   const ref=!isWheel(a)?a:b;
+   const perpendicular={x:-Math.sin(ref.angle),y:Math.cos(ref.angle)};
+   const side=dot(sub(b,a),perpendicular)<0?-1:1;
+   delta=mul(perpendicular,side);len=1;
+  }else{
+   delta=sub(b,a);len=Math.hypot(delta.x,delta.y);
+   if(len<1e-8){delta={x:1,y:0};len=1;}
+  }
  }
  const n=mul(delta,1/len),penetration=radius(a)+radius(b)-Math.hypot(q.x-p.x,q.y-p.y);
  return {a:a.id,b:b.id,n,penetration,ra:sub(p,a),rb:sub(q,b),point:{x:(p.x+q.x)/2,y:(p.y+q.y)/2}};
