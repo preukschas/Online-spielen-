@@ -56,10 +56,10 @@ main{padding-bottom:60px}.hero{padding:46px 0 30px;display:flex;justify-content:
 <div class="head"><h2>🧠 Lernen & Vergleichen</h2><small>Reproduzierbar · v1</small></div>
 <div class="body">
 <div><h3>1. Laufgehirn für beide Roboter</h3>
-<p>Übernimm deine bisher trainierten 256 neuronalen Gewichte aus der Gelenk-Lernarena. Alternativ kann dieses Labor zunächst selbst ein gemeinsames Laufmodell trainieren. Verschiedene Laufgehirne für A und B kannst du getrennt als JSON importieren.</p>
+<p>Übernimm die separat trainierten 256 neuronalen Gewichte von A und B aus der Gelenk-Lernarena. Alternativ trainiert dieses Labor zwei eigenständige Laufmodelle, die bereits während des Trainings gegeneinander getestet werden. Du kannst außerdem für jeden Roboter getrennte JSON-Dateien importieren.</p>
 <div class="group">
-<button class="btn alt" id="loadGait">🦿 Vorhandenes Lauftraining übernehmen</button>
-<button class="btn alt" id="prepareGait">🧬 Laufmodell trainieren (15 Gen.)</button>
+<button class="btn alt" id="loadGait">🦿 Gelernte Laufgehirne A &amp; B übernehmen</button>
+<button class="btn alt" id="prepareGait">🧬 Beide Laufgehirne trainieren (15 Gen.)</button>
 <button class="btn" id="importGaitA">↑ Laufmodell A</button><button class="btn" id="importGaitB">↑ Laufmodell B</button>
 </div>
 <input type="file" id="fileGaitA" accept=".json,application/json" hidden>
@@ -98,5 +98,5 @@ main{padding-bottom:60px}.hero{padding:46px 0 30px;display:flex;justify-content:
 </div>
 <div class="details"><strong>Welche Teile lernen tatsächlich?</strong> Die Beinbewegungen stammen aus den gespeicherten neuronalen Netzen der Gelenk-Lernarena (256 Gewichte je Roboter). Im Duell werden zusätzliche 11 Strategieparameter je Kämpfer evolutionär optimiert; Hüft- und Kniewinkel, Fuß-Boden-Kontakte und Rückstöße werden dabei im gleichen vereinfachten Bewegungsmodell simuliert. <strong>Modellgrenzen:</strong> Die Kontakt- und Kampfphysik bleibt abstrahiert. Es handelt sich nicht um vollständige Ganzkörperphysik, Verletzungsberechnung oder einen zuverlässigen Nachweis für allgemeines maschinelles Lernen. Ein höherer Trainingswert garantiert keinen Sieg auf neuen Startwerten.</div>
 </main>
-<script type="module" src="./joint-duel-ui.js?v=1"></script>
+<script type="module" src="./joint-duel-ui.js?v=2"></script>
 </body></html>
