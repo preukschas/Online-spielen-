@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1725">
+<meta name="description" content="DMP Aktions-Duell: Schlagen, Springen und Schubsen als eigenständige, lernfähige 2D-Simulation mit zwei trainierbaren Roboter-Modellen.">
+<title>Aktions-Duell · DMP SIM LAB</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:dark;--bg:#091725;--card:#142b3d;--line:#36596c;--white:#ebf8f4;--muted:#aac4cd;--mint:#76e7c3;--gold:#f4c67e;--accent:#8fd9fa}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;color:var(--white);background:radial-gradient(ellipse 930px 640px at 80% -200px,#194958 0,transparent 76%),radial-gradient(ellipse 620px 470px at -15% 70%,#183747,transparent 85%),var(--bg);min-height:100vh}
+button,input,select{font:inherit}button{cursor:pointer;touch-action:manipulation}button:disabled{opacity:.55;cursor:wait}
+a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--mint);outline-offset:3px}
+button:hover:not(:disabled),a.action:hover{filter:brightness(1.12)}
+.container{max-width:1500px;margin:auto;padding:0 clamp(12px,3vw,48px)}
+header{border-bottom:1px solid #ffffff1d;background:#0b1b2ad1}
+.top{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+.logo{font-size:17px;font-weight:900;letter-spacing:.035em;display:flex;align-items:center;gap:12px;white-space:nowrap}
+.logo span{width:43px;height:43px;background:linear-gradient(145deg,#96fbd5,#41bdba);color:#0c2831;display:grid;place-items:center;border-radius:13px;font-size:25px}
+.logo em{font-style:normal;color:var(--mint)}
+nav{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+nav a{padding:9px 12px;border:1px solid #35566b;border-radius:10px;color:#d3e9ea;font-size:12px;font-weight:700;background:#193548}
+h1,h2,h3,p{margin-top:0}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding:32px 0 24px;flex-wrap:wrap}
+.kicker{text-transform:uppercase;letter-spacing:.21em;font-size:11px;font-weight:800;color:var(--mint);margin:0 0 11px}
+h1{font-size:clamp(34px,5vw,64px);letter-spacing:-.057em;line-height:1.07;margin:0 0 14px}
+h1 span{color:var(--mint)}
+.lead{max-width:760px;color:var(--muted);font-size:14px;line-height:1.75;margin:0}
+.hero-pill{border:1px solid #5b948b;background:#153c43;color:#b8ffdc;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:750;white-space:nowrap}
+.layout{display:grid;grid-template-columns:minmax(0,1.78fr) minmax(310px,.86fr);gap:17px;align-items:start}
+.card{background:linear-gradient(145deg,#17354a,#102537);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 18px 45px #0003}
+.cardhead{padding:16px 18px;border-bottom:1px solid #ffffff17;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.cardhead strong{font-size:15px}
+.small{color:var(--muted);font-size:12px;line-height:1.6}
+#live{font-size:12px;font-weight:750;color:var(--gold)}
+.arena{background:#081d2a;padding:12px}
+#ring{width:100%;aspect-ratio:1000/560;display:block;border:1px solid #365668;border-radius:13px;background:#092435}
+.playbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:13px 16px 15px;border-top:1px solid #ffffff12}
+button{min-height:43px;border-radius:10px;border:1px solid #486479;background:#244157;color:var(--white);padding:10px 14px;font-weight:780;font-size:13px}
+button.primary{background:var(--mint);border-color:var(--mint);color:#07312a}
+button.gold{background:linear-gradient(135deg,#ffd493,#e6a753);border-color:#d6a052;color:#2d2412}
+button.ghost{background:#152d3f}
+button.warn{color:#f8bdb1;border-color:#885657;background:#3e2b34}
+.speed{margin-left:auto;display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12px}
+.speed select{background:#213e52;color:var(--white);border:1px solid #497080;padding:8px;border-radius:9px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:0 16px 16px}
+.stat{background:#10293b;border:1px solid #355366;border-radius:11px;padding:11px 12px;min-width:0}
+.stat small{display:block;font-size:10px;letter-spacing:.04em;color:#a7c3cd;margin-bottom:4px}
+.stat strong{font-size:20px;font-variant-numeric:tabular-nums}
+.details{margin:0 16px 16px;color:var(--muted);font-size:11px;line-height:1.5}
+.side{display:grid;gap:15px}
+.body{padding:17px}
+.body h2{font-size:18px;margin:0 0 8px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label.field{display:grid;gap:6px;color:var(--muted);font-size:12px;font-weight:730;margin-bottom:11px}
+label.field input,label.field select{width:100%;min-width:0;min-height:41px;background:#0d283a;color:var(--white);border:1px solid #456578;border-radius:10px;padding:8px 10px}
+.fieldset{border:1px solid #385c6d;padding:12px;border-radius:13px;margin:13px 0}
+.fieldset legend{padding:0 5px;font-size:12px;font-weight:780;color:#c5e4e5}
+.moves{display:flex;flex-wrap:wrap;gap:7px}
+.move{display:flex;align-items:center;gap:6px;background:#153d4a;border:1px solid #3c7281;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:750}
+.move input{accent-color:var(--mint);width:17px;height:17px;margin:0}
+.twobtn{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.twobtn button{padding:11px 5px;min-width:0}
+.training-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.badge{background:#205549;color:#aefbd8;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:800}
+.training-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}
+.training-stats div{background:#0b2938;padding:9px;border-radius:10px}
+.training-stats small{display:block;color:#9bbbc5;font-size:10px}
+.training-stats b{font-size:16px;overflow-wrap:anywhere}
+.trainbuttons{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.trainbuttons button{min-height:48px}
+.training-headline{color:#c4ebde;font-size:12px;font-weight:750;margin:11px 0}
+#outcome{color:#b5d1d8;min-height:48px;font-size:12px;line-height:1.6}
+#fitness{display:block;width:100%;height:auto;border:1px solid #35596a;border-radius:11px;margin-top:10px;background:#0d2838}
+#status{border:1px solid #4b8274;background:#173d42;border-radius:12px;padding:12px 14px;color:#c8ffea;font-size:12px;line-height:1.65;min-height:48px;margin:17px 0}
+#status.error{color:#ffc4b9;background:#482d33;border-color:#95585c}
+.notes{border:1px solid #3d5665;border-radius:13px;padding:14px 17px;color:var(--muted);font-size:12px;line-height:1.65;margin:17px 0 30px}
+.notes strong{color:var(--white)}
+footer{border-top:1px solid #ffffff1a;padding:25px 0 40px;font-size:12px;color:#9dbecc}
+footer a{text-decoration:underline;text-underline-offset:3px;color:var(--mint)}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr;align-items:start}.hero{padding-top:24px}}
+@media(max-width:650px){.side{grid-template-columns:1fr}.hero-pill{display:none}.stats{grid-template-columns:repeat(2,1fr)}.speed{margin-left:0}.arena{padding:6px}.cardhead{padding:12px}.playbar{padding:11px}.playbar button{min-height:44px;font-size:12px}.top{justify-content:center}.logo{margin-right:auto}nav{gap:5px}nav a{padding:8px;font-size:11px}#status{margin-top:14px}h1{font-size:40px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="container top">
+  <a href="./" class="logo"><span>D</span><div>DMP <em>SIM LAB</em></div></a>
+  <nav aria-label="Navigation"><a href="./">⌂ Übersicht</a><a href="./lab.html?mode=arena&amp;preset=duel">Original-Arena</a><a href="./editor.html">✎ Entitäten</a><a href="./joint-duel.html">Gelenk-Duell</a></nav>
+ </div>
+</header>
+<main class="container">
+ <section class="hero">
+  <div><p class="kicker">Einzel-Simulation · Zwei lernfähige Modelle</p><h1>Schlagen. Springen.<br><span>Schubsen.</span></h1>
+   <p class="lead">Eine eigene Arena für das Aktions-Duell: Zwei selbstständig handelnde Roboter oder Entitäten treten gegeneinander an, weichen aus, blocken und entwickeln <strong>beide</strong> ihre Strategie über Generationen weiter. Jeder Treffer und jeder Sprung entsteht aus dem Simulationszustand.</p></div>
+  <span class="hero-pill">🥊 LIVE · EVOLUTION · TURNIERE</span>
+ </section>
+ <div class="layout">
+  <section class="card" aria-label="Aktionsarena">
+   <div class="cardhead"><strong>🥊 Aktions-Arena <span class="small">· 2D-Simulationsmodell</span></strong><span id="live" role="status">Bereit</span></div>
+   <div class="arena"><canvas id="ring" width="1000" height="560" aria-label="Visualisierung zweier kämpfender Figuren, Zustand und Aktion"></canvas></div>
+   <div class="playbar">
+    <button id="play" class="primary" type="button">▶ Duell starten</button>
+    <button id="resetFight" class="ghost" type="button">↺ Neues Duell</button>
+    <label class="speed">Tempo <select id="speed" aria-label="Simulationsgeschwindigkeit"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+    <span class="small" id="speedText">1×</span>
+   </div>
+   <div class="stats">
+    <div class="stat"><small>HP · Entität A</small><strong id="hpA">100</strong></div>
+    <div class="stat"><small>HP · Entität B</small><strong id="hpB">100</strong></div>
+    <div class="stat"><small>Treffer · A : B</small><strong id="hits">0 : 0</strong></div>
+    <div class="stat"><small>Sprünge · A : B</small><strong id="jumps">0 : 0</strong></div>
+    <div class="stat"><small>Energie · A : B</small><strong id="energy">100 : 100</strong></div>
+    <div class="stat"><small>Punkte · A : B</small><strong id="score">0 : 0</strong></div>
+   </div>
+   <p class="details">Die Anzeige zeigt Spielwerte, keine tatsächlichen Verletzungen. Die Bewegungen kommen aus den berechneten Schritten, Aktionen und Impulsen.</p>
+  </section>
+  <aside class="side">
+   <section class="card body" aria-label="Teilnehmer und Regeln">
+    <h2>🤖 Zwei Teilnehmer</h2><p class="small">Wähle eigene Figuren aus dem Entitäten-Editor oder nutze zwei Standard-Roboter.</p>
+    <div class="formgrid">
+     <div><label class="field" for="entityA">Entität A<select id="entityA"><option value="">Standard-Roboter</option></select></label><label class="field" for="nameA">Name A<input id="nameA" type="text" maxlength="24" value="Roboter A"></label></div>
+     <div><label class="field" for="entityB">Entität B<select id="entityB"><option value="">Standard-Roboter</option></select></label><label class="field" for="nameB">Name B<input id="nameB" type="text" maxlength="24" value="Roboter B"></label></div>
+    </div>
+    <fieldset class="fieldset"><legend>Welche Aktionen sollen erlaubt sein?</legend><div class="moves">
+     <label class="move"><input data-move type="checkbox" value="Schlagen" checked>👊 Schlagen</label>
+     <label class="move"><input data-move type="checkbox" value="Springen" checked>🦘 Springen</label>
+     <label class="move"><input data-move type="checkbox" value="Schubsen" checked>🤜 Schubsen</label>
+    </div></fieldset>
+    <label class="field" for="duration">Dauer pro Duell
+     <select id="duration"><option value="12">12 Simulationssekunden</option><option value="24" selected>24 Simulationssekunden</option><option value="36">36 Simulationssekunden</option></select>
+    </label>
+    <p class="small">Blocken, Ausweichen und Laufen sind immer erlaubt. Treten ist in dieser separaten Disziplin deaktiviert.</p>
+   </section>
+   <section class="card body" aria-label="Lernen und Auswerten">
+    <div class="training-head"><h2>🧠 Gemeinsames Lernen</h2><span class="badge">Generation <span id="gen">0</span></span></div>
+    <p class="small">Nicht nur A trainiert: <strong>beide Modelle</strong> optimieren unabhängig voneinander Angriff, Verteidigung, Sprungkraft, Balance und Beinarbeit – mit Kämpfen gegeneinander und gegen Referenzgegner.</p>
+    <div class="training-stats">
+     <div><small>Ziel</small><b id="target">pausiert</b></div>
+     <div><small>Trainingssiege A/B/Remis</small><b id="record">0 / 0 / 0</b></div>
+     <div><small>Lernstand</small><b>lokal</b></div>
+    </div>
+    <p id="styles" class="training-headline">A: Techniker · B: Techniker</p>
+    <div class="trainbuttons">
+     <button id="plus1" class="primary" type="button">+1 Generation</button>
+     <button id="plus100" class="primary" type="button">+100 Generationen</button>
+    </div>
+    <button id="trainPause" class="ghost" type="button" style="width:100%;margin-top:9px">▶ Evolution fortsetzen</button>
+    <canvas id="fitness" width="560" height="165" aria-label="Fitness-Verlauf der Generationen"></canvas>
+    <p id="outcome" aria-live="polite">Beide Modelle starten mit einer Grundstrategie.</p>
+    <div class="trainbuttons">
+     <button id="compare10" class="gold" type="button">🥊 10 Duelle</button>
+     <button id="compare50" class="gold" type="button">🏆 50 Duelle</button>
+    </div>
+    <p class="small" style="margin-top:10px">Turniere werten echte Duelle aus und wechseln fair die Startseiten. Sie verändern den Trainingsstand nicht.</p>
+    <div class="trainbuttons">
+     <button id="export" type="button" class="ghost">↓ JSON exportieren</button>
+     <button id="wipe" type="button" class="warn">Lernstand löschen</button>
+    </div>
+   </section>
+  </aside>
+ </div>
+ <p id="status" role="status" aria-live="polite">Bereit.</p>
+ <div class="notes"><strong>Modellgrenze:</strong> Diese Simulation ist ein stilisiertes, deterministisches Spiel- und Lernmodell mit vereinfachter 2D-Physik. Sie bildet keine echten Körperverletzungen oder realistische menschliche Kampfbewegungen ab. Der Fortschritt wird im Browser getrennt nach Entitätenpaar gespeichert; ohne geräteübergreifende Anmeldung ist er nicht automatisch auf anderen Geräten verfügbar. <strong>Duell-Arena</strong> und <strong>Gelenk-Duell</strong> bleiben als eigene Simulationen bestehen.</div>
+</main>
+<footer class="container">DMP SIM LAB · Aktions-Duell · <a href="./">Alle Simulationen</a> · <a href="./editor.html">Entitäten gestalten</a></footer>
+<script type="module" src="./duel-arena-ui.js?v=1.7.0"></script>
+</body>
+</html>
