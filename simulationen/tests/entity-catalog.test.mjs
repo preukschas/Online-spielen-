@@ -4,6 +4,7 @@ import {ENTITY_KEY,ENTITY_LIMIT,newEntity,validateEntity,toBiomechanics,toArena,
 import {ENTITY_CATALOG,catalogEntity,installCatalog} from "../entity-catalog.js";
 import {drawCharacter,characterThumbnail} from "../entity-art.js";
 import {makeSim,stepSim} from "../engine.js";
+import {makeDuel,simulateDuel} from "../duel-core.js";
 function storage(items=[]){
  const values=new Map([[ENTITY_KEY,JSON.stringify(items)]]);
  return {getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,value)};
@@ -106,4 +107,20 @@ test("Benutzerprofil bleibt erhalten, wenn der Katalog erweitert wird",()=>{
  assert.equal(r.added,18);
  assert.equal(safeEntityList(st).length,20);
  assert.equal(safeEntityList(st).find(x=>x.id==="catalog-ali").combat.guard,.37);
+});
+
+test("Kampfstile gelangen als reale Anfangsgene in den Duellsolver",()=>{
+ const ali=toArena(catalogEntity("ali")),tyson=toArena(catalogEntity("tyson"));
+ const p={nameA:ali.name,nameB:tyson.name,colorA:ali.color,colorB:tyson.color,
+  kindA:ali.kind,kindB:tyson.kind,speedA:ali.speed,speedB:tyson.speed,
+  staminaA:ali.stamina,staminaB:tyson.stamina,genomeA:ali.genome,genomeB:tyson.genome,
+  fighterStyleA:ali.fighterStyle,fighterStyleB:tyson.fighterStyle,duelDuration:16};
+ const body=makeDuel(p,[p.genomeA,p.genomeB],25);
+ assert.equal(body.fighters[0].fighterStyle,"ali");
+ assert.equal(body.fighters[1].fighterStyle,"tyson");
+ assert.equal(body.fighters[0].genome.punch,.95);
+ assert.equal(body.fighters[1].genome.aggression,.96);
+ const end=simulateDuel(p,[ali.genome,tyson.genome],25);
+ assert.equal(end.finished,true);
+ assert.ok(end.fighters.every(x=>Number.isFinite(x.points)&&Number.isFinite(x.hp)));
 });
