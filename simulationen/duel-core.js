@@ -39,6 +39,7 @@ export function duelFighter(p,side,genome){
 }
 export function makeDuel(p,genomes=[DEFAULT,DEFAULT],seed=42){
  return {fighters:[duelFighter(p,0,genomes[0]),duelFighter(p,1,genomes[1])],
+  moves:Array.isArray(p.duelMoves)?p.duelMoves.filter(x=>["Schlagen","Schubsen","Springen","Treten"].includes(x)):null,
   winner:null,elapsed:0,limit:p.duelDuration||24,seed,finished:false,events:[],round:1};
 }
 function perform(a,b,body,action,rng){
@@ -75,7 +76,7 @@ function strategy(a,b,body,rng){
  if(threatened&&dist<1.65&&rng()<g.guard*.8){
   a.intent=0;a.action="Blocken";a.actionTime=.46;a.cooldown=.45;a.energy-=5;return;
  }
- if(a.landed&&dist<2.5&&rng()<g.jump*(.07+.13*g.spring)){
+ if(a.landed&&dist<2.5&&(!body.moves||body.moves.includes("Springen"))&&rng()<g.jump*(.07+.13*g.spring)){
   a.vy=2.8+g.spring*2.6;a.landed=false;a.jumps++;
   a.action="Springen";a.actionTime=.40;a.cooldown=.43;a.energy=clamp(a.energy-(5+4*g.spring),0,100);return;
  }
@@ -84,7 +85,8 @@ function strategy(a,b,body,rng){
   {a:"Schubsen",w:(.11+g.push*.9)*(dist<1.25?1:.08)},
   {a:"Schlagen",w:(.15+g.punch)*(dist<.95?1:.08)},
   {a:"Treten",w:(.16+g.kick)*(dist<1.55?1:.1)}
- ];
+ ].filter(opt=>!body.moves||body.moves.includes(opt.a));
+ if(!weights.length)return;
  const sum=weights.reduce((t,x)=>t+x.w,0);let pick=rng()*sum;
  for(const opt of weights){pick-=opt.w;if(pick<=0){perform(a,b,body,opt.a,rng);return;}}
 }
