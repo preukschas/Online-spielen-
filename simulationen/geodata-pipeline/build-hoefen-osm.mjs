@@ -32,10 +32,61 @@ async function request(url){
   return JSON.parse(raw);
  }finally{clearTimeout(timer);}
 }
+// Fallback to the official OpenStreetMap API 0.6 map endpoint if public
+// Overpass mirrors reject or rate-limit the request. Avoid fake data.
+const decode=s=>String(s).replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&");
+const attrs=s=>Object.fromEntries([...s.matchAll(/([A-Za-z_:][-\w:.]*)="([^"]*)"/g)].map(x=>[x[1],decode(x[2])]));
+function parseOsmXml(text){
+ if(!text.includes("<osm"))throw Error("No OSM XML");
+ const nodes=new Map();
+ for(const x of text.matchAll(/<node\b([^>]*?)\/?>/g)){
+  const a=attrs(x[1]),lat=Number(a.lat),lon=Number(a.lon);
+  if(a.id&&Number.isFinite(lat)&&Number.isFinite(lon))nodes.set(a.id,{lat,lon});
+ }
+ const elements=[];
+ for(const x of text.matchAll(/<way\b([^>]*)>([\s\S]*?)<\/way>/g)){
+  const a=attrs(x[1]),tags={},geometry=[];
+  for(const tag of x[2].matchAll(/<tag\b([^>]*?)\/?>/g)){
+   const t=attrs(tag[1]);if(allowedTags.includes(t.k))tags[t.k]=t.v;
+  }
+  if(!Object.keys(tags).length)continue;
+  for(const nd of x[2].matchAll(/<nd\b([^>]*?)\/?>/g)){
+   const p=nodes.get(attrs(nd[1]).ref);if(p)geometry.push(p);
+  }
+  if(geometry.length>=2&&geometry.length<=5000)elements.push({type:"way",id:Number(a.id),tags,geometry});
+ }
+ return {elements};
+}
+async function officialOSM(){
+ const bounds=[bbox.west,bbox.south,bbox.east,bbox.north].map(x=>x.toFixed(7)).join(",");
+ let last;
+ for(const url of ["https://api.openstreetmap.org/api/0.6/map?bbox="+bounds,
+                   "https://www.openstreetmap.org/api/0.6/map?bbox="+bounds]){
+  const c=new AbortController(),timer=setTimeout(()=>c.abort(),45000);
+  try{
+   const response=await fetch(url,{signal:c.signal,headers:{
+     Accept:"application/xml",
+     "User-Agent":"DMP-SimLab/1.0 (+https://github.com/preukschas/Online-spielen-)"
+   }});
+   if(!response.ok)throw Error("HTTP "+response.status);
+   const raw=await response.text();
+   if(raw.length>30*1024*1024)throw Error("OSM XML too large");
+   const result=parseOsmXml(raw);
+   if(result.elements.length<10)throw Error("Too few geometries in official OSM map API");
+   return {json:result,endpoint:url.split("?")[0]};
+  }catch(e){last=e;console.warn("Official OSM API failed",e.message);}
+  finally{clearTimeout(timer);}
+ }
+ throw last||Error("Official OSM API unavailable");
+}
 let json,endpoint,error;
 for(const service of services){
  try{json=await request(service);endpoint=service;break}
  catch(e){error=e;console.warn("Overpass endpoint failed",service,e.message);}
+}
+if(!json){
+ try{const result=await officialOSM();json=result.json;endpoint=result.endpoint;}
+ catch(e){error=e;}
 }
 if(!json)throw Error("No real OSM available. NOT creating snapshot: "+(error?.message||"unknown"));
 const sanity=p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&p.lat>48.3&&p.lat<48.6&&p.lon>7.6&&p.lon<8.1;
