@@ -1,7 +1,7 @@
-import {contacts,solveContacts,contactImpulse} from "./builder-collision.js";
+import {contacts,solveContacts,contactImpulse,firstSweptImpact,safeContactInterval} from "./builder-collision.js";
 // DMP Mechanik-Baukasten – modellhafte 2D-Starrkörper mit Drehgelenken.
 // SI-Einheiten: Meter, Kilogramm, Sekunden, N·m. Kein Konstruktionsnachweis.
-export const BUILDER_VERSION="1.1.0";
+export const BUILDER_VERSION="1.2.0";
 export const DT=1/120;
 const LIMIT={bodies:20,joints:25};
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -19,10 +19,12 @@ function normalizeBody(data,id){
  return{id,kind,name:String(data.name||"Körper "+id).slice(0,35),length,mass,
   x:clamp(Number(data.x)||0,-4.6,4.6),y:clamp(Number(data.y)||0,-3.2,2.1),
   angle:Number.isFinite(data.angle)?clamp(data.angle,-Math.PI*2,Math.PI*2):0,
-  vx:0,vy:0,omega:0,invM:1/mass,invI:1/inertia({kind,length,mass})};
+  startVx:clamp(Number(data.startVx)||0,-500,500),startVy:clamp(Number(data.startVy)||0,-500,500),
+  vx:clamp(Number(data.startVx)||0,-500,500),vy:clamp(Number(data.startVy)||0,-500,500),omega:0,
+  invM:1/mass,invI:1/inertia({kind,length,mass})};
 }
 export function blank(){return{format:"DMP_MECHANIC_BUILDER",version:1,name:"Neue Maschine",gravity:9.81,
- bodies:[],joints:[],nextId:1,collisions:true,restitution:.05,friction:.35,contactsNow:0};}
+ bodies:[],joints:[],nextId:1,collisions:true,restitution:.05,friction:.35,ccd:true,contactsNow:0,ccdSubsteps:1,ccdImpacts:0};}
 export function addBody(scene,kind="bar",data={}){
  if(scene.bodies.length>=LIMIT.bodies)throw Error("Maximal 20 Körper");
  const id=scene.nextId++;
@@ -53,7 +55,11 @@ export function deleteBody(scene,id){scene.bodies=scene.bodies.filter(b=>b.id!==
 export function deleteJoint(scene,id){scene.joints=scene.joints.filter(j=>j.id!==id)}
 export function sample(name="pendulum"){
  const s=blank();
- if(name==="collision"){
+ if(name==="fast"){
+  s.name="Schneller Radstoß (CCD)";s.gravity=0;
+  addBody(s,"wheel",{name:"Schneller Ball",length:.8,mass:2,x:-1.6,y:-.8,startVx:220});
+  addBody(s,"wheel",{name:"Zielrad",length:.8,mass:2,x:.4,y:-.8});
+ }else if(name==="collision"){
   s.name="Kollision: zwei Räder";
   addBody(s,"wheel",{name:"Rad A",length:1.2,mass:2,x:-1,y:-1.4,angle:0});
   addBody(s,"wheel",{name:"Rad B",length:1.2,mass:3,x:-.15,y:-1.4,angle:0});
@@ -76,8 +82,8 @@ export function sample(name="pendulum"){
 }
 export function snapshot(scene){
  return {format:"DMP_MECHANIC_BUILDER",version:1,name:String(scene.name).slice(0,60),
-  gravity:scene.gravity,collisions:scene.collisions!==false,restitution:scene.restitution??.05,friction:scene.friction??.35,bodies:scene.bodies.map(b=>({id:b.id,kind:b.kind,name:b.name,
-   length:b.length,mass:b.mass,x:b.x,y:b.y,angle:b.angle})),
+  gravity:scene.gravity,ccd:scene.ccd!==false,collisions:scene.collisions!==false,restitution:scene.restitution??.05,friction:scene.friction??.35,bodies:scene.bodies.map(b=>({id:b.id,kind:b.kind,name:b.name,
+   length:b.length,mass:b.mass,x:b.x,y:b.y,angle:b.angle,startVx:b.startVx??0,startVy:b.startVy??0})),
   joints:scene.joints.map(j=>({id:j.id,a:j.a,b:j.b,localA:{...j.localA},localB:{...j.localB},
    motor:!!j.motor,rpm:j.rpm,torque:j.torque})),nextId:scene.nextId};
 }
@@ -87,6 +93,7 @@ export function validate(o){
   !Array.isArray(o.bodies)||!Array.isArray(o.joints)||o.bodies.length>LIMIT.bodies||
   o.joints.length>LIMIT.joints||!fin(o.gravity,0,20)||
   (o.collisions!==undefined&&typeof o.collisions!=="boolean")||
+  (o.ccd!==undefined&&typeof o.ccd!=="boolean")||
   (o.restitution!==undefined&&!fin(o.restitution,0,.8))||
   (o.friction!==undefined&&!fin(o.friction,0,1))||
   typeof o.name!=="string"||o.name.length>60||!Number.isSafeInteger(o.nextId))return false;
@@ -94,7 +101,9 @@ export function validate(o){
  for(const b of o.bodies){
   if(!Number.isSafeInteger(b.id)||b.id<1||ids.has(b.id)||!["bar","wheel"].includes(b.kind)||
    typeof b.name!=="string"||b.name.length>35||!fin(b.length,.3,2.8)||!fin(b.mass,.2,35)||
-   !fin(b.x,-5,5)||!fin(b.y,-4,3)||!fin(b.angle,-2*Math.PI,2*Math.PI))return false;
+   !fin(b.x,-5,5)||!fin(b.y,-4,3)||!fin(b.angle,-2*Math.PI,2*Math.PI)||
+   (b.startVx!==undefined&&!fin(b.startVx,-500,500))||
+   (b.startVy!==undefined&&!fin(b.startVy,-500,500)))return false;
   ids.add(b.id);
  }
  const jointIds=new Set();
@@ -113,7 +122,7 @@ export function restore(input){
  if(!validate(input))throw Error("Ungültige oder zu große Maschinendatei");
  const o=JSON.parse(JSON.stringify(input));
  const s=blank();s.name=o.name;s.gravity=o.gravity;s.nextId=o.nextId;
- s.collisions=o.collisions!==false;s.restitution=o.restitution??.05;s.friction=o.friction??.35;
+ s.collisions=o.collisions!==false;s.ccd=o.ccd!==false;s.restitution=o.restitution??.05;s.friction=o.friction??.35;
  s.bodies=o.bodies.map(b=>normalizeBody(b,b.id));
  s.joints=o.joints;
  return s;
@@ -145,8 +154,8 @@ function groundContact(b){
  const penetration=Math.max(0,Math.max(...endpoints)+radius-ground);
  if(penetration>0){b.y-=penetration;b.vy=Math.min(0,b.vy)*-.08;b.vx*=.97;b.omega*=.97;}
 }
-export function step(scene,dt=DT){
- if(!fin(dt,.0001,.04))throw Error("Ungültiger Zeitschritt");
+function discreteStep(scene,dt=DT){
+ if(!(Number.isFinite(dt)&&dt>1e-10&&dt<=.04))throw Error("Ungültiger innerer Zeitschritt");
  const prior=new Map(scene.bodies.map(b=>[b.id,{x:b.x,y:b.y,angle:b.angle}]));
  // Gelenkmotoren: relative Solldrehzahl, begrenzt durch verfügbares Moment.
  for(const j of scene.joints){
@@ -179,8 +188,8 @@ export function step(scene,dt=DT){
  for(const b of scene.bodies){
   const v=prior.get(b.id);
   const offset=correction.get(b.id);
-  b.vx=clamp((b.x-v.x-offset.x)/dt,-25,25);
-  b.vy=clamp((b.y-v.y-offset.y)/dt,-25,25);
+  b.vx=clamp((b.x-v.x-offset.x)/dt,-500,500);
+  b.vy=clamp((b.y-v.y-offset.y)/dt,-500,500);
   b.omega=clamp((b.angle-v.angle-offset.angle)/dt,-30,30);
   b.angle=((b.angle+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;
   // Design view contains actual runtime coordinates and angles. Snapshot is saved only while paused/reset.
@@ -188,10 +197,38 @@ export function step(scene,dt=DT){
  if(scene.collisions!==false){
   for(const c of contacts(scene))contactImpulse(scene,c);
   for(const b of scene.bodies){
-   b.vx=clamp(b.vx,-25,25);b.vy=clamp(b.vy,-25,25);b.omega=clamp(b.omega,-30,30);
+   b.vx=clamp(b.vx,-500,500);b.vy=clamp(b.vy,-500,500);b.omega=clamp(b.omega,-30,30);
   }
  }
  return{jointError:maxError,bodies:scene.bodies.length,joints:scene.joints.length,contacts:scene.contactsNow};
+}
+// CCD: swept time of impact followed by bounded adaptive integration.
+// Thin bodies cannot cross more than about 7cm relative per microstep.
+export function step(scene,dt=DT){
+ if(!fin(dt,.0001,.04))throw Error("Ungültiger Zeitschritt");
+ if(scene.collisions===false||scene.ccd===false||scene.bodies.length<2){
+  const out=discreteStep(scene,dt);scene.ccdSubsteps=1;scene.ccdImpacts=0;
+  return{...out,ccdSubsteps:1,ccdImpacts:0};
+ }
+ const MAX_SUBSTEPS=128;let remaining=dt,count=0,impacts=0,maxContacts=0,maxError=0;
+ while(remaining>1e-9&&count<MAX_SUBSTEPS){
+  let h=safeContactInterval(scene,remaining);
+  h=Math.min(remaining,Math.max(h,1e-7));
+  const first=firstSweptImpact(scene,h);
+  if(first!==null&&first<h){
+   h=Math.max(h*.25,Math.min(h,first+.00012));
+   impacts++;
+  }
+  if(count===MAX_SUBSTEPS-1)h=remaining;
+  const result=discreteStep(scene,h);
+  remaining=Math.max(0,remaining-h);count++;
+  maxContacts=Math.max(maxContacts,result.contacts);
+  maxError=Math.max(maxError,result.jointError);
+ }
+ scene.ccdSubsteps=count;scene.ccdImpacts=impacts;
+ scene.contactsNow=maxContacts;
+ return{jointError:maxError,bodies:scene.bodies.length,joints:scene.joints.length,
+        contacts:maxContacts,ccdSubsteps:count,ccdImpacts:impacts};
 }
 export function jointError(scene){
  return scene.joints.map(j=>{
