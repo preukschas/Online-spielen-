@@ -41,11 +41,13 @@ function controls(){
   }
   const imp=document.createElement("button");imp.type="button";imp.className="extra-button";imp.textContent="🦿 Besten Läufer als Entität A laden";
   imp.addEventListener("click",()=>{
-   const best=safeGet(BIOKEY,null);if(!best){note("Noch kein trainierter Zweibeiner gespeichert.",true);return;}
+   const best=safeGet(BIOKEY,null);if(!best){note("Noch kein trainierter Zweibeiner oder Vierbeiner gespeichert.",true);return;}
    params.speedA=trainedToArena(best.genome);resetSim();controls();note("Trainierter Läufer für Entität A importiert: "+params.speedA.toFixed(2)+" m/s (modellbasierte Umrechnung).");
   });ex.append(imp);
   const bat=document.createElement("button");bat.type="button";bat.className="extra-button";bat.style.background="#334d71";bat.textContent="🏁 10 Durchläufe vergleichen";
-  bat.addEventListener("click",()=>{const w=arenaBatch(params,seed,10);note("10 Läufe, Startbahnen im Wechsel: A "+w[0]+" Siege · B "+w[1]+" Siege · "+w[2]+" Gleichstand.")});ex.append(bat);
+  bat.addEventListener("click",()=>{const w=arenaBatch(params,seed,10,preset);note("10 Läufe · "+(preset==="sprint"?"Sprint":"Hindernisse")+" · A "+w[0]+" Siege · B "+w[1]+" Siege · "+w[2]+" Gleichstand.")});ex.append(bat);
+  const tournament=document.createElement("button");tournament.type="button";tournament.className="extra-button";tournament.style.background="#334d71";tournament.textContent="🏆 50 Duelle auswerten";
+  tournament.addEventListener("click",()=>{const w=arenaBatch(params,seed,50,preset);note("50 Duelle · A "+w[0]+" Siege · B "+w[1]+" Siege · "+w[2]+" Gleichstand; Zuordnung abwechselnd.")});ex.append(tournament);
  }
  if(mode==="crash"){
   const cmp=document.createElement("button");cmp.type="button";cmp.className="extra-button";cmp.textContent="📊 Knautschzone A/B vergleichen";
@@ -81,15 +83,15 @@ function drawChart(){
  const c=chartCtx,w=c.canvas.width,h=c.canvas.height;c.clearRect(0,0,w,h);c.fillStyle="#0e1b2b";c.fillRect(0,0,w,h);
  const left=55,right=w-14,top=15,bottom=h-27;
  c.strokeStyle="#345064";c.lineWidth=1;for(let i=0;i<=4;i++){const y=top+(bottom-top)*i/4;c.beginPath();c.moveTo(left,y);c.lineTo(right,y);c.stroke();}
- let hst=sim.history;
+ let hst=sim.history.slice(-240);
  if(mode==="bio"&&sim.training.generation>0){
   const tr=sim.training.history;hst=tr.map(d=>({t:d.generation,v:d.validation}));$("chartLabel").textContent="Testbewertung über Generationen (Modellpunkte)";
  }
  const ys=hst.map(x=>x.v).filter(Number.isFinite);
- let min=Math.min(0,...ys),max=Math.max(1,...ys);if(max-min<.01)max=min+1;const maxT=Math.max(1,...hst.map(x=>x.t));
- c.font="12px system-ui";c.fillStyle="#a2b8c8";c.textAlign="right";c.fillText(max.toFixed(1),left-9,top+5);c.fillText(min.toFixed(1),left-9,bottom);c.fillText("0",left,bottom+19);c.textAlign="right";c.fillText(maxT.toFixed(1)+(mode==="bio"&&sim.training.generation?" Gen.":" s"),right,bottom+19);
+ let min=Math.min(0,...ys),max=Math.max(1,...ys);if(max-min<.01)max=min+1;const minT=hst.length?hst[0].t:0,maxT=Math.max(minT+1,...hst.map(x=>x.t));
+ c.font="12px system-ui";c.fillStyle="#a2b8c8";c.textAlign="right";c.fillText(max.toFixed(1),left-9,top+5);c.fillText(min.toFixed(1),left-9,bottom);c.fillText(minT.toFixed(1),left,bottom+19);c.textAlign="right";c.fillText(maxT.toFixed(1)+(mode==="bio"&&sim.training.generation?" Gen.":" s"),right,bottom+19);
  c.strokeStyle="#55dbb4";c.lineWidth=3;c.beginPath();let started=false;
- for(const pt of hst){if(!Number.isFinite(pt.v))continue;const x=left+pt.t/maxT*(right-left),y=bottom-(pt.v-min)/(max-min)*(bottom-top);if(!started){c.moveTo(x,y);started=true;}else c.lineTo(x,y);}
+ for(const pt of hst){if(!Number.isFinite(pt.v))continue;const x=left+(pt.t-minT)/(maxT-minT)*(right-left),y=bottom-(pt.v-min)/(max-min)*(bottom-top);if(!started){c.moveTo(x,y);started=true;}else c.lineTo(x,y);}
  if(started)c.stroke();
 }
 function frame(now){
@@ -141,6 +143,34 @@ $("load").addEventListener("click",()=>{const i=$("saved").value;if(i===""){note
 $("export").addEventListener("click",()=>{
  const blob=new Blob([JSON.stringify(scenario(),null,2)],{type:"application/json"});
  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="dmp-simulation-"+mode+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);note("JSON-Experiment exportiert.");
+});
+function downloadText(text,filename,type){
+ const blob=new Blob([text],{type});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+$("csvExport").addEventListener("click",()=>{
+ const q=scenario(),history=sim.history;
+ const hdr=["# DMP Simulationswerkstatt "+VERSION,"# Modul: "+mode,"# Versuch: "+preset,"# Zufallsstartwert: "+seed,"# Parameter: "+JSON.stringify(q.params),"zeit_s,messwert"];
+ const lines=history.map(h=>[h.t.toFixed(4),h.v.toFixed(6)].join(","));
+ downloadText("\uFEFF"+hdr.concat(lines).join("\r\n"),"dmp-messwerte-"+mode+".csv","text/csv;charset=utf-8");
+ note("CSV-Messreihe exportiert ("+history.length+" Messpunkte).");
+});
+$("compare").addEventListener("click",()=>{
+ const index=$("saved").value,other=index===""?null:scenarios()[Number(index)];
+ if(!other||!validScenario(other)){note("Zuerst ein gespeichertes Experiment auswählen.",true);return;}
+ if(other.mode!==mode||other.preset!==preset){note("Für A/B-Vergleich dasselbe Modul und denselben Aufbau auswählen.",true);return;}
+ function run(p,seed){
+  const test=makeSim(mode,preset,p,seed);
+  const duration=mode==="physics"?15:mode==="bio"?14:mode==="arena"?30:12;
+  for(let j=0;j<duration*120&&!test.finished;j++)stepSim(test,1/120);
+  return test;
+ }
+ const current=run(params,seed),comparison=run(other.params,other.seed);
+ const av=measure(current).plot,bv=measure(comparison).plot;
+ if(mode==="arena"){note("A/B · aktueller Sieger: "+(current.body.winner||"offen")+" · gespeicherter Sieger: "+(comparison.body.winner||"offen")+".");return;}
+ const unit=mode==="crash"?" kN":mode==="bio"?" m":preset==="fall"?" m":preset==="pendulum"?" °":"";
+ note("A/B nach festem Versuch: aktuell "+av.toFixed(2)+unit+" · gespeichert "+bv.toFixed(2)+unit+" · Differenz "+(av-bv).toFixed(2)+unit+".");
 });
 $("importButton").addEventListener("click",()=>$("importFile").click());
 $("importFile").addEventListener("change",async e=>{
