@@ -1,4 +1,4 @@
-import {GAIT_DT,footPosition,restoreGaitTrainer,validGaitGenome} from "./joint-walker-core.js";
+import {GAIT_DT,footPosition,restoreGaitTrainer,validGaitGenome} from "./joint-walker-core.js?v=3";
 import {tacticStyle,makeJointDuel,stepJointDuel,newJointDuelTrainer,jointDuelSnapshot,restoreJointDuel} from "./joint-duel-core.js";
 const $=id=>document.getElementById(id),canvas=$("arena"),ctx=canvas.getContext("2d"),chart=$("chart"),graph=chart.getContext("2d");
 const GAIT_KEY="dmp_joint_walker_v1",RIVAL_GAIT_KEY=GAIT_KEY+"__rival_v1",KEY="dmp_joint_duel_v1";
@@ -161,7 +161,7 @@ function runTask(kind,count){
   playing=false;gate(true);$("progressBar").style.width="0%";
   $("trainingStatus").textContent=kind==="gait"?"Neuronale Gelenksteuerungen werden trainiert …":
    kind==="duel"?"Beide Strategien lernen aus echten Duellen …":"Gepaarte Duelle mit Seitenwechsel laufen …";
-  worker=new Worker(new URL("./joint-duel-worker.js?v=1",import.meta.url),{type:"module"});
+  worker=new Worker(new URL("./joint-duel-worker.js?v=2",import.meta.url),{type:"module"});
   worker.onmessage=e=>{
    const v=e.data||{};
    try{
