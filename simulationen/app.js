@@ -1,14 +1,33 @@
-import {VERSION,CONFIG,FIELDS,initialParams,makeSim,stepSim,measure,trainOneGeneration,trainedToArena,arenaBatch} from "./engine.js?v=1.3.0";
-import {drawScene} from "./render-v2.js?v=1.3.0";
+import {VERSION,CONFIG,FIELDS,initialParams,makeSim,stepSim,measure,trainOneGeneration,trainedToArena,arenaBatch} from "./engine.js?v=1.4.0";
+import {trainDuelGeneration,duelValidGenome,duelDefaultGenome} from "./duel-core.js?v=1.4.0";
+import {drawScene} from "./render-v2.js?v=1.4.0";
 import {safeEntityList,findEntity,toBiomechanics,toArena} from "./entity-model.js";
 const $=id=>document.getElementById(id),canvas=$("scene"),sceneCtx=canvas.getContext("2d"),chartCtx=$("chart").getContext("2d");
-const KEY="dmp_simlab_scenarios_v1",BIOKEY="dmp_simlab_best_walker_v1";
+const KEY="dmp_simlab_scenarios_v1",BIOKEY="dmp_simlab_best_walker_v1",DUELKEY="dmp_duel_progress_v1";
 let mode="physics",preset="fall",params=initialParams(preset),seed=42,sim=makeSim(mode,preset,params,seed),playing=false,accum=0,lastFrame=0,dialog=$("helpDialog"),renderTick=0,lastSceneRender=0,sceneDirty=true;
 function formatValue(v,f){return String(Number(v.toFixed(3))).replace(".",",")+(f[5]?" "+f[5]:"")}
 function note(message,error=false){const n=$("notice");n.textContent=message;n.style.color=error?"#ff9e9e":"#55dbb4";}
 function safeGet(key,defaultValue){try{return JSON.parse(localStorage.getItem(key))??defaultValue}catch{return defaultValue}}
 function safeSet(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch{note("Browser-Speicher nicht verfügbar. Bitte JSON exportieren.",true);return false}}
 
+function duelKey(){return DUELKEY+"_"+encodeURIComponent(String(params.entityA||params.nameA||"Entität A").slice(0,80)+"|"+String(params.entityB||params.nameB||"Entität B").slice(0,80));}
+function restoreDuel(){
+ if(mode!=="arena"||preset!=="duel"||!sim.duelTraining)return;
+ const saved=safeGet(duelKey(),null);
+ if(saved&&Number.isInteger(saved.generation)&&saved.generation>=0&&saved.generation<=9999&&Array.isArray(saved.genomes)&&saved.genomes.length===2&&saved.genomes.every(duelValidGenome)){
+  sim.duelTraining={...sim.duelTraining,...saved,running:false,targetGeneration:Math.max(saved.targetGeneration||0,saved.generation),
+    history:Array.isArray(saved.history)?saved.history.slice(-250):[]};
+  params.genomeA={...saved.genomes[0]};params.genomeB={...saved.genomes[1]};
+  sim.body.fighters[0].genome={...params.genomeA};sim.body.fighters[1].genome={...params.genomeB};
+ }
+}
+function startDuelTraining(){
+ const tr=sim.duelTraining;if(!tr)return;
+ if(tr.running){tr.running=false;note("Duell-Evolution pausiert nach Generation "+tr.generation+".");}
+ else{if(tr.targetGeneration<=tr.generation)tr.targetGeneration=tr.generation+params.evoRounds;
+  tr.running=true;playing=false;$("play").textContent="▶ Start";note("Beide Entitäten trainieren selbstständig in simulierten Duellen.");}
+ $("overlay").classList.add("hidden");refresh();
+}
 function addEntityPicker(container,slot=null){
  const block=document.createElement("div");block.className="entity-picker";
  const title=document.createElement("label");title.className="field-label";title.textContent=slot?"Entität "+slot+" aus dem Editor":"Gespeicherten Körper laden";
@@ -35,6 +54,7 @@ function applyEntityToLab(entity,target,slot="A"){
   params["speed"+side]=converted.speed;params["stamina"+side]=converted.stamina;
   params["name"+side]=converted.name;params["color"+side]=converted.color;
   params["kind"+side]=converted.kind;params["entity"+side]=entity.id;
+  if(preset==="duel")delete params["genome"+side];
  }else return;
  document.querySelectorAll(".module").forEach(b=>{const active=b.dataset.mode===mode;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active));});
  controls();resetSim();
@@ -78,18 +98,24 @@ function controls(){
   for(const [key,label,fallback] of [["nameA","Entität A benennen","Entität A"],["nameB","Entität B benennen","Entität B"]]){
    const title=document.createElement("label");title.className="field-label";title.textContent=label;title.htmlFor=key;
    const field=document.createElement("input");field.id=key;field.className="full";field.maxLength=24;field.value=String(params[key]||fallback);field.setAttribute("aria-label",label);
-   field.addEventListener("change",()=>{params[key]=field.value.trim().slice(0,24)||fallback;resetSim();});
+   field.addEventListener("change",()=>{params[key]=field.value.trim().slice(0,24)||fallback;if(preset==="duel")delete params["genome"+key.slice(-1)];resetSim();});
    ex.append(title,field);
   }
-  const imp=document.createElement("button");imp.type="button";imp.className="extra-button";imp.textContent="🦿 Besten Läufer als Entität A laden";
-  imp.addEventListener("click",()=>{
-   const best=safeGet(BIOKEY,null);if(!best){note("Noch kein trainierter Zweibeiner oder Vierbeiner gespeichert.",true);return;}
-   params.speedA=trainedToArena(best.genome);resetSim();controls();note("Trainierter Läufer für Entität A importiert: "+params.speedA.toFixed(2)+" m/s (modellbasierte Umrechnung).");
-  });ex.append(imp);
-  const bat=document.createElement("button");bat.type="button";bat.className="extra-button";bat.style.background="#334d71";bat.textContent="🏁 10 Durchläufe vergleichen";
-  bat.addEventListener("click",()=>{const w=arenaBatch(params,seed,10,preset);note("10 Läufe · "+(preset==="sprint"?"Sprint":"Hindernisse")+" · A "+w[0]+" Siege · B "+w[1]+" Siege · "+w[2]+" Gleichstand.")});ex.append(bat);
-  const tournament=document.createElement("button");tournament.type="button";tournament.className="extra-button";tournament.style.background="#334d71";tournament.textContent="🏆 50 Duelle auswerten";
-  tournament.addEventListener("click",()=>{const w=arenaBatch(params,seed,50,preset);note("50 Duelle · A "+w[0]+" Siege · B "+w[1]+" Siege · "+w[2]+" Gleichstand; Zuordnung abwechselnd.")});ex.append(tournament);
+  if(preset==="duel"){
+   const hint=document.createElement("p");hint.className="micro";hint.textContent="Die Figuren duellieren sich automatisch mit Schubsen, Schlagen, Treten, Springen und Blocken. Ihre Entscheidungen können sie über viele Generationen verbessern.";ex.append(hint);
+   const train=document.createElement("button");train.type="button";train.className="extra-button";train.id="duelTrainButton";train.textContent="🧠 Evolution starten";train.addEventListener("click",startDuelTraining);ex.append(train);
+   const status=document.createElement("p");status.id="duelStatus";status.className="train-status";ex.append(status);
+   const erase=document.createElement("button");erase.type="button";erase.className="secondary";erase.textContent="↺ Training dieser Paarung zurücksetzen";
+   erase.addEventListener("click",()=>{try{localStorage.removeItem(duelKey());}catch{}delete params.genomeA;delete params.genomeB;resetSim();note("Evolution dieser beiden Entitäten zurückgesetzt.");});ex.append(erase);
+  }else{
+   const imp=document.createElement("button");imp.type="button";imp.className="extra-button";imp.textContent="🦿 Besten Läufer als Entität A laden";
+   imp.addEventListener("click",()=>{const best=safeGet(BIOKEY,null);if(!best){note("Noch kein trainierter Zweibeiner oder Vierbeiner gespeichert.",true);return;}
+    params.speedA=trainedToArena(best.genome);resetSim();controls();note("Trainierter Läufer für A übernommen.");});ex.append(imp);
+  }
+  const bat=document.createElement("button");bat.type="button";bat.className="extra-button";bat.textContent=preset==="duel"?"🥊 10 Duelle vergleichen":"🏁 10 Durchläufe vergleichen";
+  bat.addEventListener("click",()=>{const w=arenaBatch(params,seed,10,preset);note("10 "+(preset==="duel"?"Duelle":"Rennen")+" · A "+w[0]+" Siege · B "+w[1]+" Siege · "+w[2]+" Unentschieden.");});ex.append(bat);
+  const tournament=document.createElement("button");tournament.type="button";tournament.className="extra-button";tournament.textContent="🏆 50 Runden auswerten";
+  tournament.addEventListener("click",()=>{const w=arenaBatch(params,seed,50,preset);note("50 Runden · A "+w[0]+" Siege · B "+w[1]+" Siege · "+w[2]+" Gleichstand.");});ex.append(tournament);
  }
  if(mode==="crash"&&preset==="barrier"){
   const cmp=document.createElement("button");cmp.type="button";cmp.className="extra-button";cmp.textContent="📊 Knautschzone A/B vergleichen";
@@ -100,7 +126,7 @@ function controls(){
  }
  $("configTag").textContent=mode.toUpperCase();
 }
-function resetSim(){playing=false;accum=0;sceneDirty=true;sim=makeSim(mode,preset,params,seed);$("play").textContent="▶ Start";$("overlay").textContent="Drücke Start, um die Simulation auszuführen.";$("overlay").classList.remove("hidden");refresh();}
+function resetSim(){playing=false;accum=0;sceneDirty=true;sim=makeSim(mode,preset,params,seed);restoreDuel();$("play").textContent="▶ Start";$("overlay").textContent="Drücke Start, um die Simulation auszuführen.";$("overlay").classList.remove("hidden");refresh();}
 function switchMode(next){if(!CONFIG[next])return;mode=next;preset=CONFIG[next].presets[0][0];params=initialParams(preset);document.querySelectorAll(".module").forEach(b=>{const active=b.dataset.mode===next;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active));});controls();resetSim();note("");}
 function togglePlay(){if(sim.finished){resetSim()}playing=!playing;$("play").textContent=playing?"❚❚ Pause":"▶ Fortsetzen";if(playing)$("overlay").classList.add("hidden");refresh();}
 function doStep(){playing=false;$("play").textContent="▶ Fortsetzen";if(!sim.finished)stepSim(sim,1/120);$("overlay").classList.add("hidden");refresh();}
@@ -124,6 +150,16 @@ function refresh(){
   $("trainStatus").textContent="Ziel: "+params.targetDistance+" m · Gen. "+tr.generation+"/"+tr.targetGeneration+(tr.validation?" · Bestwert "+tr.score.toFixed(2)+" · Test "+tr.validation.score.toFixed(2)+" · "+(tr.validation.goalReached?"Ziel erreicht ✓":"Ziel offen"):" · zunächst Start drücken");
   $("trainButton").textContent=tr.running?"⏸ Training pausieren":tr.generation>0&&tr.generation>=tr.targetGeneration?"🧠 Weitere "+params.generations+" Generationen":tr.targetGeneration>tr.generation?"▶ Training fortsetzen":"🧠 "+params.generations+" Generationen trainieren";
  }
+ if(mode==="arena"&&preset==="duel"&&$("duelStatus")){
+  const tr=sim.duelTraining;
+  $("duelStatus").textContent="Lernziel: siegen, Treffer vermeiden, Energie sparen. Generation "+tr.generation+"/"+tr.targetGeneration+
+   " · Bewertung A "+(Number.isFinite(tr.scores[0])?tr.scores[0].toFixed(1):"–")+
+   " · B "+(Number.isFinite(tr.scores[1])?tr.scores[1].toFixed(1):"–")+
+   " · Testduelle A/B/Remis: "+tr.wins.join("/")+" · Fortschritt wird lokal gespeichert.";
+  $("duelTrainButton").textContent=tr.running?"⏸ Evolution pausieren":tr.generation>=tr.targetGeneration&&tr.generation>0?
+   "🧠 Weitere "+params.evoRounds+" Generationen":tr.targetGeneration>tr.generation?
+   "▶ Evolution fortsetzen":"🧠 "+params.evoRounds+" Generationen trainieren";
+ }
  drawChart();
 }
 function drawChart(){
@@ -134,10 +170,10 @@ function drawChart(){
  panel.addColorStop(0,"#102f42");panel.addColorStop(1,"#0b2131");
  c.fillStyle=panel;c.fillRect(0,0,w,h);
  let points=sim.history.slice(-320);
- const isTraining=mode==="bio"&&sim.training.generation>0;
+ const isTraining=(mode==="bio"&&sim.training.generation>0)||(mode==="arena"&&preset==="duel"&&sim.duelTraining.generation>0);
  if(isTraining){
-  points=sim.training.history.map(p=>({t:p.generation,v:p.validation}));
-  $("chartLabel").textContent="Bewertung im unabhängigen Test · Generationen";
+  points=mode==="bio"?sim.training.history.map(p=>({t:p.generation,v:p.validation})):sim.duelTraining.history.map(p=>({t:p.generation,v:p.training}));
+  $("chartLabel").textContent=mode==="bio"?"Bewertung im unabhängigen Test · Generationen":"Strategie-Bewertung · Generationen";
  }
  const good=points.filter(p=>Number.isFinite(p.t)&&Number.isFinite(p.v));
  const values=good.map(p=>p.v);
@@ -184,7 +220,7 @@ function drawChart(){
  c.fillStyle=accent;c.fillRect(14,14,25,3);
 }
 function frame(now){
- const activeAtStart=playing||(mode==="bio"&&sim.training.running);
+ const activeAtStart=playing||(mode==="bio"&&sim.training.running)||(mode==="arena"&&preset==="duel"&&sim.duelTraining.running);
  const delta=lastFrame?Math.min(.10,(now-lastFrame)/1000):0;lastFrame=now;
  if(playing){
   accum+=delta*Number($("speed").value);let count=0;
@@ -206,6 +242,19 @@ function frame(now){
    }
   }
  }
+ if(mode==="arena"&&preset==="duel"&&sim.duelTraining.running){
+  const tr=sim.duelTraining;
+  trainDuelGeneration(tr,sim.p,seed);
+  params.genomeA={...tr.genomes[0]};params.genomeB={...tr.genomes[1]};
+  safeSet(duelKey(),{...tr,running:false});
+  sceneDirty=true;
+  if(!tr.running){
+   resetSim();
+   note("Evolution abgeschlossen: "+tr.generation+" Generationen. Beide Entitäten haben ihre verbesserten Strategien übernommen.");
+   $("overlay").textContent="Training abgeschlossen. Starte das Duell der verbesserten Entitäten!";
+   $("overlay").classList.remove("hidden");
+  }
+ }
  // When idle, reuse the last canvas frame and throttle expensive chart repainting.
  // This reduces GPU/CPU load in mobile WebKit without affecting fixed-step simulation time.
  if(activeAtStart||sceneDirty||now-lastSceneRender>=1000){drawScene(sceneCtx,sim);lastSceneRender=now;sceneDirty=false;}
@@ -224,11 +273,12 @@ function validScenario(o){
  const kindsValid=["kindA","kindB"].every(key=>o.params[key]===undefined||o.params[key]==="biped"||o.params[key]==="quadruped");
  const idsValid=["entityId","entityA","entityB"].every(key=>o.params[key]===undefined||(typeof o.params[key]==="string"&&/^[a-zA-Z0-9_-]{1,80}$/.test(o.params[key])));
  const shapeValid=["torso","limb","head"].every(key=>o.params[key]===undefined||(typeof o.params[key]==="number"&&Number.isFinite(o.params[key])&&o.params[key]>=.5&&o.params[key]<=1.6));
- return fieldsValid&&namesValid&&colorsValid&&kindsValid&&idsValid&&shapeValid;
+ const genomeValid=["genomeA","genomeB"].every(key=>o.params[key]===undefined||duelValidGenome(o.params[key]));
+ return fieldsValid&&namesValid&&colorsValid&&kindsValid&&idsValid&&shapeValid&&genomeValid;
 }
 function loadScenario(s){
  if(!validScenario(s)){note("Datei enthält kein gültiges Simulationsszenario.",true);return;}
- mode=s.mode;preset=s.preset;params=Object.fromEntries(FIELDS[preset].map(f=>[f[0],s.params[f[0]]??f[6]]));if(mode==="arena"){for(const key of ["nameA","nameB","colorA","colorB","kindA","kindB","entityA","entityB"]){if(s.params[key]!==undefined)params[key]=s.params[key];}}
+ mode=s.mode;preset=s.preset;params=Object.fromEntries(FIELDS[preset].map(f=>[f[0],s.params[f[0]]??f[6]]));if(mode==="arena"){for(const key of ["nameA","nameB","colorA","colorB","kindA","kindB","entityA","entityB","genomeA","genomeB"]){if(s.params[key]!==undefined)params[key]=s.params[key];}}
  if(mode==="bio"){for(const key of ["entityId","entityName","color","torso","limb","head"]){if(s.params[key]!==undefined)params[key]=s.params[key];}}
  seed=s.seed;
  document.querySelectorAll(".module").forEach(b=>{const yes=b.dataset.mode===mode;b.classList.toggle("active",yes);b.setAttribute("aria-pressed",String(yes));});controls();resetSim();$("scenarioName").value=s.name;note("Experiment geladen. Mit Start wiederholen.");
@@ -291,6 +341,10 @@ if (savedIndex >= 0 && savedIndex < stored.length && validScenario(stored[savedI
   loadScenario(stored[savedIndex]);
 } else if (requestedMode && CONFIG[requestedMode]) {
   switchMode(requestedMode);
+  const requestedPreset=entry.get("preset");
+  if(requestedPreset&&CONFIG[requestedMode].presets.some(v=>v[0]===requestedPreset)){
+   preset=requestedPreset;params=initialParams(preset);controls();resetSim();
+  }
 } else {
   controls();
 }
