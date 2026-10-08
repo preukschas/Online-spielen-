@@ -201,6 +201,8 @@ export function trainGaitGeneration(t,rivalWeights=null,contestSeed=null){
  t.history.push(line);if(t.history.length>1500)t.history.shift();
  const r=gaitRng(t.seed+6711*t.generation);
  const next=[results[0].w.slice(),results[1].w.slice()];
+ // A hard-earned locomotion champion remains evolvable even when direct rivalry reshuffles ranking.
+ if(t.champion&&!next.some(g=>g.every((v,i)=>v===t.champion[i])))next.push(t.champion.slice());
  while(next.length<t.size){
   const select=()=>{
    const a=results[Math.floor(r()*Math.min(10,results.length))],
