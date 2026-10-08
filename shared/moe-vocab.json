@@ -1,0 +1,869 @@
+{
+  "schema": 1,
+  "updated": "2026-10-08",
+  "count": 93,
+  "description": "Nur aktivierte Lernbegriffe aus Moes Google-Vokabelbibliothek. Keine privaten Lernfortschritte.",
+  "words": [
+    {
+      "id": "MOE-001",
+      "en": "I'm from …",
+      "de": "ich komme aus …",
+      "topic": "Herkunft & Orte",
+      "unit": "Unit 1",
+      "alternatives": [
+        "im from",
+        "i'm from"
+      ]
+    },
+    {
+      "id": "MOE-002",
+      "en": "from",
+      "de": "aus; von",
+      "topic": "Herkunft & Orte",
+      "unit": "Unit 1",
+      "alternatives": [
+        "aus",
+        "von"
+      ]
+    },
+    {
+      "id": "MOE-003",
+      "en": "this",
+      "de": "das; dies",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "das",
+        "dies"
+      ]
+    },
+    {
+      "id": "MOE-004",
+      "en": "my",
+      "de": "mein",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-005",
+      "en": "bike",
+      "de": "Fahrrad",
+      "topic": "Freizeit & Sport",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-006",
+      "en": "cool",
+      "de": "cool; super",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "cool",
+        "super"
+      ]
+    },
+    {
+      "id": "MOE-007",
+      "en": "fan",
+      "de": "Fan",
+      "topic": "Freizeit & Sport",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-008",
+      "en": "eleven",
+      "de": "elf",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-009",
+      "en": "How old are you?",
+      "de": "Wie alt bist du?",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-010",
+      "en": "that's",
+      "de": "das ist",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "that is",
+        "that's"
+      ]
+    },
+    {
+      "id": "MOE-011",
+      "en": "England",
+      "de": "England",
+      "topic": "Herkunft & Orte",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-012",
+      "en": "Where are you from?",
+      "de": "Woher kommst du?",
+      "topic": "Herkunft & Orte",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-013",
+      "en": "pet",
+      "de": "Haustier",
+      "topic": "Tiere",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-014",
+      "en": "they're",
+      "de": "sie sind",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "they are",
+        "they're"
+      ]
+    },
+    {
+      "id": "MOE-015",
+      "en": "nice",
+      "de": "nett; schön",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "nett",
+        "schön",
+        "schoen"
+      ]
+    },
+    {
+      "id": "MOE-016",
+      "en": "twelve",
+      "de": "zwölf",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "zwölf",
+        "zwoelf"
+      ]
+    },
+    {
+      "id": "MOE-017",
+      "en": "cat",
+      "de": "Katze",
+      "topic": "Tiere",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-018",
+      "en": "photo",
+      "de": "Foto",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "foto"
+      ]
+    },
+    {
+      "id": "MOE-019",
+      "en": "Germany",
+      "de": "Deutschland",
+      "topic": "Herkunft & Orte",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-029",
+      "en": "in",
+      "de": "in; im",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "in",
+        "im"
+      ]
+    },
+    {
+      "id": "MOE-030",
+      "en": "a",
+      "de": "ein; eine",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "ein",
+        "eine"
+      ]
+    },
+    {
+      "id": "MOE-031",
+      "en": "park",
+      "de": "Park",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-032",
+      "en": "colour",
+      "de": "Farbe",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": [
+        "color",
+        "colour"
+      ]
+    },
+    {
+      "id": "MOE-033",
+      "en": "activity",
+      "de": "Aktivität",
+      "topic": "Freizeit & Sport",
+      "unit": "Unit 1",
+      "alternatives": [
+        "aktivität",
+        "aktivitaet"
+      ]
+    },
+    {
+      "id": "MOE-034",
+      "en": "number",
+      "de": "Nummer; Zahl",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "nummer",
+        "zahl"
+      ]
+    },
+    {
+      "id": "MOE-035",
+      "en": "people",
+      "de": "Leute; Menschen",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "leute",
+        "menschen"
+      ]
+    },
+    {
+      "id": "MOE-036",
+      "en": "dog",
+      "de": "Hund",
+      "topic": "Tiere",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-037",
+      "en": "tennis",
+      "de": "Tennis",
+      "topic": "Freizeit & Sport",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-038",
+      "en": "boy",
+      "de": "Junge",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-039",
+      "en": "something",
+      "de": "etwas",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-040",
+      "en": "it is",
+      "de": "es ist",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "it is",
+        "it's"
+      ]
+    },
+    {
+      "id": "MOE-041",
+      "en": "here",
+      "de": "hier",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-042",
+      "en": "bus",
+      "de": "Bus",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-043",
+      "en": "I can play football.",
+      "de": "Ich kann Fußball spielen.",
+      "topic": "Freizeit & Sport",
+      "unit": "Unit 1",
+      "alternatives": [
+        "i can play football",
+        "i can play soccer"
+      ]
+    },
+    {
+      "id": "MOE-044",
+      "en": "I can buy …",
+      "de": "Ich kann … kaufen.",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-045",
+      "en": "red",
+      "de": "rot",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-046",
+      "en": "green",
+      "de": "grün",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": [
+        "grün",
+        "gruen"
+      ]
+    },
+    {
+      "id": "MOE-047",
+      "en": "blue",
+      "de": "blau",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-048",
+      "en": "yellow",
+      "de": "gelb",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-049",
+      "en": "black",
+      "de": "schwarz",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-050",
+      "en": "grey",
+      "de": "grau",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": [
+        "gray",
+        "grey"
+      ]
+    },
+    {
+      "id": "MOE-051",
+      "en": "brown",
+      "de": "braun",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-052",
+      "en": "white",
+      "de": "weiß",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": [
+        "weiß",
+        "weiss"
+      ]
+    },
+    {
+      "id": "MOE-053",
+      "en": "orange",
+      "de": "orange",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-054",
+      "en": "purple",
+      "de": "lila; violett",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": [
+        "lila",
+        "violett"
+      ]
+    },
+    {
+      "id": "MOE-055",
+      "en": "pink",
+      "de": "rosa; pink",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": [
+        "rosa",
+        "pink"
+      ]
+    },
+    {
+      "id": "MOE-056",
+      "en": "welcome",
+      "de": "willkommen",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-057",
+      "en": "Hello.",
+      "de": "Hallo.",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-058",
+      "en": "I'm",
+      "de": "ich bin",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "i'm",
+        "i am"
+      ]
+    },
+    {
+      "id": "MOE-059",
+      "en": "the",
+      "de": "der; die; das",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "der",
+        "die",
+        "das"
+      ]
+    },
+    {
+      "id": "MOE-060",
+      "en": "bat",
+      "de": "Fledermaus",
+      "topic": "Tiere",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-061",
+      "en": "Nice to meet you.",
+      "de": "Nett, dich kennen zu lernen.",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "nett dich kennen zu lernen",
+        "nett dich kennenzulernen"
+      ]
+    },
+    {
+      "id": "MOE-062",
+      "en": "What's your name?",
+      "de": "Wie heißt du?",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "wie heißt du",
+        "wie heisst du"
+      ]
+    },
+    {
+      "id": "MOE-063",
+      "en": "I like",
+      "de": "ich mag; gefällt mir",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "ich mag",
+        "gefällt mir",
+        "gefaellt mir"
+      ]
+    },
+    {
+      "id": "MOE-064",
+      "en": "English",
+      "de": "Englisch",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-065",
+      "en": "Hi!",
+      "de": "Hi!; Hallo!",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "hi",
+        "hallo"
+      ]
+    },
+    {
+      "id": "MOE-066",
+      "en": "My name is …",
+      "de": "Ich heiße …",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "ich heiße",
+        "ich heisse"
+      ]
+    },
+    {
+      "id": "MOE-067",
+      "en": "music",
+      "de": "Musik",
+      "topic": "Freizeit & Sport",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-068",
+      "en": "And you?",
+      "de": "Und du?",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-069",
+      "en": "sport",
+      "de": "Sport",
+      "topic": "Freizeit & Sport",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-070",
+      "en": "animal",
+      "de": "Tier",
+      "topic": "Tiere",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-071",
+      "en": "computer",
+      "de": "Computer",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-072",
+      "en": "It's time to go.",
+      "de": "Es ist Zeit zu gehen.",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-073",
+      "en": "See you!",
+      "de": "Tschüss!; Bis bald!",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "tschüss",
+        "tschuess",
+        "bis bald"
+      ]
+    },
+    {
+      "id": "MOE-074",
+      "en": "yes",
+      "de": "ja",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-075",
+      "en": "Bye!",
+      "de": "Tschüss!",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "tschüss",
+        "tschuess"
+      ]
+    },
+    {
+      "id": "MOE-076",
+      "en": "Goodbye!",
+      "de": "Auf Wiedersehen.",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-077",
+      "en": "shoe",
+      "de": "Schuh",
+      "topic": "Kleidung & Aussehen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-078",
+      "en": "hat",
+      "de": "Hut; Mütze",
+      "topic": "Kleidung & Aussehen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "hut",
+        "mütze",
+        "muetze"
+      ]
+    },
+    {
+      "id": "MOE-079",
+      "en": "shirt",
+      "de": "Hemd; Shirt",
+      "topic": "Kleidung & Aussehen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "hemd",
+        "shirt"
+      ]
+    },
+    {
+      "id": "MOE-080",
+      "en": "dress",
+      "de": "Kleid",
+      "topic": "Kleidung & Aussehen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-081",
+      "en": "come with me",
+      "de": "komm mit mir",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-082",
+      "en": "a colour mix",
+      "de": "eine Farbmischung",
+      "topic": "Farben",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-083",
+      "en": "you look so fine",
+      "de": "du siehst so schön aus",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "du siehst so schön aus",
+        "du siehst so schoen aus"
+      ]
+    },
+    {
+      "id": "MOE-084",
+      "en": "I like you",
+      "de": "ich mag dich",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-085",
+      "en": "Greenwich",
+      "de": "Greenwich",
+      "topic": "Herkunft & Orte",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-086",
+      "en": "hair",
+      "de": "Haare",
+      "topic": "Kleidung & Aussehen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-087",
+      "en": "skirt",
+      "de": "Rock",
+      "topic": "Kleidung & Aussehen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-088",
+      "en": "top",
+      "de": "Top",
+      "topic": "Kleidung & Aussehen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-089",
+      "en": "cap",
+      "de": "Kappe; Mütze",
+      "topic": "Kleidung & Aussehen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "kappe",
+        "mütze",
+        "muetze"
+      ]
+    },
+    {
+      "id": "MOE-090",
+      "en": "zero",
+      "de": "null",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-091",
+      "en": "one",
+      "de": "eins",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-092",
+      "en": "two",
+      "de": "zwei",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-093",
+      "en": "three",
+      "de": "drei",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-094",
+      "en": "four",
+      "de": "vier",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-095",
+      "en": "five",
+      "de": "fünf",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "fünf",
+        "fuenf"
+      ]
+    },
+    {
+      "id": "MOE-096",
+      "en": "six",
+      "de": "sechs",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-097",
+      "en": "seven",
+      "de": "sieben",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-098",
+      "en": "eight",
+      "de": "acht",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-099",
+      "en": "nine",
+      "de": "neun",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-100",
+      "en": "ten",
+      "de": "zehn",
+      "topic": "Zahlen",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-101",
+      "en": "I spy with my little eye ...",
+      "de": "Ich sehe was, was du nicht siehst ...",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "I spy with my little eye"
+      ]
+    },
+    {
+      "id": "MOE-102",
+      "en": "it's",
+      "de": "es ist",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "alternatives": [
+        "it is"
+      ]
+    }
+  ]
+}
