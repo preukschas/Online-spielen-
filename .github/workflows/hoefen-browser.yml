@@ -1,0 +1,35 @@
+name: Höfen Starkregen Browser-Abnahme
+on:
+  push:
+    paths:
+      - 'simulationen/vorschau-hoefen/**'
+      - 'simulationen/tests/hoefen-preview-browser.mjs'
+      - '.github/workflows/hoefen-browser.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hoefen-browser-preview
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Playwright installieren
+        run: npm install --no-save --no-package-lock playwright@1.56.1
+      - name: Browser installieren
+        run: npx playwright install --with-deps chromium webkit
+      - name: Höfen / Bruchgraben: Desktop, iPhone und iPad durchtesten
+        run: node simulationen/tests/hoefen-preview-browser.mjs
+      - name: Screenshots sichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hoefen-preview-test-screenshots
+          path: test-artifacts/hoefen-*.png
+          if-no-files-found: ignore
