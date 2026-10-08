@@ -1,9 +1,11 @@
+import {drawFighter} from "./fighter-art.js";
 // DMP SIM LAB – selbst gezeichnete SVG-Figuren für 10 Arten.
 // Schematische Illustrationen, keine anatomisch korrekten 3D-Modelle.
 const NS="http://www.w3.org/2000/svg";
 const bound=(x,a,b)=>Math.max(a,Math.min(b,x));
 function shade(hex,d){return "#"+[1,3,5].map(i=>bound(parseInt(hex.slice(i,i+2),16)+d,0,255).toString(16).padStart(2,"0")).join("");}
 export function drawCharacter(root,e,move=0){
+ if(e.fighterStyle&&drawFighter(root,e,move))return true;
  const type=e.appearance||"generic";
  if(type==="generic")return false;
  if(!["human","robot","ostrich","cat","fox","wolf","horse","cheetah","robotdog"].includes(type))return false;
