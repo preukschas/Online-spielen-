@@ -57,7 +57,7 @@ test("Abgründe bleiben gefährlich, Bewegung ist reproduzierbar und endlich",()
  const pit=makeEpisode(42),p=pit.course.find(o=>o.type==="pit");
  pit.x=p.x+p.w/2;pit.y=-.47;pit.vy=-1;pit.grounded=false;
  stepEpisode(pit,constant());
- assert.equal(p.failed,true);assert.equal(p.reached,false);
+ assert.equal(pit.failed,true);assert.equal(pit.reached,false);
 });
 test("Beide unabhängigen Teams entwickeln sich, konkurrieren und speichern ihre Chromosomen",()=>{
  const t=newTrainer(42,8),t2=newTrainer(42,8);
