@@ -3,7 +3,7 @@ import {restoreJointDuel,jointDuelSnapshot,evolveJointDuelGeneration,runJointDue
 let session=null;
 function finish(reason){
  const s=session;if(!s)return;
- if(s.type==="gait")postMessage({type:"done-gait",reason,completed:s.done,requested:s.count,checkpoint:gaitSnapshot(s.data)});
+ if(s.type==="gait")postMessage({type:"done-gait",reason,completed:s.done,requested:s.count,checkpoints:s.data.map(gaitSnapshot)});
  if(s.type==="duel")postMessage({type:"done-duel",reason,completed:s.done,requested:s.count,snapshot:jointDuelSnapshot(s.data)});
  if(s.type==="tournament")postMessage({type:"done-tournament",reason,results:s.results,completed:s.done});
  session=null;
@@ -13,8 +13,13 @@ function advance(){
  if(s.stop||s.done>=s.count){finish(s.stop?"stopped":"complete");return;}
  try{
   if(s.type==="gait"){
-   const result=trainGaitGeneration(s.data);s.done++;
-   postMessage({type:"progress-gait",done:s.done,total:s.count,fitness:result.training,holdout:result.validation,rate:result.success});
+   const [a,b]=s.data,oppA=b.champion||b.baseline,oppB=a.champion||a.baseline;
+   const shared=1+(a.seed+8101+(s.done%7)*109)%900000000;
+   const resultA=trainGaitGeneration(a,oppA,shared),resultB=trainGaitGeneration(b,oppB,shared);
+   s.done++;
+   postMessage({type:"progress-gait",done:s.done,total:s.count,fitnessA:resultA.training,
+    fitnessB:resultB.training,holdoutA:resultA.validation,holdoutB:resultB.validation,
+    generationA:a.generation,generationB:b.generation});
   }else if(s.type==="duel"){
    const result=evolveJointDuelGeneration(s.data);s.done++;
    postMessage({type:"progress-duel",done:s.done,total:s.count,snapshot:jointDuelSnapshot(s.data),result});
@@ -39,7 +44,8 @@ onmessage=e=>{
  try{
   if(m.type==="start-gait"){
    if(!Number.isInteger(m.rounds)||m.rounds<1||m.rounds>100)throw Error("Ungültige Lauftraining-Runden");
-   session={type:"gait",data:newGaitTrainer(m.seed||42),done:0,count:m.rounds,stop:false};
+   const seed=m.seed||42,second=1+((seed+104729-1)%1000000000);
+   session={type:"gait",data:[newGaitTrainer(seed),newGaitTrainer(second)],done:0,count:m.rounds,stop:false};
   }else if(m.type==="start-duel"){
    if(!Number.isInteger(m.rounds)||m.rounds<1||m.rounds>100)throw Error("Ungültige Duelltraining-Runden");
    session={type:"duel",data:restoreJointDuel(m.snapshot),done:0,count:m.rounds,stop:false};
