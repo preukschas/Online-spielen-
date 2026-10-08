@@ -1,0 +1,158 @@
+<!doctype html><html lang="de"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1725">
+<title>Höfen & Bruchgraben – DMP SIM LAB</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;--bg:#091724;--panel:#132d3d;--panel2:#102637;--line:#315466;--bright:#68f1c4;--text:#eaf9f5;--muted:#a6c0c9;--warn:#ffd59b;--blue:#79c7f8}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse 70vw 50vw at 80% -15%,#244f55 0,transparent 72%),var(--bg);color:var(--text)}
+button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:wait}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #fff;outline-offset:2px}
+a{color:#9eeed5}main{max-width:1440px;padding:17px clamp(12px,3vw,42px) 34px;margin:auto}
+nav{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #ffffff20;padding:9px 0 18px}
+.brand{font-weight:900;letter-spacing:.075em;color:white;text-decoration:none}.brand b{color:var(--bright)}
+.pill{border:1px solid #426a72;background:#194248;border-radius:30px;padding:7px 12px;font-size:11px;font-weight:850;color:#bffce8;letter-spacing:.08em}
+.hero{margin:25px 0 19px;display:flex;gap:24px;justify-content:space-between;align-items:end}
+.eyebrow{font-size:11px;color:var(--bright);font-weight:900;letter-spacing:.18em;text-transform:uppercase}
+h1{font-size:clamp(32px,5.1vw,64px);letter-spacing:-.06em;line-height:1.06;margin:9px 0 12px}h1 em{color:var(--bright);font-style:normal}
+.hero p{line-height:1.6;color:var(--muted);max-width:770px;margin:0;font-size:14px}
+.notice{padding:11px 15px;border-radius:12px;border:1px solid #9b6a39;border-left:4px solid #e7b36f;color:#ffdfb2;background:#342b29;font-size:12px;line-height:1.6;margin-bottom:16px}
+.board{display:grid;grid-template-columns:minmax(0,1.68fr) minmax(295px,.82fr);gap:16px}
+.panel{background:linear-gradient(150deg,#173646,#102535);border:1px solid var(--line);border-radius:17px;overflow:hidden;min-width:0}
+.panel-head{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid #ffffff21}
+.panel-head strong{font-size:13px;letter-spacing:.015em}.panel-head small{color:var(--muted);font-size:11px}
+.mapwrap{position:relative;background:radial-gradient(ellipse 500px 300px at 50% 45%,#225061,#0a2534);padding:10px}
+canvas{display:block;width:100%;height:auto}#terrain{aspect-ratio:3/2;touch-action:manipulation;cursor:crosshair}
+.corner{position:absolute;bottom:21px;left:20px;max-width:290px;background:#092535df;padding:8px 10px;border:1px solid #b7dbdb55;border-radius:9px;font-size:10px;color:#d3edf0;line-height:1.5;pointer-events:none}
+.north{position:absolute;right:20px;top:15px;color:white;font-weight:900;font-size:13px;text-shadow:0 1px 5px black;pointer-events:none}
+.legend{display:flex;flex-wrap:wrap;gap:10px;padding:12px 14px;border-top:1px solid #ffffff17;font-size:11px;color:#bbd1d7}
+.dot{display:inline-block;width:10px;height:10px;vertical-align:middle;border-radius:3px;margin-right:5px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0 13px 13px}
+.stat{background:#0c2937;border:1px solid #325667;border-radius:11px;padding:10px;min-width:0}
+.stat strong{display:block;font-size:clamp(17px,2.1vw,24px);letter-spacing:-.035em}
+.stat span{font-size:10px;color:var(--muted);line-height:1.4;display:block}
+.controls{display:grid;align-content:start;gap:14px}
+.in{padding:15px}
+h2{font-size:18px;margin:0 0 14px;letter-spacing:-.025em}
+.cap{font-size:10px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
+.segment{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.btn{border:1px solid #486f7e;background:#1c4050;color:#edf7f3;border-radius:10px;padding:10px 9px;font-weight:800;font-size:12px;min-height:43px}
+.btn:hover{filter:brightness(1.13)}.btn.accent{background:var(--bright);border-color:var(--bright);color:#0b3029}
+.btn.on{border-color:var(--bright);background:#205748;color:#cdffeb}.btn.soft{border-style:dashed}
+.slider{margin:13px 0}
+.sliderline{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#d4e8eb;font-size:12px}
+output{font-weight:800;color:var(--bright);white-space:nowrap}
+input[type=range]{accent-color:var(--bright);width:100%;min-height:26px}
+.optionline{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted);margin-top:12px;line-height:1.45}
+select{background:#092737;border:1px solid #4d7184;border-radius:10px;color:var(--text);width:100%;padding:11px}
+.callout{border:1px solid #375e6a;background:#0c2c38;padding:10px;border-radius:10px;color:#b9e3e3;font-size:11px;line-height:1.6;margin-top:11px}
+.actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.row{display:flex;gap:7px;flex-wrap:wrap}
+.row>*{flex:1 1 100px}
+.stack{display:grid;gap:8px}
+.lower{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,.85fr);gap:16px;margin-top:16px}
+#hydrograph{height:230px}
+.chart-pad{padding:8px 12px 12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+td,th{padding:9px 4px;border-bottom:1px solid #ffffff26;text-align:right;white-space:nowrap}td:first-child,th:first-child{text-align:left;color:#bcd0da}
+.small{font-size:11px;line-height:1.65;color:var(--muted)}
+.badge{display:inline-block;color:#c3ffeb;background:#1c5142;border:1px solid #3b9a7d;border-radius:30px;font-size:10px;padding:4px 8px;font-weight:900}
+.file{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center}.file input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+footer{border-top:1px solid #ffffff1b;margin-top:24px;padding-top:16px;color:#9fb6c0;font-size:11px;line-height:1.7}
+@media(max-width:1050px){.board{grid-template-columns:1fr}.controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.controls,.lower{grid-template-columns:1fr}.hero{display:block}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.pill{font-size:9px}.brand{font-size:12px}.corner{font-size:9px;left:12px;bottom:13px;padding:6px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style></head><body><main>
+<nav><a class="brand" href="./index.html">DMP <b>SIM LAB</b> / SCHUTTERWALD</a><span class="pill">SPIELBARE ENTWICKLUNGSVERSION · V1</span></nav>
+<header class="hero"><div><div class="eyebrow">Schutterwald · Höfen · Bruchgraben</div><h1>Wo fließt das <em>Wasser hin?</em></h1>
+<p>Ein ganzes Modellgebiet, drei Maßnahmenpakete und eigene Eingriffe. Lass Starkregen fallen, sieh den modellierten Abfluss, bearbeite die Fläche direkt und vergleiche zwei Varianten.</p></div></header>
+<div class="notice"><strong>Keine Gefahrenkarte:</strong> Der erste Start verwendet eine <strong>frei erfundene Modelllandschaft</strong> um eine echte Ortskoordinate in Höfen. Der dargestellte Wasserlauf ist <strong>nur schematisch</strong> und nicht die kartierte Lage des Bruchgrabens. Tatsächliche Gebäude- und Gewässergeometrien werden erst nach erfolgreichem OSM-Abruf verwendet, reale Höhen erst nach geeignetem DGM-Import. Ergebnisse sind <strong>keine lokalen Überflutungsprognosen</strong>.</div>
+<div class="board">
+<section class="panel">
+<div class="panel-head"><strong>MODELLGEBIET HÖFEN · 1.200 × 800 m</strong><small id="clock">Minute 0 / 180</small></div>
+<div class="mapwrap">
+<canvas id="terrain" width="960" height="640" role="img" aria-label="60 mal 40 große schematische Rasterkarte von Höfen mit simuliertem Oberflächenabfluss"></canvas>
+<span class="north" aria-hidden="true">↑ N</span>
+<div class="corner"><strong id="mapKind">SCHEMATISCHE GELÄNDEKARTE</strong><br>Raster 20 × 20 m · 96 Hektar<br><span id="chosenSpot">Höfen, 48,44290° N · 7,87741° O</span></div>
+</div>
+<div class="legend">
+<span><i class="dot" style="background:#3b9a81"></i>Grün</span><span><i class="dot" style="background:#91a2a8"></i>Straßen</span>
+<span><i class="dot" style="background:#cb9077"></i>Gebäude</span><span><i class="dot" style="background:#3a77b9"></i>Wasserzelle</span>
+<span><i class="dot" style="background:#ead58d"></i>Maßnahmen</span>
+</div>
+<div class="stats">
+<div class="stat"><strong id="metricRain">0</strong><span>Niederschlag · m³</span></div>
+<div class="stat"><strong id="metricSoil">0</strong><span>Versickert · m³</span></div>
+<div class="stat"><strong id="metricRetained">0</strong><span>Zurückgehalten · m³</span></div>
+<div class="stat"><strong id="metricDrain">0</strong><span>Modell-Kanalabfluss · m³</span></div>
+<div class="stat"><strong id="metricExit">0</strong><span>Randabfluss · m³</span></div>
+<div class="stat"><strong id="metricSurface">0</strong><span>Wasser auf Fläche · m³</span></div>
+</div>
+<div class="callout" id="balance" style="margin:0 13px 13px" role="status">Wasserbilanz: kontrolliert.</div>
+</section>
+<aside class="controls">
+<section class="panel in">
+<h2>1. Starkregen bestimmen</h2>
+<div class="cap">Beispielpakete</div>
+<div class="segment" id="presets"><button class="btn on" data-preset="basic" aria-pressed="true">Ist-Variante*</button><button class="btn" data-preset="green" aria-pressed="false">Entsiegeln</button><button class="btn" data-preset="buffer" aria-pressed="false">Rückhalten</button></div>
+<p class="small">*Die Ausgangsvariante ist hypothetisch, kein amtlich vermessener Istzustand.</p>
+<div class="slider"><div class="sliderline"><label for="rain">Regenstärke</label><output id="rainVal">65 mm/h</output></div><input type="range" id="rain" min="0" max="160" step="5" value="65"></div>
+<div class="slider"><div class="sliderline"><label for="duration">Dauer</label><output id="durationVal">60 min</output></div><input type="range" id="duration" min="0" max="180" step="5" value="60"></div>
+<div class="slider"><div class="sliderline"><label for="seal">Versiegelung (Modellwert)</label><output id="sealVal">52 %</output></div><input type="range" id="seal" min="0" max="100" step="1" value="52"></div>
+<div class="slider"><div class="sliderline"><label for="soil">Bodenaufnahme (Modellwert)</label><output id="soilVal">9 mm/h</output></div><input type="range" id="soil" min="0" max="40" step="1" value="9"></div>
+<div class="slider"><div class="sliderline"><label for="drain">Kanalabgabe (Modellwert)</label><output id="drainVal">8 mm/h</output></div><input type="range" id="drain" min="0" max="30" step="1" value="8"></div>
+<div class="slider"><div class="sliderline"><label for="storage">Rückhalt je Modellpunkt</label><output id="storageVal">0 mm</output></div><input type="range" id="storage" min="0" max="300" step="5" value="0"></div>
+</section>
+<section class="panel in">
+<h2>2. Starten & gestalten</h2>
+<div class="segment"><button id="start" class="btn accent">▶ Starten</button><button id="step" class="btn">+1 Minute</button><button id="reset" class="btn">↺ Neu</button></div>
+<div class="slider"><div class="sliderline"><label for="speed">Tempo</label><output id="speedVal">10 min/s</output></div><input id="speed" type="range" min="1" max="30" value="10"></div>
+<div class="cap">Kartenwerkzeug · auf Zelle tippen</div>
+<div class="actions" id="tools">
+<button class="btn on" data-tool="garden" aria-pressed="true">🌱 Mulde</button>
+<button class="btn" data-tool="basin" aria-pressed="false">💧 Becken</button>
+<button class="btn" data-tool="unseal" aria-pressed="false">🍀 Entsiegeln</button>
+</div>
+<div class="row" style="margin-top:7px"><button id="eraseTool" class="btn">✕ Löschen</button><button id="clearActions" class="btn soft">Alle Maßnahmen zurück</button></div>
+<div class="callout" id="actionStatus" role="status">Tippe in die Karte. Maßnahmen werden an Rasterzellen gesetzt.</div>
+</section>
+<section class="panel in" style="grid-column:1/-1">
+<h2>3. Ortsdaten & Varianten</h2>
+<div class="cap">Geografischer Bezug</div>
+<div class="callout" id="geoStatus" role="status">Start: schematische Karte, künstliche Geländehöhen.</div>
+<div class="row" style="margin-top:10px">
+<button id="getOsm" class="btn accent">⬇ OSM-Geometrie laden</button>
+<button id="restoreMap" class="btn">Schematische Karte</button></div>
+<div class="row" style="margin-top:8px">
+<label class="btn file">DGM (.asc) importieren<input type="file" id="demInput" accept=".asc,.txt,text/plain" aria-label="ESRI ASCII Höhendaten importieren"></label>
+</div>
+<p class="small">OSM liefert bei erfolgreicher Abfrage reale Gebäude, Wege und Flächen (© OpenStreetMap-Mitwirkende, ODbL). Importierte Geländehöhen benötigen <strong>EPSG:25832</strong>. Kanalmodell, Bodenannahmen und Wirkungswerte bleiben auch dann vereinfacht.</p>
+<div class="cap">Versuch A/B sichern</div>
+<div class="tools"><button id="saveA" class="btn">A speichern</button><button id="saveB" class="btn">B speichern</button></div>
+<button id="runAB" class="btn accent" style="width:100%;margin-top:8px">A/B mit gleichem Regen vergleichen</button>
+<div class="row" style="margin-top:8px"><button id="export" class="btn">↓ JSON speichern</button><label class="btn file">↑ JSON importieren<input id="import" type="file" accept=".json,application/json" aria-label="Versuchs-JSON importieren"></label></div>
+<div class="callout" id="status" role="status">Bereit. Voreinstellung A: Ausgangsvariante; B: Entsiegelung.</div>
+</section>
+</aside>
+</div>
+<div class="lower">
+<section class="panel"><div class="panel-head"><strong>ABFLUSS IM ZEITVERLAUF</strong><small>Modellrand + Modell-Kanalabgabe · m³/min</small></div><div class="chart-pad"><canvas id="hydrograph" width="900" height="280" role="img" aria-label="Zeitlicher Modellabfluss mit aktuellem Versuch und Varianten A und B"></canvas></div>
+<div class="legend"><span><i class="dot" style="background:#fff"></i>Aktuell</span><span><i class="dot" style="background:#ffca84"></i>A</span><span><i class="dot" style="background:#7ff6d3"></i>B</span></div></section>
+<section class="panel in">
+<h2>Vergleich</h2>
+<table><thead><tr><th>Kennzahl</th><th>A</th><th>B</th></tr></thead><tbody>
+<tr><td>Abfluss gesamt · m³</td><td id="aFlow">–</td><td id="bFlow">–</td></tr>
+<tr><td>Versickerung · m³</td><td id="aSoil">–</td><td id="bSoil">–</td></tr>
+<tr><td>Rückhalt · m³</td><td id="aStorage">–</td><td id="bStorage">–</td></tr>
+<tr><td>Max. Abfluss · m³/min</td><td id="aPeak">–</td><td id="bPeak">–</td></tr>
+<tr><td>Rasterzellen ≥ 20 mm*</td><td id="aWet">–</td><td id="bWet">–</td></tr>
+</tbody></table>
+<p class="small">*Rein modellinterner Wasserstand, kein amtlicher Gefahrenindikator. Der Vergleich verwendet gleiche Regenwerte und identische Ortsdaten.</p>
+<div class="callout" id="insight">Wähle zwei Varianten und klicke „A/B vergleichen“.</div>
+</section>
+</div>
+<footer>Dies ist ein bewusst grobes, vollständig bedienbares <strong>Lehr- und Vergleichsmodell</strong> für Höfen/Bruchgraben (Schutterwald). Raster: 60 × 40 Zellen à 20 m, 96 ha. Geländeschema, Wasserlauf und modellierte Kanalabgabe sind bis zur expliziten Datenübernahme <strong>keine echten lokalen Daten</strong>. Bodenaufnahme, Speichergrößen, Drainage und Abflussrouting sind vereinfachte Annahmen; die Gewässerhydraulik, Rückstau, Wasserstände in Häusern und die tatsächliche Belastung des Kanalnetzes werden nicht prognostiziert. Örtlicher Quellenbezug: <a href="https://www.schutterwald.de/leben-wohnen/bauen/bebauungsplaene" target="_blank" rel="noopener noreferrer">Gemeinde Schutterwald · Planunterlagen</a> und <a href="https://opengeodata.lgl-bw.de" target="_blank" rel="noopener noreferrer">LGL Open GeoData</a>. Planungshintergrund Höfen: südlich Löhliswälder Straße, Bruchgraben als Vorfluter, hoher Grundwasserstand (Planbegründung 2018). <strong>Keine kommunale Freigabe, kein amtliches Risiko- oder Überflutungsmodell.</strong></footer>
+</main>
+<script src="./hoefen-core.js"></script>
+<script src="./water-geodata.js"></script>
+<script src="./hoefen-app.js"></script>
+</body></html>
