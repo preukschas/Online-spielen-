@@ -103,3 +103,25 @@ test("Evolution bewertet auch Bewegungsleistung und bewahrt alle Bewegungsparame
  assert.ok(training.last?.movementB);
  assert.ok(training.history.every(h=>Number.isFinite(h.training)));
 });
+
+test("Arena-Turniere liefern bei 10 und 50 Duellen echte, reproduzierbare Sieger",()=>{
+ const params={nameA:"Figur A",nameB:"Figur B",duelDuration:12};
+ const first=arenaBatch(params,53,10,"duel");
+ assert.equal(first.reduce((a,b)=>a+b),10);
+ const fifty=arenaBatch(params,53,50,"duel");
+ assert.equal(fifty.reduce((a,b)=>a+b),50);
+ assert.deepEqual(arenaBatch(params,53,10,"duel"),first);
+});
+test("Asynchrone 2er-Stücke haben identische Seitenwechsel und Ergebnisse",()=>{
+ const params={nameA:"A",nameB:"B",duelDuration:12};
+ const single=arenaBatch(params,417,10,"duel");
+ const pieces=[0,0,0];
+ for(let i=0;i<10;i+=2){
+  const part=arenaBatch(params,417,2,"duel",i);
+  part.forEach((n,k)=>pieces[k]+=n);
+ }
+ assert.deepEqual(pieces,single,"10 Duelle in kleinen Browser-Portionen");
+ const single50=arenaBatch(params,312,50,"duel"),pieces50=[0,0,0];
+ for(let i=0;i<50;i+=2){const part=arenaBatch(params,312,2,"duel",i);part.forEach((n,k)=>pieces50[k]+=n);}
+ assert.deepEqual(pieces50,single50,"50 Duelle trotz UI-Unterbrechungen reproduzierbar");
+});
