@@ -59,7 +59,7 @@ async function check(browser,label,opts){
    const download=page.waitForEvent("download");
    await page.locator("#export").click();assert.match((await download).suggestedFilename(),/dmp-roboterduell.*\.json$/);
    await page.locator("#fileDuel").setInputFiles({name:"duel.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(json))});
-   assert.match(await page.locator("#notice").textContent(),/erfolgreich importiert/);
+   await page.waitForFunction(()=>document.querySelector("#notice")?.textContent?.includes("erfolgreich importiert"),null,{timeout:10000});
   }
   await page.reload({waitUntil:"networkidle"});
   assert.equal(await page.locator("#generation").textContent(),"1");
