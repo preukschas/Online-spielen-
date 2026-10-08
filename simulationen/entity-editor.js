@@ -226,7 +226,7 @@ function send(mode,slot){
  if(mode==="bio"&&!toBiomechanics(draft)){notice("Biomechanik-Werte nicht gültig.",true);return;}
  if(mode==="arena"&&!toArena(draft)){notice("Arena-Werte nicht gültig.",true);return;}
  const query=new URLSearchParams({mode,entity:draft.id});
- if(mode==="arena")query.set("slot",slot);
+ if(mode==="arena"){query.set("slot",slot);if(draft.combat)query.set("preset","duel");}
  location.assign("./lab.html?"+query.toString());
 }
 sliders();combatSliders();
