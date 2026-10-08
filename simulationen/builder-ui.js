@@ -1,4 +1,5 @@
 import {BUILDER_VERSION,DT,blank,addBody,addHinge,deleteBody,deleteJoint,bodyById,sample,snapshot,restore,step,jointError,worldPoint} from "./builder-core.js";
+import {contacts} from "./builder-collision.js";
 const $=id=>document.getElementById(id),w=$("world"),cx=w.getContext("2d"),chart=$("chart"),cc=chart.getContext("2d");
 const KEY="dmp_builder_scenes_v1",PI=Math.PI;
 let scene=sample("double"),design=snapshot(scene),selectedBody=scene.bodies[0]?.id||null,selectedJoint=null;
@@ -55,6 +56,9 @@ function makeField(container,label,key,value,min,max,stepVal,context){
 }
 function renderUI(){
  $("sceneName").textContent=scene.name;$("filename").value=scene.name;$("gravity").value=scene.gravity;
+ $("collisions").checked=scene.collisions!==false;
+ $("restitution").value=scene.restitution??.05;
+ $("friction").value=scene.friction??.35;
  $("bodyCount").textContent=scene.bodies.length;$("jointCount").textContent=scene.joints.length;
  const selected=bodyById(scene,selectedBody);
  if(!selected)selectedBody=scene.bodies[0]?.id||null;
@@ -130,6 +134,11 @@ function draw(){
   cx.fillStyle="#163246";cx.font="14px system-ui";cx.textAlign="center";cx.fillText(j.motor?"⚡":"●",x,y+5);cx.textAlign="left";
   if(j.a===0){cx.strokeStyle="#f2c875";cx.beginPath();cx.moveTo(x-18,y-21);cx.lineTo(x+18,y-21);cx.stroke()}
  }
+ if(scene.collisions!==false){
+  for(const c of contacts(scene)){
+   cx.strokeStyle="#ffc67b";cx.lineWidth=4;cx.beginPath();cx.arc(xp(c.point.x),yp(c.point.y),10,0,2*PI);cx.stroke();
+  }
+ }
  if(!scene.bodies.length){cx.fillStyle="#b9d4dc";cx.font="23px system-ui";cx.textAlign="center";cx.fillText("Starte mit „＋ Stange“ oder „＋ Rad“.",480,225);cx.textAlign="left";}
 }
 function drawChart(){
@@ -145,6 +154,7 @@ function stats(){
  const errors=jointError(scene),residual=errors.length?Math.max(...errors):0;
  $("time").textContent=number(clock)+" s";$("bodyCount").textContent=scene.bodies.length;
  $("jointCount").textContent=scene.joints.length;$("residual").textContent=number(1000*residual)+" mm";
+ $("contactsNow").textContent=scene.collisions===false?"Aus":String(scene.contactsNow||0);
  drawChart();
 }
 function record(){
@@ -187,6 +197,14 @@ $("addJoint").addEventListener("click",()=>{
  try{const j=addHinge(scene,a,b,pa,pb);selectedJoint=j.id;sync();reset();notify("Gelenk hinzugefügt. Jetzt kann ein Motor aktiviert werden.")}catch(e){notify(e.message,true)}
 });
 $("gravity").addEventListener("change",()=>{scene.gravity=clamp(Number($("gravity").value)||0,0,20);sync();reset()});
+$("collisions").addEventListener("change",e=>{scene.collisions=e.target.checked;sync();reset();notify(scene.collisions?"Kontakte aktiv.":"Kontakte deaktiviert.")});
+for(const [id,min,max] of [["restitution",0,.8],["friction",0,1]]){
+ $(id).addEventListener("change",()=>{
+  const value=Number($(id).value);
+  if(!Number.isFinite(value)){$(id).value=scene[id];return;}
+  scene[id]=clamp(value,min,max);sync();reset();
+ });
+}
 $("filename").addEventListener("change",()=>{sync();renderUI()});
 $("new").addEventListener("click",()=>chooseTemplate("empty"));
 $("save").addEventListener("click",()=>{
