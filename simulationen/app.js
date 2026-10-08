@@ -32,6 +32,11 @@ function controls(){
   btn.addEventListener("click",startTraining);ex.append(btn);
   const s=document.createElement("p");s.id="trainStatus";s.className="train-status";s.textContent="Der Regler wird durch Evolution mit getrenntem Testlauf optimiert.";ex.append(s);
  }
+ if(mode==="mechanics"){
+  const link=document.createElement("a");link.className="extra-button";link.href="./builder.html";link.textContent="🧩 Freien Maschinenbaukasten öffnen ↗";
+  link.style.textAlign="center";link.style.textDecoration="none";link.style.display="block";ex.append(link);
+  const hint=document.createElement("p");hint.className="micro";hint.textContent="Beliebige Stangen und Räder konstruieren, mit Drehgelenken verbinden und Motoren hinzufügen.";ex.append(hint);
+ }
  if(mode==="arena"){
   for(const [key,label,fallback] of [["nameA","Entität A benennen","Entität A"],["nameB","Entität B benennen","Entität B"]]){
    const title=document.createElement("label");title.className="field-label";title.textContent=label;title.htmlFor=key;
