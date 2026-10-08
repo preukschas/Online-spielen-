@@ -24,7 +24,7 @@ async function run(browser,name,opts){
  const ctx=await browser.newContext({...opts,acceptDownloads:true}),page=await ctx.newPage();
  const faults=[];page.on("pageerror",e=>faults.push(e.message));
  try{
-  await page.goto(base+"/vorschau-hoefen/",{waitUntil:"networkidle"});
+  await page.goto(base+"/vorschau-hoefen/index.html",{waitUntil:"networkidle"});
   assert.match(await page.title(),/Höfen/);
   assert.equal(await page.locator("#terrain").count(),1);
   assert.equal(await page.locator("#start").count(),1);
