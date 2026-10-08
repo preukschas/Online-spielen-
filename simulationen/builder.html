@@ -18,24 +18,26 @@ main{max-width:1380px;margin:auto;padding:22px 15px 36px}.intro{display:flex;jus
 </head><body class="builder">
 <header><span class="brand">⚙ DMP SIM LAB / MECHANIK</span><nav><a href="./">← Simulationsportal</a><a href="./lab.html?mode=mechanics">Mechanikversuche</a><a href="../">DMP Games</a></nav></header>
 <main>
-<div class="intro"><div><div class="eyebrow">2D KONSTRUKTIONSWERKSTATT · EDITOR 1.4</div><h1>Baue deine eigene Maschine.</h1><p>Stangen und Räder platzieren, Gelenke und Motoren verbinden – jetzt auch Kollisionen und Rückprall simulieren.</p></div><span class="pill" id="stateTag">BAU-MODUS</span></div>
+<div class="intro"><div><div class="eyebrow">2D KONSTRUKTIONSWERKSTATT · EDITOR 1.5</div><h1>Baue deine eigene Maschine.</h1><p>Stangen und Räder platzieren, Gelenke und Motoren verbinden – jetzt auch Kollisionen, Rückprall und schnelle Stöße simulieren.</p></div><span class="pill" id="stateTag">BAU-MODUS</span></div>
 <div class="layout">
 <div class="panel">
 <div class="canvas-header"><strong id="sceneName">Doppelpendel</strong><span class="hint">Antippen: auswählen · Ziehen: verschieben</span></div>
 <div class="view-wrap"><canvas id="world" width="960" height="540" aria-label="2D-Maschinenkonstruktion, Körper können angetippt und verschoben werden"></canvas></div>
 <div class="toolbar"><button id="play" class="btn primary" type="button">▶ Starten</button><button id="step" class="btn" type="button">⏭ Schritt</button><button id="reset" class="btn" type="button">↺ Reset</button><label class="hint" for="speed">Tempo</label><select id="speed" class="field" aria-label="Simulationsgeschwindigkeit"><option value="1">1×</option><option value="2">2×</option><option value="5">5×</option></select></div>
-<div class="stats" aria-live="off"><div class="stat"><small>Simulationszeit</small><strong id="time">0,00 s</strong></div><div class="stat"><small>Körper</small><strong id="bodyCount">2</strong></div><div class="stat"><small>Gelenke</small><strong id="jointCount">2</strong></div><div class="stat"><small>Gelenkfehler</small><strong id="residual">0,00 mm</strong></div><div class="stat"><small>Aktive Kontakte</small><strong id="contactsNow">0</strong></div></div>
+<div class="stats" aria-live="off"><div class="stat"><small>Simulationszeit</small><strong id="time">0,00 s</strong></div><div class="stat"><small>Körper</small><strong id="bodyCount">2</strong></div><div class="stat"><small>Gelenke</small><strong id="jointCount">2</strong></div><div class="stat"><small>Gelenkfehler</small><strong id="residual">0,00 mm</strong></div><div class="stat"><small>Aktive Kontakte</small><strong id="contactsNow">0</strong></div>
+<div class="stat"><small>CCD-Teilschritte</small><strong id="ccdSubsteps">1</strong></div></div>
 <div class="panel-body" style="border-top:1px solid var(--line)"><div class="columns"><strong>Live: Bewegung ausgewählter Körper</strong><span class="hint" id="chartLabel" style="text-align:right">Winkel in Grad</span></div><canvas id="chart" width="900" height="140" aria-label="Messkurve des ausgewählten Körpers"></canvas><p class="micro">Die vertikale Achse zeigt den Winkel. Der Export enthält Winkel, Position und Zeitstempel.</p></div>
 <p class="status" id="notice" role="status">Vorlage geladen. Starte die Simulation oder bearbeite Körper und Gelenke.</p>
 </div>
 <div class="controls">
 <section class="panel panel-body"><h2>1 · Konstruktion</h2>
-<label class="field-label" for="template">Beispiel laden</label><select class="field" id="template"><option value="double">Doppelpendel</option><option value="pendulum">Einfaches Pendel</option><option value="motor">Motorarm</option><option value="collision">Rad-Kollision</option><option value="empty">Leere Arbeitsfläche</option></select>
+<label class="field-label" for="template">Beispiel laden</label><select class="field" id="template"><option value="double">Doppelpendel</option><option value="pendulum">Einfaches Pendel</option><option value="motor">Motorarm</option><option value="collision">Rad-Kollision</option><option value="fast">Schneller Radstoß (CCD)</option><option value="empty">Leere Arbeitsfläche</option></select>
 <div class="actions"><button type="button" class="btn" id="addBar">＋ Stange</button><button type="button" class="btn" id="addWheel">＋ Rad</button></div>
 <label class="field-label" for="gravity">Gravitation (m/s²)</label><input class="field" id="gravity" type="number" min="0" max="20" step="0.1" value="9.81">
 <hr class="section-line">
 <div class="small-heading">Kontaktphysik</div>
 <label class="checkline"><input id="collisions" type="checkbox" checked><span>Bauteilkollisionen aktivieren</span></label>
+<label class="checkline"><input id="ccd" type="checkbox" checked><span>Schnelle Kollisionserkennung (CCD)</span></label>
 <div class="columns">
   <div><label class="field-label" for="restitution">Rückprall (0–0,8)</label><input class="field" id="restitution" type="number" min="0" max="0.8" step="0.05" value="0.05"></div>
   <div><label class="field-label" for="friction">Reibung (0–1)</label><input class="field" id="friction" type="number" min="0" max="1" step="0.05" value="0.35"></div>
@@ -60,6 +62,6 @@ main{max-width:1380px;margin:auto;padding:22px 15px 36px}.intro{display:flex;jus
 <p class="micro">Szenarien bleiben lokal im Browser. Der JSON-Export ermöglicht die Weitergabe zwischen Geräten.</p>
 </section>
 </div></div>
-<div class="note"><strong>Modellgrenzen:</strong> Die Darstellung verwendet einen vereinfachten 2D-Positionssolver mit Stangen, Rädern, Gelenkankern, Schwerkraft, Bodenbegrenzung und drehmomentbegrenzten Antrieben. Neu: angenäherte Rad-Rad-, Stange-Rad- und Stange-Stange-Kontakte mit einstellbarer Reibung und Rückprall. Die Materialverformung und belastbare Lagerkräfte sind weiterhin nicht modelliert. Ergebnisse sind zum Experimentieren und Lernen gedacht, nicht zur Auslegung realer Maschinen.</div>
+<div class="note"><strong>Modellgrenzen:</strong> Die Darstellung verwendet einen vereinfachten 2D-Positionssolver mit Stangen, Rädern, Gelenkankern, Schwerkraft, Bodenbegrenzung und drehmomentbegrenzten Antrieben. Neu: angenäherte Rad-Rad-, Stange-Rad- und Stange-Stange-Kontakte mit einstellbarer Reibung und Rückprall. Die kontinuierliche Kontaktprüfung erkennt schnelle Radstöße und schätzt Treffer von Stangen durch einen Zeitschritt hinweg ab. Materialverformung und belastbare Lagerkräfte sind weiterhin nicht modelliert. Ergebnisse sind zum Experimentieren und Lernen gedacht, nicht zur Auslegung realer Maschinen.</div>
 </main><script type="module" src="./builder-ui.js"></script>
 </body></html>
