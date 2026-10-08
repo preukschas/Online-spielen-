@@ -534,7 +534,9 @@ function restoreRound(){let r=loadJSON(ROUND_KEY);if(!r){const old=loadJSON('moe
 function renderResume(){const active=['quiz','spell','retry'].includes(state.phase)&&state.source.length;if(!active){$('resumePanel').classList.add('hidden');return;}$('resumePanel').classList.remove('hidden');const labels={quiz:'Bedeutung',spell:'Rechtschreibung',retry:'Wiederholung'};const total=state.phase==='retry'?Math.max(1,state.retry.length):state.source.length;$('resumeText').textContent=labels[state.phase]+' · '+Math.min(state.index+1,total)+' von '+total+' · bisher '+state.score+' ⭐';}
 function updatePhaseSteps(){const order=['quiz','spell','retry'],idx=order.indexOf(state.phase);document.querySelectorAll('.phaseStep').forEach((el,i)=>{el.classList.toggle('active',state.phase!=='done'&&i===idx);el.classList.toggle('done',state.phase==='done'||(idx>=0&&i<idx));});}function updateStats(){$('score').textContent=state.score;$('mistakes').textContent=state.mistakes;updateComboUI();const n=Math.max(1,state.source.length);let p=0;if(state.phase==='quiz')p=state.index/n*45;else if(state.phase==='spell')p=45+state.index/n*45;else if(state.phase==='retry')p=90+(state.retry.length?state.index/state.retry.length*9:9);else if(state.phase==='done')p=100;const progressValue=Math.max(0,Math.min(100,p));$('progress').style.width=progressValue+'%';$('progressTrack').setAttribute('aria-valuenow',String(Math.round(progressValue)));updatePhaseSteps();updateProfileUI();}
 function showScreen(name){$('menuScreen').classList.toggle('hidden',name!=='menu');$('gameScreen').classList.toggle('hidden',name!=='game');$('resultScreen').classList.toggle('hidden',name!=='result');}
-function makeOptions(item){const out=[{text:item.de,correct:true,id:item.id}],seen=new Set([item.de]);for(const v of shuffle(state.source.length?state.source:vocab)){if(v.id===item.id||seen.has(v.de))continue;seen.add(v.de);out.push({text:v.de,correct:false,id:v.id});if(out.length===4)break;}if(out.length<4)for(const v of shuffle(vocab)){if(v.id!==item.id&&!seen.has(v.de)){seen.add(v.de);out.push({text:v.de,correct:false,id:v.id});if(out.length===4)break;}}return shuffle(out);}
+function moeMeaningParts(value){return String(value||'').toLocaleLowerCase('de').split(';').map(v=>v.trim()).filter(Boolean);}
+function moeMeaningsOverlap(a,b){const meaning=new Set(moeMeaningParts(a));return moeMeaningParts(b).some(v=>meaning.has(v));}
+function makeOptions(item){const out=[{text:item.de,correct:true,id:item.id}],seen=new Set([item.de]);for(const v of shuffle(state.source.length?state.source:vocab)){if(v.id===item.id||seen.has(v.de)||moeMeaningsOverlap(item.de,v.de))continue;seen.add(v.de);out.push({text:v.de,correct:false,id:v.id});if(out.length===4)break;}if(out.length<4)for(const v of shuffle(vocab)){if(v.id!==item.id&&!seen.has(v.de)&&!moeMeaningsOverlap(item.de,v.de)){seen.add(v.de);out.push({text:v.de,correct:false,id:v.id});if(out.length===4)break;}}return shuffle(out);}
 function clearFeedback(preserveLearning=false){state.locked=false;state.awaitingNext=false;state.nextReadyAt=0;$('feedback').textContent='';$('feedback').className='feedback';$('correction').classList.add('hidden');$('nextBtn').classList.add('hidden');$('nextBtn').disabled=true;$('writeInput').disabled=false;$('retryHint').classList.add('hidden');$('hintText').classList.add('hidden');$('hintText').textContent='';$('hintBtn').disabled=false;if(!preserveLearning){state.hintLevel=0;state.currentErrors=0;state.draft='';}setWritingButton('check');}
 function setWritingButton(mode){const b=$('checkBtn');b.dataset.mode=mode;b.textContent=mode==='next'?'Weiter ➜':'✓ Prüfen';b.disabled=mode==='next'?false:!normalize($('writeInput').value);}
 function showQuiz(resuming=false){if(state.index>=state.quiz.length){state.phase='spell';state.index=0;state.questionElapsedMs=0;showSpelling();return;}state.phase='quiz';state.current=state.quiz[state.index];clearFeedback();$('choiceArea').classList.remove('hidden');$('writeArea').classList.add('hidden');$('level').textContent='🎯 Runde 1 · Bedeutung';$('hint').textContent='Wähle die richtige deutsche Bedeutung.';$('counter').textContent=(state.index+1)+' / '+state.source.length;$('prompt').textContent='Was bedeutet:';$('question').textContent=state.current.book;$('choiceArea').innerHTML='';makeOptions(state.current).forEach(opt=>{const b=document.createElement('button');b.type='button';b.className='answer';b.textContent=opt.text;quizOptionMap.set(b,{id:opt.id,correct:opt.correct});b.onclick=()=>handleChoice(b,opt.correct);$('choiceArea').appendChild(b);});if(!resuming)state.questionElapsedMs=0;state.questionStartedAt=Date.now();animateQuestion();saveRound();updateStats();}
@@ -576,6 +578,7 @@ function selfTest(){const germany=vocab.find(v=>v.book==='Germany'),thats=vocab.
 /* Freigegebene Google-Vokabeln nachladen, vorhandene Wort-IDs beibehalten. */
 const MOE_CENTRAL_URL="https://preukschas.github.io/Online-spielen-/shared/moe-vocab.json";
 function moeKey(value){return String(value||'').toLowerCase().replace(/…/g,'...').replace(/\(=.+?\)|\(pl\)|\(pl only\)|\(to\)/g,'').replace(/[^a-z0-9']+/g,' ').trim();}
+function moeFamilyAnswers(word){const key=moeKey(word);if(key==='mum'||key==='mother')return ['mum','mother'];if(key==='dad'||key==='father')return ['dad','father'];return null;}
 async function moeRefreshVocabulary(){
  try{
   const reply=await fetch(MOE_CENTRAL_URL,{cache:'no-store'});
@@ -586,13 +589,16 @@ async function moeRefreshVocabulary(){
   const next=[],seen=new Set();
   for(const row of data.words){
    if(!row||!row.en||!row.de)continue;
+   // Nur die 104 freigegebenen Vokabeln der ersten vier Seiten.
+   const approvedId=Number(String(row.id||'').replace(/^MOE-/,''));
+   if(!Number.isInteger(approvedId)||approvedId<1||approvedId>104)continue;
    const key=moeKey(row.en);if(seen.has(key))continue;seen.add(key);
    const existing=original.get(key);
-   if(existing){existing.de=String(row.de);next.push(existing);}
+   if(existing){existing.de=String(row.de);const family=moeFamilyAnswers(row.en);if(family)existing.answers=family;next.push(existing);}
    else{
     const number=Number(String(row.id||'').replace(/^MOE-/,''));
     if(!Number.isInteger(number)||number<1||number>100000)continue;
-    const item={id:1000+number,group:'g',book:String(row.en),de:String(row.de),answers:[String(row.en).replace(/…/g,'...')]};
+    const item={id:1000+number,group:'g',book:String(row.en),de:String(row.de),answers:moeFamilyAnswers(row.en)||[String(row.en).replace(/…/g,'...')]};
     next.push(item);
    }
   }
