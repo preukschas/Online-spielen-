@@ -246,7 +246,9 @@ export function trainOneGeneration(s){
  if(tr.generation>=tr.targetGeneration)tr.running=false;
 }
 export function trainedToArena(genome){return clamp(1.8+genome.amplitude*genome.frequency*1.15,1,6);}
-export function arenaBatch(params,seed=42,count=10,preset="race"){
+// startIndex keeps side-swapping and seeds stable when tournaments run in UI chunks.
+export function arenaBatch(params,seed=42,count=10,preset="race",startIndex=0){
+ if(!Number.isInteger(count)||count<0||count>500||!Number.isInteger(startIndex)||startIndex<0||startIndex>100000)return [0,0,0];
  let wins=[0,0,0];
  if(preset==="duel"){
   for(let i=0;i<count;i++){
@@ -261,7 +263,7 @@ export function arenaBatch(params,seed=42,count=10,preset="race"){
   return wins;
  }
 
- for(let i=0;i<count;i++){
+ for(let i=startIndex;i<startIndex+count;i++){
   const q=i%2?{...params,speedA:params.speedB,speedB:params.speedA,staminaA:params.staminaB,staminaB:params.staminaA}:params;
   const s=makeSim("arena",preset,q,seed+Math.floor(i/2));
   for(let j=0;j<60*60&&!s.finished;j++)stepSim(s,1/60);
