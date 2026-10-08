@@ -289,6 +289,42 @@ function arenaLane(c,y,color){
  for(let j=1;j<16;j++)stroke(c,70+j*54,y-50,70+j*54,y+40,"#8acbd323",1,[4,8]);
  stroke(c,70,y-50,70,y+40,"#c9edf1",2);
 }
+// Kampflegenden-Uniformen und Silhouetten im aktiven Duell.
+// Der Schrittablauf kommt weiterhin ausschließlich aus der Simulation.
+function drawFighterAccents(c,e){
+ const style=e.fighterStyle||"";
+ const groups={ali:"BOXEN",tyson:"BOXEN",shields:"BOXEN",bruce:"JEET KUNE DO",
+  oyama:"KARATE",ronda:"JUDO",riner:"JUDO",saenchai:"MUAY THAI",khabib:"MMA / SAMBO",musashi:"SAMURAI"};
+ if(!Object.hasOwn(groups,style))return;
+ const boxing=["ali","tyson","shields"].includes(style),judo=["oyama","ronda","riner"].includes(style);
+ const outfit={ali:"#e84d53",tyson:"#263342",shields:"#8d64cf",bruce:"#e8c248",oyama:"#eeeae2",
+  ronda:"#4075c8",riner:"#eeeae2",saenchai:"#e84e65",khabib:"#388b77",musashi:"#536d88"}[style];
+ const skin={ali:"#985d4a",tyson:"#995b3e",shields:"#8d5847",bruce:"#d6a574",oyama:"#c79b7d",
+  ronda:"#e1b59d",riner:"#94634c",saenchai:"#b98767",khabib:"#d2a784",musashi:"#cfa684"}[style];
+ const headX=-e.pose.lean*18;
+ fill(c,-11,-34,23,31,outfit,boxing?5:3);
+ disc(c,headX,-46,12,skin);
+ if(style==="bruce"){stroke(c,-8,-35,-8,-8,"#303744",4);}
+ if(boxing){
+   const glove=style==="shields"?"#ffd56d":"#da4243";
+   disc(c,24,-5,8,glove);disc(c,-24,-6,7,glove);
+   fill(c,-10,-5,21,7,style==="tyson"?"#f1d29a":"#f4ede4",2);
+ }else if(judo){
+   stroke(c,-10,-31,3,-14,style==="ronda"?"#e7f1fd":"#c5cbd0",3);
+   stroke(c,10,-31,-2,-14,style==="ronda"?"#e1edff":"#c5cbd0",3);
+   stroke(c,-10,-8,10,-8,"#172635",5);
+ }else if(style==="musashi"){
+   stroke(c,-9,-7,11,16,"#dfd2b5",6);
+   stroke(c,-11,-11,12,-11,"#3e3230",5);
+   stroke(c,-15,2,21,-22,"#b78d5c",3);
+   stroke(c,-18,-2,16,-30,"#d5b27f",2);
+ }else if(style==="saenchai"){stroke(c,-10,-3,10,-3,"#f7dba1",4);}
+ else if(style==="khabib"){stroke(c,-8,-31,8,-31,"#d0ece6",3);}
+ if(["tyson","riner"].includes(style)){stroke(c,headX-11,-54,headX+11,-54,"#293443",3);}
+ if(["shields","ronda"].includes(style)){disc(c,headX+11,-51,7,"#563d34");}
+ if(style==="musashi"){disc(c,headX,-59,7,"#2b3037");}
+ label(c,groups[style],0,-80,9,"#fce7a4","center",800);
+}
 function drawDuel(c,s){
  const b=s.body,who=b.fighters;
  ground(c,466);
@@ -333,6 +369,7 @@ function drawDuel(c,s){
    else if(contact&&action==="Schubsen"){stroke(c,5,-15,49,-9,C.aqua,10);stroke(c,1,-8,42,-2,C.aqua,8);}
    else if(contact&&action==="Ausweichen"){stroke(c,2,-19,-20,-33,C.aqua,8);ring(c,-6,0,35,C.aqua,.45);}
    else stroke(c,4,-22,25,-3,col,8);
+   drawFighterAccents(c,e);
   }
   if(contact&&action==="Blocken"){
    ring(c,10,-10,35,C.aqua,.8);
