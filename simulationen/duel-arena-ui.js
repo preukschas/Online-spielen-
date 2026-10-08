@@ -174,8 +174,10 @@ function compare(total){
    const p=swapped?swapParams(params):params;
    const g=swapped?[genomes[1],genomes[0]]:genomes;
    const s=simulateDuel(p,g,state.seed+507+Math.floor(done/2)*199);
-   const idx=s.winner==="Unentschieden"?2:
-    s.winner===p.nameA?(swapped?1:0):(swapped?0:1);
+   const pointsA=s.fighters[0].hp+s.fighters[0].points*.72;
+   const pointsB=s.fighters[1].hp+s.fighters[1].points*.72;
+   const idx=Math.abs(pointsA-pointsB)<.3?2:
+    pointsA>pointsB?(swapped?1:0):(swapped?0:1);
    results[idx]++;done++;
    say("🥊 "+done+" / "+total+" Duelle · A "+results[0]+" / B "+results[1]+" / Remis "+results[2]);refresh();
    if(done<total)setTimeout(run,1);
