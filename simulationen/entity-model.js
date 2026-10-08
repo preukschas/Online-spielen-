@@ -26,6 +26,11 @@ export const ENTITY_APPEARANCES=Object.freeze({
   horse:"quadruped",fox:"quadruped",cat:"quadruped",ostrich:"biped",
   robot:"biped",robotdog:"quadruped"
 });
+// Combat controller values are game heuristics (0..1), NOT claims about a person's performance.
+export const COMBAT_KEYS=Object.freeze(["aggression","guard","jump","punch","kick","push","range",
+ "stride","cadence","footwork","evade","spring","balance","recovery"]);
+export const FIGHTER_STYLES=Object.freeze(["ali","tyson","shields","bruce","oyama",
+ "ronda","riner","saenchai","khabib","musashi"]);
 const clamp=(x,min,max)=>Math.max(min,Math.min(max,x));
 export function newEntity(type="human",id="draft"){
   const base=ENTITY_PRESETS[type]||ENTITY_PRESETS.human;
@@ -46,6 +51,21 @@ export function validateEntity(value){
     if(typeof value[key]!=="number"||!Number.isFinite(value[key])||value[key]<field[1]||value[key]>field[2])return null;
   }
   const normalized={format:ENTITY_FORMAT,schema:ENTITY_SCHEMA,id:value.id,name:value.name.trim(),kind:value.kind,color:value.color.toLowerCase(),appearance};
+  // Optional historical fighter archetype and complete combat genome.
+  // Schema 1 entities without combat information remain backward-compatible.
+  if(value.fighterStyle!==undefined){
+    if(typeof value.fighterStyle!=="string"||!FIGHTER_STYLES.includes(value.fighterStyle)||value.kind!=="biped"||appearance!=="human")return null;
+    normalized.fighterStyle=value.fighterStyle;
+  }
+  if(value.combat!==undefined){
+    if(!value.combat||typeof value.combat!=="object"||Array.isArray(value.combat)||value.kind!=="biped")return null;
+    const gene={};
+    for(const k of COMBAT_KEYS){
+      if(!Number.isFinite(value.combat[k])||value.combat[k]<0||value.combat[k]>1)return null;
+      gene[k]=value.combat[k];
+    }
+    normalized.combat=gene;
+  }
   for(const key of Object.keys(ENTITY_FIELDS))normalized[key]=value[key];
   return normalized;
 }
@@ -62,7 +82,10 @@ export function toArena(entity){
   const shape=e.kind==="quadruped"?1.07:1;
   const massFactor=clamp(1-(e.mass-55)/400,.8,1.13);
   const speed=clamp(1.3+e.amplitude*e.frequency*1.25*e.traction*shape*massFactor,1,6);
-  return {name:e.name,speed:Math.round(speed*100)/100,stamina:e.endurance,color:e.color,kind:e.kind};
+  const result={name:e.name,speed:Math.round(speed*100)/100,stamina:e.endurance,color:e.color,kind:e.kind};
+  if(e.combat)result.genome={...e.combat};
+  if(e.fighterStyle)result.fighterStyle=e.fighterStyle;
+  return result;
 }
 export function safeEntityList(storage){
   try{
