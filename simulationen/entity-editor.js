@@ -240,10 +240,13 @@ $("fighterStyleSelect").addEventListener("change",ev=>{
  if(ev.target.value)draft.fighterStyle=ev.target.value;else delete draft.fighterStyle;
  draft.appearance="human";draft.kind="biped";sync();
 });
+const preferredGroup=new URLSearchParams(location.search).get("category");
+if(["all","fighters","other"].includes(preferredGroup))$("catalogFilter").value=preferredGroup;
 renderCatalog();
 const seeded=installCatalog(localStorage);
-const first=findEntity(localStorage,"catalog-cheetah")||catalogEntity("cheetah");
-setDraft(first,!!findEntity(localStorage,"catalog-cheetah"));
+const defaultKey=$("catalogFilter").value==="fighters"?"ali":"cheetah";
+const first=findEntity(localStorage,"catalog-"+defaultKey)||catalogEntity(defaultKey);
+setDraft(first,!!findEntity(localStorage,"catalog-"+defaultKey));
 notice(seeded.ok?(seeded.added+" neue Katalog-Entitäten lokal gespeichert. "+(seeded.skipped?seeded.skipped+" wegen 40er-Grenze nicht gespeichert.":"20 Beispiel-Figuren auswählbar.")):"Browser-Speicher nicht verfügbar; Katalog kann trotzdem geladen werden.",!seeded.ok);
 $("name").addEventListener("input",ev=>{draft.name=ev.target.value;draw();});
 $("color").addEventListener("input",ev=>{draft.color=ev.target.value;draw();});
