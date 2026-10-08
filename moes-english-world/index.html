@@ -575,16 +575,7 @@ function showParentView(){const sum=learningSummary(),rows=vocab.map(v=>{const m
 function selfTest(){const germany=vocab.find(v=>v.book==='Germany'),thats=vocab.find(v=>v.book.startsWith("that's")),age=vocab.find(v=>v.book==='How old are you?');if(vocab.length<70||pool('sport').length<12||pool('zoo').length<12)return false;if(classifyInput('Germany',germany)!=='exact'||classifyInput('germany',germany)!=='case'||classifyInput('thats',thats)!=='apostrophe'||classifyInput('that’s',thats)!=='exact'||classifyInput('How old are you',age)!=='punct')return false;for(const item of vocab){const old=state.source;state.source=vocab;const o=makeOptions(item);state.source=old;if(o.length!==4||o.filter(x=>x.correct).length!==1||new Set(o.map(x=>x.text)).size!==4)return false;}const m=defaultMemory();m.stage=1;scheduleFromStage(m,Date.now());if(m.dueAt<=Date.now())return false;return true;}
 /* Freigegebene Google-Vokabeln nachladen, vorhandene Wort-IDs beibehalten. */
 const MOE_CENTRAL_URL="https://preukschas.github.io/Online-spielen-/shared/moe-vocab.json";
-const MOE_PAUSED=new Set(['dad','father','mum','mother','parents','parents (pl)','sister','brother','aunt','uncle','grandmother','grandfather']);
 function moeKey(value){return String(value||'').toLowerCase().replace(/…/g,'...').replace(/\(=.+?\)|\(pl\)|\(pl only\)|\(to\)/g,'').replace(/[^a-z0-9']+/g,' ').trim();}
-function moeHidePaused(){
- for(let i=vocab.length-1;i>=0;i--){
-  const item=vocab[i];
-  if(MOE_PAUSED.has(moeKey(item.book))||item.answers.some(v=>MOE_PAUSED.has(moeKey(v)))){
-   byId.delete(item.id);vocab.splice(i,1);
-  }
- }
-}
 async function moeRefreshVocabulary(){
  try{
   const reply=await fetch(MOE_CENTRAL_URL,{cache:'no-store'});
@@ -594,7 +585,7 @@ async function moeRefreshVocabulary(){
   const original=new Map(vocab.map(v=>[moeKey(v.answers[0]),v]));
   const next=[],seen=new Set();
   for(const row of data.words){
-   if(!row||!row.en||!row.de||MOE_PAUSED.has(moeKey(row.en)))continue;
+   if(!row||!row.en||!row.de)continue;
    const key=moeKey(row.en);if(seen.has(key))continue;seen.add(key);
    const existing=original.get(key);
    if(existing){existing.de=String(row.de);next.push(existing);}
@@ -611,7 +602,6 @@ async function moeRefreshVocabulary(){
   updateProfileUI();
  }catch(_error){/* Offline und gespeicherter Lernstand bleiben unverändert. */}
 }
-moeHidePaused();
 mountGameKeyboard('writeInput','writeKeyboard');
 const restored=restoreRound(),ok=selfTest();$('selfTest').textContent=ok?(storageWorks?'✅ Systemtest bestanden: Lernlogik, Speicher, Antworten und Belohnungsschutz sind bereit.':'✅ Lernlogik und Antworten sind bereit. ⚠️ Dauerhafte Speicherung ist in diesem Browser-Kontext blockiert.'):'❌ Systemtest fehlgeschlagen – Spielstart wurde gesperrt.';$('selfTest').classList.toggle('hidden',ok&&storageWorks);
 document.querySelectorAll('.choiceSet').forEach(b=>{b.disabled=!ok;b.addEventListener('click',()=>startRound(b.dataset.set));});document.querySelectorAll('.worldStop').forEach(b=>b.addEventListener('click',()=>{const need=Number(b.dataset.unlock)||0;if(profile.totalPoints>=need)startRound(b.dataset.set);else showToast('🔒 Dieser Ort ist noch gesperrt.');}));document.querySelectorAll('.arcadeBtn[data-mini]').forEach(b=>b.addEventListener('click',()=>queueOverlay(()=>startMini(b.dataset.mini,false))));document.querySelectorAll('.avatarChoice').forEach(b=>b.addEventListener('click',()=>{profile.avatar=b.dataset.avatar;saveJSON(PROFILE_KEY,profile);renderRoom();}));
