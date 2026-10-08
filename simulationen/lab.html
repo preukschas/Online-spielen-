@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101926"><meta name="description" content="DMP Simulationswerkstatt – Physik, Crashtest, Biomechanik und Arena im Browser.">
+<meta name="theme-color" content="#101926"><meta name="description" content="DMP Simulationswerkstatt – Physik, Crashtest, Biomechanik, Arena und Mechanik im Browser.">
 <title>Labor | DMP Simulationswerkstatt</title>
 <link rel="stylesheet" href="./style.css">
 <style>.labnav{display:flex;gap:8px;align-items:center}.labnav a{color:#d8f7ee;text-decoration:none;border:1px solid #3a5f62;border-radius:9px;padding:9px 12px;font-size:13px;font-weight:700;white-space:nowrap}.labnav a:hover,.labnav a:focus-visible{background:#193d42;outline-offset:2px}@media(max-width:570px){.labnav{gap:5px}.labnav a{font-size:11px;padding:8px 7px}}</style>
@@ -15,7 +15,7 @@
 </header>
 <main>
  <section class="hero">
-  <div><div class="eyebrow">INTERAKTIVE SIMULATIONEN</div><h1>Deine eigene <span>Versuchswerkstatt.</span></h1><p>Physik entdecken, Zusammenstöße untersuchen, Bewegung trainieren und Entitäten gegeneinander antreten lassen.</p></div>
+  <div><div class="eyebrow">INTERAKTIVE SIMULATIONEN</div><h1>Deine eigene <span>Versuchswerkstatt.</span></h1><p>Physik entdecken, Maschinen antreiben, Zusammenstöße untersuchen, Bewegung trainieren und Entitäten gegeneinander antreten lassen.</p></div>
   <div class="hero-number"><strong id="heroTime">0,0</strong><span>Simulationssekunden</span></div>
  </section>
  <nav class="modules" id="modules" aria-label="Simulator auswählen">
@@ -23,6 +23,7 @@
   <button class="module" data-mode="crash" type="button"><span>🚗</span><strong>Crashtest</strong><small>Kollision & Kräfte</small></button>
   <button class="module" data-mode="bio" type="button"><span>🦿</span><strong>Biomechanik</strong><small>Laufen lernen</small></button>
   <button class="module" data-mode="arena" type="button"><span>🏁</span><strong>Arena</strong><small>Entitäten-Rennen</small></button>
+  <button class="module" data-mode="mechanics" type="button"><span>⚙️</span><strong>Mechanik</strong><small>Hebel & Zahnräder</small></button>
  </nav>
  <div class="workspace">
   <section class="viewer">
@@ -57,6 +58,6 @@
  </div>
  <section class="bottom-info"><strong>Hinweis:</strong> Diese interaktiven Demonstratoren nutzen vereinfachte Modelle für Bildung und Experimente. Sie sind keine sicherheitstechnischen, medizinischen oder ingenieurwissenschaftlichen Nachweise.</section>
 </main>
-<dialog id="helpDialog"><h2>So funktioniert die Simulationswerkstatt</h2><p>1. Modul und Versuch wählen. 2. Werte einstellen. 3. Start drücken. 4. Messungen beobachten. 5. Szenario speichern oder exportieren.</p><p>Die Simulation läuft mit festem Zeitschritt unabhängig von der Bildwiederholrate. Einzelschritt bewegt den Zustand um 1/120 Sekunde weiter. Parameteränderungen setzen den Versuch zurück.</p><p>Die Modelle sind bewusst vereinfacht. Besonders Crashtest, Biomechanik und Arena liefern keine realen Prognosen.</p><button id="closeHelp" class="primary" type="button">Schließen</button></dialog>
+<dialog id="helpDialog"><h2>So funktioniert die Simulationswerkstatt</h2><p>1. Modul und Versuch wählen. 2. Werte einstellen. 3. Start drücken. 4. Messungen beobachten. 5. Szenario speichern oder exportieren.</p><p>Die Simulation läuft mit festem Zeitschritt unabhängig von der Bildwiederholrate. Einzelschritt bewegt den Zustand um 1/120 Sekunde weiter. Parameteränderungen setzen den Versuch zurück.</p><p>Die Modelle sind bewusst vereinfacht. Besonders Crashtest, Biomechanik, Arena und Mechanik liefern keine realen Prognosen.</p><button id="closeHelp" class="primary" type="button">Schließen</button></dialog>
 <script type="module" src="./app.js"></script>
 </body></html>
