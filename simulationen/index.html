@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101926"><meta name="description" content="DMP Simulationswerkstatt – Physik, Crashtest, Biomechanik und Arena im Browser.">
+<title>DMP Simulationswerkstatt</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="sitebar">
+  <div class="brand"><span class="brandmark">D</span><span><strong>DMP</strong> <em>SIM LAB</em></span></div>
+  <div class="sitehint">Experimentieren · Beobachten · Vergleichen</div>
+  <button id="help" class="ghost" type="button">ⓘ Hilfe</button>
+</header>
+<main>
+ <section class="hero">
+  <div><div class="eyebrow">INTERAKTIVE SIMULATIONEN</div><h1>Deine eigene <span>Versuchswerkstatt.</span></h1><p>Physik entdecken, Zusammenstöße untersuchen, Bewegung trainieren und Entitäten gegeneinander antreten lassen.</p></div>
+  <div class="hero-number"><strong id="heroTime">0,0</strong><span>Simulationssekunden</span></div>
+ </section>
+ <nav class="modules" id="modules" aria-label="Simulator auswählen">
+  <button class="module active" data-mode="physics" type="button"><span>⚛️</span><strong>Physik</strong><small>4 Experimente</small></button>
+  <button class="module" data-mode="crash" type="button"><span>🚗</span><strong>Crashtest</strong><small>Kollision & Kräfte</small></button>
+  <button class="module" data-mode="bio" type="button"><span>🦿</span><strong>Biomechanik</strong><small>Laufen lernen</small></button>
+  <button class="module" data-mode="arena" type="button"><span>🏁</span><strong>Arena</strong><small>Entitäten-Rennen</small></button>
+ </nav>
+ <div class="workspace">
+  <section class="viewer">
+   <div class="viewer-head"><div><span class="status-dot"></span><strong id="sceneTitle">Freier Fall</strong><span id="sceneSubtitle" class="viewer-sub"></span></div><span class="scene-tag" id="sceneTag">2D · MODELL</span></div>
+   <div class="canvas-wrap"><canvas id="scene" aria-label="Animierte Simulation" width="1000" height="560"></canvas><div class="overlay-message" id="overlay">Drücke Start, um die Simulation auszuführen.</div></div>
+   <div class="playbar">
+    <button id="play" type="button" class="primary">▶ Start</button>
+    <button id="step" type="button" class="secondary">⏭ Einzelschritt</button>
+    <button id="reset" type="button" class="secondary">↺ Reset</button>
+    <label class="speedlabel" for="speed">Tempo <select id="speed"><option value="1">1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option></select></label>
+   </div>
+   <div class="readouts" id="readouts" aria-live="off"></div>
+   <section class="chart-panel"><div class="section-top"><h2>Live-Messung</h2><span id="chartLabel">Bewegung über Zeit</span></div><canvas id="chart" aria-label="Messwertverlauf" width="900" height="180"></canvas></section>
+  </section>
+  <aside class="sidebar">
+   <section class="panel"><div class="section-top"><h2>Einstellungen</h2><span class="mini-tag" id="configTag">VERSUCH 01</span></div>
+    <label for="preset" class="field-label">Versuchsaufbau</label><select id="preset" class="full"></select>
+    <div id="parameters"></div>
+    <div id="extraActions"></div>
+    <p id="modelLimit" class="model-note"></p>
+   </section>
+   <section class="panel"><h2>Experimente speichern</h2><p class="micro">Startwerte, Zufallsstartwert und Modellversion werden gespeichert. Ein gespeicherter Versuch lässt sich erneut starten.</p>
+    <label for="scenarioName" class="field-label">Name des Versuchs</label><input id="scenarioName" class="full" type="text" maxlength="60" placeholder="Mein Experiment">
+    <div class="two-buttons"><button id="save" class="secondary" type="button">💾 Speichern</button><button id="export" class="secondary" type="button">↓ JSON-Export</button></div>
+    <label for="saved" class="field-label">Gespeicherte Experimente</label><select id="saved" class="full"></select>
+    <div class="two-buttons"><button id="load" class="secondary" type="button">↗ Laden</button><button id="importButton" class="secondary" type="button">↑ Importieren</button></div>
+    <input id="importFile" type="file" accept=".json,application/json" hidden>
+    <p id="notice" role="status" class="notice"></p>
+   </section>
+  </aside>
+ </div>
+ <section class="bottom-info"><strong>Hinweis:</strong> Diese interaktiven Demonstratoren nutzen vereinfachte Modelle für Bildung und Experimente. Sie sind keine sicherheitstechnischen, medizinischen oder ingenieurwissenschaftlichen Nachweise.</section>
+</main>
+<dialog id="helpDialog"><h2>So funktioniert die Simulationswerkstatt</h2><p>1. Modul und Versuch wählen. 2. Werte einstellen. 3. Start drücken. 4. Messungen beobachten. 5. Szenario speichern oder exportieren.</p><p>Die Simulation läuft mit festem Zeitschritt unabhängig von der Bildwiederholrate. Einzelschritt bewegt den Zustand um 1/120 Sekunde weiter. Parameteränderungen setzen den Versuch zurück.</p><p>Die Modelle sind bewusst vereinfacht. Besonders Crashtest, Biomechanik und Arena liefern keine realen Prognosen.</p><button id="closeHelp" class="primary" type="button">Schließen</button></dialog>
+<script type="module" src="./app.js"></script>
+</body></html>
