@@ -21,7 +21,7 @@ export function initialParams(preset){return Object.fromEntries((FIELDS[preset]|
 export function random(seed){let state=(seed>>>0)||1;return ()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296}}
 export function makeSim(mode,preset,params,seed=42){
  let p={...initialParams(preset),...params},r=random(seed);
- let s={mode,preset,p,seed,time:0,finished:false,history:[],plotClock:0};
+ let s={mode,preset,p,seed,rng:r,time:0,finished:false,history:[],plotClock:0};
  if(mode==="physics"){
   if(preset==="fall")s.body={y:p.height,v:0,bounces:0};
   if(preset==="pendulum")s.body={angle:.78,omega:0};
@@ -102,7 +102,7 @@ export function stepSim(s,dt=1/120){
   if(b.x<-.6&&b.v<0){s.finished=true;b.force=0;}
   if(s.time>12)s.finished=true;
  }
- if(s.mode==="bio"){updateWalker(b,p,dt,random(s.seed+Math.floor(s.time*120)));if(b.fallen||s.time>22)s.finished=true;}
+ if(s.mode==="bio"){updateWalker(b,p,dt,s.rng);if(b.fallen||s.time>22)s.finished=true;}
  if(s.mode==="arena"){
   for(let i=0;i<2;i++){const racer=b.racers[i];if(racer.finish!==null)continue;
    racer.v+=(racer.base*(.72+.28*racer.stamina)-racer.v)*dt*2;
@@ -130,8 +130,8 @@ export function measure(s){
 function record(s){const m=measure(s);s.history.push({t:s.time,v:m.plot});if(s.history.length>12000)s.history.shift();}
 function presetForWalker(p){return p.gait==="quad"?"quad":"walker";}
 export function evaluateWalker(p,genome,seed=17){
- const q={...p,...genome},r=random(seed),b=makeWalker(q,r,presetForWalker(p));const dt=1/60;
- for(let t=0;t<14;t+=dt){updateWalker(b,q,dt,r);if(b.fallen)break;}
+ const q={...p,...genome},r=random(seed),b=makeWalker(q,r,presetForWalker(p));const dt=1/120;
+ for(let i=0;i<14*120;i++){updateWalker(b,q,dt,r);if(b.fallen)break;}
  const score=b.x-(b.fallen?4:0)-b.energy*.028;
  return{score,distance:b.x,fallen:b.fallen,energy:b.energy};
 }
