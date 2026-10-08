@@ -34,10 +34,27 @@ async function check(browser,label,options){
    &&document.querySelector("#stop")?.disabled===true,null,{timeout:120000});
   const data=await page.evaluate(()=>JSON.parse(localStorage.getItem("dmp_joint_walker_v1")));
   assert.equal(data.generation,5);
+  const rival=await page.evaluate(()=>JSON.parse(localStorage.getItem("dmp_joint_walker_v1__rival_v1")));
+  assert.equal(rival.generation,5,"Roboter B muss ebenfalls lernen");
+  assert.equal(rival.population.length,24);
+  assert.equal(rival.champion.length,256);
+  assert.notDeepEqual(rival.population,data.population,"A/B dürfen kein identischer Zustand sein");
+  assert.notDeepEqual(rival.champion,data.champion,"Beide sollen eigene Champion-Gewichte lernen");
+  assert.equal(await page.locator("#generationB").textContent(),"5");
+  assert.match(await page.locator("#contestInfo").textContent(),/Gegeneinander/);
   assert.equal(data.population.length,24);
   assert.equal(data.champion.length,256);
   assert.equal(data.history.length,5);
   assert.ok(Number.isFinite(data.history[4].validation));
+  await page.locator("#trainB").click();
+  await page.waitForFunction(()=>document.querySelector("#generationB")?.textContent==="6"&&
+     document.querySelector("#stop")?.disabled===true,null,{timeout:120000});
+  assert.equal(await page.locator("#generation").textContent(),"5","B lernt zusätzlich unabhängig von A");
+  if(label==="chromium-desktop"){
+   const pairDownload=page.waitForEvent("download");
+   await page.locator("#exportPair").click();
+   assert.match((await pairDownload).suggestedFilename(),/dmp-gelenklernarena-A-B/);
+  }
   await page.locator("#play").click();
   await page.waitForTimeout(550);
   assert.match(await page.locator("#raceStatus").innerText(),/Bodenkontakte/);
@@ -56,6 +73,7 @@ async function check(browser,label,options){
   }
   await page.reload({waitUntil:"networkidle"});
   assert.equal(await page.locator("#generation").textContent(),"5");
+  assert.equal(await page.locator("#generationB").textContent(),"6");
   assert.equal(faults.length,0,label+": "+JSON.stringify(faults));
   await page.screenshot({path:"test-artifacts/joint-walker-"+label+".png",fullPage:true});
   console.log("PASS "+label+" real gait evolution, worker, persistent model and responsive UI");
