@@ -4,6 +4,7 @@ import {drawScene} from "./render-v2.js?v=1.6.0";
 import {safeEntityList,findEntity,toBiomechanics,toArena,FIGHTER_STYLES} from "./entity-model.js";
 import {installCatalog} from "./entity-catalog.js";
 const $=id=>document.getElementById(id),canvas=$("scene"),sceneCtx=canvas.getContext("2d"),chartCtx=$("chart").getContext("2d");
+// Standardarten auch bei Direkteinstieg ins Labor verfügbar machen.
 installCatalog(localStorage);
 const KEY="dmp_simlab_scenarios_v1",BIOKEY="dmp_simlab_best_walker_v1",DUELKEY="dmp_duel_progress_v1";
 let mode="physics",preset="fall",params=initialParams(preset),seed=42,sim=makeSim(mode,preset,params,seed),playing=false,accum=0,lastFrame=0,dialog=$("helpDialog"),renderTick=0,lastSceneRender=0,sceneDirty=true,arenaTournamentToken=0,arenaTournamentBusy=false,arenaQuickMessage="";
