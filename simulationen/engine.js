@@ -1,8 +1,8 @@
 // DMP Sim Lab – deterministische, bewusst vereinfachte Lehrmodelle
-export const VERSION="1.2.0";
+export const VERSION="1.3.0";
 export const CONFIG={
  physics:{title:"Physik-Spielwiese",presets:[["fall","Freier Fall"],["pendulum","Pendel"],["ramp","Schiefe Ebene"],["collision","Kugelkollision"]],limit:"Lehrmodell mit idealisierten Körpern, festem Zeitschritt und angenommener Reibung. Nicht für technische Nachweise."},
- crash:{title:"Crashtest",presets:[["barrier","Auto gegen Barriere"]],limit:"Feder-Dämpfer-Modell einer Knautschzone; kein realer Fahrzeugcrash, keine Verletzungsprognose und keine Sicherheitsbewertung."},
+ crash:{title:"Crashtest",presets:[["barrier","Auto gegen Betonbarriere"],["gate","Auto gegen Schranke"],["jump","Auto über Sprungrampe"]],limit:"Vereinfachte Kontakt-, Bruch- und Flugmodelle. Schadensstufen sind illustrative Werte aus Belastung und Verformung, keine realen Fahrzeug- oder Verletzungsprognosen."},
  bio:{title:"Biomechanik",presets:[["walker","Zweibeiner: Balance & Gang"],["quad","Vierbeiner: Traben lernen"]],limit:"Zweibeiner-/Vierbeinermodell mit begrenzten Gelenkmotoren und vereinfachter Fußkontaktregel. Keine anatomisch vollständige oder medizinische Simulation."},
  arena:{title:"Arena",presets:[["race","Hindernisrennen"],["sprint","Sprint ohne Hindernisse"]],limit:"Regelbasiertes Rennen vereinfachter Agenten; Sieger entstehen aus transparenten Spielregeln, nicht aus realen biomechanischen Fähigkeiten."},
  mechanics:{title:"Maschinen & Mechanik",presets:[["lever","Hebel am Drehgelenk"],["crank","Kurbel & Schubstange"],["gears","Zahnradübersetzung"]],limit:"Idealisierte 2D-Lehrmodelle. Hebel mit Trägheit und Anschlag; Kurbel und Zahnräder kinematisch vorgegeben. Kein Festigkeitsnachweis, keine Fertigungsfreigabe."}
@@ -13,8 +13,10 @@ export const FIELDS={
  ramp:[["gravity","Schwerkraft",0,20,.5,"m/s²",9.81],["angle","Neigung",5,45,1,"°",24],["friction","Gleitreibung",0,1,.02,"",.12]],
  collision:[["massA","Masse A",1,10,.5,"kg",3],["massB","Masse B",1,10,.5,"kg",5],["velocity","Starttempo A",.5,8,.5,"m/s",4],["bounce","Elastizität",0,1,.05,"",.85]],
  barrier:[["mass","Fahrzeugmasse",600,2500,100,"kg",1250],["velocity","Aufpralltempo",10,90,5,"km/h",50],["stiffness","Federsteifigkeit",80,600,20,"kN/m",280],["damping","Dämpfung",1,25,1,"kNs/m",10],["crush","Knautschweg",.2,1.3,.1,"m",.75]],
- walker:[["mass","Körpermasse",30,120,5,"kg",70],["amplitude","Schrittweite",.2,1,.05,"",.55],["frequency","Schrittfrequenz",.7,2.6,.1,"Hz",1.5],["feedback","Balance-Regler",1,8,.25,"",4.5],["traction","Bodenhaftung",.2,1,.1,"",.8]],
- quad:[["mass","Körpermasse",10,120,5,"kg",40],["amplitude","Schrittweite",.2,1,.05,"",.65],["frequency","Schrittfrequenz",.7,2.6,.1,"Hz",1.8],["feedback","Balance-Regler",1,8,.25,"",4.5],["traction","Bodenhaftung",.2,1,.1,"",.8]],
+  gate:[["mass","Fahrzeugmasse",600,2500,100,"kg",1250],["velocity","Aufpralltempo",10,90,5,"km/h",50],["gateStrength","Bruchkraft der Schranke",5,120,5,"kN",35],["gateDeflection","Nachgiebigkeit",.1,1,.05,"m",.4]],
+  jump:[["mass","Fahrzeugmasse",600,2500,100,"kg",1250],["velocity","Anfahrtempo",10,90,5,"km/h",50],["angle","Absprungwinkel",10,35,1,"°",22],["crush","Landungs-Knautschweg",.1,1,.05,"m",.45]],
+ walker:[["mass","Körpermasse",30,120,5,"kg",70],["amplitude","Schrittweite",.2,1,.05,"",.55],["frequency","Schrittfrequenz",.7,2.6,.1,"Hz",1.5],["feedback","Balance-Regler",1,8,.25,"",4.5],["traction","Bodenhaftung",.2,1,.1,"",.8],["targetDistance","Zielstrecke",5,30,1,"m",12],["generations","Generationen pro Runde",25,100,25,"",25]],
+ quad:[["mass","Körpermasse",10,120,5,"kg",40],["amplitude","Schrittweite",.2,1,.05,"",.65],["frequency","Schrittfrequenz",.7,2.6,.1,"Hz",1.8],["feedback","Balance-Regler",1,8,.25,"",4.5],["traction","Bodenhaftung",.2,1,.1,"",.8],["targetDistance","Zielstrecke",5,30,1,"m",12],["generations","Generationen pro Runde",25,100,25,"",25]],
  sprint:[["speedA","Tempo A",1,6,.2,"m/s",3.5],["speedB","Tempo B",1,6,.2,"m/s",3.3],["staminaA","Ausdauer A",.2,1,.1,"",.8],["staminaB","Ausdauer B",.2,1,.1,"",.9]],
  lever:[["armA","Hebelarm links",.5,3,.1,"m",1.5],["armB","Hebelarm rechts",.5,3,.1,"m",2],["force","Eingangskraft",0,180,5,"N",110],["load","Lastkraft",0,180,5,"N",65],["inertia","Trägheitsmoment",.5,25,.5,"kg·m²",9],["damping","Dämpfung",0,18,.5,"N·m·s",3]],
  crank:[["crank","Kurbelradius",.2,.9,.05,"m",.6],["rod","Pleuellänge",1.2,3,.1,"m",2],["rpm","Drehzahl",5,180,5,"U/min",55]],
@@ -32,8 +34,8 @@ export function makeSim(mode,preset,params,seed=42){
   if(preset==="ramp")s.body={d:0,v:0};
   if(preset==="collision")s.body={x1:-3.3,x2:2.8,v1:p.velocity,v2:-p.velocity*.25,hit:false};
  }
- if(mode==="crash")s.body={x:-5,v:p.velocity/3.6,force:0,maxG:0,compression:0,maxCompression:0,energy:.5*p.mass*(p.velocity/3.6)**2};
- if(mode==="bio"){p.gait=preset;s.body=makeWalker(p,r,preset);s.training={running:false,generation:0,best:null,history:[],score:-Infinity,validation:null};}
+ if(mode==="crash")s.body={x:-5,y:0,v:p.velocity/3.6,vx:0,vy:0,force:0,maxG:0,compression:0,maxCompression:0,energy:.5*p.mass*(p.velocity/3.6)**2,impactEnergy:0,damageLevel:0,gateBroken:false,airborne:false,onRamp:false,landed:false,flightTime:0};
+ if(mode==="bio"){p.gait=preset;s.body=makeWalker(p,r,preset);s.training={running:false,generation:0,targetGeneration:0,best:null,history:[],score:-Infinity,validation:null};}
  if(mode==="mechanics"){
   if(preset==="lever")s.body={angle:0,omega:0,torque:0,stop:false};
   if(preset==="crank")s.body={angle:0,position:p.crank+p.rod,velocity:0,omega:p.rpm*2*Math.PI/60};
@@ -46,12 +48,13 @@ export function makeSim(mode,preset,params,seed=42){
 function makeWalker(p,r,preset="walker"){
  const count=preset==="quad"?4:2;
  const legs=Array.from({length:count},(_,i)=>({hip:0,knee:.15,hipRate:0,kneeRate:0,contact:false,torque:0}));
- return{x:0,y:0,theta:(r()-.5)*.15,omega:0,phase:0,v:.05,energy:0,fallen:false,fallTime:null,stepCount:0,legs,contacts:0};
+ return{x:0,y:0,theta:(r()-.5)*.15,omega:0,phase:0,v:.05,energy:0,fallen:false,fallTime:null,goalReached:false,goalTime:null,elapsed:0,stepCount:0,legs,contacts:0};
 }
 // Gelenkregler mit begrenzten Antrieben (didaktische, nicht vollständige Starrkörperdynamik).
 // Hüft- und Kniegelenkwinkel fließen in die Fußkontakt- und Vortriebsregel ein.
 function updateWalker(b,p,dt,r){
- if(b.fallen)return;
+ if(b.fallen||b.goalReached)return;
+ b.elapsed+=dt;
  const previous=b.phase;
  b.phase+=2*Math.PI*p.frequency*dt;
  if(Math.floor(b.phase/Math.PI)>Math.floor(previous/Math.PI))b.stepCount++;
@@ -90,6 +93,7 @@ function updateWalker(b,p,dt,r){
  b.x+=b.v*dt;
  b.energy+=dt*(p.mass*(.011+.006*p.feedback)+motorWork*.045);
  if(Math.abs(b.theta)>.88){b.fallen=true;b.fallTime=b.x;}
+ if(!b.fallen&&b.x>=p.targetDistance){b.x=p.targetDistance;b.goalReached=true;b.goalTime=b.elapsed;}
 }
 export function stepSim(s,dt=1/120){
  if(s.finished)return;
@@ -101,17 +105,52 @@ export function stepSim(s,dt=1/120){
   if(s.preset==="collision"){b.x1+=b.v1*dt;b.x2+=b.v2*dt;const rad=.48;if(!b.hit&&b.x2-b.x1<=rad*2&&b.v1>b.v2){const v1=b.v1,v2=b.v2,e=p.bounce;b.v1=(p.massA*v1+p.massB*v2-p.massB*e*(v1-v2))/(p.massA+p.massB);b.v2=(p.massA*v1+p.massB*v2+p.massA*e*(v1-v2))/(p.massA+p.massB);b.hit=true;const overlap=rad*2-(b.x2-b.x1);b.x1-=overlap/2;b.x2+=overlap/2;}if(b.x1>8&&b.x2>8||b.x1< -8&&b.x2< -8)s.finished=true;}
  }
  if(s.mode==="crash"){
-  b.x+=b.v*dt;
-  const compression=Math.max(0,b.x),stiffness=p.stiffness*1000,damp=p.damping*1000;
-  b.force=compression>0?stiffness*Math.min(compression,p.crush)+damp*Math.max(0,b.v)+Math.max(0,compression-p.crush)*stiffness*25:0;
-  b.v-=b.force/p.mass*dt;
-  b.compression=Math.max(0,Math.min(compression,p.crush));
-  b.maxCompression=Math.max(b.maxCompression,b.compression);
-  b.maxG=Math.max(b.maxG,b.force/p.mass/9.81);
-  if(b.x<-.6&&b.v<0){s.finished=true;b.force=0;}
-  if(s.time>12)s.finished=true;
+  if(s.preset==="barrier"||s.preset==="gate"){
+   b.x+=b.v*dt;
+   const compression=Math.max(0,b.x),gate=s.preset==="gate";
+   const stiffness=gate?p.gateStrength*1000/p.gateDeflection:p.stiffness*1000;
+   const damp=gate?stiffness*.045:p.damping*1000;
+   b.force=0;
+   if(!gate||!b.gateBroken){
+    const depth=gate?Math.min(compression,p.gateDeflection):Math.min(compression,p.crush);
+    b.force=compression>0?stiffness*depth+damp*Math.max(0,b.v)+(gate?0:Math.max(0,compression-p.crush)*stiffness*25):0;
+    if(gate&&b.force>=p.gateStrength*1000){b.gateBroken=true;b.force=p.gateStrength*1000;}
+    b.impactEnergy+=b.force*Math.max(0,b.v)*dt;
+    b.v-=b.force/p.mass*dt;
+    b.compression=depth;b.maxCompression=Math.max(b.maxCompression,depth);
+   }else b.compression=0;
+   b.maxG=Math.max(b.maxG,b.force/p.mass/9.81);
+   if(b.x<-.6&&b.v<0){s.finished=true;b.force=0;}
+   if(gate&&b.gateBroken&&b.x>5)s.finished=true;
+   if(s.time>12)s.finished=true;
+  }else if(s.preset==="jump"){
+   const angle=p.angle*Math.PI/180,runup=1.2,rampHeight=runup*Math.tan(angle);
+   if(!b.airborne){
+    if(b.x< -runup)b.x+=b.v*dt;
+    else{
+     b.onRamp=true;
+     b.v=Math.max(0,b.v-9.81*Math.sin(angle)*dt);
+     b.x=Math.min(0,b.x+b.v*Math.cos(angle)*dt);
+     b.y=Math.max(0,(b.x+runup)*Math.tan(angle));
+     if(b.v===0)s.finished=true;
+     if(b.x>=0&&!s.finished){
+      b.x=0;b.y=rampHeight;b.airborne=true;b.vx=b.v*Math.cos(angle);b.vy=b.v*Math.sin(angle);
+     }
+    }
+   }else if(!b.landed){
+    b.flightTime+=dt;b.x+=b.vx*dt;b.vy-=9.81*dt;b.y+=b.vy*dt;
+    if(b.y<=0&&b.flightTime>.05){
+     b.y=0;b.landed=true;s.finished=true;
+     const impactSpeed=Math.abs(b.vy),decel=impactSpeed*impactSpeed/(2*p.crush);
+     b.force=p.mass*decel;b.maxG=decel/9.81;
+     b.maxCompression=p.crush;b.compression=p.crush;
+     b.impactEnergy=.5*p.mass*impactSpeed*impactSpeed;b.v=b.vx;
+    }
+   }
+  }
+  b.damageLevel=crashDamageLevel(b,p);
  }
- if(s.mode==="bio"){updateWalker(b,p,dt,s.rng);if(b.fallen||s.time>22)s.finished=true;}
+ if(s.mode==="bio"){updateWalker(b,p,dt,s.rng);if(b.fallen||b.goalReached||s.time>22)s.finished=true;}
  if(s.mode==="mechanics"){
   if(s.preset==="lever"){
    b.torque=p.force*p.armA-p.load*p.armB-p.damping*b.omega;
@@ -155,8 +194,8 @@ export function measure(s){
   if(s.preset==="ramp")return{plot:b.v,chart:"Geschwindigkeit (m/s)",read:[["Strecke",fmt(b.d,1)+" m"],["Tempo",fmt(b.v)+" m/s"],["Neigung",fmt(p.angle,0)+"°"],["Zeit",fmt(s.time,1)+" s"]]};
   return{plot:b.v1,chart:"Geschwindigkeit Kugel A (m/s)",read:[["Tempo A",fmt(b.v1)+" m/s"],["Tempo B",fmt(b.v2)+" m/s"],["Kontakt",b.hit?"Ja":"Nein"],["Zeit",fmt(s.time,1)+" s"]]};
  }
- if(s.mode==="crash")return{plot:b.force/1000,chart:"Kontaktkraft (kN)",read:[["Aktuelle Kraft",fmt(b.force/1000,1)+" kN"],["Spitzenlast",fmt(b.maxG,1)+" g"],["Max. Stauchung",fmt(b.maxCompression*100,0)+" cm"],["Tempo",fmt(Math.abs(b.v)*3.6,1)+" km/h"]]};
- if(s.mode==="bio")return{plot:b.x,chart:"Gelaufene Strecke (m)",read:[["Strecke",fmt(b.x,2)+" m"],["Kontakte",b.contacts+" / "+b.legs.length],["Energie (Modell)",fmt(b.energy,0)+" E"],["Training",s.training.generation+" Gen."]]};
+ if(s.mode==="crash")return{plot:b.force/1000,chart:"Kontaktkraft (kN)",read:[["Aufbau",s.preset==="gate"?"Schranke":s.preset==="jump"?"Sprungrampe":"Betonbarriere"],["Spitzenlast",fmt(b.maxG,1)+" g"],["Schadensstufe",b.damageLevel+" / 20"],[s.preset==="jump"?"Sprungweite":"Max. Verformung",s.preset==="jump"?fmt(Math.max(0,b.x),1)+" m":fmt(b.maxCompression*100,0)+" cm"],["Ergebnis",s.preset==="gate"?(b.gateBroken?"Schranke gebrochen":"Schranke intakt"):s.preset==="jump"?(b.landed?"Gelandet":b.airborne?"Im Flug":"Anfahrt"):"Knautschzone"]]};
+ if(s.mode==="bio")return{plot:b.x,chart:"Gelaufene Strecke (m)",read:[["Ziel",fmt(p.targetDistance,0)+" m"],["Fortschritt",fmt(b.x,2)+" / "+fmt(p.targetDistance,0)+" m"],["Status",b.goalReached?"Ziel erreicht ✓":b.fallen?"Gestürzt":"In Bewegung"],["Kontakte",b.contacts+" / "+b.legs.length],["Training",s.training.generation+" Gen."]]};
  if(s.mode==="mechanics"){
   if(s.preset==="lever")return{plot:b.angle*180/Math.PI,chart:"Hebelwinkel (°)",read:[["Nettomoment",fmt(b.torque,1)+" N·m"],["Auslenkung",fmt(b.angle*180/Math.PI,1)+"°"],["Winkeltempo",fmt(b.omega,2)+" rad/s"],["Anschlag",b.stop?"Erreicht":"Frei"]]};
   if(s.preset==="crank")return{plot:b.position,chart:"Schieberposition (m)",read:[["Schieberweg",fmt(b.position,2)+" m"],["Schiebertempo",fmt(b.velocity,2)+" m/s"],["Kurbelwinkel",fmt(b.angle*180/Math.PI%360,1)+"°"],["Drehzahl",fmt(p.rpm,0)+" U/min"]]};
@@ -166,11 +205,19 @@ export function measure(s){
 }
 function record(s){const m=measure(s);s.history.push({t:s.time,v:m.plot});if(s.history.length>12000)s.history.shift();}
 function presetForWalker(p){return p.gait==="quad"?"quad":"walker";}
+// Illustrativer Schadensindex: Spitzenverzögerung, Verformung und absorbierte Energie.
+export function crashDamageLevel(b,p){
+ const peak=clamp(b.maxG/45,0,1);
+ const crush=clamp(b.maxCompression/Math.max(.01,p.crush||p.gateDeflection||.75),0,1);
+ const work=clamp(b.impactEnergy/Math.max(1,b.energy),0,1);
+ return clamp(Math.round(20*(.50*peak+.35*crush+.15*work)),0,20);
+}
 export function evaluateWalker(p,genome,seed=17){
  const q={...p,...genome},r=random(seed),b=makeWalker(q,r,presetForWalker(p));const dt=1/120;
- for(let i=0;i<14*120;i++){updateWalker(b,q,dt,r);if(b.fallen)break;}
- const score=b.x-(b.fallen?4:0)-b.energy*.028;
- return{score,distance:b.x,fallen:b.fallen,energy:b.energy};
+ for(let i=0;i<14*120;i++){updateWalker(b,q,dt,r);if(b.fallen||b.goalReached)break;}
+ const progress=Math.min(b.x,q.targetDistance)/q.targetDistance;
+ const score=b.goalReached?20+(14-b.goalTime)*.8-b.energy*.028:14*progress-(b.fallen?6:0)-b.energy*.025;
+ return{score,distance:b.x,fallen:b.fallen,energy:b.energy,goalReached:b.goalReached,timeToGoal:b.goalTime};
 }
 export function trainOneGeneration(s){
  if(s.mode!=="bio")return;
@@ -184,7 +231,7 @@ export function trainOneGeneration(s){
   if(v.score>tr.score){tr.score=v.score;tr.best=g;tr.validation=evaluateWalker(s.p,g,s.seed+501);}
  }
  tr.generation++;tr.history.push({generation:tr.generation,training:tr.score,validation:tr.validation.score});
- if(tr.generation>=25)tr.running=false;
+ if(tr.generation>=tr.targetGeneration)tr.running=false;
 }
 export function trainedToArena(genome){return clamp(1.8+genome.amplitude*genome.frequency*1.15,1,6);}
 export function arenaBatch(params,seed=42,count=10,preset="race"){
@@ -286,7 +333,7 @@ export function drawScene(c,s){
  if(s.mode==="physics"){
   if(s.preset==="fall"){ground(c,476);for(let i=0;i<5;i++){line(c,110+i*14,90,110+i*14,476,"#2a4957",1)}const y=476-Math.max(0,b.y)/22*365;circle(c,460,y-18,24,colors.a);circle(c,453,y-25,7,"#dbffef");line(c,90,y-18,120,y-18,"#f5c86a");txt(c,b.y.toFixed(2)+" m",130,y-25,18);txt(c,"HÖHE",90,67,13,"#88a5b9");}
   if(s.preset==="pendulum"){ground(c,498);const topX=500,topY=92,scale=Math.min(115,340/p.length),L=p.length*scale;line(c,360,92,640,92,"#e1e8ef",10);line(c,topX,topY,topX+Math.sin(b.angle)*L,topY+Math.cos(b.angle)*L,"#a9ced4",5);circle(c,topX+Math.sin(b.angle)*L,topY+Math.cos(b.angle)*L,30,colors.a);circle(c,topX,topY,11,"#f6c86c");line(c,topX,topY,topX,topY+365,"#4e6d7b",1);txt(c,"Schwerkraft · "+p.gravity+" m/s²",35,50,15);}
-  if(s.preset==="ramp"){ground(c,491);const ang=p.angle*Math.PI/180,startX=115,startY=450,length=Math.min(720,340/Math.tan(ang)),endY=startY-Math.tan(ang)*length; c.fillStyle="#294a56";c.beginPath();c.moveTo(startX,startY);c.lineTo(startX+length,endY);c.lineTo(startX+length,startY);c.closePath();c.fill();line(c,startX,startY,startX+length,endY,"#7db5b4",6);const a=clamp(b.d/13,0,1);let x=startX+a*length,y=startY-a*Math.tan(ang)*length-19;circle(c,x,y,21,colors.a);txt(c,"Neigung "+p.angle+"°",50,67,17);}
+  if(s.preset==="ramp"){ground(c,491);const ang=p.angle*Math.PI/180,startX=115,bottomY=450,length=Math.min(720,340/Math.tan(ang)),topY=bottomY-Math.tan(ang)*length; c.fillStyle="#294a56";c.beginPath();c.moveTo(startX,topY);c.lineTo(startX+length,bottomY);c.lineTo(startX,bottomY);c.closePath();c.fill();line(c,startX,topY,startX+length,bottomY,"#7db5b4",6);const a=clamp(b.d/13,0,1);let x=startX+a*length,y=topY+a*Math.tan(ang)*length-19;circle(c,x,y,21,colors.a);txt(c,"Neigung "+p.angle+"°",50,67,17);}
   if(s.preset==="collision"){ground(c,450);const scale=67,x1=500+b.x1*scale,x2=500+b.x2*scale;circle(c,x1,414,30,colors.a);circle(c,x2,414,30,colors.b);txt(c,"A · "+p.massA+" kg",x1,360,16,colors.a,"center");txt(c,"B · "+p.massB+" kg",x2,360,16,colors.b,"center");txt(c,"Impuls und Rückprall",48,72,18);}
  }
  if(s.mode==="crash"){ground(c,465);const barrier=770;box(c,barrier,108,35,356,"#7593a3");for(let y=110;y<465;y+=29)line(c,barrier+1,y,barrier+34,y+30,"#b5cfda",2);txt(c,"STARRE BARRIERE",795,90,14);
@@ -332,8 +379,8 @@ export function drawScene(c,s){
   }
   line(c,x,185,x,465,"#f0dd7999",1);
   txt(c,b.fallen?"GESTÜRZT":s.training.running?"EVOLUTION LÄUFT":quad?"VIERBEINER · GELENKMOTOREN":"ZWEIBEINER · GELENKMOTOREN",35,65,17,b.fallen?"#ff9999":colors.a);
-  txt(c,"Training: "+s.training.generation+"/25 Generationen · Kontakte: "+b.contacts+"/"+b.legs.length,35,96,14);
-  if(b.fallen)txt(c,"Versuch beendet – Reset oder Training starten",500,180,20,"#ffb2a9","center");
+  txt(c,"Ziel "+p.targetDistance+" m · Generation "+s.training.generation+"/"+s.training.targetGeneration+" · Kontakte "+b.contacts+"/"+b.legs.length,35,96,14);
+  if(b.fallen)txt(c,"Gestürzt – neuen Versuch starten",500,180,20,"#ffb2a9","center");if(b.goalReached)txt(c,"ZIEL ERREICHT!",500,180,20,"#a1f5c1","center");
  }
  if(s.mode==="arena"){ground(c,478);box(c,34,156,932,245,"#1d344a");line(c,34,270,966,270,"#496478",4);line(c,74,156,74,401,"#92b9c5",3);for(let i=0;i<13;i++){line(c,74+i*69,156,74+i*69,401,"#314c5e",1);}
   for(const pos of (s.preset==="race"?[8,17,25]:[])){const px=74+pos/32*850;for(const y of [213,325]){box(c,px-9,y-26,18,45,"#ee9a51");txt(c,"▲",px,y-33,17,colors.b,"center");}}

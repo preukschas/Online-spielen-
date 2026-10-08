@@ -63,9 +63,9 @@ function controls(){
  }
  const ex=$("extraActions");ex.innerHTML="";
  if(mode==="bio"){
-  const btn=document.createElement("button");btn.className="extra-button";btn.type="button";btn.id="trainButton";btn.textContent="🧠 25 Generationen trainieren";
+  const btn=document.createElement("button");btn.className="extra-button";btn.type="button";btn.id="trainButton";btn.textContent="🧠 Evolution starten";
   btn.addEventListener("click",startTraining);ex.append(btn);
-  const s=document.createElement("p");s.id="trainStatus";s.className="train-status";s.textContent="Der Regler wird durch Evolution mit getrenntem Testlauf optimiert.";ex.append(s);
+  const s=document.createElement("p");s.id="trainStatus";s.className="train-status";s.textContent="Lernziel: Zielstrecke erreichen, Balance halten und Energie sparen. Weitere Generationen jederzeit möglich.";ex.append(s);
   addEntityPicker(ex,null);
  }
  if(mode==="mechanics"){
@@ -91,7 +91,7 @@ function controls(){
   const tournament=document.createElement("button");tournament.type="button";tournament.className="extra-button";tournament.style.background="#334d71";tournament.textContent="🏆 50 Duelle auswerten";
   tournament.addEventListener("click",()=>{const w=arenaBatch(params,seed,50,preset);note("50 Duelle · A "+w[0]+" Siege · B "+w[1]+" Siege · "+w[2]+" Gleichstand; Zuordnung abwechselnd.")});ex.append(tournament);
  }
- if(mode==="crash"){
+ if(mode==="crash"&&preset==="barrier"){
   const cmp=document.createElement("button");cmp.type="button";cmp.className="extra-button";cmp.textContent="📊 Knautschzone A/B vergleichen";
   cmp.addEventListener("click",()=>{
    function run(k){const s=makeSim("crash","barrier",{...params,stiffness:k},seed);for(let i=0;i<1800&&!s.finished;i++)stepSim(s);return{g:s.body.maxG,c:s.body.maxCompression};}
@@ -106,10 +106,14 @@ function togglePlay(){if(sim.finished){resetSim()}playing=!playing;$("play").tex
 function doStep(){playing=false;$("play").textContent="▶ Fortsetzen";if(!sim.finished)stepSim(sim,1/120);$("overlay").classList.add("hidden");refresh();}
 function startTraining(){
  if(mode!=="bio")return;
- if(sim.training.generation>=25){const prev=sim.training;resetSim();sim.training=prev;sim.training.generation=0;sim.training.best=null;sim.training.score=-Infinity;sim.training.history=[];}
- sim.training.running=!sim.training.running;
- const btn=$("trainButton");if(btn)btn.textContent=sim.training.running?"⏸ Training pausieren":"🧠 Training fortsetzen";
- $("overlay").classList.add("hidden");
+ const tr=sim.training;
+ if(tr.running){tr.running=false;note("Training pausiert. Fortsetzen bei Generation "+tr.generation+".");}
+ else{
+  if(tr.targetGeneration<=tr.generation)tr.targetGeneration=tr.generation+params.generations;
+  tr.running=true;
+  note("Evolution trainiert auf "+params.targetDistance+" m · Generation "+(tr.generation+1)+" bis "+tr.targetGeneration+".");
+ }
+ $("overlay").classList.add("hidden");refresh();
 }
 function refresh(){
  const m=measure(sim);$("heroTime").textContent=sim.time.toFixed(1).replace(".",",");$("chartLabel").textContent=m.chart;
@@ -117,7 +121,8 @@ function refresh(){
  for(const [label,val] of m.read){const d=document.createElement("div");d.className="readout";const a=document.createElement("small"),b=document.createElement("strong");a.textContent=label;b.textContent=val;d.append(a,b);out.append(d);}
  if(mode==="bio"&&$("trainStatus")){
   const tr=sim.training;
-  $("trainStatus").textContent=tr.generation?tr.generation+"/25 Gen. · Training "+tr.score.toFixed(2)+" · unabhängiger Test "+tr.validation.score.toFixed(2):"Evolution optimiert Schrittweite, Frequenz und Balance-Regler.";
+  $("trainStatus").textContent="Ziel: "+params.targetDistance+" m · Gen. "+tr.generation+"/"+tr.targetGeneration+(tr.validation?" · Bestwert "+tr.score.toFixed(2)+" · Test "+tr.validation.score.toFixed(2)+" · "+(tr.validation.goalReached?"Ziel erreicht ✓":"Ziel offen"):" · zunächst Start drücken");
+  $("trainButton").textContent=tr.running?"⏸ Training pausieren":tr.generation>0&&tr.generation>=tr.targetGeneration?"🧠 Weitere "+params.generations+" Generationen":tr.targetGeneration>tr.generation?"▶ Training fortsetzen":"🧠 "+params.generations+" Generationen trainieren";
  }
  drawChart();
 }
@@ -185,7 +190,7 @@ function frame(now){
   accum+=delta*Number($("speed").value);let count=0;
   while(accum>=1/120&&count<140&&!sim.finished){stepSim(sim);accum-=1/120;count++;}
   if(count===140)accum=0;
-  if(sim.finished){playing=false;$("play").textContent="▶ Neustart";$("overlay").textContent=mode==="arena"?"Rennen beendet: "+sim.body.winner:"Simulation beendet. Mit Reset erneut starten.";$("overlay").classList.remove("hidden");}
+  if(sim.finished){playing=false;$("play").textContent="▶ Neustart";$("overlay").textContent=mode==="arena"?"Rennen beendet: "+sim.body.winner:mode==="bio"?(sim.body.goalReached?"Ziel erreicht! "+sim.p.targetDistance+" m in "+sim.time.toFixed(1)+" Sekunden.":"Versuch beendet – Ziel nicht erreicht. Training starten oder fortsetzen."):"Simulation beendet. Mit Reset erneut starten.";$("overlay").classList.remove("hidden");}
  }
  if(mode==="bio"&&sim.training.running){
   trainOneGeneration(sim);
@@ -196,7 +201,7 @@ function frame(now){
     const savedTraining=tr;
     params={...params,...tr.best};
     sim=makeSim(mode,preset,params,seed);sim.training=savedTraining;playing=false;controls();
-    note("Training abgeschlossen: bester Regler gespeichert und in den Simulator übernommen.");
+    note("Trainingsrunde abgeschlossen ("+tr.generation+" Generationen). Bester Regler übernommen; weitere Generationen jederzeit möglich.");
     $("overlay").textContent="Training abgeschlossen. Starte den optimierten Läufer.";$("overlay").classList.remove("hidden");
    }
   }
@@ -213,7 +218,7 @@ function scenario(){return{format:"DMP_SIM_SCENARIO",version:VERSION,name:$("sce
 function validScenario(o){
  if(!o||o.format!=="DMP_SIM_SCENARIO"||!CONFIG[o.mode]||!CONFIG[o.mode].presets.some(x=>x[0]===o.preset)||!o.params||typeof o.params!=="object")return false;
  if(!Number.isSafeInteger(o.seed)||o.seed<1||o.seed>2147483647||typeof o.name!=="string"||o.name.length>60)return false;
- const fieldsValid=FIELDS[o.preset].every(f=>Number.isFinite(o.params[f[0]])&&o.params[f[0]]>=f[2]&&o.params[f[0]]<=f[3]);
+ const fieldsValid=FIELDS[o.preset].every(f=>{const v=o.params[f[0]]??f[6];return Number.isFinite(v)&&v>=f[2]&&v<=f[3];});
  const namesValid=["nameA","nameB","entityName"].every(key=>o.params[key]===undefined||(typeof o.params[key]==="string"&&o.params[key].length<=24));
  const colorsValid=["color","colorA","colorB"].every(key=>o.params[key]===undefined||(typeof o.params[key]==="string"&&/^#[a-fA-F0-9]{6}$/.test(o.params[key])));
  const kindsValid=["kindA","kindB"].every(key=>o.params[key]===undefined||o.params[key]==="biped"||o.params[key]==="quadruped");
@@ -223,7 +228,7 @@ function validScenario(o){
 }
 function loadScenario(s){
  if(!validScenario(s)){note("Datei enthält kein gültiges Simulationsszenario.",true);return;}
- mode=s.mode;preset=s.preset;params=Object.fromEntries(FIELDS[preset].map(f=>[f[0],s.params[f[0]]]));if(mode==="arena"){for(const key of ["nameA","nameB","colorA","colorB","kindA","kindB","entityA","entityB"]){if(s.params[key]!==undefined)params[key]=s.params[key];}}
+ mode=s.mode;preset=s.preset;params=Object.fromEntries(FIELDS[preset].map(f=>[f[0],s.params[f[0]]??f[6]]));if(mode==="arena"){for(const key of ["nameA","nameB","colorA","colorB","kindA","kindB","entityA","entityB"]){if(s.params[key]!==undefined)params[key]=s.params[key];}}
  if(mode==="bio"){for(const key of ["entityId","entityName","color","torso","limb","head"]){if(s.params[key]!==undefined)params[key]=s.params[key];}}
  seed=s.seed;
  document.querySelectorAll(".module").forEach(b=>{const yes=b.dataset.mode===mode;b.classList.toggle("active",yes);b.setAttribute("aria-pressed",String(yes));});controls();resetSim();$("scenarioName").value=s.name;note("Experiment geladen. Mit Start wiederholen.");
