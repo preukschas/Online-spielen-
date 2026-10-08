@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "updated": "2026-10-08",
-  "count": 93,
+  "count": 104,
   "description": "Nur aktivierte Lernbegriffe aus Moes Google-Vokabelbibliothek. Keine privaten Lernfortschritte.",
   "words": [
     {
@@ -182,6 +182,90 @@
       "topic": "Herkunft & Orte",
       "unit": "Unit 1",
       "alternatives": []
+    },
+    {
+      "id": "MOE-020",
+      "en": "dad",
+      "de": "Papa; Vater",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "alternatives": [
+        "dad",
+        "father"
+      ]
+    },
+    {
+      "id": "MOE-021",
+      "en": "mum",
+      "de": "Mama; Mutter",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "alternatives": [
+        "mum",
+        "mother"
+      ]
+    },
+    {
+      "id": "MOE-022",
+      "en": "parents",
+      "de": "Eltern",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-023",
+      "en": "sister",
+      "de": "Schwester",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-024",
+      "en": "brother",
+      "de": "Bruder",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-025",
+      "en": "aunt",
+      "de": "Tante",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-026",
+      "en": "uncle",
+      "de": "Onkel",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "alternatives": []
+    },
+    {
+      "id": "MOE-027",
+      "en": "grandmother",
+      "de": "Großmutter",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "alternatives": [
+        "großmutter",
+        "grossmutter"
+      ]
+    },
+    {
+      "id": "MOE-028",
+      "en": "grandfather",
+      "de": "Großvater",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "alternatives": [
+        "großvater",
+        "grossvater"
+      ]
     },
     {
       "id": "MOE-029",
@@ -863,6 +947,26 @@
       "unit": "Unit 1",
       "alternatives": [
         "it is"
+      ]
+    },
+    {
+      "id": "MOE-103",
+      "en": "father",
+      "de": "Vater",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "alternatives": [
+        "dad"
+      ]
+    },
+    {
+      "id": "MOE-104",
+      "en": "mother",
+      "de": "Mutter",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "alternatives": [
+        "mum"
       ]
     }
   ]
