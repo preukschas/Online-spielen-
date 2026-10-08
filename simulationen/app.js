@@ -1,7 +1,7 @@
 import {VERSION,CONFIG,FIELDS,initialParams,makeSim,stepSim,measure,trainOneGeneration,trainedToArena,arenaBatch} from "./engine.js?v=1.6.0";
 import {trainDuelGeneration,duelValidGenome,duelDefaultGenome,duelStyle} from "./duel-core.js?v=1.6.0";
 import {drawScene} from "./render-v2.js?v=1.6.0";
-import {safeEntityList,findEntity,toBiomechanics,toArena} from "./entity-model.js";
+import {safeEntityList,findEntity,toBiomechanics,toArena,FIGHTER_STYLES} from "./entity-model.js";
 import {installCatalog} from "./entity-catalog.js";
 const $=id=>document.getElementById(id),canvas=$("scene"),sceneCtx=canvas.getContext("2d"),chartCtx=$("chart").getContext("2d");
 installCatalog(localStorage);
@@ -363,11 +363,12 @@ function validScenario(o){
  const idsValid=["entityId","entityA","entityB"].every(key=>o.params[key]===undefined||(typeof o.params[key]==="string"&&/^[a-zA-Z0-9_-]{1,80}$/.test(o.params[key])));
  const shapeValid=["torso","limb","head"].every(key=>o.params[key]===undefined||(typeof o.params[key]==="number"&&Number.isFinite(o.params[key])&&o.params[key]>=.5&&o.params[key]<=1.6));
  const genomeValid=["genomeA","genomeB"].every(key=>o.params[key]===undefined||duelValidGenome(o.params[key]));
- return fieldsValid&&namesValid&&colorsValid&&kindsValid&&idsValid&&shapeValid&&genomeValid;
+ const fighterStyleValid=["fighterStyleA","fighterStyleB"].every(key=>o.params[key]===undefined||FIGHTER_STYLES.includes(o.params[key]));
+ return fieldsValid&&namesValid&&colorsValid&&kindsValid&&idsValid&&shapeValid&&genomeValid&&fighterStyleValid;
 }
 function loadScenario(s){
  if(!validScenario(s)){note("Datei enthält kein gültiges Simulationsszenario.",true);return;}
- mode=s.mode;preset=s.preset;params=Object.fromEntries(FIELDS[preset].map(f=>[f[0],s.params[f[0]]??f[6]]));if(mode==="arena"){for(const key of ["nameA","nameB","colorA","colorB","kindA","kindB","entityA","entityB","genomeA","genomeB"]){if(s.params[key]!==undefined)params[key]=s.params[key];}}
+ mode=s.mode;preset=s.preset;params=Object.fromEntries(FIELDS[preset].map(f=>[f[0],s.params[f[0]]??f[6]]));if(mode==="arena"){for(const key of ["nameA","nameB","colorA","colorB","kindA","kindB","entityA","entityB","genomeA","genomeB","fighterStyleA","fighterStyleB"]){if(s.params[key]!==undefined)params[key]=s.params[key];}}
  if(mode==="bio"){for(const key of ["entityId","entityName","color","torso","limb","head"]){if(s.params[key]!==undefined)params[key]=s.params[key];}}
  seed=s.seed;
  document.querySelectorAll(".module").forEach(b=>{const yes=b.dataset.mode===mode;b.classList.toggle("active",yes);b.setAttribute("aria-pressed",String(yes));});controls();resetSim();$("scenarioName").value=s.name;note("Experiment geladen. Mit Start wiederholen.");
@@ -376,7 +377,7 @@ $("modules").addEventListener("click",e=>{const btn=e.target.closest("[data-mode
 $("preset").addEventListener("change",e=>{arenaQuickMessage="";
  const prev={...params};preset=e.target.value;params=initialParams(preset);
  if(mode==="arena"){
-  for(const key of ["nameA","nameB","colorA","colorB","kindA","kindB","entityA","entityB","speedA","speedB","staminaA","staminaB","genomeA","genomeB"]){
+  for(const key of ["nameA","nameB","colorA","colorB","kindA","kindB","entityA","entityB","speedA","speedB","staminaA","staminaB","genomeA","genomeB","fighterStyleA","fighterStyleB"]){
    if(prev[key]!==undefined)params[key]=prev[key];
   }
  }
