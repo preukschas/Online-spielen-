@@ -28,7 +28,7 @@ export function makeSim(mode,preset,params,seed=42){
  }
  if(mode==="crash")s.body={x:-5,v:p.velocity/3.6,force:0,maxG:0,compression:0,maxCompression:0,energy:.5*p.mass*(p.velocity/3.6)**2};
  if(mode==="bio"){s.body=makeWalker(p,r);s.training={running:false,generation:0,best:null,history:[],score:-Infinity,validation:null};}
- if(mode==="arena"){s.body={racers:[{name:"Entität A",x:0,v:0,finish:null,stamina:p.staminaA,base:p.speedA,penalty:0},{name:"Entität B",x:0,v:0,finish:null,stamina:p.staminaB,base:p.speedB,penalty:0}],winner:null,seed};}
+ if(mode==="arena"){s.body={racers:[{name:String(p.nameA||"Entität A").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaA,base:p.speedA,penalty:0},{name:String(p.nameB||"Entität B").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaB,base:p.speedB,penalty:0}],winner:null,seed};}
  record(s);
  return s;
 }
@@ -68,11 +68,10 @@ export function stepSim(s,dt=1/120){
  }
  if(s.mode==="bio"){updateWalker(b,p,dt,random(s.seed+Math.floor(s.time*120)));if(b.fallen||s.time>22)s.finished=true;}
  if(s.mode==="arena"){
-  const rand=random(s.seed);
   for(let i=0;i<2;i++){const racer=b.racers[i];if(racer.finish!==null)continue;
    racer.v+=(racer.base*(.72+.28*racer.stamina)-racer.v)*dt*2;
    racer.x+=racer.v*dt;
-   for(const pos of [8,17,25]){const key="passed"+pos;if(!racer[key]&&racer.x>=pos){racer[key]=true;const hazard=1+.1*(rand()+i);racer.penalty+=p.obstacle*hazard;racer.v=Math.max(0,racer.v*(1-.65*p.obstacle));}}
+   for(const pos of [8,17,25]){const key="passed"+pos;if(!racer[key]&&racer.x>=pos){racer[key]=true;const hazard=.75+.7*random(s.seed+pos*173+i*719)();racer.penalty+=p.obstacle*hazard;racer.v=Math.max(0,racer.v*(1-.65*p.obstacle));}}
    racer.stamina=Math.max(.1,racer.stamina-.008*dt);
    if(racer.x>=32){racer.x=32;racer.finish=s.time;}
   }
@@ -137,8 +136,8 @@ export function drawScene(c,s){
  if(!s)return;grid(c);const p=s.p,b=s.body,t=s.time;
  if(s.mode==="physics"){
   if(s.preset==="fall"){ground(c,476);for(let i=0;i<5;i++){line(c,110+i*14,90,110+i*14,476,"#2a4957",1)}const y=476-Math.max(0,b.y)/22*365;circle(c,460,y-18,24,colors.a);circle(c,453,y-25,7,"#dbffef");line(c,90,y-18,120,y-18,"#f5c86a");txt(c,b.y.toFixed(2)+" m",130,y-25,18);txt(c,"HÖHE",90,67,13,"#88a5b9");}
-  if(s.preset==="pendulum"){ground(c,498);const topX=500,topY=92,scale=115,L=p.length*scale;line(c,360,92,640,92,"#e1e8ef",10);line(c,topX,topY,topX+Math.sin(b.angle)*L,topY+Math.cos(b.angle)*L,"#a9ced4",5);circle(c,topX+Math.sin(b.angle)*L,topY+Math.cos(b.angle)*L,30,colors.a);circle(c,topX,topY,11,"#f6c86c");line(c,topX,topY,topX,topY+365,"#4e6d7b",1);txt(c,"Schwerkraft · "+p.gravity+" m/s²",35,50,15);}
-  if(s.preset==="ramp"){ground(c,491);const ang=p.angle*Math.PI/180,startX=115,startY=450,length=720,endY=startY-Math.tan(ang)*length; c.fillStyle="#294a56";c.beginPath();c.moveTo(startX,startY);c.lineTo(startX+length,endY);c.lineTo(startX+length,startY);c.closePath();c.fill();line(c,startX,startY,startX+length,endY,"#7db5b4",6);const a=clamp(b.d/13,0,1);let x=startX+a*length,y=startY-a*Math.tan(ang)*length-19;circle(c,x,y,21,colors.a);txt(c,"Neigung "+p.angle+"°",50,67,17);}
+  if(s.preset==="pendulum"){ground(c,498);const topX=500,topY=92,scale=Math.min(115,340/p.length),L=p.length*scale;line(c,360,92,640,92,"#e1e8ef",10);line(c,topX,topY,topX+Math.sin(b.angle)*L,topY+Math.cos(b.angle)*L,"#a9ced4",5);circle(c,topX+Math.sin(b.angle)*L,topY+Math.cos(b.angle)*L,30,colors.a);circle(c,topX,topY,11,"#f6c86c");line(c,topX,topY,topX,topY+365,"#4e6d7b",1);txt(c,"Schwerkraft · "+p.gravity+" m/s²",35,50,15);}
+  if(s.preset==="ramp"){ground(c,491);const ang=p.angle*Math.PI/180,startX=115,startY=450,length=Math.min(720,340/Math.tan(ang)),endY=startY-Math.tan(ang)*length; c.fillStyle="#294a56";c.beginPath();c.moveTo(startX,startY);c.lineTo(startX+length,endY);c.lineTo(startX+length,startY);c.closePath();c.fill();line(c,startX,startY,startX+length,endY,"#7db5b4",6);const a=clamp(b.d/13,0,1);let x=startX+a*length,y=startY-a*Math.tan(ang)*length-19;circle(c,x,y,21,colors.a);txt(c,"Neigung "+p.angle+"°",50,67,17);}
   if(s.preset==="collision"){ground(c,450);const scale=67,x1=500+b.x1*scale,x2=500+b.x2*scale;circle(c,x1,414,30,colors.a);circle(c,x2,414,30,colors.b);txt(c,"A · "+p.massA+" kg",x1,360,16,colors.a,"center");txt(c,"B · "+p.massB+" kg",x2,360,16,colors.b,"center");txt(c,"Impuls und Rückprall",48,72,18);}
  }
  if(s.mode==="crash"){ground(c,465);const barrier=770;box(c,barrier,108,35,356,"#7593a3");for(let y=110;y<465;y+=29)line(c,barrier+1,y,barrier+34,y+30,"#b5cfda",2);txt(c,"STARRE BARRIERE",795,90,14);
@@ -161,7 +160,7 @@ export function drawScene(c,s){
  if(s.mode==="arena"){ground(c,478);box(c,34,156,932,245,"#1d344a");line(c,34,270,966,270,"#496478",4);line(c,74,156,74,401,"#92b9c5",3);for(let i=0;i<13;i++){line(c,74+i*69,156,74+i*69,401,"#314c5e",1);}
   for(const pos of [8,17,25]){const px=74+pos/32*850;for(const y of [213,325]){box(c,px-9,y-26,18,45,"#ee9a51");txt(c,"▲",px,y-33,17,colors.b,"center");}}
   const finish=924;for(let j=0;j<10;j++)for(let k=0;k<2;k++)box(c,finish+j%2*8,158+j*24+k*12,8,12,(j+k)%2?"#f8f8ff":"#16283b");
-  for(let i=0;i<2;i++){const e=b.racers[i],x=74+e.x/32*850,y=i===0?207:327;circle(c,x,y,30,i===0?colors.a:colors.b);txt(c,i==="0"?"A":i===0?"A":"B",x,y+8,23,"#122436","center");txt(c,e.name,55,y-45,16,i===0?colors.a:colors.b);}
+  for(let i=0;i<2;i++){const e=b.racers[i],x=74+e.x/32*850,y=i===0?207:327;circle(c,x,y,30,i===0?colors.a:colors.b);txt(c,i===0?"A":"B",x,y+8,23,"#122436","center");txt(c,e.name,55,y-45,16,i===0?colors.a:colors.b);}
   if(b.winner)txt(c,"SIEGER: "+b.winner,500,78,29,colors.a,"center");else txt(c,"HINDERNISRENNEN · 32 m",500,78,20,"#bdd4de","center");
  }
  txt(c,"SIMULATION · v"+VERSION,23,540,12,"#7798a9");txt(c,t.toFixed(2)+" s",976,540,13,"#c5d4e1","right");
