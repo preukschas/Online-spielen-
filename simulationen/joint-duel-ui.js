@@ -1,7 +1,7 @@
 import {GAIT_DT,footPosition,restoreGaitTrainer,validGaitGenome} from "./joint-walker-core.js";
 import {tacticStyle,makeJointDuel,stepJointDuel,newJointDuelTrainer,jointDuelSnapshot,restoreJointDuel} from "./joint-duel-core.js";
 const $=id=>document.getElementById(id),canvas=$("arena"),ctx=canvas.getContext("2d"),chart=$("chart"),graph=chart.getContext("2d");
-const GAIT_KEY="dmp_joint_walker_v1",KEY="dmp_joint_duel_v1";
+const GAIT_KEY="dmp_joint_walker_v1",RIVAL_GAIT_KEY=GAIT_KEY+"__rival_v1",KEY="dmp_joint_duel_v1";
 let model=null,match=null,playing=false,last=0,acc=0,worker=null,busy=false,seed=30043,pending=[null,null];
 const fmt=(n,d=1)=>Number.isFinite(n)?n.toFixed(d).replace(".",","):"–";
 const msg=(s,error=false)=>{$("notice").textContent=s;$("notice").classList.toggle("error",error);};
@@ -10,7 +10,7 @@ const save=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));ret
 const persist=()=>{if(model)save(KEY,jointDuelSnapshot(model));};
 try{model=restoreJointDuel(read(KEY));}catch{}
 if(!model){
- try{const g=restoreGaitTrainer(read(GAIT_KEY));if(g.champion&&validGaitGenome(g.champion)){model=newJointDuelTrainer(g.champion,g.champion,g.seed);persist();}}catch{}
+ try{const g=restoreGaitTrainer(read(GAIT_KEY));if(g.champion&&validGaitGenome(g.champion)){let rival=null;try{rival=restoreGaitTrainer(read(RIVAL_GAIT_KEY));}catch{};model=newJointDuelTrainer(g.champion,rival?.champion&&validGaitGenome(rival.champion)?rival.champion:g.baseline,g.seed);persist();}}catch{}
 }
 if(model)seed=model.seed+30001;
 const gated=["loadGait","prepareGait","importGaitA","importGaitB","add1","add10","add100","ten","fifty","resetTraining","importDuel"];
@@ -26,9 +26,12 @@ function loadLocal(){
  try{
   const g=restoreGaitTrainer(read(GAIT_KEY));
   if(!validGaitGenome(g.champion))throw Error("kein trainierter Champion gespeichert");
-  if(model&&!confirm("Bisheriges Duell durch den gespeicherten Lauf-Champion für A und B ersetzen?"))return;
-  pair(g.champion,g.champion,g.seed);
-  msg("Gelenksteuerung erfolgreich übernommen. Beide starten mit demselben Laufgehirn, lernen aber getrennte Strategien.");
+  let rival=null;try{rival=restoreGaitTrainer(read(RIVAL_GAIT_KEY));}catch{}
+  const brainB=rival?.champion&&validGaitGenome(rival.champion)?rival.champion:g.baseline;
+  if(model&&!confirm("Bisherige Duell-Strategien durch die getrennten Laufmodelle A und B ersetzen?"))return;
+  pair(g.champion,brainB,g.seed);
+  msg(rival?.champion?"Beide getrennt trainierten Laufgehirne übernommen: A Gen. "+g.generation+" / B Gen. "+rival.generation+".":
+    "A wurde trainiert; B nutzt zunächst ein untrainiertes Modell. Trainiere B in der Gelenk-Lernarena, um auch seine Gelenke zu verbessern.");
  }catch(e){msg("Laufmodell nicht vorhanden: "+e.message+". Du kannst direkt hier 15 Generationen trainieren.",true);}
 }
 $("loadGait").addEventListener("click",loadLocal);
@@ -164,7 +167,7 @@ function runTask(kind,count){
    try{
     if(v.type==="error"){msg("Rechenfehler: "+v.message,true);clean();return;}
     if(v.type==="progress-gait"){
-     $("trainingStatus").textContent="Gelenklernen "+v.done+"/"+v.total+" · Fit "+fmt(v.fitness)+" · Prüfung "+fmt(v.holdout);
+     $("trainingStatus").textContent="Gelenklernen A & B "+v.done+"/"+v.total+" · Fit "+fmt(v.fitnessA)+"/"+fmt(v.fitnessB)+" · Prüfung "+fmt(v.holdoutA)+"/"+fmt(v.holdoutB);
      $("progressBar").style.width=(100*v.done/v.total)+"%";
     }
     if(v.type==="progress-duel"){
@@ -178,12 +181,13 @@ function runTask(kind,count){
      $("progressBar").style.width=(100*v.done/v.total)+"%";
     }
     if(v.type==="done-gait"){
-     const gait=restoreGaitTrainer(v.checkpoint);
-     if(!validGaitGenome(gait.champion))throw Error("Kein Champion gefunden");
-     if(!read(GAIT_KEY))save(GAIT_KEY,v.checkpoint);
-     pair(gait.champion,gait.champion,gait.seed);
-     $("trainingStatus").textContent="Lauftraining nach "+gait.generation+" Generationen abgeschlossen.";
-     msg("Gelerntes Laufgehirn ist bei beiden Robotern aktiv. Jetzt Strategie-Generationen trainieren.");clean();
+     if(!Array.isArray(v.checkpoints)||v.checkpoints.length!==2)throw Error("Zwei Laufmodelle fehlen");
+     const A=restoreGaitTrainer(v.checkpoints[0]),B=restoreGaitTrainer(v.checkpoints[1]);
+     if(!validGaitGenome(A.champion)||!validGaitGenome(B.champion))throw Error("Ein trainierter Champion fehlt");
+     save(GAIT_KEY,v.checkpoints[0]);save(RIVAL_GAIT_KEY,v.checkpoints[1]);
+     pair(A.champion,B.champion,A.seed);
+     $("trainingStatus").textContent="Lauftraining A: "+A.generation+" / B: "+B.generation+" Generationen.";
+     msg("Zwei unabhängig trainierte Laufgehirne übernommen. Jetzt können beide eigene Duellstrategien entwickeln.");clean();
     }
     if(v.type==="done-duel"){
      model=restoreJointDuel(v.snapshot);persist();refresh();restart();
