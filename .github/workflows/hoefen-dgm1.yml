@@ -1,0 +1,39 @@
+name: Höfen DGM1 Geländehöhen prüfen
+on:
+  push:
+    paths:
+      - 'simulationen/geodata-pipeline/build-hoefen-dgm1.mjs'
+      - '.github/workflows/hoefen-dgm1.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: hoefen-dgm1-download
+  cancel-in-progress: false
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: GeoTIFF Reader installieren
+        run: npm install --no-save --no-package-lock --ignore-scripts geotiff@2.1.4
+      - name: DGM1 über amtlichen LGL WCS beziehen, prüfen und rasterisieren
+        run: node simulationen/geodata-pipeline/build-hoefen-dgm1.mjs
+      - name: Geprüfte DGM1-Höhen versionieren
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add simulationen/vorschau-hoefen/hoefen-dgm1.json
+          if git diff --cached --quiet; then
+            echo "No verified new heights."
+            exit 0
+          fi
+          git commit -m "data(hoefen): LGL DGM1 elevations, EPSG:25832, dl-de/by-2-0"
+          git pull --rebase origin main
+          git push origin HEAD:main
