@@ -28,33 +28,33 @@ main{padding-bottom:60px}.hero{padding:46px 0 30px;display:flex;justify-content:
 <main class="shell">
 <section class="hero"><div><div class="eyebrow">PHASE 3 / LERNEN & EVOLUTION</div>
 <h1>Roboter lernen.<br><span>Du schaust zu.</span></h1>
-<p class="intro">28 neuronale Steuerungen treten gegen denselben Hindernisparcours an. Die besten Modelle geben ihre Gewichte verändert weiter. Jede Generation wird auf getrennten, unbekannten Teststrecken bewertet – ohne vorprogrammierte Lernkurve.</p></div><div class="pill"><i class="pulse"></i><span>2D NEUROEVOLUTION · LIVE</span></div></section>
+<p class="intro">Zwei unabhängige Roboterteams mit jeweils 28 neuronalen Steuerungen lernen gleichzeitig und treten gegeneinander an. Elf schwierige Hindernisse verlangen mehr als Springen: Ducken unter niedrigen Decken, Ausweichen vor beweglichen Kehrmaschinen, Warten auf Pressen von oben, Timing an Mauern und Sprünge über Abgründe. Beide Teams erhalten eigene Lernkurven und entwickeln sich durch Wettbewerb weiter.</p></div><div class="pill"><i class="pulse"></i><span>2D NEUROEVOLUTION · LIVE</span></div></section>
 <div class="details" style="margin:0 0 18px;background:#183a43;border-color:#4c877b"><strong>Neue Forschungsstufe:</strong> Zwei Beine und vier motorisierte Hüft-/Kniegelenke lernen nun tatsächlich durch Evolution. <a href="./joint-walker.html" style="color:#8ff6c9;font-weight:900;text-decoration:underline">🦿 Jetzt Gelenk-Lernarena ausprobieren ↗</a></div>
 <section class="metrics" aria-label="Trainingskennzahlen">
 <div class="metric"><small>Abgeschlossene Generationen</small><strong id="generation">0</strong><span>Evolutionäre Trainingsrunden</span></div>
-<div class="metric"><small>Beste Trainingswertung</small><strong id="best">–</strong><span>Fester Trainingsparcours</span></div>
-<div class="metric"><small>Unbekannte Teststrecken</small><strong id="validation">–</strong><span>Unabhängiger Vergleich</span></div>
-<div class="metric"><small>Zielquote im Test</small><strong id="success">–</strong><span>Ziel erreicht / 2 Kurse</span></div>
+<div class="metric"><small>Trainingsbestwert · Blau / Grün</small><strong id="best">–</strong><span>Beide Roboter lernen unabhängig</span></div>
+<div class="metric"><small>Testwertung · Blau / Grün</small><strong id="validation">–</strong><span>Unbekannte Strecken</span></div>
+<div class="metric"><small>Zielquote · Blau / Grün</small><strong id="success">–</strong><span>Getrennte Erfolgsquoten</span></div>
 </section>
 <div class="grid">
 <section class="panel viewer" aria-label="Roboter in der Lernarena">
 <div class="head"><h2>LIVE · Zwei Roboter, dieselbe Strecke</h2><small id="courseLabel">Testparcours #1</small></div>
 <div class="canvas-wrap"><canvas id="arena" width="1080" height="570" role="img" aria-label="Vergleich zweier Roboter auf identischen Hindernissen. Die Werte werden unter der Grafik beschrieben."></canvas><div id="overlay" class="overlay">▶ Vergleich starten</div></div>
-<div class="legend"><span><i class="swatch blue"></i>Referenz: ohne Lernstrategie</span><span><i class="swatch green"></i>Trainiertes Bestmodell</span><span><i class="swatch gold"></i>Hindernisse</span></div>
+<div class="legend"><span><i class="swatch blue"></i>Team Blau: lernender Roboter</span><span><i class="swatch green"></i>Team Grün: lernender Roboter</span><span><i class="swatch gold"></i>Decken, Pressen, Kehrer, Mauern, Abgründe</span></div>
 <div class="controls">
 <button type="button" class="btn primary" id="play">▶ Vergleich starten</button>
 <button type="button" class="btn" id="restart">↺ Wiederholen</button>
 <button type="button" class="btn" id="newCourse">↗ Neuer Testkurs</button>
 <label class="control-spacer" for="speed">Tempo</label><select class="select" id="speed"><option value="1">1×</option><option value="4">4×</option><option value="12">12×</option></select>
 </div>
-<div class="legend" id="raceStatus" role="status">Trainiere mindestens eine Generation, um den Lernerfolg im Vergleich zu sehen.</div>
+<div class="legend" id="raceStatus" role="status">Beide Roboter treten mit ihren eigenen Steuerungen auf demselben Kurs gegeneinander an.</div>
 </section>
 <aside class="panel right" aria-label="Training und Speicherung">
-<div class="head"><h2>🧠 Trainingssteuerung</h2><small>Neuroevolution v1</small></div>
+<div class="head"><h2>🧠 Trainingssteuerung</h2><small>Neuroevolution · 2 Teams v3</small></div>
 <div class="body">
-<div><h3>Evolution starten</h3><p>Ein kleines neuronales Netz steuert Gas und Sprung. Wir selektieren erfolgreiche Steuerungen und verändern ihre Gewichte. Das Training läuft in Rechenschritten, nicht als festgelegte Animation.</p>
+<div><h3>Evolution starten</h3><p>Jeder Roboter entwickelt sein eigenes neuronales Netz: Fahren, Springen und Ducken. Die Fitness berücksichtigt reale Streckenleistung und Siege gegen Kandidaten des anderen Teams. Bewegliche Hindernisse können nach unten drücken oder sich seitlich bewegen. Die Modelle müssen Zeitpunkt, Position und Körperhöhe beachten. Kein Bewegungsablauf ist fest vorprogrammiert.</p>
 <div class="group"><button class="btn primary" id="train5">+ 5 Generationen</button><button class="btn alt" id="train25">+ 25 Generationen</button><button class="btn wide" id="stop" disabled>⏸ Nach aktuellem Modell anhalten</button></div>
-<div class="statline" id="trainingStatus" role="status">Bereit. 28 Modelle pro Generation · zwei Trainingskurse.</div><div class="progress" aria-hidden="true"><i id="trainingBar"></i></div></div>
+<div class="statline" id="trainingStatus" role="status">Bereit. 28 Modelle je Team pro Generation · zwei gemeinsame Trainingskurse.</div><div class="progress" aria-hidden="true"><i id="trainingBar"></i></div></div>
 <hr class="divider">
 <div><h3>Messung &amp; Reproduzierbarkeit</h3><p>Trainings- und Teststrecken verwenden unterschiedliche feste Zufallsstarts. Ein neuer Testkurs prüft, ob das Modell übertragbares Verhalten gelernt hat.</p><label for="seed">Zufallsstartwert für neues Training</label><input type="number" id="seed" min="1" max="1000000000" value="42"><div class="small-note">Eine Änderung wird erst mit „Neues Training“ aktiv. Für identische Ergebnisse dieselbe Version und denselben Startwert verwenden.</div></div>
 <hr class="divider">
@@ -64,13 +64,13 @@ main{padding-bottom:60px}.hero{padding:46px 0 30px;display:flex;justify-content:
 </aside>
 </div>
 <div class="lower">
-<section class="panel"><div class="head"><h2>Lernkurve · Generationen</h2><small>Keine garantierte Verbesserung</small></div>
-<canvas id="chart" class="chart" width="860" height="270" aria-label="Diagramm der mittleren Trainingswertung, besten Trainingswertung und unabhängigen Testwertung"></canvas>
-<div class="chart-legend"><span><i style="background:#7c9ee9"></i>Populationsmittel</span><span><i style="background:#7eebc0"></i>Bester Trainingswert</span><span><i style="background:#ffd28c"></i>Unabhängiger Test</span></div></section>
+<section class="panel"><div class="head"><h2>Zwei Lernkurven · Generationen</h2><small>Keine garantierte Verbesserung</small></div>
+<canvas id="chart" class="chart" width="860" height="270" aria-label="Diagramm mit Trainings- und unabhängigen Testwerten für Team Blau und Team Grün"></canvas>
+<div class="chart-legend"><span><i style="background:#7da8f6"></i>Blau: Training (durchgezogen) / Test (gestrichelt)</span><span><i style="background:#7beac1"></i>Grün: Training (durchgezogen) / Test (gestrichelt)</span></div></section>
 <section class="panel"><div class="head"><h2>Generationenprotokoll</h2><small>Letzte 9 Generationen</small></div>
-<div class="tablebox"><table><thead><tr><th>Generation</th><th>Ø Training</th><th>Bestwert</th><th>Test</th><th>Zielquote</th></tr></thead><tbody id="history"><tr><td colspan="5">Noch keine Trainingsdaten</td></tr></tbody></table></div></section>
+<div class="tablebox"><table><thead><tr><th>Gen.</th><th>Blau Best</th><th>Grün Best</th><th>Blau Test</th><th>Grün Test</th><th>Sieger</th></tr></thead><tbody id="history"><tr><td colspan="6">Noch keine Trainingsdaten</td></tr></tbody></table></div></section>
 </div>
-<div class="details"><strong>Was hier wirklich lernt:</strong> Ein neuronales Netz mit 9 Sensorwerten, 10 versteckten Neuronen und 2 Entscheidungen. Seine Gewichte werden durch evolutionäre Suche optimiert; es gibt keine fest vorgegebene erfolgreiche Steuerung. <strong>Grenzen:</strong> Vereinfachter rollender/springender Roboter als 2D-Körper – noch kein frei lernender Zwei- oder Vierbeiner, keine echte Mehrkörperphysik und keine Verletzungs- oder Sicherheitsprognose. Die Testwertung ist ein separater Prüfwert; sie wird nicht zur Selektion benutzt. Auch gute Testwerte auf zwei Strecken beweisen keine allgemeine Intelligenz.</div>
+<div class="details"><strong>Was hier wirklich lernt:</strong> Zwei getrennte Populationen neuronaler Netze, jeweils 17 Sensorwerte, 12 versteckte Neuronen und drei Aktionen: Beschleunigen/Bremsen, Springen und Ducken. Echte Simulationsepisoden bestimmen den evolutionären Fitnesswert und den Sieg im paarweisen Duell. Beide Teams selektieren, kreuzen und mutieren ihre eigenen Steuerungen. <strong>Grenzen:</strong> Vereinfachter rollender/springender Roboter als 2D-Körper – keine echten Roboterbeine, keine echte Mehrkörperphysik und keine Verletzungs- oder Sicherheitsprognose. Unbekannte Testwertungen werden nicht zur Selektion herangezogen. Ein Vorteil im Rennen bedeutet nicht, dass andere Parcours automatisch gelöst werden.</div>
 </main>
-<script type="module" src="./learn-arena-ui.js?v=1"></script>
+<script type="module" src="./learn-arena-ui.js?v=3"></script>
 </body></html>
