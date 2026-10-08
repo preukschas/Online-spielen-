@@ -30,6 +30,7 @@ export function duelFighter(p,side,genome){
  return {name:String(p["name"+id]||"Entität "+id).slice(0,24),
   color:/^#[0-9a-f]{6}$/i.test(color||"")?color:left?"#53deb6":"#f8bc6a",
   kind:p["kind"+id]==="quadruped"?"quadruped":"biped",
+  fighterStyle:typeof p["fighterStyle"+id]==="string"?p["fighterStyle"+id]:"",
   x:left?3:9,y:0,vx:0,vy:0,hp:100,energy:100,points:0,
   hits:0,blocks:0,ringouts:0,landed:true,cooldown:0,actionTime:0,decision:0,
   action:"Bereit",facing:left?1:-1,genome:{...DEFAULT,...genome},base:p["speed"+id]||3.5,
