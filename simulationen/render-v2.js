@@ -1,6 +1,6 @@
 /* DMP SIM LAB · Canvas renderer 2.0
    Presentation-only layer: all movement, physics and outcomes come from engine.js. */
-import {drawScene as legacyDraw} from "./engine.js";
+import {drawScene as legacyDraw} from "./engine.js?v=1.3.0";
 const W=1000,H=560,PI=Math.PI;
 const C={mint:"#79eac7",aqua:"#88cfea",gold:"#f1c879",coral:"#f3a48c",ink:"#0a2232",white:"#f0faf6",muted:"#9db9c8"};
 const clamp=(x,min,max)=>Math.min(max,Math.max(min,x));
