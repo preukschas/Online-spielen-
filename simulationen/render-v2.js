@@ -1,6 +1,6 @@
 /* DMP SIM LAB · Canvas renderer 2.0
    Presentation-only layer: all movement, physics and outcomes come from engine.js. */
-import {drawScene as legacyDraw} from "./engine.js?v=1.3.0";
+import {drawScene as legacyDraw} from "./engine.js?v=1.4.0";
 const W=1000,H=560,PI=Math.PI;
 const C={mint:"#79eac7",aqua:"#88cfea",gold:"#f1c879",coral:"#f3a48c",ink:"#0a2232",white:"#f0faf6",muted:"#9db9c8"};
 const clamp=(x,min,max)=>Math.min(max,Math.max(min,x));
@@ -288,8 +288,73 @@ function arenaLane(c,y,color){
  for(let j=1;j<16;j++)stroke(c,70+j*54,y-50,70+j*54,y+40,"#8acbd323",1,[4,8]);
  stroke(c,70,y-50,70,y+40,"#c9edf1",2);
 }
+function drawDuel(c,s){
+ const b=s.body,who=b.fighters;
+ ground(c,466);
+ fill(c,105,414,788,50,"#254859",9);
+ stroke(c,110,417,890,417,C.gold,4);
+ for(let i=0;i<14;i++)stroke(c,132+i*57,421,115+i*57,453,"#8cd0bf3d",2);
+ stroke(c,128,150,128,462,C.coral,4,[6,8]);stroke(c,872,150,872,462,C.coral,4,[6,8]);
+ label(c,"KAMPFZONE",500,399,11,C.muted,"center");
+ who.forEach((e,i)=>{
+  const col=validColor(e.color,i===0?C.mint:C.gold),x=155+e.x/12*690,y=365-e.y*43;
+  const dir=e.facing||1;
+  shadow(c,x,429,45,8);
+  c.save();c.translate(x,y);c.scale(dir,1);
+  const phase=s.time*8+i*PI;
+  const contact=e.actionTime>0,action=e.action;
+  const jump=e.y>.1;
+  if(e.kind==="quadruped"){
+   stroke(c,-23,0,22,0,col,19);stroke(c,19,-1,40,-21,col,10);
+   disc(c,47,-25,13,col);
+   for(const dx of [-17,15])for(const off of [0,12]){
+    stroke(c,dx+off/2,7,dx+off/2+Math.sin(phase+off)*5,27,col,7);
+   }
+   if(contact&&["Schlagen","Treten","Schubsen"].includes(action))stroke(c,18,0,58,2,C.gold,9);
+  }else{
+   const stride=jump?6:Math.sin(phase)*12;
+   stroke(c,0,-30,0,7,col,19);disc(c,0,-46,15,col);
+   stroke(c,-3,8,-18+stride,32,col,10);
+   if(contact&&action==="Treten")stroke(c,2,8,49,5,C.gold,12);
+   else stroke(c,3,8,17-stride,32,col,10);
+   stroke(c,-4,-22,-27,-1,col,8);
+   if(contact&&action==="Schlagen")stroke(c,6,-21,52,-24,C.gold,10);
+   else if(contact&&action==="Schubsen"){stroke(c,5,-15,49,-9,C.aqua,10);stroke(c,1,-8,42,-2,C.aqua,8);}
+   else stroke(c,4,-22,25,-3,col,8);
+  }
+  if(contact&&action==="Blocken"){
+   ring(c,10,-10,35,C.aqua,.8);
+   stroke(c,26,-38,32,17,C.aqua,8);
+  }
+  if(contact&&["Schubsen","Schlagen","Treten"].includes(action)){
+   ring(c,49,-10,16,C.gold,.55);
+   for(let k=0;k<3;k++)stroke(c,58+k*5,-22+k*12,76+k*7,-17+k*12,C.gold,2);
+  }
+  if(jump)ring(c,0,-6,41,C.mint,.26);
+  c.restore();
+  label(c,e.name,x,262,17,col,"center",750);
+  textChip(c,contact?action:"Bereit",Math.max(110,Math.min(785,x-69)),280,contact?C.gold:C.muted,140);
+  label(c,"+"+e.points+" Punkte",x,320,12,C.white,"center");
+ });
+ const [a,d]=who;
+ for(const [i,e] of who.entries()){
+  const x=i?543:34,col=i?C.gold:C.mint;
+  fill(c,x,80,421,126,"#0b2b3dbf",15);
+  label(c,e.name,x+14,103,18,col,"left",800);
+  label(c,e.hp.toFixed(0)+" / 100 HP",x+14,125,12,C.white);
+  gauge(c,x+14,133,384,15,e.hp/100,col);
+  label(c,"ENERGIE",x+14,169,11,C.muted);
+  gauge(c,x+85,158,312,9,e.energy/100,C.aqua);
+  label(c,"TREFFER "+e.hits+"  ·  BLOCKS "+e.blocks+"  ·  RINGAUS "+e.ringouts,x+14,191,11,C.muted);
+ }
+ textChip(c,"DUELL · "+Math.ceil(Math.max(0,b.limit-b.elapsed))+" s",380,217,C.gold,240);
+ if(b.winner)textChip(c,"SIEGER: "+b.winner,350,352,C.gold,330);
+ const tr=s.duelTraining;
+ if(tr&&tr.generation)label(c,"EVOLUTION · GEN "+tr.generation,500,506,13,C.mint,"center",800);
+}
 function drawArena(c,s){
  const b=s.body,p=s.p;
+ if(s.preset==="duel"){drawDuel(c,s);return;}
  ground(c,487);arenaLane(c,222,C.mint);arenaLane(c,371,C.gold);
  const fx=920;fill(c,fx,152,19,267,"#c9e4eb",2);
  for(let r=0;r<14;r++)for(let col=0;col<2;col++)fill(c,fx+col*10,153+r*19,10,19,(r+col)%2?"#102638":"#f0f8ef");
