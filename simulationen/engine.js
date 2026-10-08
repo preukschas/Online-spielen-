@@ -39,7 +39,7 @@ export function makeSim(mode,preset,params,seed=42){
   if(preset==="crank")s.body={angle:0,position:p.crank+p.rod,velocity:0,omega:p.rpm*2*Math.PI/60};
   if(preset==="gears")s.body={angleA:0,angleB:Math.PI/p.teethB,rpmB:-p.rpm*p.teethA/p.teethB,torqueB:p.torque*p.teethB/p.teethA*p.efficiency};
  }
- if(mode==="arena"){s.body={racers:[{name:String(p.nameA||"Entität A").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaA,base:p.speedA,penalty:0},{name:String(p.nameB||"Entität B").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaB,base:p.speedB,penalty:0}],winner:null,seed};}
+ if(mode==="arena"){const appearance=(side,fallback)=>({color:/^#[a-fA-F0-9]{6}$/.test(p["color"+side]||"")?p["color"+side]:fallback,kind:p["kind"+side]==="quadruped"?"quadruped":"biped"});s.body={racers:[{name:String(p.nameA||"Entität A").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaA,base:p.speedA,penalty:0,...appearance("A","#53deb6")},{name:String(p.nameB||"Entität B").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaB,base:p.speedB,penalty:0,...appearance("B","#f8bc6a")}],winner:null,seed};}
  record(s);
  return s;
 }
@@ -299,34 +299,35 @@ export function drawScene(c,s){
  if(s.mode==="bio"){
   ground(c,480);
   const quad=b.legs.length===4,x=clamp(250+b.x*24,125,845);
-  const hipY=quad?350:360,seg=quad?53:61;
+  const tint=/^#[a-fA-F0-9]{6}$/.test(p.color||"")?p.color:colors.a;
+  const hipY=quad?350:360,seg=(quad?53:61)*clamp(p.limb||1,.6,1.55);
   const baseY=hipY+b.theta*20;
   if(quad){
    const attachments=[-67,-32,35,68];
-   line(c,x-74,baseY-10,x+75,baseY-10,"#64cbb4",31);
-   line(c,x+62,baseY-15,x+94,baseY-50,"#64cbb4",16);
-   circle(c,x+98,baseY-60,23,"#f8cf99");
+   line(c,x-74*clamp(p.torso||1,.65,1.6),baseY-10,x+75*clamp(p.torso||1,.65,1.6),baseY-10,tint,31);
+   line(c,x+62,baseY-15,x+94,baseY-50,tint,16);
+   circle(c,x+98,baseY-60,23*clamp(p.head||1,.6,1.5),"#f8cf99");
    line(c,x+85,baseY-81,x+78,baseY-99,"#f8cf99",6);
    b.legs.forEach((leg,i)=>{
     const anchor=x+attachments[i],ky=baseY+seg*Math.cos(leg.hip),kx=anchor+seg*Math.sin(leg.hip);
     const fx=kx+seg*Math.sin(leg.hip-leg.knee),fy=ky+seg*Math.cos(leg.hip-leg.knee);
-    const shade=i%2?colors.b:colors.a;
+    const shade=i%2?colors.b:tint;
     line(c,anchor,baseY,kx,ky,shade,10);line(c,kx,ky,fx,fy,shade,8);
     circle(c,kx,ky,7,"#d9f4ec");line(c,fx-9,fy,fx+12,fy,"#d9f4ec",5);
     if(leg.contact)circle(c,fx,fy,5,"#ffcf63");
    });
   }else{
-   line(c,x,baseY,x-12,baseY-124,colors.a,17);
-   circle(c,x-14,baseY-146,26,"#f8cf99");
+   line(c,x,baseY,x-12,baseY-124*clamp(p.torso||1,.65,1.6),tint,17);
+   circle(c,x-14,baseY-124*clamp(p.torso||1,.65,1.6)-22,26*clamp(p.head||1,.6,1.5),"#f8cf99");
    b.legs.forEach((leg,i)=>{
     const anchor=x+(i?12:-12),kx=anchor+seg*Math.sin(leg.hip),ky=baseY+seg*Math.cos(leg.hip);
     const fx=kx+seg*Math.sin(leg.hip-leg.knee),fy=ky+seg*Math.cos(leg.hip-leg.knee);
-    const shade=i?colors.b:colors.a;
+    const shade=i?colors.b:tint;
     line(c,anchor,baseY,kx,ky,shade,12);line(c,kx,ky,fx,fy,shade,10);
     circle(c,kx,ky,8,"#e8f8ed");line(c,fx-11,fy,fx+14,fy,"#e8f8ed",6);
     if(leg.contact)circle(c,fx,fy,6,"#ffcf63");
    });
-   line(c,x-10,baseY-95,x+42*Math.sin(b.phase),baseY-34,"#70bfae",7);
+   line(c,x-10,baseY-95,x+42*Math.sin(b.phase),baseY-34,tint,7);
    line(c,x-10,baseY-95,x-42*Math.sin(b.phase),baseY-34,"#f8bc6a",7);
   }
   line(c,x,185,x,465,"#f0dd7999",1);
@@ -337,7 +338,7 @@ export function drawScene(c,s){
  if(s.mode==="arena"){ground(c,478);box(c,34,156,932,245,"#1d344a");line(c,34,270,966,270,"#496478",4);line(c,74,156,74,401,"#92b9c5",3);for(let i=0;i<13;i++){line(c,74+i*69,156,74+i*69,401,"#314c5e",1);}
   for(const pos of (s.preset==="race"?[8,17,25]:[])){const px=74+pos/32*850;for(const y of [213,325]){box(c,px-9,y-26,18,45,"#ee9a51");txt(c,"▲",px,y-33,17,colors.b,"center");}}
   const finish=924;for(let j=0;j<10;j++)for(let k=0;k<2;k++)box(c,finish+j%2*8,158+j*24+k*12,8,12,(j+k)%2?"#f8f8ff":"#16283b");
-  for(let i=0;i<2;i++){const e=b.racers[i],x=74+e.x/32*850,y=i===0?207:327;circle(c,x,y,30,i===0?colors.a:colors.b);txt(c,i===0?"A":"B",x,y+8,23,"#122436","center");txt(c,e.name,55,y-45,16,i===0?colors.a:colors.b);}
+  for(let i=0;i<2;i++){const e=b.racers[i],x=74+e.x/32*850,y=i===0?207:327;circle(c,x,y,30,e.color||(i===0?colors.a:colors.b));txt(c,i===0?"A":"B",x,y+8,23,"#122436","center");txt(c,e.name,55,y-45,16,e.color||colors.a);txt(c,e.kind==="quadruped"?"4 Beine":"2 Beine",x,y+51,12,"#a5c3c9","center");}
   if(b.winner)txt(c,"SIEGER: "+b.winner,500,78,29,colors.a,"center");else txt(c,s.preset==="sprint"?"SPRINT · 32 m":"HINDERNISRENNEN · 32 m",500,78,20,"#bdd4de","center");
  }
  txt(c,"SIMULATION · v"+VERSION,23,540,12,"#7798a9");txt(c,t.toFixed(2)+" s",976,540,13,"#c5d4e1","right");
