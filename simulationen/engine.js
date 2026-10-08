@@ -1,6 +1,6 @@
 // DMP Sim Lab – deterministische, bewusst vereinfachte Lehrmodelle
-import {makeDuel,stepDuel,makeDuelTraining,duelDefaultGenome,simulateDuel} from "./duel-core.js?v=1.4.0";
-export const VERSION="1.4.0";
+import {makeDuel,stepDuel,makeDuelTraining,duelDefaultGenome,duelStyle,simulateDuel} from "./duel-core.js?v=1.5.0";
+export const VERSION="1.5.0";
 export const CONFIG={
  physics:{title:"Physik-Spielwiese",presets:[["fall","Freier Fall"],["pendulum","Pendel"],["ramp","Schiefe Ebene"],["collision","Kugelkollision"]],limit:"Lehrmodell mit idealisierten Körpern, festem Zeitschritt und angenommener Reibung. Nicht für technische Nachweise."},
  crash:{title:"Crashtest",presets:[["barrier","Auto gegen Betonbarriere"],["gate","Auto gegen Schranke"],["jump","Auto über Sprungrampe"]],limit:"Vereinfachte Kontakt-, Bruch- und Flugmodelle. Schadensstufen sind illustrative Werte aus Belastung und Verformung, keine realen Fahrzeug- oder Verletzungsprognosen."},
@@ -211,7 +211,7 @@ export function measure(s){
  }
  if(s.mode==="arena"&&s.preset==="duel"){
   const [a,c]=b.fighters;
-  return{plot:a.points-c.points,chart:"Punkte A − B",read:[["Entität A",a.name+" · "+a.hp.toFixed(0)+" HP"],["Entität B",c.name+" · "+c.hp.toFixed(0)+" HP"],["Punkte",a.points+" : "+c.points],["Aktionen",a.action+" / "+c.action],["Sieger",b.winner||"Noch offen"]]};
+  return{plot:a.points-c.points,chart:"Punkte A − B",read:[["Entität A",a.name+" · "+a.hp.toFixed(0)+" HP"],["Entität B",c.name+" · "+c.hp.toFixed(0)+" HP"],["Punkte",a.points+" : "+c.points],["Lernstile",duelStyle(a.genome)+" / "+duelStyle(c.genome)],["Sieger",b.winner||"Noch offen"]]};
  }
  const [a,c]=b.racers;return{plot:a.x-c.x,chart:"Vorsprung A − B (m)",read:[["Entität A",fmt(a.x,1)+" / 32 m"],["Entität B",fmt(c.x,1)+" / 32 m"],["Zeit",fmt(s.time,1)+" s"],["Sieger",b.winner||"–"]]};
 }
