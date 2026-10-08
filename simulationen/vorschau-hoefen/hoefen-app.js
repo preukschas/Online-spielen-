@@ -275,7 +275,7 @@ async function loadBundledOSM(){
  // If it is absent, silently retain the honestly labelled schematic fallback.
  if(geosource.hasDgm||geosource.type==="osm"||geosource.type==="osm+dem")return;
  try{
-  const timeout=AbortSignal.timeout?AbortSignal.timeout(9000):undefined;
+  const timeout=typeof AbortSignal!=="undefined"&&AbortSignal.timeout?AbortSignal.timeout(9000):undefined;
   const response=await fetch("./hoefen-ortsdaten.json",{cache:"no-store",signal:timeout});
   if(!response.ok)throw Error("HTTP "+response.status);
   const snapshot=await response.json();
