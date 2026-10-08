@@ -129,7 +129,7 @@ function save(){storeSet(LS.stats,JSON.stringify(stats));storeSet(LS.meta,JSON.s
 function normBase(s){return String(s??'').toLowerCase().trim().replace(/[’‘`´]/g,"'").replace(/['’]/g,'').replace(/[.!?,;:]/g,' ').replace(/\s+/g,' ').trim()}
 function normDe(s){return normBase(s).replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')}
 function variants(v,d){
- if(d==='de-en'){const base=normBase(v.en);const out=new Set([base]);(v.a||[]).forEach(x=>out.add(normBase(x)));if(base==='colour')out.add('color');if(base==='grey')out.add('gray');if(base==='dad')out.add('father');if(base==='mum')out.add('mother');if(base==='i can play football')out.add('i can play soccer');return [...out]}
+ if(d==='de-en'){const base=normBase(v.en);const out=new Set([base]);(v.a||[]).forEach(x=>out.add(normBase(x)));if(base==='colour')out.add('color');if(base==='grey')out.add('gray');if(base==='dad')out.add('father');if(base==='mum')out.add('mother');if(base==='mother')out.add('mum');if(base==='father')out.add('dad');if(base==='i can play football')out.add('i can play soccer');return [...out]}
  const out=new Set(String(v.de).split(';').map(normDe));(v.a||[]).forEach(x=>out.add(normDe(x)));return [...out]
 }
 function answerOk(v,d,val){const n=d==='de-en'?normBase(val):normDe(val);return n!==''&&variants(v,d).includes(n)}
@@ -185,6 +185,9 @@ async function moeRefreshVocabulary(){
   const next=[],seen=new Set();
   for(const row of data.words){
    if(!row||!row.en||!row.de)continue;
+   // Nur die 104 freigegebenen Vokabeln der ersten vier Seiten.
+   const approvedId=Number(String(row.id||'').replace(/^MOE-/,''));
+   if(!Number.isInteger(approvedId)||approvedId<1||approvedId>104)continue;
    const key=moeKey(row.en);if(seen.has(key))continue;seen.add(key);
    const older=original.get(key);
    next.push({en:String(row.en),de:String(row.de),core:older?older.core:1,a:older?(older.a||[]):[]});
