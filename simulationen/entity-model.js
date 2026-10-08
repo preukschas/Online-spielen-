@@ -5,7 +5,7 @@ export const ENTITY_FORMAT = "DMP_SIM_ENTITY";
 export const ENTITY_SCHEMA = 1;
 export const ENTITY_LIMIT = 40;
 export const ENTITY_FIELDS = Object.freeze({
-  mass:["Masse",10,120,5,"kg"],
+  mass:["Masse",3,650,.5,"kg"],
   amplitude:["Schrittweite",.2,1,.05,""],
   frequency:["Schrittfrequenz",.7,2.6,.1,"Hz"],
   feedback:["Balance-Regler",1,8,.25,""],
@@ -20,6 +20,12 @@ export const ENTITY_PRESETS = Object.freeze({
   animal:{name:"Vierbeiner",kind:"quadruped",color:"#f3c577",mass:40,amplitude:.65,frequency:1.8,feedback:4.5,traction:.8,endurance:.75,torso:1.15,limb:.85,head:.9},
   robot:{name:"Roboter",kind:"biped",color:"#89b6ff",mass:85,amplitude:.6,frequency:1.7,feedback:5,traction:.9,endurance:.95,torso:1.1,limb:1.05,head:.75}
 });
+// Grafische Archetypen; die Namen erlauben keine freien SVG-/HTML-Inhalte.
+export const ENTITY_APPEARANCES=Object.freeze({
+  generic:"neutral",human:"biped",cheetah:"quadruped",wolf:"quadruped",
+  horse:"quadruped",fox:"quadruped",cat:"quadruped",ostrich:"biped",
+  robot:"biped",robotdog:"quadruped"
+});
 const clamp=(x,min,max)=>Math.max(min,Math.min(max,x));
 export function newEntity(type="human",id="draft"){
   const base=ENTITY_PRESETS[type]||ENTITY_PRESETS.human;
@@ -32,11 +38,14 @@ export function validateEntity(value){
   if(typeof value.name!=="string"||value.name.trim().length<1||value.name.trim().length>24)return null;
   if(value.kind!=="biped"&&value.kind!=="quadruped")return null;
   if(value.kind==="biped"&&value.mass<30)return null;
+  const appearance=value.appearance===undefined?"generic":value.appearance;
+  if(typeof appearance!=="string"||!Object.hasOwn(ENTITY_APPEARANCES,appearance))return null;
+  if(ENTITY_APPEARANCES[appearance]!=="neutral"&&ENTITY_APPEARANCES[appearance]!==value.kind)return null;
   if(typeof value.color!=="string"||!/^#[0-9a-fA-F]{6}$/.test(value.color))return null;
   for(const [key,field] of Object.entries(ENTITY_FIELDS)){
     if(typeof value[key]!=="number"||!Number.isFinite(value[key])||value[key]<field[1]||value[key]>field[2])return null;
   }
-  const normalized={format:ENTITY_FORMAT,schema:ENTITY_SCHEMA,id:value.id,name:value.name.trim(),kind:value.kind,color:value.color.toLowerCase()};
+  const normalized={format:ENTITY_FORMAT,schema:ENTITY_SCHEMA,id:value.id,name:value.name.trim(),kind:value.kind,color:value.color.toLowerCase(),appearance};
   for(const key of Object.keys(ENTITY_FIELDS))normalized[key]=value[key];
   return normalized;
 }
