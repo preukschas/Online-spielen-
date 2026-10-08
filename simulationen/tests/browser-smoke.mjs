@@ -33,11 +33,17 @@ async function testViewport(browser,name,opts){
  page.on("pageerror",e=>errors.push(e.message));
  page.on("console",msg=>{if(msg.type()==="error")errors.push("console: "+msg.text());});
  await page.goto(base+"/index.html",{waitUntil:"networkidle"});
+ await check(name+" Portal zeigt Mechanik als startbar",async()=>{
+  const card=page.locator('.sim.available[href="./lab.html?mode=mechanics"]');
+  assert.equal(await card.count(),1);
+  assert.match(await card.innerText(),/Mechanik/);
+ });
+ await page.goto(base+"/lab.html",{waitUntil:"networkidle"});
  await check(name+" title and canvas",async()=>{
   assert.match(await page.title(),/Simulationswerkstatt/);
   assert.equal(await page.locator("#scene").count(),1);
   assert.equal(await page.locator("#parameters input[type=range]").count(),3);
-  assert.equal(await page.locator(".module").count(),4);
+  assert.equal(await page.locator(".module").count(),5);
  });
  await check(name+" no horizontal overflow",async()=>{
   const widths=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,inner:innerWidth,canvas:document.querySelector("#scene").getBoundingClientRect().width}));
@@ -56,8 +62,8 @@ async function testViewport(browser,name,opts){
   await page.locator("#step").click();
   assert.match(await page.locator("#readouts").innerText(),/Höhe/);
  });
- await check(name+" switch 4 modules and chart",async()=>{
-  for(const mode of ["crash","bio","arena","physics"]){
+ await check(name+" switch 5 modules and chart",async()=>{
+  for(const mode of ["crash","bio","arena","mechanics","physics"]){
    await page.locator('.module[data-mode="'+mode+'"]').click();
    assert.equal(await page.locator('.module[data-mode="'+mode+'"]').getAttribute("aria-pressed"),"true");
    assert.equal(await page.locator("#readouts .readout").count(),4);
@@ -124,6 +130,34 @@ async function testViewport(browser,name,opts){
    const download=await downloading;
    assert.match(download.suggestedFilename(),/\.csv$/);
    assert.match(await page.locator("#notice").innerText(),/CSV-Messreihe exportiert/);
+ });
+ await check(name+" Mechanik Hebel, Kurbel, Zahnräder",async()=>{
+  await page.locator('.module[data-mode="mechanics"]').click();
+  assert.equal(await page.locator("#preset option").count(),3);
+  for(const preset of ["lever","crank","gears"]){
+    await page.locator("#preset").selectOption(preset);
+    assert.equal(await page.locator("#preset").inputValue(),preset);
+    assert.equal(await page.locator("#readouts .readout").count(),4);
+    await page.locator("#play").click();
+    await page.waitForTimeout(240);
+    await page.locator("#play").click();
+    await page.locator("#step").click();
+    const read=await page.locator("#readouts").innerText();
+    assert.ok(read.length>15,read);
+    await page.locator("#reset").click();
+  }
+ });
+ await check(name+" Mechanik-Einstellungen über Neustart reproduzieren",async()=>{
+  await page.locator('.module[data-mode="mechanics"]').click();
+  await page.locator("#preset").selectOption("gears");
+  await page.locator("#param-teethA").evaluate(el=>{el.value="20";el.dispatchEvent(new Event("input",{bubbles:true}));});
+  await page.locator("#scenarioName").fill("Getriebe-Test "+name);
+  await page.locator("#save").click();
+  await page.reload({waitUntil:"networkidle"});
+  await page.locator("#saved").selectOption({index:1});
+  await page.locator("#load").click();
+  assert.equal(await page.locator("#preset").inputValue(),"gears");
+  assert.equal(await page.locator("#param-teethA").inputValue(),"20");
  });
  await check(name+" all scripts clean",async()=>{assert.equal(errors.length,0,JSON.stringify(errors));});
  await page.screenshot({path:"test-artifacts/"+name.replace(/\W+/g,"-")+".png",fullPage:true});
