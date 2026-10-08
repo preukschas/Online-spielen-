@@ -30,7 +30,7 @@ export function makeGaitWorld(seed=31){
  const s={seed,x:.35,y:1.035,vx:0,vy:0,phi:(gaitRng(seed)()-.5)*.045,omega:0,
   t:0,steps:0,fallen:false,reached:false,finished:false,contacts:[false,false],
   legs:[{hip:-.23,knee:.27,hv:0,kv:0},{hip:.23,knee:.27,hv:0,kv:0}],
-  energy:0,slip:0,score:0,history:[],lastActions:[0,0,0,0]};
+  energy:0,slip:0,landings:0,contactTicks:0,flightTicks:0,score:0,history:[],lastActions:[0,0,0,0]};
  s.prevFeet=[footPosition(s,0).foot,footPosition(s,1).foot];
  return s;
 }
@@ -88,7 +88,7 @@ export function gaitStep(s,genome){
   if(leg.knee===.03||leg.knee===1.65)leg.kv=0;
   work+=(Math.abs(hipAccel*leg.hv)+Math.abs(kneeAccel*leg.kv))*.0008*dt;
  }
- const prevX=s.x,prevY=s.y;
+ const previousContacts=s.contacts.slice();
  s.vy-=9.81*dt;
  s.vx*=.996;
  s.x+=s.vx*dt;
@@ -101,25 +101,27 @@ export function gaitStep(s,genome){
  for(let i=0;i<2;i++){
   const foot=feet[i],prev=s.prevFeet[i],vx=(foot.x-prev.x)/dt,vy=(foot.y-prev.y)/dt;
   const penetration=groundHeight(foot.x,s.seed)-foot.y;
-  const normal=clamp(260*penetration-Math.min(0,vy)*8,0,70);
+  const normal=clamp(190*penetration-Math.min(0,vy)*6,0,28);
   const friction=clamp(-vx*8,-traction*normal,traction*normal);
-  s.contacts[i]=normal>1;
+  s.contacts[i]=normal>1;if(s.contacts[i]&&!previousContacts[i])s.landings++;
   netN+=normal;netF+=friction;
   moment+=(-normal*(foot.x-s.x)+friction*(s.y-foot.y)*.18)*.36;
   s.slip+=Math.abs(vx)*(normal>1?1:0)*dt;
  }
  s.prevFeet=feet;
- s.vx=clamp(s.vx+netF*dt,-4.2,5.0);
- s.vy=clamp(s.vy+netN*dt,-10,7);
+ s.vx=clamp(s.vx+netF*.72*dt,-2.6,3.3);
+ s.vy=clamp(s.vy+netN*dt,-7,3.0);
  s.omega=clamp(s.omega+(moment-1.0*s.omega)*dt,-8,8);
  s.energy+=work+Math.abs(output[0]-output[2])*.0003*dt;
  s.t+=dt;s.steps++;
+ if(s.contacts.some(Boolean))s.contactTicks++;else s.flightTicks++;
  s.fallen=(s.y<.63||Math.abs(s.phi)>1.05||!Number.isFinite(s.x));
- s.reached=s.x>=GAIT_GOAL;
+ // Successful gait requires alternating support phases, not just a single ballistic jump.
+ s.reached=s.x>=GAIT_GOAL&&!s.fallen&&s.landings>=4&&s.contactTicks/s.steps>=.30;
  s.finished=s.fallen||s.reached||s.t>=GAIT_DURATION-1e-8;
  const progress=clamp(s.x-.35,-1,GAIT_GOAL);
  s.score=progress*8+(s.reached?32+Math.max(0,GAIT_DURATION-s.t)*1.2:0)
-   +(s.t/GAIT_DURATION)*3-(s.fallen?7:0)-s.energy*.04-s.slip*.012;
+   +(s.t/GAIT_DURATION)*3-(s.fallen?7:0)-s.energy*.10-s.slip*.12-s.flightTicks*dt*.36;
  if(s.steps%12===0||s.finished){
   s.history.push({t:s.t,x:s.x,y:s.y,phi:s.phi});
   if(s.history.length>80)s.history.shift();
@@ -131,7 +133,7 @@ export function gaitEpisode(w,seed){
  const s=makeGaitWorld(seed);
  for(let i=0;i<=GAIT_DURATION/GAIT_DT+1&&!s.finished;i++)gaitStep(s,w);
  return {score:s.score,distance:s.x,fallen:s.fallen,reached:s.reached,
-   time:s.t,energy:s.energy,slip:s.slip};
+   time:s.t,energy:s.energy,slip:s.slip,landings:s.landings,contactShare:s.steps?s.contactTicks/s.steps:0};
 }
 export function gaitEvaluate(w,seeds){
  if(!Array.isArray(seeds)||!seeds.length||seeds.length>20)throw Error("Ungültige Testkurse");
@@ -153,13 +155,13 @@ function mutate(w,r,rate=.14){
  return w.map(v=>r()<rate?clamp(v+(r()+r()+r()+r()-2)*.42,-4,4):v);
 }
 export function trainGaitGeneration(t){
- const seeds=[t.seed+101,t.seed+203];
+ const seeds=[101,203,317,439,563,677].map(n=>t.seed+n);
  const results=t.population.map((w,i)=>({w,i,test:gaitEvaluate(w,seeds)}));
  results.sort((a,b)=>b.test.score-a.test.score||a.i-b.i);
  const top=results[0],mean=results.reduce((sum,a)=>sum+a.test.score,0)/results.length;
  if(top.test.score>t.bestScore){t.bestScore=top.test.score;t.champion=top.w.slice();}
  t.generation++;
- const holdout=gaitEvaluate(t.champion,[t.seed+15001,t.seed+15002,t.seed+15003]);
+ const holdout=gaitEvaluate(t.champion,[15001,15002,15003,15071,15133].map(n=>t.seed+n));
  const line={generation:t.generation,mean,training:t.bestScore,
   validation:holdout.score,success:holdout.success,falls:holdout.falls};
  t.history.push(line);if(t.history.length>1500)t.history.shift();
