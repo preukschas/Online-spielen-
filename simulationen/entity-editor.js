@@ -1,6 +1,7 @@
-import {ENTITY_KEY,ENTITY_LIMIT,ENTITY_FIELDS,ENTITY_APPEARANCES,newEntity,validateEntity,toBiomechanics,toArena,safeEntityList,findEntity} from "./entity-model.js";
+import {ENTITY_KEY,ENTITY_LIMIT,ENTITY_FIELDS,ENTITY_APPEARANCES,COMBAT_KEYS,newEntity,validateEntity,toBiomechanics,toArena,safeEntityList,findEntity} from "./entity-model.js";
 import {ENTITY_CATALOG,catalogEntity,installCatalog} from "./entity-catalog.js";
 import {drawCharacter,characterThumbnail} from "./entity-art.js";
+import {duelDefaultGenome} from "./duel-core.js";
 const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";
 let draft,selected=null,playing=false,phase=0,last=0;
 const names={mass:"Masse",amplitude:"Schrittweite",frequency:"Schrittfrequenz",feedback:"Balance-Regler",traction:"Bodenhaftung",endurance:"Ausdauer",torso:"Rumpfgröße",limb:"Beinlänge",head:"Kopfgröße"};
@@ -16,12 +17,43 @@ function selectCard(){
  const item=ENTITY_CATALOG.find(i=>i.key===draft.id.replace(/^catalog-/,""));
  if(item)showCatalogFact(item);
 }
+const skillNames={aggression:"Angriffsdrang",guard:"Deckung",jump:"Sprungbereitschaft",
+ punch:"Schlagen",kick:"Treten",push:"Schubsen / Nahdistanz",range:"Kampfdistanz",
+ stride:"Schrittweite",cadence:"Schritttakt",footwork:"Fußarbeit",evade:"Ausweichen",
+ spring:"Sprungimpuls",balance:"Balance",recovery:"Erholung"};
+function combatSliders(){
+ const target=$("combatFields");target.replaceChildren();
+ for(const key of COMBAT_KEYS){
+  const block=document.createElement("div");block.className="range";
+  const label=document.createElement("label");label.htmlFor="c_"+key;label.textContent=skillNames[key]||key;
+  const out=document.createElement("output");out.id="combat_"+key;label.append(out);
+  const input=document.createElement("input");input.type="range";input.min="0";input.max="100";input.step="1";input.id="c_"+key;
+  input.addEventListener("input",()=>{if(!draft.combat)return;draft.combat[key]=Number(input.value)/100;out.textContent=input.value+" %";showCombatSummary();});
+  block.append(label,input);target.append(block);
+ }
+}
+function showCombatSummary(){
+ const summary=$("combatSummary");if(!draft.combat){summary.textContent="";return;}
+ const top=COMBAT_KEYS.map(k=>[skillNames[k],draft.combat[k]]).sort((a,b)=>b[1]-a[1]).slice(0,4);
+ summary.textContent="Profil-Schwerpunkte: "+top.map(([k,v])=>k+" "+Math.round(v*100)+" %").join(" · ")+". Lernrunden dürfen diese Gene später verändern.";
+}
+function syncCombat(){
+ const active=!!draft.combat;
+ $("combatArea").hidden=!active;$("enableCombat").hidden=active;
+ $("fighterStyleSelect").value=draft.fighterStyle||"";
+ if(!active)return;
+ for(const key of COMBAT_KEYS){
+  const v=Math.round((draft.combat[key]??.5)*100);
+  $("c_"+key).value=String(v);$("combat_"+key).textContent=v+" %";
+ }
+ showCombatSummary();
+}
 function showCatalogFact(item){
  const box=$("catalogFact");box.replaceChildren();
  const caption=document.createElement("strong");caption.textContent=item.emoji+" "+item.name+" · "+item.type+". ";
- box.append(caption,document.createTextNode(item.fact+" "));
+ box.append(caption,document.createTextNode(item.fact+" "+(item.talent?"Bewegungs-/Kampfstil: "+item.talent+". ":"")));
  if(item.source){
-  const link=document.createElement("a");link.href=item.source;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Artprofil und Quelle ↗";box.append(link);
+  const link=document.createElement("a");link.href=item.source;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Recherchequelle ↗";box.append(link);
  }else{
   const label=document.createElement("span");label.className="catalog-label";label.textContent=" Konstruktions-/Spielannahme";box.append(label);
  }
@@ -36,6 +68,8 @@ function renderCatalog(){
   const title=document.createElement("strong");title.textContent=item.emoji+" "+item.name;
   const desc=document.createElement("small");desc.textContent=item.mass.toLocaleString("de-DE")+" kg · "+(item.kind==="biped"?"2 Beine":"4 Beine");
   button.append(title,desc);
+  if(item.talent){const detail=document.createElement("small");detail.className="skill-tag";detail.textContent=item.talent;button.append(detail);}
+  button.hidden=$("catalogFilter").value==="fighters"?!item.fighterStyle:$("catalogFilter").value==="other"?!!item.fighterStyle:false;
   button.addEventListener("click",()=>{
    const existing=findEntity(localStorage,example.id);
    setDraft(existing||example,!!existing);
@@ -53,7 +87,7 @@ function sync(){
  $("r_mass").max=draft.mass>120?650:120;
  Object.keys(ENTITY_FIELDS).forEach(k=>{$("r_"+k).value=draft[k];$("v_"+k).textContent=valueText(k);});
  $("massNumber").value=String(draft.mass);
- draw();
+ syncCombat();draw();
 }
 function sliders(){
  Object.entries(ENTITY_FIELDS).forEach(([k,v])=>{
@@ -195,20 +229,34 @@ function send(mode,slot){
  if(mode==="arena")query.set("slot",slot);
  location.assign("./lab.html?"+query.toString());
 }
-sliders();renderCatalog();
+sliders();combatSliders();
+$("catalogFilter").addEventListener("change",renderCatalog);
+$("enableCombat").addEventListener("click",()=>{
+ if(draft.kind!=="biped"){notice("Kampffähigkeiten sind zunächst für Zweibeiner verfügbar.",true);return;}
+ draft.combat=duelDefaultGenome();syncCombat();notice("Kampfprofil hinzugefügt – alle vierzehn Eigenschaften sind editierbar.");
+});
+$("clearCombat").addEventListener("click",()=>{delete draft.combat;delete draft.fighterStyle;sync();notice("Kampfprofil aus dem Entwurf entfernt.");});
+$("fighterStyleSelect").addEventListener("change",ev=>{
+ if(ev.target.value)draft.fighterStyle=ev.target.value;else delete draft.fighterStyle;
+ draft.appearance="human";draft.kind="biped";sync();
+});
+renderCatalog();
 const seeded=installCatalog(localStorage);
 const first=findEntity(localStorage,"catalog-cheetah")||catalogEntity("cheetah");
 setDraft(first,!!findEntity(localStorage,"catalog-cheetah"));
-notice(seeded.ok?(seeded.added+" neue Katalog-Entitäten lokal gespeichert. "+(seeded.skipped?seeded.skipped+" wegen 40er-Grenze nicht gespeichert.":"10 Beispiel-Figuren auswählbar.")):"Browser-Speicher nicht verfügbar; Katalog kann trotzdem geladen werden.",!seeded.ok);
+notice(seeded.ok?(seeded.added+" neue Katalog-Entitäten lokal gespeichert. "+(seeded.skipped?seeded.skipped+" wegen 40er-Grenze nicht gespeichert.":"20 Beispiel-Figuren auswählbar.")):"Browser-Speicher nicht verfügbar; Katalog kann trotzdem geladen werden.",!seeded.ok);
 $("name").addEventListener("input",ev=>{draft.name=ev.target.value;draw();});
 $("color").addEventListener("input",ev=>{draft.color=ev.target.value;draw();});
 $("kind").addEventListener("change",ev=>{
  draft.kind=ev.target.value;
  if(ENTITY_APPEARANCES[draft.appearance]!==draft.kind)draft.appearance="generic";
- if(draft.kind==="biped"&&draft.mass<30)draft.mass=30;sync();
+ if(draft.kind==="biped"&&draft.mass<30)draft.mass=30;
+ if(draft.kind!=="biped"){delete draft.combat;delete draft.fighterStyle;}
+ sync();
 });
 $("appearance").addEventListener("change",ev=>{
  draft.appearance=ev.target.value;
+ if(draft.appearance!=="human")delete draft.fighterStyle;
  const kind=ENTITY_APPEARANCES[draft.appearance];
  if(kind&&kind!=="neutral")draft.kind=kind;
  if(draft.kind==="biped"&&draft.mass<30)draft.mass=30;
