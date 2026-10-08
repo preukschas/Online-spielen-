@@ -33,6 +33,12 @@ function controls(){
   const s=document.createElement("p");s.id="trainStatus";s.className="train-status";s.textContent="Der Regler wird durch Evolution mit getrenntem Testlauf optimiert.";ex.append(s);
  }
  if(mode==="arena"){
+  for(const [key,label,fallback] of [["nameA","Entität A benennen","Entität A"],["nameB","Entität B benennen","Entität B"]]){
+   const title=document.createElement("label");title.className="field-label";title.textContent=label;title.htmlFor=key;
+   const field=document.createElement("input");field.id=key;field.className="full";field.maxLength=24;field.value=String(params[key]||fallback);field.setAttribute("aria-label",label);
+   field.addEventListener("change",()=>{params[key]=field.value.trim().slice(0,24)||fallback;resetSim();});
+   ex.append(title,field);
+  }
   const imp=document.createElement("button");imp.type="button";imp.className="extra-button";imp.textContent="🦿 Besten Läufer als Entität A laden";
   imp.addEventListener("click",()=>{
    const best=safeGet(BIOKEY,null);if(!best){note("Noch kein trainierter Zweibeiner gespeichert.",true);return;}
