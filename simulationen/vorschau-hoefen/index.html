@@ -1,7 +1,7 @@
 <!doctype html><html lang="de"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1725">
-<title>Höfen & Bruchgraben – DMP SIM LAB</title>
+<title>Höfen & Bruchgraben V2 – DMP SIM LAB</title>
 <style>
 :root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;--bg:#091724;--panel:#132d3d;--panel2:#102637;--line:#315466;--bright:#68f1c4;--text:#eaf9f5;--muted:#a6c0c9;--warn:#ffd59b;--blue:#79c7f8}*{box-sizing:border-box}
 body{margin:0;background:radial-gradient(ellipse 70vw 50vw at 80% -15%,#244f55 0,transparent 72%),var(--bg);color:var(--text)}
@@ -62,7 +62,7 @@ footer{border-top:1px solid #ffffff1b;margin-top:24px;padding-top:16px;color:#9f
 @media(max-width:720px){.controls,.lower{grid-template-columns:1fr}.hero{display:block}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.pill{font-size:9px}.brand{font-size:12px}.corner{font-size:9px;left:12px;bottom:13px;padding:6px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style></head><body><main>
-<nav><a class="brand" href="./index.html">DMP <b>SIM LAB</b> / SCHUTTERWALD</a><span class="pill">SPIELBARE ENTWICKLUNGSVERSION · V1</span></nav>
+<nav><a class="brand" href="./index.html">DMP <b>SIM LAB</b> / SCHUTTERWALD</a><span class="pill">SPIELBARE ENTWICKLUNGSVERSION · V2</span></nav>
 <header class="hero"><div><div class="eyebrow">Schutterwald · Höfen · Bruchgraben</div><h1>Wo fließt das <em>Wasser hin?</em></h1>
 <p>Ein ganzes Modellgebiet, drei Maßnahmenpakete und eigene Eingriffe. Lass Starkregen fallen, sieh den modellierten Abfluss, bearbeite die Fläche direkt und vergleiche zwei Varianten.</p></div></header>
 <div class="notice"><strong>Keine Gefahrenkarte:</strong> Der erste Start verwendet eine <strong>frei erfundene Modelllandschaft</strong> um eine echte Ortskoordinate in Höfen. Der dargestellte Wasserlauf ist <strong>nur schematisch</strong> und nicht die kartierte Lage des Bruchgrabens. Tatsächliche Gebäude- und Gewässergeometrien werden erst nach erfolgreichem OSM-Abruf verwendet, reale Höhen erst nach geeignetem DGM-Import. Ergebnisse sind <strong>keine lokalen Überflutungsprognosen</strong>.</div>
@@ -119,13 +119,14 @@ footer{border-top:1px solid #ffffff1b;margin-top:24px;padding-top:16px;color:#9f
 <h2>3. Ortsdaten & Varianten</h2>
 <div class="cap">Geografischer Bezug</div>
 <div class="callout" id="geoStatus" role="status">Start: schematische Karte, künstliche Geländehöhen.</div>
+<div class="callout" id="waterwayStatus" role="status">Bruchgraben-Verlauf nicht mit realen Kartendaten bestätigt.</div>
 <div class="row" style="margin-top:10px">
 <button id="getOsm" class="btn accent">⬇ OSM-Geometrie laden</button>
 <button id="restoreMap" class="btn">Schematische Karte</button></div>
 <div class="row" style="margin-top:8px">
-<label class="btn file">DGM (.asc) importieren<input type="file" id="demInput" accept=".asc,.txt,text/plain" aria-label="ESRI ASCII Höhendaten importieren"></label>
+<label class="btn file">DGM1-Höhen (.xyz/.txt/.asc) importieren<input type="file" id="demInput" accept=".xyz,.asc,.txt,text/plain" aria-label="ESRI ASCII Höhendaten importieren"></label>
 </div>
-<p class="small">OSM liefert bei erfolgreicher Abfrage reale Gebäude, Wege und Flächen (© OpenStreetMap-Mitwirkende, ODbL). Importierte Geländehöhen benötigen <strong>EPSG:25832</strong>. Kanalmodell, Bodenannahmen und Wirkungswerte bleiben auch dann vereinfacht.</p>
+<p class="small">Bei erfolgreicher Online-Abfrage werden OSM-Gebäude, Straßen und Gewässer als echte Kartendaten gekennzeichnet; <strong>nur namentlich bestätigte OSM-Wasserwege heißen hier Bruchgraben</strong>. LGL-DGM1 kann direkt als entpackte <strong>XYZ-Datei</strong> (oder zugeschnittenes ASCII-Raster) importiert werden – EPSG:25832 vorausgesetzt. © OpenStreetMap-Mitwirkende, ODbL; Datenquelle LGL, www.lgl-bw.de, dl-de/by-2-0. Auch mit echten Karten bleiben Versiegelung, Kanaldaten und Strömungsphysik stark vereinfacht.</p>
 <div class="cap">Versuch A/B sichern</div>
 <div class="tools"><button id="saveA" class="btn">A speichern</button><button id="saveB" class="btn">B speichern</button></div>
 <button id="runAB" class="btn accent" style="width:100%;margin-top:8px">A/B mit gleichem Regen vergleichen</button>
@@ -150,9 +151,10 @@ footer{border-top:1px solid #ffffff1b;margin-top:24px;padding-top:16px;color:#9f
 <div class="callout" id="insight">Wähle zwei Varianten und klicke „A/B vergleichen“.</div>
 </section>
 </div>
-<footer>Dies ist ein bewusst grobes, vollständig bedienbares <strong>Lehr- und Vergleichsmodell</strong> für Höfen/Bruchgraben (Schutterwald). Raster: 60 × 40 Zellen à 20 m, 96 ha. Geländeschema, Wasserlauf und modellierte Kanalabgabe sind bis zur expliziten Datenübernahme <strong>keine echten lokalen Daten</strong>. Bodenaufnahme, Speichergrößen, Drainage und Abflussrouting sind vereinfachte Annahmen; die Gewässerhydraulik, Rückstau, Wasserstände in Häusern und die tatsächliche Belastung des Kanalnetzes werden nicht prognostiziert. Örtlicher Quellenbezug: <a href="https://www.schutterwald.de/leben-wohnen/bauen/bebauungsplaene" target="_blank" rel="noopener noreferrer">Gemeinde Schutterwald · Planunterlagen</a> und <a href="https://opengeodata.lgl-bw.de" target="_blank" rel="noopener noreferrer">LGL Open GeoData</a>. Planungshintergrund Höfen: südlich Löhliswälder Straße, Bruchgraben als Vorfluter, hoher Grundwasserstand (Planbegründung 2018). <strong>Keine kommunale Freigabe, kein amtliches Risiko- oder Überflutungsmodell.</strong></footer>
+<footer>Dies ist ein bewusst grobes, vollständig bedienbares <strong>Lehr- und Vergleichsmodell</strong> für Höfen/Bruchgraben (Schutterwald). Raster: 60 × 40 Zellen à 20 m, 96 ha. Die importierten realen Daten stammen ausschließlich aus erfolgreichem OSM-Abruf bzw. mit passender EPSG:25832-Projektion belegtem DGM1-Import. Geländeschema, Wasserlauf und modellierte Kanalabgabe sind bis zur expliziten Datenübernahme <strong>keine echten lokalen Daten</strong>. Bodenaufnahme, Speichergrößen, Drainage und Abflussrouting sind vereinfachte Annahmen; die Gewässerhydraulik, Rückstau, Wasserstände in Häusern und die tatsächliche Belastung des Kanalnetzes werden nicht prognostiziert. Örtlicher Quellenbezug: <a href="https://www.schutterwald.de/leben-wohnen/bauen/bebauungsplaene" target="_blank" rel="noopener noreferrer">Gemeinde Schutterwald · Planunterlagen</a> und <a href="https://opengeodata.lgl-bw.de" target="_blank" rel="noopener noreferrer">LGL Open GeoData</a>. Planungshintergrund Höfen: südlich Löhliswälder Straße, Bruchgraben als Vorfluter, hoher Grundwasserstand (Planbegründung 2018). <strong>Keine kommunale Freigabe, kein amtliches Risiko- oder Überflutungsmodell.</strong></footer>
 </main>
 <script src="./hoefen-core.js"></script>
 <script src="./water-geodata.js"></script>
+<script src="./hoefen-geo-v2.js"></script>
 <script src="./hoefen-app.js"></script>
 </body></html>
