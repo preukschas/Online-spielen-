@@ -3,7 +3,7 @@ import {drawScene} from "./render-v2.js";
 import {safeEntityList,findEntity,toBiomechanics,toArena} from "./entity-model.js";
 const $=id=>document.getElementById(id),canvas=$("scene"),sceneCtx=canvas.getContext("2d"),chartCtx=$("chart").getContext("2d");
 const KEY="dmp_simlab_scenarios_v1",BIOKEY="dmp_simlab_best_walker_v1";
-let mode="physics",preset="fall",params=initialParams(preset),seed=42,sim=makeSim(mode,preset,params,seed),playing=false,accum=0,lastFrame=0,dialog=$("helpDialog"),renderTick=0;
+let mode="physics",preset="fall",params=initialParams(preset),seed=42,sim=makeSim(mode,preset,params,seed),playing=false,accum=0,lastFrame=0,dialog=$("helpDialog"),renderTick=0,lastSceneRender=0,sceneDirty=true;
 function formatValue(v,f){return String(Number(v.toFixed(3))).replace(".",",")+(f[5]?" "+f[5]:"")}
 function note(message,error=false){const n=$("notice");n.textContent=message;n.style.color=error?"#ff9e9e":"#55dbb4";}
 function safeGet(key,defaultValue){try{return JSON.parse(localStorage.getItem(key))??defaultValue}catch{return defaultValue}}
@@ -100,7 +100,7 @@ function controls(){
  }
  $("configTag").textContent=mode.toUpperCase();
 }
-function resetSim(){playing=false;accum=0;sim=makeSim(mode,preset,params,seed);$("play").textContent="▶ Start";$("overlay").textContent="Drücke Start, um die Simulation auszuführen.";$("overlay").classList.remove("hidden");refresh();}
+function resetSim(){playing=false;accum=0;sceneDirty=true;sim=makeSim(mode,preset,params,seed);$("play").textContent="▶ Start";$("overlay").textContent="Drücke Start, um die Simulation auszuführen.";$("overlay").classList.remove("hidden");refresh();}
 function switchMode(next){if(!CONFIG[next])return;mode=next;preset=CONFIG[next].presets[0][0];params=initialParams(preset);document.querySelectorAll(".module").forEach(b=>{const active=b.dataset.mode===next;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active));});controls();resetSim();note("");}
 function togglePlay(){if(sim.finished){resetSim()}playing=!playing;$("play").textContent=playing?"❚❚ Pause":"▶ Fortsetzen";if(playing)$("overlay").classList.add("hidden");refresh();}
 function doStep(){playing=false;$("play").textContent="▶ Fortsetzen";if(!sim.finished)stepSim(sim,1/120);$("overlay").classList.add("hidden");refresh();}
@@ -179,6 +179,7 @@ function drawChart(){
  c.fillStyle=accent;c.fillRect(14,14,25,3);
 }
 function frame(now){
+ const activeAtStart=playing||(mode==="bio"&&sim.training.running);
  const delta=lastFrame?Math.min(.10,(now-lastFrame)/1000):0;lastFrame=now;
  if(playing){
   accum+=delta*Number($("speed").value);let count=0;
@@ -200,8 +201,10 @@ function frame(now){
    }
   }
  }
- drawScene(sceneCtx,sim);
- if(now-renderTick>90){refresh();renderTick=now;}
+ // When idle, reuse the last canvas frame and throttle expensive chart repainting.
+ // This reduces GPU/CPU load in mobile WebKit without affecting fixed-step simulation time.
+ if(activeAtStart||sceneDirty||now-lastSceneRender>=1000){drawScene(sceneCtx,sim);lastSceneRender=now;sceneDirty=false;}
+ if(now-renderTick>(activeAtStart?90:600)){refresh();renderTick=now;}
  requestAnimationFrame(frame);
 }
 function scenarios(){const items=safeGet(KEY,[]);return Array.isArray(items)?items.filter(x=>x&&typeof x.name==="string").slice(0,100):[];}
