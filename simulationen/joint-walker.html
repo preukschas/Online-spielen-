@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#091624">
+<meta name="description" content="DMP Gelenk-Lernarena: zweibeinige Roboter lernen mit beweglichen Hüft- und Kniegelenken laufen.">
+<title>Gelenk-Lernarena | DMP SIM LAB</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:dark;--ink:#ebfbfc;--muted:#a0bbc5;--border:#34566a;--blue:#73a8ff;--green:#76edbf;--gold:#ffc67d}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:radial-gradient(ellipse 900px 580px at 75% -180px,#194d59,transparent 78%),radial-gradient(ellipse 550px 650px at -7% 100%,#133c4d,transparent 83%),#091624}button,input,select{font:inherit}button,a,select{touch-action:manipulation}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #a6f8d4;outline-offset:3px}h1,h2,h3,p{margin-top:0}.shell{max-width:1480px;margin:0 auto;padding:0 clamp(14px,3vw,50px)}
+header{border-bottom:1px solid #ffffff1a}.bar{min-height:78px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-top:13px;padding-bottom:13px}.logo{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.06em;font-size:18px}.logo b{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(135deg,#75f0ba,#55c8d6);color:#103241;font-size:23px}.logo em{font-style:normal;color:var(--green)}.links{display:flex;gap:12px;margin-left:auto;flex-wrap:wrap}.links a{padding:10px 13px;border:1px solid #42687a;border-radius:10px;color:#cce6e7;font-weight:700;font-size:12px}.links a:hover{background:#214053}.experimental{font-size:10px;font-weight:900;letter-spacing:.14em;color:#fee0af;border:1px solid #a98550;background:#5a411b38;border-radius:20px;padding:7px 9px}
+main{padding-bottom:60px}.hero{padding:46px 0 30px;display:flex;justify-content:space-between;align-items:end;gap:30px}.eyebrow{font-size:11px;font-weight:850;letter-spacing:.2em;color:var(--green)}h1{font-size:clamp(36px,5vw,72px);letter-spacing:-.065em;line-height:1.06;margin:13px 0 17px}h1 span{color:var(--green)}.intro{max-width:760px;font-size:15px;line-height:1.72;color:#b4ccd4;margin:0}.pill{display:flex;gap:8px;align-items:center;white-space:nowrap;border-radius:14px;padding:12px 17px;background:#142b3b;border:1px solid #3d6070;font-size:12px;font-weight:800}.pulse{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 0 5px #64dbaa22}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:19px}.metric{background:linear-gradient(145deg,#193747,#13283b);border:1px solid #345b6a;border-radius:16px;padding:18px 19px;min-height:101px}.metric small{display:block;color:#9fbac5;font-size:11px;font-weight:750}.metric strong{display:block;margin-top:5px;font-size:clamp(23px,3vw,33px);letter-spacing:-.045em}.metric span{color:#9ab6c0;font-size:10px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}.panel{background:linear-gradient(150deg,#142b3b,#102536 80%);border:1px solid #355668;border-radius:20px;box-shadow:0 20px 60px #0003;overflow:hidden}.head{padding:18px 21px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #ffffff1a;flex-wrap:wrap}.head h2{font-size:17px;margin:0;letter-spacing:-.025em}.head small{font-size:11px;color:#aec8ce}.viewer{min-width:0}.canvas-wrap{position:relative;background:#071b2b}.canvas-wrap canvas{display:block;width:100%;height:auto;aspect-ratio:1080/570}.overlay{position:absolute;pointer-events:none;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid #73cfb899;background:#0a2235d9;box-shadow:0 15px 40px #0008;color:#d4fff0;padding:12px 20px;border-radius:12px;white-space:nowrap;font-weight:850;font-size:13px}.overlay[hidden]{display:none}.legend{display:flex;gap:15px;flex-wrap:wrap;padding:13px 18px;color:#b2cbd4;font-size:12px;border-top:1px solid #ffffff15}.swatch{width:10px;height:10px;display:inline-block;border-radius:50%;margin-right:5px}.swatch.blue{background:var(--blue)}.swatch.green{background:var(--green)}.swatch.gold{background:var(--gold)}
+.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:14px 18px 19px;border-top:1px solid #ffffff14}.btn{min-height:44px;padding:11px 14px;border:1px solid #456a7b;border-radius:11px;color:#e6f9f5;background:#213d4e;font-size:12px;font-weight:850}.btn:hover{background:#2b5061}.btn.primary{background:var(--green);color:#102d2a;border-color:var(--green)}.btn.primary:hover{background:#a2ffd6}.btn.alt{background:#224458;border-color:#4b83a0}.btn:disabled{opacity:.46;cursor:not-allowed}.select{border:1px solid #496e7d;background:#102839;color:#e6fafa;border-radius:10px;padding:10px;min-height:44px}.control-spacer{margin-left:auto}.right .body{padding:18px}.right p{font-size:12px;color:#b3cbd2;line-height:1.65}.right h3{font-size:13px;margin:8px 0 9px;color:#e7faf8}.group{display:grid;grid-template-columns:1fr 1fr;gap:9px}.group .btn{width:100%}.group .wide{grid-column:1/-1}.divider{border:0;border-top:1px solid #ffffff20;margin:18px 0}.progress{height:9px;border-radius:10px;background:#0a1e2d;overflow:hidden;border:1px solid #325365}.progress i{display:block;width:0;height:100%;background:linear-gradient(90deg,#5c9dea,#77efb9);transition:width .2s}.statline{font-size:12px;color:#d3eeee;line-height:1.7;margin:9px 0 0;min-height:39px}.right label{font-size:12px;color:#bdd5da;display:block;margin-bottom:7px;font-weight:750}.right input[type="number"]{max-width:120px;background:#0a2132;color:white;border:1px solid #527082;border-radius:9px;padding:10px}.small-note{border-radius:11px;background:#0c2934;padding:12px;margin-top:15px;color:#a9c8c8;font-size:11px;line-height:1.6}.status{color:#b9f7dc;font-size:12px;min-height:24px;margin:13px 0 0;line-height:1.5}.status.error{color:#ffbbb5}
+.lower{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,1fr);gap:18px;margin-top:18px}.chart{display:block;width:100%;height:auto;aspect-ratio:860/270;background:#0b2434}.chart-legend{display:flex;flex-wrap:wrap;gap:14px;padding:12px 18px 17px;color:#b5ccd4;font-size:11px}.chart-legend i{display:inline-block;width:20px;height:3px;vertical-align:middle;margin-right:6px}.tablebox{padding:16px 18px;overflow:auto;max-height:265px}table{border-collapse:collapse;width:100%;min-width:315px;text-align:right;font-size:11px}th,td{padding:9px 7px;border-bottom:1px solid #ffffff17;font-variant-numeric:tabular-nums}th{color:#9bbac4;font-weight:750}th:first-child,td:first-child{text-align:left}td{color:#e8f5f4}.details{margin-top:18px;padding:18px 22px;border:1px solid #355668;border-radius:16px;color:#b3c9d0;background:#102735;font-size:12px;line-height:1.7}.details strong{color:#a0f3d4}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:1080px){.grid{grid-template-columns:minmax(0,1fr)}.right .body{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;align-items:start}.right .body>.divider{grid-column:1/-1}.right .body>.small-note,.right .body>.status{grid-column:1/-1}.hero{align-items:start}.pill{display:none}}
+@media(max-width:700px){.links{margin-left:0;width:100%}.hero{padding:28px 0 24px}.metrics{grid-template-columns:1fr 1fr}.metric{min-height:91px;padding:13px}.right .body{display:block}.lower{grid-template-columns:1fr}.overlay{white-space:normal;text-align:center;width:70%}.controls .btn{flex:1 1 auto}.control-spacer{margin-left:0}.select{flex:1}h1{font-size:clamp(35px,9vw,56px)}}
+@media(prefers-reduced-motion:reduce){.progress i{transition:none}}
+</style>
+</head>
+<body>
+<header><div class="shell bar">
+<a href="./" class="logo"><b>D</b><span>DMP <em>SIM LAB</em></span></a>
+<span class="experimental">GELENKTRAINING · PROTOTYP</span>
+<nav class="links" aria-label="Navigation"><a href="./">⌂ Übersicht</a><a href="./learn-arena.html">🏁 Parcours-Arena</a><a href="./lab.html?mode=arena">🥊 Duell-Arena</a><a href="./editor.html">✎ Entitäten-Editor</a></nav>
+</div></header>
+<main class="shell">
+<section class="hero"><div><div class="eyebrow">PHASE 3 / GELENK-LERNEN</div>
+<h1>Vier Gelenke.<br><span>Ein Lernziel: Gehen.</span></h1>
+<p class="intro">24 zweibeinige Roboter mit beweglichen Hüften und Knien lernen selbstständig, sieben Meter zurückzulegen. Ein neuronales Netz steuert vier Gelenkmotoren – ohne vorgegebene Schrittfolge. Wir messen Stürze, Bodenkontakte und Fortschritte auf voneinander getrennten Trainings- und Testböden.</p></div><div class="pill"><i class="pulse"></i><span>2D GELENKPHYSIK · EVOLUTION</span></div></section>
+<section class="metrics" aria-label="Trainingskennzahlen">
+<div class="metric"><small>Trainierte Generationen</small><strong id="generation">0</strong><span>Evolutionäre Trainingsrunden</span></div>
+<div class="metric"><small>Beste Trainingswertung</small><strong id="best">–</strong><span>6 Trainingsböden / Gen.</span></div>
+<div class="metric"><small>Unabhängige Prüfstrecken</small><strong id="validation">–</strong><span>5 feste Testböden</span></div>
+<div class="metric"><small>Ankunftsquote im Test</small><strong id="success">–</strong><span>7 m geschafft / 5 Läufe</span></div>
+</section>
+<div class="grid">
+<section class="panel viewer" aria-label="Roboter in der Lernarena">
+<div class="head"><h2>LIVE · Zwei Zweibeiner, gleicher Boden</h2><small id="courseLabel">Boden-Testlauf</small></div>
+<div class="canvas-wrap"><canvas id="arena" width="1080" height="570" role="img" aria-label="Vergleich zweier Gelenkroboter beim Laufen auf dem gleichen Boden."></canvas><div id="overlay" class="overlay">▶ Vergleich starten</div></div>
+<div class="legend"><span><i class="swatch blue"></i>Untrainiertes neuronales Netz</span><span><i class="swatch green"></i>Champion: trainierte Gelenke</span><span><i class="swatch gold"></i>Boden und Kontaktpunkte</span></div>
+<div class="controls">
+<button type="button" class="btn primary" id="play">▶ Vergleich starten</button>
+<button type="button" class="btn" id="restart">↺ Wiederholen</button>
+<button type="button" class="btn" id="newCourse">↗ Neuer Prüf-Boden</button>
+<label class="control-spacer" for="speed">Tempo</label><select class="select" id="speed"><option value="1">1×</option><option value="4">4×</option><option value="12">12×</option></select>
+</div>
+<div class="legend" id="raceStatus" role="status">Jeder Zweibeiner besitzt unabhängig steuerbare Hüft- und Kniegelenke. Starte die Evolution.</div>
+</section>
+<aside class="panel right" aria-label="Training und Speicherung">
+<div class="head"><h2>🧠 Trainingssteuerung</h2><small>Neuroevolution v1</small></div>
+<div class="body">
+<div><h3>Evolution starten</h3><p>Das Netz regelt Zielwinkel für zwei Hüften und zwei Knie. Bodenreaktion, Reibung und Schwerkraft bestimmen die Bewegung. Erfolgreiche Steuerungen werden durch Mutation und Selektion weiterentwickelt.</p>
+<div class="group"><button class="btn primary" id="train5">+ 5 Generationen</button><button class="btn alt" id="train25">+ 25 Generationen</button><button class="btn wide" id="stop" disabled>⏸ Nach aktuellem Modell anhalten</button></div>
+<div class="statline" id="trainingStatus" role="status">Bereit. 24 Roboter pro Generation · sechs Trainingsböden.</div><div class="progress" aria-hidden="true"><i id="trainingBar"></i></div></div>
+<hr class="divider">
+<div><h3>Messung &amp; Reproduzierbarkeit</h3><p>Sechs Trainingsböden und fünf getrennte Prüfläufe nutzen feste Zufallsstarts. Neue Prüf-Böden zeigen, ob das Modell unter anderen Startbedingungen und Reibwerten zurechtkommt.</p><label for="seed">Zufallsstartwert für neues Training</label><input type="number" id="seed" min="1" max="1000000000" value="42"><div class="small-note">Eine Änderung wird erst mit „Neues Training“ aktiv. Für identische Ergebnisse dieselbe Version und denselben Startwert verwenden.</div></div>
+<hr class="divider">
+<div><h3>Fortschritt sichern</h3><div class="group"><button class="btn" id="export">↓ Training exportieren</button><button class="btn" id="import">↑ Training importieren</button><button class="btn wide" id="clear">↺ Neues Training beginnen</button></div><input id="importFile" type="file" accept=".json,application/json" hidden><p>Alle Gelenk-Steuerungen der Population werden auf diesem Gerät gespeichert. Für ein anderes Gerät kannst du sie als JSON exportieren.</p></div>
+<p id="notice" class="status" role="status"></p>
+</div>
+</aside>
+</div>
+<div class="lower">
+<section class="panel"><div class="head"><h2>Lernkurve · Generationen</h2><small>Keine garantierte Verbesserung</small></div>
+<canvas id="chart" class="chart" width="860" height="270" aria-label="Diagramm der mittleren Trainingswertung, besten Trainingswertung und unabhängigen Testwertung"></canvas>
+<div class="chart-legend"><span><i style="background:#7c9ee9"></i>Populationsmittel</span><span><i style="background:#7eebc0"></i>Bester Trainingswert</span><span><i style="background:#ffd28c"></i>Unabhängiger Test</span></div></section>
+<section class="panel"><div class="head"><h2>Generationenprotokoll</h2><small>Letzte 9 Generationen</small></div>
+<div class="tablebox"><table><thead><tr><th>Generation</th><th>Ø Training</th><th>Bestwert</th><th>Test</th><th>Ankunft</th></tr></thead><tbody id="history"><tr><td colspan="5">Noch keine Trainingsdaten</td></tr></tbody></table></div></section>
+</div>
+<div class="details"><strong>Was hier wirklich lernt:</strong> Ein neuronales Netz mit 16 Sensorwerten, 12 versteckten Neuronen und 4 Ausgängen (256 Gewichte) steuert die Hüft- und Kniegelenke. Die Bewegung ergibt sich aus begrenzten Gelenkmotoren und vereinfachten Fuß-Boden-Kräften. Zum Bestehen braucht der Roboter mindestens vier neue Bodenkontakte und 30 % Kontaktzeit – ein einzelner Weitsprung reicht nicht. <strong>Grenzen:</strong> Reduziertes Lehrmodell, kein vollständiger Mehrkörper-Solver, keine reale Biomechanik. Die Testwertung wird nicht zur Selektion benutzt. Die Gewichte sind derzeit noch nicht direkt in die separate Duell-Arena übertragbar.</div>
+</main>
+<script type="module" src="./joint-walker-ui.js?v=1"></script>
+</body></html>
