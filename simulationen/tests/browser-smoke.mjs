@@ -248,6 +248,42 @@ async function testViewport(browser,name,opts){
    assert.ok(dims.width<=dims.view+3,JSON.stringify(dims));
    await ctx.close();
  });
+
+ await check(name+" CCD fängt schnellen Radstoß vor dem Tunneling ab",async()=>{
+   const ctx=await browser.newContext({...opts,acceptDownloads:true});
+   const builder=await ctx.newPage(),errors=[];
+   builder.on("pageerror",e=>errors.push(e.message));
+   await builder.goto(base+"/builder.html",{waitUntil:"networkidle"});
+   await builder.locator("#template").selectOption("fast");
+   assert.equal(await builder.locator("#ccd").isChecked(),true);
+   assert.equal(await builder.getByRole("spinbutton",{name:"Start-Vx (m/s)"}).inputValue(),"220");
+   await builder.locator("#step").click();
+   const micro=Number(await builder.locator("#ccdSubsteps").innerText());
+   assert.ok(micro>1,"Keine zusätzlichen Zeit-Teilschritte: "+micro);
+   assert.ok(Number(await builder.locator("#contactsNow").innerText())>=1);
+   await builder.locator("#reset").click();
+   await builder.locator("#ccd").uncheck();
+   await builder.locator("#step").click();
+   assert.equal(await builder.locator("#ccdSubsteps").innerText(),"Aus");
+   assert.equal(await builder.locator("#contactsNow").innerText(),"0");
+   assert.deepEqual(errors,[]);
+   await ctx.close();
+ });
+ await check(name+" CCD-Auswahl und Startgeschwindigkeit über Reload erhalten",async()=>{
+   const ctx=await browser.newContext({...opts,acceptDownloads:true});
+   const builder=await ctx.newPage();
+   await builder.goto(base+"/builder.html",{waitUntil:"networkidle"});
+   await builder.locator("#template").selectOption("fast");
+   await builder.locator("#ccd").uncheck();
+   await builder.locator("#filename").fill("Schnellstoß-Test "+name);
+   await builder.locator("#save").click();
+   await builder.reload({waitUntil:"networkidle"});
+   await builder.locator("#saved").selectOption({index:1});
+   await builder.locator("#load").click();
+   assert.equal(await builder.locator("#ccd").isChecked(),false);
+   assert.equal(await builder.getByRole("spinbutton",{name:"Start-Vx (m/s)"}).inputValue(),"220");
+   await ctx.close();
+ });
  await check(name+" all scripts clean",async()=>{assert.equal(errors.length,0,JSON.stringify(errors));});
  await page.screenshot({path:"test-artifacts/"+name.replace(/\W+/g,"-")+".png",fullPage:true});
  await context.close();
