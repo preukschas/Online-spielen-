@@ -117,7 +117,9 @@ export function newTrainer(seed=42,size=POPULATION) {
  if(!Number.isSafeInteger(seed)||seed<1||seed>1e9||!Number.isInteger(size)||size<8||size>64)throw Error("Ungültige Trainingseinstellungen");
  const r=rng(seed+404);
  const population=Array.from({length:size},()=>randomGenome(r));
- const baseline=population[0].slice();
+ // Reproduzierbare Referenz: fährt vorwärts, reagiert aber nicht auf Hindernisse.
+ const baseline=Array(GENE_COUNT).fill(0);
+ baseline[(INPUTS+1)*HIDDEN+HIDDEN]=2;
  return {version:ARENA_VERSION,seed,size,generation:0,population,baseline,
   champion:null,bestScore:-Infinity,history:[],last:null};
 }
