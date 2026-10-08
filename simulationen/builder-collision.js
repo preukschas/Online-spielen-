@@ -120,3 +120,86 @@ export function contactImpulse(scene,c){
  a.vx-=a.invM*ft.x;a.vy-=a.invM*ft.y;a.omega-=a.invI*cross(ra,ft);
  b.vx+=b.invM*ft.x;b.vy+=b.invM*ft.y;b.omega+=b.invI*cross(rb,ft);
 }
+
+
+// Continuous collision detection (CCD): swept time-of-impact in seconds.
+// Wheel/wheel is solved analytically; capsule pairs use conservative advancement
+// over the translated and rotating centerline segments. Does not model deformation.
+function gapAt(a,b,t){
+ const A={...a,x:a.x+a.vx*t,y:a.y+a.vy*t,angle:a.angle+a.omega*t};
+ const B={...b,x:b.x+b.vx*t,y:b.y+b.vy*t,angle:b.angle+b.omega*t};
+ let p,q;
+ if(isWheel(A)&&isWheel(B)){p=A;q=B;}
+ else if(!isWheel(A)&&isWheel(B)){p=closestPoint(B,capsule(A));q=B;}
+ else if(isWheel(A)&&!isWheel(B)){p=A;q=closestPoint(A,capsule(B));}
+ else [p,q]=closestSegments(capsule(A),capsule(B));
+ return Math.hypot(p.x-q.x,p.y-q.y)-radius(A)-radius(B);
+}
+export function sweptContactTime(a,b,dt){
+ if(!a||!b||a.id===b.id||!Number.isFinite(dt)||dt<=0)return null;
+ const startGap=gapAt(a,b,0);
+ if(startGap<=0)return null; // Existing penetration handled by contact projection.
+ const dx=(b.vx||0)-(a.vx||0),dy=(b.vy||0)-(a.vy||0);
+ const speed=Math.hypot(dx,dy)+Math.abs(a.omega||0)*a.length/2+Math.abs(b.omega||0)*b.length/2;
+ if(speed<1e-10||startGap>speed*dt+1e-8)return null;
+ if(isWheel(a)&&isWheel(b)){
+  const x=b.x-a.x,y=b.y-a.y;
+  const A=dx*dx+dy*dy,B=2*(x*dx+y*dy),R=radius(a)+radius(b),C=x*x+y*y-R*R;
+  const discriminant=B*B-4*A*C;
+  if(A<=1e-12||B>=0||discriminant<0)return null;
+  const impact=(-B-Math.sqrt(discriminant))/(2*A);
+  return impact>=0&&impact<=dt?impact:null;
+ }
+ let t=0,prev=0;
+ // Upper bound on feature approach speed allows guaranteed safe advancement
+ // for linearly translated, uniformly rotating centerline approximations.
+ for(let i=0;i<80;i++){
+  const gap=gapAt(a,b,t);
+  if(gap<=1e-5){
+   let lo=prev,hi=t;
+   for(let j=0;j<18;j++){
+    const mid=(lo+hi)*.5;
+    if(gapAt(a,b,mid)<=1e-5)hi=mid;else lo=mid;
+   }
+   return hi;
+  }
+  const advancement=Math.max(1e-9,.92*gap/speed);
+  prev=t;t+=advancement;
+  if(t>dt)return null;
+ }
+ return null; // Bounded fallback to adaptive substeps in the physics integrator.
+}
+export function firstSweptImpact(scene,dt){
+ if(scene.collisions===false)return null;
+ let earliest=null;
+ for(let i=0;i<scene.bodies.length;i++){
+  for(let j=i+1;j<scene.bodies.length;j++){
+   const a=scene.bodies[i],b=scene.bodies[j];
+   if(connected(a.id,b.id,scene.joints))continue;
+   const t=sweptContactTime(a,b,dt);
+   if(t!==null&&(earliest===null||t<earliest))earliest=t;
+  }
+ }
+ return earliest;
+}
+// Conservative interval cap: smallest capsule radius is 0.11 m;
+// no adjacent free-body centerline can travel more than about 0.07 m
+// relative to another potential collision body in one adaptive substep.
+export function safeContactInterval(scene,dt){
+ if(scene.collisions===false||scene.bodies.length<2)return dt;
+ let speedLimit=0;
+ for(let i=0;i<scene.bodies.length;i++){
+  for(let j=i+1;j<scene.bodies.length;j++){
+   const a=scene.bodies[i],b=scene.bodies[j];
+   if(connected(a.id,b.id,scene.joints))continue;
+   const rel=Math.hypot((b.vx||0)-(a.vx||0),(b.vy||0)-(a.vy||0))
+     +Math.abs(a.omega||0)*a.length/2+Math.abs(b.omega||0)*b.length/2;
+   if(rel<1e-9)continue;
+   const reach=a.length/2+b.length/2+(a.kind==="bar"?.11:0)+(b.kind==="bar"?.11:0);
+   if(Math.hypot(b.x-a.x,b.y-a.y)>reach+rel*dt+.12)continue;
+   speedLimit=Math.max(speedLimit,rel);
+  }
+ }
+ if(speedLimit<1e-8)return dt;
+ return Math.min(dt,.07/speedLimit);
+}
