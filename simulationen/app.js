@@ -122,19 +122,61 @@ function refresh(){
  drawChart();
 }
 function drawChart(){
- const c=chartCtx,w=c.canvas.width,h=c.canvas.height;c.clearRect(0,0,w,h);c.fillStyle="#0e1b2b";c.fillRect(0,0,w,h);
- const left=55,right=w-14,top=15,bottom=h-27;
- c.strokeStyle="#345064";c.lineWidth=1;for(let i=0;i<=4;i++){const y=top+(bottom-top)*i/4;c.beginPath();c.moveTo(left,y);c.lineTo(right,y);c.stroke();}
- let hst=sim.history.slice(-240);
- if(mode==="bio"&&sim.training.generation>0){
-  const tr=sim.training.history;hst=tr.map(d=>({t:d.generation,v:d.validation}));$("chartLabel").textContent="Testbewertung über Generationen (Modellpunkte)";
+ const c=chartCtx,w=c.canvas.width,h=c.canvas.height;
+ const left=61,right=w-21,top=18,bottom=h-31;
+ c.clearRect(0,0,w,h);
+ const panel=c.createLinearGradient(0,0,0,h);
+ panel.addColorStop(0,"#102f42");panel.addColorStop(1,"#0b2131");
+ c.fillStyle=panel;c.fillRect(0,0,w,h);
+ let points=sim.history.slice(-320);
+ const isTraining=mode==="bio"&&sim.training.generation>0;
+ if(isTraining){
+  points=sim.training.history.map(p=>({t:p.generation,v:p.validation}));
+  $("chartLabel").textContent="Bewertung im unabhängigen Test · Generationen";
  }
- const ys=hst.map(x=>x.v).filter(Number.isFinite);
- let min=Math.min(0,...ys),max=Math.max(1,...ys);if(max-min<.01)max=min+1;const minT=hst.length?hst[0].t:0,maxT=Math.max(minT+1,...hst.map(x=>x.t));
- c.font="12px system-ui";c.fillStyle="#a2b8c8";c.textAlign="right";c.fillText(max.toFixed(1),left-9,top+5);c.fillText(min.toFixed(1),left-9,bottom);c.fillText(minT.toFixed(1),left,bottom+19);c.textAlign="right";c.fillText(maxT.toFixed(1)+(mode==="bio"&&sim.training.generation?" Gen.":" s"),right,bottom+19);
- c.strokeStyle="#55dbb4";c.lineWidth=3;c.beginPath();let started=false;
- for(const pt of hst){if(!Number.isFinite(pt.v))continue;const x=left+(pt.t-minT)/(maxT-minT)*(right-left),y=bottom-(pt.v-min)/(max-min)*(bottom-top);if(!started){c.moveTo(x,y);started=true;}else c.lineTo(x,y);}
- if(started)c.stroke();
+ const good=points.filter(p=>Number.isFinite(p.t)&&Number.isFinite(p.v));
+ const values=good.map(p=>p.v);
+ let low=Math.min(0,...values),high=Math.max(1,...values);
+ if(high-low<.01)high=low+1;
+ const start=good.length?good[0].t:0,end=good.length?good[good.length-1].t:1;
+ const span=Math.max(.1,end-start);
+ const colors={physics:"#78eac5",crash:"#f1c678",bio:"#bda9fa",arena:"#8bc3f8",mechanics:"#75e0d5"};
+ const accent=colors[mode]||"#78eac5";
+ c.save();c.strokeStyle="#648ba036";c.lineWidth=1;
+ for(let i=0;i<=4;i++){
+  const y=top+i*(bottom-top)/4;
+  c.beginPath();c.moveTo(left,y);c.lineTo(right,y);c.stroke();
+ }
+ for(let i=0;i<=8;i++){
+  const x=left+i*(right-left)/8;
+  c.beginPath();c.moveTo(x,top);c.lineTo(x,bottom);c.stroke();
+ }
+ c.restore();
+ c.save();c.font="11px system-ui";c.fillStyle="#a4c5d0";
+ c.textAlign="right";
+ for(let i=0;i<=4;i++){
+  const val=high-(high-low)*i/4;
+  c.fillText(val.toFixed(Math.abs(high-low)>100?0:1),left-9,top+i*(bottom-top)/4+4);
+ }
+ c.textAlign="left";c.fillText(start.toFixed(1),left,bottom+21);
+ c.textAlign="right";c.fillText(end.toFixed(1)+(isTraining?" Gen.":" s"),right,bottom+21);
+ c.restore();
+ if(good.length){
+  const xy=good.map(p=>({x:left+(p.t-start)/span*(right-left),y:bottom-(p.v-low)/(high-low)*(bottom-top)}));
+  c.save();c.beginPath();c.rect(left,top,right-left,bottom-top);c.clip();
+  const under=c.createLinearGradient(0,top,0,bottom);
+  under.addColorStop(0,accent+"55");under.addColorStop(1,accent+"00");
+  c.beginPath();c.moveTo(xy[0].x,bottom);
+  for(const p of xy)c.lineTo(p.x,p.y);
+  c.lineTo(xy[xy.length-1].x,bottom);c.closePath();c.fillStyle=under;c.fill();
+  c.shadowColor=accent;c.shadowBlur=10;c.strokeStyle=accent;c.lineWidth=3.3;c.lineJoin="round";c.lineCap="round";
+  c.beginPath();xy.forEach((p,i)=>{if(i===0)c.moveTo(p.x,p.y);else c.lineTo(p.x,p.y);});c.stroke();
+  c.shadowBlur=0;
+  const last=xy[xy.length-1];c.fillStyle=accent;c.beginPath();c.arc(last.x,last.y,4.5,0,Math.PI*2);c.fill();
+  c.strokeStyle="#e7fff5";c.lineWidth=2;c.stroke();
+  c.restore();
+ }
+ c.fillStyle=accent;c.fillRect(14,14,25,3);
 }
 function frame(now){
  const delta=lastFrame?Math.min(.10,(now-lastFrame)/1000):0;lastFrame=now;
