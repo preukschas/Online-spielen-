@@ -93,6 +93,38 @@ async function testViewport(browser,name,opts){
   const best=await page.evaluate(()=>localStorage.getItem("dmp_simlab_best_walker_v1"));
   assert.ok(best&&JSON.parse(best).genome);
  });
+ await check(name+" vierbeiniger Gelenkläufer",async()=>{
+   await page.locator('.module[data-mode="bio"]').click();
+   await page.locator("#preset").selectOption("quad");
+   assert.equal(await page.locator("#preset").inputValue(),"quad");
+   await page.locator("#trainButton").click();
+   await page.waitForFunction(()=>document.querySelector("#trainStatus")?.textContent?.includes("25/25"),{timeout:15000});
+   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem("dmp_simlab_best_walker_v1")));
+   assert.ok(saved?.genome?.feedback);
+   await page.locator("#play").click();await page.waitForTimeout(160);await page.locator("#reset").click();
+ });
+ await check(name+" Arena-Sprint mit 50 Duellen",async()=>{
+   await page.locator('.module[data-mode="arena"]').click();
+   await page.locator("#preset").selectOption("sprint");
+   assert.equal(await page.locator("#preset").inputValue(),"sprint");
+   await page.getByRole("button",{name:/50 Duelle/}).click();
+   assert.match(await page.locator("#notice").innerText(),/50 Duelle/);
+   await page.locator("#play").click();await page.waitForTimeout(160);await page.locator("#reset").click();
+ });
+ await check(name+" CSV-Export und A-B-Vergleich",async()=>{
+   await page.locator('.module[data-mode="physics"]').click();
+   await page.locator("#scenarioName").fill("Messreihe "+name);
+   await page.locator("#save").click();
+   await page.locator("#param-height").evaluate(el=>{el.value="10";el.dispatchEvent(new Event("input",{bubbles:true}));});
+   await page.locator("#saved").selectOption({index:1});
+   await page.locator("#compare").click();
+   assert.match(await page.locator("#notice").innerText(),/A\/B nach festem Versuch/);
+   const downloading=page.waitForEvent("download");
+   await page.locator("#csvExport").click();
+   const download=await downloading;
+   assert.match(download.suggestedFilename(),/\.csv$/);
+   assert.match(await page.locator("#notice").innerText(),/CSV-Messreihe exportiert/);
+ });
  await check(name+" all scripts clean",async()=>{assert.equal(errors.length,0,JSON.stringify(errors));});
  await page.screenshot({path:"test-artifacts/"+name.replace(/\W+/g,"-")+".png",fullPage:true});
  await context.close();
