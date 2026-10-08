@@ -2,7 +2,9 @@ import {VERSION,CONFIG,FIELDS,initialParams,makeSim,stepSim,measure,trainOneGene
 import {trainDuelGeneration,duelValidGenome,duelDefaultGenome,duelStyle} from "./duel-core.js?v=1.6.0";
 import {drawScene} from "./render-v2.js?v=1.6.0";
 import {safeEntityList,findEntity,toBiomechanics,toArena} from "./entity-model.js";
+import {installCatalog} from "./entity-catalog.js";
 const $=id=>document.getElementById(id),canvas=$("scene"),sceneCtx=canvas.getContext("2d"),chartCtx=$("chart").getContext("2d");
+installCatalog(localStorage);
 const KEY="dmp_simlab_scenarios_v1",BIOKEY="dmp_simlab_best_walker_v1",DUELKEY="dmp_duel_progress_v1";
 let mode="physics",preset="fall",params=initialParams(preset),seed=42,sim=makeSim(mode,preset,params,seed),playing=false,accum=0,lastFrame=0,dialog=$("helpDialog"),renderTick=0,lastSceneRender=0,sceneDirty=true,arenaTournamentToken=0,arenaTournamentBusy=false,arenaQuickMessage="";
 function formatValue(v,f){return String(Number(v.toFixed(3))).replace(".",",")+(f[5]?" "+f[5]:"")}
@@ -136,10 +138,10 @@ function controls(){
   const title=document.createElement("label");title.htmlFor="param-"+key;title.textContent=label;
   const out=document.createElement("output");out.textContent=formatValue(params[key],f);
   head.append(title,out);wrap.append(head);
-  const range=document.createElement("input");range.type="range";range.id="param-"+key;range.min=min;range.max=max;range.step=step;range.value=params[key];range.setAttribute("aria-label",label);
+  const range=document.createElement("input");range.type="range";range.id="param-"+key;range.min=min;range.max=(key==="mass"&&params.mass<=120?120:max);range.step=step;range.value=params[key];range.setAttribute("aria-label",label);
   range.addEventListener("input",()=>{params[key]=Number(range.value);out.textContent=formatValue(params[key],f);resetSim();});
   wrap.append(range);
-  const ext=document.createElement("div");ext.className="range-ends";ext.innerHTML="<span>"+formatValue(min,f)+"</span><span>"+formatValue(max,f)+"</span>";wrap.append(ext);box.append(wrap);
+  const ext=document.createElement("div");ext.className="range-ends";ext.innerHTML="<span>"+formatValue(min,f)+"</span><span>"+formatValue(Number(range.max),f)+"</span>";wrap.append(ext);box.append(wrap);
  }
  const ex=$("extraActions");ex.innerHTML="";
  if(mode==="bio"){
