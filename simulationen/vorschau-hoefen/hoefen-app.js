@@ -273,7 +273,7 @@ async function osmf(){
   const waterWays=data.elements.filter(e=>e.type==="way"&&e.tags?.waterway&&Array.isArray(e.geometry)&&e.geometry.length>=2);
   const waterways=waterWays.slice(0,90).map(e=>({
    id:e.id||null,name:typeof e.tags.name==="string"?e.tags.name.slice(0,95):"",
-   isBruchgraben:/\\bBruchgraben\\b/i.test(e.tags.name||""),
+   isBruchgraben:/\bBruchgraben\b/i.test(e.tags.name||""),
    geometry:e.geometry.slice(0,800).filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon)).map(p=>[p.lat,p.lon])
   }));
   const m={type:"osm",date:new Date().toISOString().slice(0,10),hasDgm:false,source:"© OpenStreetMap-Mitwirkende (ODbL)",
