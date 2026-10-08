@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#091624">
+<meta name="description" content="DMP Gelenk-Duell: trainierte neuronale Zweibeiner lernen über Generationen Kampf- und Bewegungsstrategien im 2D-Lehrmodell.">
+<title>Roboter-Duell | DMP SIM LAB</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:dark;--ink:#ebfbfc;--muted:#a0bbc5;--border:#34566a;--blue:#73a8ff;--green:#76edbf;--gold:#ffc67d}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:radial-gradient(ellipse 900px 580px at 75% -180px,#194d59,transparent 78%),radial-gradient(ellipse 550px 650px at -7% 100%,#133c4d,transparent 83%),#091624}button,input,select{font:inherit}button,a,select{touch-action:manipulation}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #a6f8d4;outline-offset:3px}h1,h2,h3,p{margin-top:0}.shell{max-width:1480px;margin:0 auto;padding:0 clamp(14px,3vw,50px)}
+header{border-bottom:1px solid #ffffff1a}.bar{min-height:78px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-top:13px;padding-bottom:13px}.logo{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.06em;font-size:18px}.logo b{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(135deg,#75f0ba,#55c8d6);color:#103241;font-size:23px}.logo em{font-style:normal;color:var(--green)}.links{display:flex;gap:12px;margin-left:auto;flex-wrap:wrap}.links a{padding:10px 13px;border:1px solid #42687a;border-radius:10px;color:#cce6e7;font-weight:700;font-size:12px}.links a:hover{background:#214053}.experimental{font-size:10px;font-weight:900;letter-spacing:.14em;color:#fee0af;border:1px solid #a98550;background:#5a411b38;border-radius:20px;padding:7px 9px}
+main{padding-bottom:60px}.hero{padding:46px 0 30px;display:flex;justify-content:space-between;align-items:end;gap:30px}.eyebrow{font-size:11px;font-weight:850;letter-spacing:.2em;color:var(--green)}h1{font-size:clamp(36px,5vw,72px);letter-spacing:-.065em;line-height:1.06;margin:13px 0 17px}h1 span{color:var(--green)}.intro{max-width:760px;font-size:15px;line-height:1.72;color:#b4ccd4;margin:0}.pill{display:flex;gap:8px;align-items:center;white-space:nowrap;border-radius:14px;padding:12px 17px;background:#142b3b;border:1px solid #3d6070;font-size:12px;font-weight:800}.pulse{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 0 5px #64dbaa22}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:19px}.metric{background:linear-gradient(145deg,#193747,#13283b);border:1px solid #345b6a;border-radius:16px;padding:18px 19px;min-height:101px}.metric small{display:block;color:#9fbac5;font-size:11px;font-weight:750}.metric strong{display:block;margin-top:5px;font-size:clamp(23px,3vw,33px);letter-spacing:-.045em}.metric span{color:#9ab6c0;font-size:10px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}.panel{background:linear-gradient(150deg,#142b3b,#102536 80%);border:1px solid #355668;border-radius:20px;box-shadow:0 20px 60px #0003;overflow:hidden}.head{padding:18px 21px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #ffffff1a;flex-wrap:wrap}.head h2{font-size:17px;margin:0;letter-spacing:-.025em}.head small{font-size:11px;color:#aec8ce}.viewer{min-width:0}.canvas-wrap{position:relative;background:#071b2b}.canvas-wrap canvas{display:block;width:100%;height:auto;aspect-ratio:1080/570}.overlay{position:absolute;pointer-events:none;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid #73cfb899;background:#0a2235d9;box-shadow:0 15px 40px #0008;color:#d4fff0;padding:12px 20px;border-radius:12px;white-space:nowrap;font-weight:850;font-size:13px}.overlay[hidden]{display:none}.legend{display:flex;gap:15px;flex-wrap:wrap;padding:13px 18px;color:#b2cbd4;font-size:12px;border-top:1px solid #ffffff15}.swatch{width:10px;height:10px;display:inline-block;border-radius:50%;margin-right:5px}.swatch.blue{background:var(--blue)}.swatch.green{background:var(--green)}.swatch.gold{background:var(--gold)}
+.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:14px 18px 19px;border-top:1px solid #ffffff14}.btn{min-height:44px;padding:11px 14px;border:1px solid #456a7b;border-radius:11px;color:#e6f9f5;background:#213d4e;font-size:12px;font-weight:850}.btn:hover{background:#2b5061}.btn.primary{background:var(--green);color:#102d2a;border-color:var(--green)}.btn.primary:hover{background:#a2ffd6}.btn.alt{background:#224458;border-color:#4b83a0}.btn:disabled{opacity:.46;cursor:not-allowed}.select{border:1px solid #496e7d;background:#102839;color:#e6fafa;border-radius:10px;padding:10px;min-height:44px}.control-spacer{margin-left:auto}.right .body{padding:18px}.right p{font-size:12px;color:#b3cbd2;line-height:1.65}.right h3{font-size:13px;margin:8px 0 9px;color:#e7faf8}.group{display:grid;grid-template-columns:1fr 1fr;gap:9px}.group .btn{width:100%}.group .wide{grid-column:1/-1}.divider{border:0;border-top:1px solid #ffffff20;margin:18px 0}.progress{height:9px;border-radius:10px;background:#0a1e2d;overflow:hidden;border:1px solid #325365}.progress i{display:block;width:0;height:100%;background:linear-gradient(90deg,#5c9dea,#77efb9);transition:width .2s}.statline{font-size:12px;color:#d3eeee;line-height:1.7;margin:9px 0 0;min-height:39px}.right label{font-size:12px;color:#bdd5da;display:block;margin-bottom:7px;font-weight:750}.right input[type="number"]{max-width:120px;background:#0a2132;color:white;border:1px solid #527082;border-radius:9px;padding:10px}.small-note{border-radius:11px;background:#0c2934;padding:12px;margin-top:15px;color:#a9c8c8;font-size:11px;line-height:1.6}.status{color:#b9f7dc;font-size:12px;min-height:24px;margin:13px 0 0;line-height:1.5}.status.error{color:#ffbbb5}
+.lower{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,1fr);gap:18px;margin-top:18px}.chart{display:block;width:100%;height:auto;aspect-ratio:860/270;background:#0b2434}.chart-legend{display:flex;flex-wrap:wrap;gap:14px;padding:12px 18px 17px;color:#b5ccd4;font-size:11px}.chart-legend i{display:inline-block;width:20px;height:3px;vertical-align:middle;margin-right:6px}.tablebox{padding:16px 18px;overflow:auto;max-height:265px}table{border-collapse:collapse;width:100%;min-width:315px;text-align:right;font-size:11px}th,td{padding:9px 7px;border-bottom:1px solid #ffffff17;font-variant-numeric:tabular-nums}th{color:#9bbac4;font-weight:750}th:first-child,td:first-child{text-align:left}td{color:#e8f5f4}.details{margin-top:18px;padding:18px 22px;border:1px solid #355668;border-radius:16px;color:#b3c9d0;background:#102735;font-size:12px;line-height:1.7}.details strong{color:#a0f3d4}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:1080px){.grid{grid-template-columns:minmax(0,1fr)}.right .body{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;align-items:start}.right .body>.divider{grid-column:1/-1}.right .body>.small-note,.right .body>.status{grid-column:1/-1}.hero{align-items:start}.pill{display:none}}
+@media(max-width:700px){.links{margin-left:0;width:100%}.hero{padding:28px 0 24px}.metrics{grid-template-columns:1fr 1fr}.metric{min-height:91px;padding:13px}.right .body{display:block}.lower{grid-template-columns:1fr}.overlay{white-space:normal;text-align:center;width:70%}.controls .btn{flex:1 1 auto}.control-spacer{margin-left:0}.select{flex:1}h1{font-size:clamp(35px,9vw,56px)}}
+@media(prefers-reduced-motion:reduce){.progress i{transition:none}}
+.metric strong{font-size:clamp(20px,2.5vw,30px)}#styleA,#styleB{font-size:clamp(18px,2vw,26px)}.right .body .btn{white-space:normal;line-height:1.4}.small-note strong{color:#cdfde8}#fightEvents{color:#ffd39c;border-top:1px solid #ffffff14;min-height:26px}#arena{touch-action:pan-y}@media(max-width:700px){.right .body .group .btn{min-height:50px}.links a{padding:9px 10px}} </style>
+</head>
+<body>
+<header><div class="shell bar">
+<a href="./" class="logo"><b>D</b><span>DMP <em>SIM LAB</em></span></a>
+<span class="experimental">DUELL-LEARNING · PROTOTYP</span>
+<nav class="links" aria-label="Navigation"><a href="./">⌂ Übersicht</a><a href="./joint-walker.html">🦿 Gelenk-Lernarena</a><a href="./lab.html?mode=arena">🥊 Duell-Arena</a><a href="./editor.html">✎ Entitäten-Editor</a></nav>
+</div></header>
+<main class="shell">
+<section class="hero">
+<div><div class="eyebrow">PHASE 3 / ZWEI GELERNTE KÖRPER · EIN WETTKAMPF</div>
+<h1>Erst laufen lernen.<br><span>Dann Duelle gewinnen.</span></h1>
+<p class="intro">Hier treten zwei <strong>echte trainierte Gelenksteuerungen</strong> gegeneinander an. Ihr neuronales Netz bewegt weiterhin vier Hüft- und Kniegelenke. Darüber entwickelt jede Entität in vielen Duellen ihre eigene Strategie: schubsen, blocken, ausweichen, treten und schlagen – stilisiert, ohne Verletzungsdarstellung.</p></div>
+<div class="pill"><i class="pulse"></i><span>GELENKPOLICY + EVOLUTION</span></div></section>
+<section class="metrics" aria-label="Duell-Kennzahlen">
+<div class="metric"><small>Strategie-Generationen</small><strong id="generation">0</strong><span>pro Kämpfer 11 Verhaltensgene</span></div>
+<div class="metric"><small>Entität A</small><strong id="styleA">–</strong><span id="gaitA">Laufmodell fehlt</span></div>
+<div class="metric"><small>Entität B</small><strong id="styleB">–</strong><span id="gaitB">Laufmodell fehlt</span></div>
+<div class="metric"><small>Testduelle: Siegquote A</small><strong id="winRate">–</strong><span>unabhängige Seeds, Seitenwechsel</span></div>
+</section>
+<div class="grid">
+<section class="panel viewer">
+<div class="head"><h2>🥊 GELENK-DUELL · Zwei körperlich simulierte Roboter</h2><small id="arenaLabel">Arena · reproduzierbarer Startwert</small></div>
+<div class="canvas-wrap"><canvas id="arena" width="1080" height="570" role="img" aria-label="Zwei zweibeinige Roboter mit Gelenkwinkeln aus den trainierten neuronalen Netzen treten in einer 2D-Arena gegeneinander an."></canvas><div class="overlay" id="overlay">🦿 Laufmodell übernehmen oder trainieren</div></div>
+<div class="legend"><span><i class="swatch blue"></i>Entität A</span><span><i class="swatch green"></i>Entität B</span><span><i class="swatch gold"></i>Fußkontakt, Treffer, Blocken</span></div>
+<div class="controls">
+<button class="btn primary" id="play">▶ Duell starten</button>
+<button class="btn" id="restart">↺ Wiederholen</button>
+<button class="btn" id="newSeed">🎲 Anderen Startwert</button>
+<label class="control-spacer" for="speed">Tempo</label>
+<select class="select" id="speed" aria-label="Geschwindigkeit"><option value="1">1×</option><option value="3">3×</option><option value="8">8×</option></select>
+</div>
+<div id="duelStatus" class="legend" role="status">Keine trainierten Laufmodelle ausgewählt. Das Training kann hier gestartet werden.</div>
+<div id="fightEvents" class="legend" aria-live="off"></div>
+</section>
+<aside class="panel right">
+<div class="head"><h2>🧠 Lernen & Vergleichen</h2><small>Reproduzierbar · v1</small></div>
+<div class="body">
+<div><h3>1. Laufgehirn für beide Roboter</h3>
+<p>Übernimm deine bisher trainierten 256 neuronalen Gewichte aus der Gelenk-Lernarena. Alternativ kann dieses Labor zunächst selbst ein gemeinsames Laufmodell trainieren. Verschiedene Laufgehirne für A und B kannst du getrennt als JSON importieren.</p>
+<div class="group">
+<button class="btn alt" id="loadGait">🦿 Vorhandenes Lauftraining übernehmen</button>
+<button class="btn alt" id="prepareGait">🧬 Laufmodell trainieren (15 Gen.)</button>
+<button class="btn" id="importGaitA">↑ Laufmodell A</button><button class="btn" id="importGaitB">↑ Laufmodell B</button>
+</div>
+<input type="file" id="fileGaitA" accept=".json,application/json" hidden>
+<input type="file" id="fileGaitB" accept=".json,application/json" hidden>
+<p class="small-note" id="gaitStatus">Noch keine trainierten Modelle geladen.</p></div>
+<hr class="divider">
+<div><h3>2. Duellstrategien entwickeln</h3>
+<p>Beide Entitäten behalten ihre trainierten Gelenknetze. Das Training verändert <strong>nur ihre Kampf- und Annäherungsstrategie</strong>. Treffer, defensive Aktionen, Fußkontakt und Stürze wirken sich auf das Ergebnis aus.</p>
+<div class="group">
+<button class="btn primary" id="add1">+ 1 Generation</button>
+<button class="btn alt" id="add10">+ 10 Generationen</button>
+<button class="btn wide" id="add100">+ 100 Generationen</button>
+<button class="btn wide" id="stop" disabled>■ Aktuelle Generation abschließen & stoppen</button>
+</div><div class="statline" id="trainingStatus" role="status">Bereit.</div>
+<div class="progress"><i id="progressBar"></i></div></div>
+<hr class="divider">
+<div><h3>3. Wettkämpfe auswerten</h3>
+<div class="group"><button class="btn" id="ten">10 Duelle vergleichen</button>
+<button class="btn" id="fifty">50 Duelle vergleichen</button></div>
+<p id="tournamentStatus" class="small-note">Gleiche Testbedingungen mit Seitenwechseln. Reproduzierbare Siege, Niederlagen und Unentschieden.</p></div>
+<hr class="divider">
+<div><h3>Modelle & Fortschritt speichern</h3>
+<div class="group">
+<button class="btn" id="export">↓ Duellmodell JSON</button><button class="btn" id="importDuel">↑ Duellmodell JSON</button>
+<button class="btn wide" id="resetTraining">↺ Nur Strategie-Training zurücksetzen</button>
+</div><input type="file" id="fileDuel" accept=".json,application/json" hidden>
+<p>Beide Laufgehirne, Strategiegewichte und Generationen werden auf diesem Gerät gespeichert. Per JSON können sie übertragen werden.</p></div>
+<p class="status" id="notice" role="status"></p>
+</div>
+</aside></div>
+<div class="lower">
+<section class="panel"><div class="head"><h2>Strategie-Lernkurven</h2><small>Fit A · Fit B · unabhängiger Test</small></div>
+<canvas id="chart" width="860" height="270" class="chart" aria-label="Bewertung der Strategieentwicklung von A und B sowie unabhängiger Testwert"></canvas>
+<div class="chart-legend"><span><i style="background:#83acf0"></i>Trainingsbewertung A</span><span><i style="background:#7cf0be"></i>Trainingsbewertung B</span><span><i style="background:#ffd28c"></i>Testvorteil A</span></div></section>
+<section class="panel"><div class="head"><h2>Generationenprotokoll</h2><small>Letzte 10 Generationen</small></div><div class="tablebox"><table><thead><tr><th>Gen.</th><th>Fitness A</th><th>Fitness B</th><th>Test A–B</th><th>Quote A</th></tr></thead><tbody id="history"><tr><td colspan="5">Noch keine Daten</td></tr></tbody></table></div></section>
+</div>
+<div class="details"><strong>Welche Teile lernen tatsächlich?</strong> Die Beinbewegungen stammen aus den gespeicherten neuronalen Netzen der Gelenk-Lernarena (256 Gewichte je Roboter). Im Duell werden zusätzliche 11 Strategieparameter je Kämpfer evolutionär optimiert; Hüft- und Kniewinkel, Fuß-Boden-Kontakte und Rückstöße werden dabei im gleichen vereinfachten Bewegungsmodell simuliert. <strong>Modellgrenzen:</strong> Die Kontakt- und Kampfphysik bleibt abstrahiert. Es handelt sich nicht um vollständige Ganzkörperphysik, Verletzungsberechnung oder einen zuverlässigen Nachweis für allgemeines maschinelles Lernen. Ein höherer Trainingswert garantiert keinen Sieg auf neuen Startwerten.</div>
+</main>
+<script type="module" src="./joint-duel-ui.js?v=1"></script>
+</body></html>
