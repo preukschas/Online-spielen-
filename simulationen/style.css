@@ -3,3 +3,15 @@
 /* Responsive laboratory navigation: prevent iPhone horizontal overflow. */
 .labnav{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.labnav a{color:var(--muted);font-size:12px;text-decoration:none;white-space:nowrap}.labnav a:hover{color:var(--accent)}
 @media(max-width:570px){.sitebar{height:auto;min-height:70px;flex-wrap:wrap;gap:8px 12px;padding:10px 12px;max-width:100%}.brand{min-width:0}.labnav{order:3;flex-basis:100%;width:100%;gap:12px}.sitebar>.ghost{margin-left:auto;flex-shrink:0}}
+
+/* Arena-Schnellaktionen: unmittelbar unter der Visualisierung rechtsbündig und iPad-tauglich. */
+#duelQuickbar[hidden]{display:none!important}
+.duel-quickbar{display:flex;flex-direction:column;align-items:flex-end;gap:9px;margin:10px 14px 0;padding:12px 14px;background:linear-gradient(120deg,#123b42,#162d47);border:1px solid #4c8a8c;border-radius:12px}
+.duel-quick-title{display:flex;gap:16px;align-items:center;justify-content:flex-end;color:#e6fff4;font-size:13px;width:100%}
+#duelQuickGeneration{color:#ffd78c;font-variant-numeric:tabular-nums;font-size:12px}
+.duel-quick-buttons{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;width:100%}
+.duel-quick-btn{border:1px solid #628aa7;background:#29445e;color:#fff;border-radius:9px;padding:11px 12px;min-height:44px;font-size:13px;font-weight:720;touch-action:manipulation}
+.duel-quick-btn.duel-plus{background:#245f4c;border-color:#64d2a1}
+.duel-quick-btn:disabled{opacity:.55;cursor:wait}
+.duel-quick-result{color:#e3f6ed;font-size:12px;min-height:17px;margin:0;width:100%;text-align:right;line-height:1.45}
+@media(max-width:570px){.duel-quickbar{margin:8px 6px 0;padding:10px 8px}.duel-quick-buttons{display:grid;grid-template-columns:1fr 1fr;gap:6px}.duel-quick-btn{padding:9px 6px;font-size:11px;min-width:0}.duel-quick-result{text-align:left;font-size:11px}}
