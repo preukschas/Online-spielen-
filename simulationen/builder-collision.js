@@ -92,7 +92,7 @@ export function solveContacts(scene,stiffness=.85,corrections=null){
  }
  return pairs.length;
 }
-export function contactImpulse(scene,c){
+export function contactImpulse(scene,c,restitutionOverride=null){
  const a=scene.bodies.find(b=>b.id===c.a),b=scene.bodies.find(b=>b.id===c.b);
  if(!a||!b)return;
  const n=c.n,ra=c.ra,rb=c.rb;
@@ -104,7 +104,7 @@ export function contactImpulse(scene,c){
  const qA=cross(ra,n),qB=cross(rb,n);
  const invMass=a.invM+b.invM+a.invI*qA*qA+b.invI*qB*qB;
  if(invMass<=1e-12)return;
- const e=clamp(scene.restitution??.05,0,.8);
+ const e=clamp(restitutionOverride??scene.restitution??.05,0,.8);
  // Correct only the incoming normal component, using limited restitution.
  const impulse=-(1+e)*vN/invMass;
  const v1=mul(n,impulse);
