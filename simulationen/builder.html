@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a1825"><meta name="description" content="Freier Maschinen-Editor mit starren Stangen, Rädern, Gelenken und Motoren.">
+<title>Maschinenbaukasten · DMP SIM LAB</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;--bg:#091723;--card:#172c3d;--line:#39546a;--text:#edf7f5;--soft:#b6cbd0;--accent:#70e3c2;--warm:#ffca78}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse 900px 620px at 80% -25%,#244d50 0,transparent 70%),var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--accent)}button,input,select{font:inherit}button{cursor:pointer;color:inherit}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--warm);outline-offset:2px}
+header{display:flex;align-items:center;gap:12px;padding:12px max(15px,calc((100vw - 1350px)/2));border-bottom:1px solid var(--line);flex-wrap:wrap}header .brand{font-weight:900;letter-spacing:.08em;color:var(--accent)}header nav{display:flex;gap:16px;margin-left:auto}header nav a{color:var(--soft);font-size:13px;text-decoration:none}header nav a:hover{color:var(--accent)}
+main{max-width:1380px;margin:auto;padding:22px 15px 36px}.intro{display:flex;justify-content:space-between;gap:14px;align-items:end;margin-bottom:16px;flex-wrap:wrap}.eyebrow{letter-spacing:.14em;font-size:10px;color:var(--accent);font-weight:900}.intro h1{font-size:clamp(25px,3.8vw,43px);letter-spacing:-.04em;margin:5px 0}.intro p{color:var(--soft);font-size:13px;margin:3px 0;line-height:1.5}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(310px,.85fr);gap:14px}.panel{background:#132637;border:1px solid var(--line);border-radius:14px;overflow:hidden}.panel-body{padding:15px}.canvas-header{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px}.pill{color:var(--accent);background:#20433f;border:1px solid #39756b;border-radius:999px;font-size:11px;font-weight:800;padding:6px 10px}.view-wrap{margin:0 10px 10px;border:1px solid #3d6272;border-radius:10px;overflow:hidden;background:#0d1b2a}.view-wrap canvas{display:block;width:100%;aspect-ratio:960/540;touch-action:none;cursor:crosshair}#chart{aspect-ratio:900/140;touch-action:auto}
+.toolbar{padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}.toolbar select{width:auto;min-height:37px}.btn{background:#2d485b;border:1px solid #4c6d80;border-radius:9px;min-height:37px;padding:8px 12px;font-weight:700;font-size:13px}.btn.primary{background:var(--accent);color:#13312c;border-color:var(--accent)}.btn.gold{background:#624d2c;border-color:#a17c3b;color:#ffdf98}.btn:hover{filter:brightness(1.1)}button:disabled{opacity:.45;cursor:not-allowed}.controls{display:flex;flex-direction:column;gap:14px}.panel h2{font-size:16px;margin:0 0 12px}.field-label{font-size:12px;color:var(--soft);display:block;margin:11px 0 5px}.field{width:100%;background:#20394b;color:var(--text);border:1px solid #597485;border-radius:8px;padding:9px 10px;min-height:39px}.columns{display:grid;grid-template-columns:1fr 1fr;gap:9px}.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.full{width:100%}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.micro{color:var(--soft);font-size:12px;line-height:1.5;margin:9px 0}.hint{font-size:12px;color:var(--soft);line-height:1.4}.section-line{margin:15px 0;border:0;border-top:1px solid #30495b}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:0 13px 14px}.stat{background:#203449;border-radius:9px;padding:11px;min-width:0}.stat small{display:block;font-size:11px;color:var(--soft);margin-bottom:6px}.stat strong{font-size:clamp(13px,1.4vw,21px);font-variant-numeric:tabular-nums}.status{color:var(--accent);font-size:12px;min-height:22px;padding:7px 14px;line-height:1.4}.object-list{display:flex;flex-wrap:wrap;gap:6px}.chip{background:#213a4b;border:1px solid #4e7386;color:#eafbf5;border-radius:9px;padding:7px 10px;font-size:12px}.chip.selected{border-color:var(--accent);background:#26594d}.small-heading{font-size:12px;color:#b6cbd0;margin-bottom:8px;font-weight:700}#bodyProps,#jointProps{min-height:42px}.checkline{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text);margin:10px 0}input[type=checkbox]{accent-color:var(--accent);width:19px;height:19px}.note{color:var(--soft);font-size:12px;background:#142d36;border:1px solid #305a64;border-radius:12px;padding:13px 14px;margin-top:15px;line-height:1.6}.empty{font-size:12px;color:var(--soft);font-style:italic}#sceneName{font-weight:800}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.controls>.panel:last-child{grid-column:span 2}}
+@media(max-width:610px){.intro h1{font-size:29px}header{gap:9px}header nav{width:100%;margin:0;justify-content:space-between}.controls{display:flex}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat strong{font-size:18px}main{padding:16px 8px}.toolbar{padding:9px}.toolbar .btn{font-size:12px}.view-wrap{margin:0 5px 8px}.columns{gap:6px}.three{gap:5px}.intro{padding:0 5px}}
+</style>
+</head><body>
+<header><span class="brand">⚙ DMP SIM LAB / MECHANIK</span><nav><a href="./">← Simulationsportal</a><a href="./lab.html?mode=mechanics">Mechanikversuche</a><a href="../">DMP Games</a></nav></header>
+<main>
+<div class="intro"><div><div class="eyebrow">2D KONSTRUKTIONSWERKSTATT · EDITOR 1.0</div><h1>Baue deine eigene Maschine.</h1><p>Stangen und Räder platzieren, Gelenke verbinden, Motoren antreiben und die Bewegung untersuchen.</p></div><span class="pill" id="stateTag">BAU-MODUS</span></div>
+<div class="layout">
+<div class="panel">
+<div class="canvas-header"><strong id="sceneName">Doppelpendel</strong><span class="hint">Antippen: auswählen · Ziehen: verschieben</span></div>
+<div class="view-wrap"><canvas id="world" width="960" height="540" aria-label="2D-Maschinenkonstruktion, Körper können angetippt und verschoben werden"></canvas></div>
+<div class="toolbar"><button id="play" class="btn primary" type="button">▶ Starten</button><button id="step" class="btn" type="button">⏭ Schritt</button><button id="reset" class="btn" type="button">↺ Reset</button><label class="hint" for="speed">Tempo</label><select id="speed" class="field" aria-label="Simulationsgeschwindigkeit"><option value="1">1×</option><option value="2">2×</option><option value="5">5×</option></select></div>
+<div class="stats" aria-live="off"><div class="stat"><small>Simulationszeit</small><strong id="time">0,00 s</strong></div><div class="stat"><small>Körper</small><strong id="bodyCount">2</strong></div><div class="stat"><small>Gelenke</small><strong id="jointCount">2</strong></div><div class="stat"><small>Gelenkfehler</small><strong id="residual">0,00 mm</strong></div></div>
+<div class="panel-body" style="border-top:1px solid var(--line)"><div class="columns"><strong>Live: Bewegung ausgewählter Körper</strong><span class="hint" id="chartLabel" style="text-align:right">Winkel in Grad</span></div><canvas id="chart" width="900" height="140" aria-label="Messkurve des ausgewählten Körpers"></canvas><p class="micro">Die vertikale Achse zeigt den Winkel. Der Export enthält Winkel, Position und Zeitstempel.</p></div>
+<p class="status" id="notice" role="status">Vorlage geladen. Starte die Simulation oder bearbeite Körper und Gelenke.</p>
+</div>
+<div class="controls">
+<section class="panel panel-body"><h2>1 · Konstruktion</h2>
+<label class="field-label" for="template">Beispiel laden</label><select class="field" id="template"><option value="double">Doppelpendel</option><option value="pendulum">Einfaches Pendel</option><option value="motor">Motorarm</option><option value="empty">Leere Arbeitsfläche</option></select>
+<div class="actions"><button type="button" class="btn" id="addBar">＋ Stange</button><button type="button" class="btn" id="addWheel">＋ Rad</button></div>
+<label class="field-label" for="gravity">Gravitation (m/s²)</label><input class="field" id="gravity" type="number" min="0" max="20" step="0.1" value="9.81">
+<p class="micro">Maximal 20 Körper und 25 Drehgelenke. Bauteile lassen sich im Bau-Modus mit dem Finger verschieben.</p>
+<div class="small-heading">Körper auswählen</div><div class="object-list" id="bodyList"></div><div id="bodyProps" aria-label="Körpereigenschaften"></div>
+</section>
+<section class="panel panel-body"><h2>2 · Drehgelenk verbinden</h2>
+<div class="columns"><div><label class="field-label" for="jointA">Ausgangskörper</label><select class="field" id="jointA"></select></div><div><label class="field-label" for="jointB">Zielkörper</label><select class="field" id="jointB"></select></div></div>
+<div class="columns"><div><label class="field-label" for="tipA">Anker am Ausgang</label><select class="field" id="tipA"><option value="-1">Links</option><option value="0">Mitte</option><option value="1" selected>Rechts</option></select></div><div><label class="field-label" for="tipB">Anker am Ziel</label><select class="field" id="tipB"><option value="-1" selected>Links</option><option value="0">Mitte</option><option value="1">Rechts</option></select></div></div>
+<button type="button" class="btn gold full" id="addJoint">＋ Drehgelenk verbinden</button>
+<p class="micro">„Rahmen“ bedeutet einen unbeweglichen Anker. Verbundene Körper erhalten eine gemeinsame Drehgelenkposition.</p>
+<div class="small-heading">Gelenke auswählen</div><div class="object-list" id="jointList"></div><div id="jointProps" aria-label="Gelenkeigenschaften"></div>
+</section>
+<section class="panel panel-body"><h2>3 · Speichern &amp; Exportieren</h2>
+<label class="field-label" for="filename">Konstruktionsname</label><input class="field" id="filename" type="text" maxlength="60" value="Doppelpendel" placeholder="Meine Maschine">
+<div class="actions"><button class="btn" id="save" type="button">💾 Im Browser</button><button class="btn" id="load" type="button">↗ Laden</button><button class="btn" id="json" type="button">↓ JSON</button><button class="btn" id="csv" type="button">↓ Messwerte CSV</button></div>
+<label class="field-label" for="saved">Gespeicherte Maschinen</label><select class="field" id="saved"></select>
+<div class="actions"><button class="btn" id="import" type="button">↑ JSON importieren</button><button class="btn" id="new" type="button">⟳ Leere Maschine</button></div>
+<input id="importFile" type="file" accept=".json,application/json" hidden>
+<p class="micro">Szenarien bleiben lokal im Browser. Der JSON-Export ermöglicht die Weitergabe zwischen Geräten.</p>
+</section>
+</div></div>
+<div class="note"><strong>Modellgrenzen:</strong> Die Darstellung verwendet einen vereinfachten 2D-Positionssolver mit Stangen, Rädern, Gelenkankern, Schwerkraft, Bodenbegrenzung und drehmomentbegrenzten Antrieben. Körper-Körper-Kollisionen, Materialverformung und belastbare Lagerkräfte sind noch nicht modelliert. Ergebnisse sind zum Experimentieren und Lernen gedacht, nicht zur Auslegung realer Maschinen.</div>
+</main><script type="module" src="./builder-ui.js"></script>
+</body></html>
