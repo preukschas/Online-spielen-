@@ -154,6 +154,7 @@ function controls(){
   const hint=document.createElement("p");hint.className="micro";hint.textContent="Beliebige Stangen und Räder konstruieren, mit Drehgelenken verbinden und Motoren hinzufügen.";ex.append(hint);
  }
  if(mode==="arena"){
+  const link=document.createElement("a");link.className="extra-button";link.href="./joint-duel.html";link.textContent="🦿🥊 Gelernte Gelenkroboter im KI-Duell vergleichen ↗";link.style.display="block";link.style.textAlign="center";link.style.textDecoration="none";ex.append(link);
   addEntityPicker(ex,"A");addEntityPicker(ex,"B");
   for(const [key,label,fallback] of [["nameA","Entität A benennen","Entität A"],["nameB","Entität B benennen","Entität B"]]){
    const title=document.createElement("label");title.className="field-label";title.textContent=label;title.htmlFor=key;
