@@ -71,7 +71,7 @@ async function run(browser,name,opts){
     return E.BASE.map(c=>{
       const p=V.centroid(c.x,c.y,E.ORIGIN,E.W,E.H,E.SIZE,G.toUTM32);
       return p.east.toFixed(3)+" "+p.north.toFixed(3)+" "+(150+.02*c.x+.01*c.y).toFixed(3);
-    }).join("\\n");
+    }).join("\n");
   });
   await page.locator("#demInput").setInputFiles({name:"fixture.xyz",mimeType:"text/plain",buffer:Buffer.from(xyz)});
   await page.waitForFunction(()=>document.querySelector("#geoStatus")?.textContent.includes("Höhen importiert"),{timeout:20000});
