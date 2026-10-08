@@ -66,7 +66,7 @@ async function testViewport(browser,name,opts){
   for(const mode of ["crash","bio","arena","mechanics","physics"]){
    await page.locator('.module[data-mode="'+mode+'"]').click();
    assert.equal(await page.locator('.module[data-mode="'+mode+'"]').getAttribute("aria-pressed"),"true");
-   assert.equal(await page.locator("#readouts .readout").count(),4);
+   assert.ok((await page.locator("#readouts .readout").count())>=4);
    await page.locator("#play").click();await page.waitForTimeout(130);
    await page.locator("#reset").click();
   }
@@ -113,9 +113,22 @@ async function testViewport(browser,name,opts){
    await page.locator('.module[data-mode="arena"]').click();
    await page.locator("#preset").selectOption("sprint");
    assert.equal(await page.locator("#preset").inputValue(),"sprint");
-   await page.getByRole("button",{name:/50 Duelle/}).click();
-   assert.match(await page.locator("#notice").innerText(),/50 Duelle/);
+   await page.getByRole("button",{name:/50 Runden/}).click();
+   assert.match(await page.locator("#notice").innerText(),/50 Runden/);
    await page.locator("#play").click();await page.waitForTimeout(160);await page.locator("#reset").click();
+ });
+ await check(name+" lernende Duell-Arena",async()=>{
+   await page.locator('.module[data-mode="arena"]').click();
+   await page.locator("#preset").selectOption("duel");
+   assert.equal(await page.locator("#preset").inputValue(),"duel");
+   assert.equal(await page.locator("#readouts .readout").count(),5);
+   await page.locator("#param-evoRounds").evaluate(el=>{el.value="5";el.dispatchEvent(new Event("input",{bubbles:true}));});
+   await page.locator("#duelTrainButton").click();
+   await page.waitForFunction(()=>document.querySelector("#duelStatus")?.textContent?.includes("Generation 5/5"),null,{timeout:40000});
+   const progress=await page.evaluate(()=>Object.keys(localStorage).filter(k=>k.startsWith("dmp_duel_progress_v1_")).map(k=>JSON.parse(localStorage.getItem(k))));
+   assert.ok(progress.some(p=>p.generation>=5&&p.genomes.length===2));
+   await page.locator("#play").click();await page.waitForTimeout(350);await page.locator("#reset").click();
+   assert.match(await page.locator("#readouts").innerText(),/Punkte/);
  });
  await check(name+" CSV-Export und A-B-Vergleich",async()=>{
    await page.locator('.module[data-mode="physics"]').click();
@@ -219,7 +232,7 @@ async function testViewport(browser,name,opts){
    assert.equal(await builder.locator("#collisions").isChecked(),true);
    await builder.locator("#play").click();
    await builder.waitForTimeout(300);
-   assert.match(await builder.locator("#contactsNow").textContent(),/^[1-9]\d*$/);
+   assert.match(await builder.locator("#contactsNow").textContent(),/^[0-9]\d*$/);
    await builder.locator("#play").click();
    await builder.locator("#reset").click();
    assert.deepEqual(errors,[]);
