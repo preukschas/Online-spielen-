@@ -82,6 +82,7 @@ async function run(browser,name,settings){
    assert.ok(await page.locator("#bodyDrawing > *").count()>20);
    await page.locator('.catalog-card[data-key="horse"]').click();
    assert.equal(await page.locator("#massNumber").inputValue(),"500");
+   await page.locator("#template").selectOption("human");
    await page.locator("#template").selectOption("animal");
    await page.locator("#name").fill("Phase1 Testfuchs");
    await page.locator("#r_mass").evaluate(el=>{el.value="50";el.dispatchEvent(new Event("input",{bubbles:true}));});
