@@ -2,6 +2,7 @@
 // Reale Körpermassen aus den jeweils verlinkten Artprofilen; Gang- und
 // Spielparameter sind frei gewählte, nicht kalibrierte Startwerte.
 import {ENTITY_KEY,ENTITY_LIMIT,newEntity,validateEntity,safeEntityList} from "./entity-model.js";
+import {FIGHTER_CATALOG} from "./fighter-catalog.js";
 export const ENTITY_CATALOG=Object.freeze([
  {key:"cheetah",name:"Gepard",emoji:"🐆",type:"Tier",appearance:"cheetah",kind:"quadruped",
   color:"#eac479",mass:50,amplitude:1,frequency:2.6,feedback:5.2,traction:.95,endurance:.4,torso:1.35,limb:1.25,head:.75,
@@ -33,13 +34,13 @@ export const ENTITY_CATALOG=Object.freeze([
  {key:"robotdog",name:"Roboterhund",emoji:"🦾",type:"Maschine",appearance:"robotdog",kind:"quadruped",
   color:"#8bcbd2",mass:45,amplitude:.69,frequency:2,feedback:6.1,traction:.95,endurance:.9,torso:1.2,limb:.9,head:.75,
   fact:"Fiktiver Vierbein-Roboter, 45 kg angenommene Masse. Mechanische Grenzwerte und Leistung sind Modellannahmen.",source:null}
-]);
+].concat(FIGHTER_CATALOG));
 export function catalogEntity(entry){
  const raw=typeof entry==="string"?ENTITY_CATALOG.find(e=>e.key===entry):entry;
  if(!raw)return null;
  const base=newEntity(raw.kind==="quadruped"?"animal":raw.type==="Maschine"?"robot":"human","catalog-"+raw.key);
- const properties=["name","appearance","kind","color","mass","amplitude","frequency","feedback","traction","endurance","torso","limb","head"];
- for(const prop of properties)base[prop]=raw[prop];
+ const properties=["name","appearance","kind","color","mass","amplitude","frequency","feedback","traction","endurance","torso","limb","head","fighterStyle","combat"];
+ for(const prop of properties)if(raw[prop]!==undefined)base[prop]=raw[prop];
  return validateEntity(base);
 }
 // Nur fehlende Muster einfügen, niemals vorhandene Entwürfe/Änderungen überschreiben.
