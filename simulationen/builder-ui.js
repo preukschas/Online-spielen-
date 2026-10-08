@@ -1,9 +1,9 @@
-import {BUILDER_VERSION,DT,blank,addBody,addHinge,deleteBody,deleteJoint,bodyById,sample,snapshot,restore,step,jointError,worldPoint} from "./builder-core.js";
+import {BUILDER_VERSION,DT,blank,addBody,addHinge,deleteBody,deleteJoint,bodyById,sample,snapshot,restore,step,jointError,worldPoint,mechanicalEnergy} from "./builder-core.js";
 import {contacts} from "./builder-collision.js";
 const $=id=>document.getElementById(id),w=$("world"),cx=w.getContext("2d"),chart=$("chart"),cc=chart.getContext("2d");
 const KEY="dmp_builder_scenes_v1",PI=Math.PI;
 let scene=sample("double"),design=snapshot(scene),selectedBody=scene.bodies[0]?.id||null,selectedJoint=null;
-let running=false,clock=0,acc=0,last=0,frameIndex=0,history=[],drag=null,peak=0;
+let running=false,clock=0,acc=0,last=0,frameIndex=0,history=[],drag=null,peak=0,energyBaseline=mechanicalEnergy(scene).total;
 const number=(v,n=2)=>Number.isFinite(v)?v.toFixed(n).replace(".",","):"–";
 const xp=x=>480+85*x,yp=y=>300+85*y;
 const toWorld=(x,y)=>({x:(x-480)/85,y:(y-300)/85});
@@ -16,7 +16,7 @@ function sync(){
 }
 function reset(){
  running=false;clock=0;acc=0;history=[];peak=0;
- scene=restore(design);$("play").textContent="▶ Starten";$("stateTag").textContent="BAU-MODUS";
+ scene=restore(design);energyBaseline=mechanicalEnergy(scene).total;$("play").textContent="▶ Starten";$("stateTag").textContent="BAU-MODUS";
  renderUI();draw();stats();
 }
 function chooseTemplate(name){
@@ -207,6 +207,9 @@ function stats(){
  $("jointCount").textContent=scene.joints.length;$("residual").textContent=number(1000*residual)+" mm";
  $("contactsNow").textContent=scene.collisions===false?"Aus":String(scene.contactsNow||0);
  $("ccdSubsteps").textContent=scene.collisions===false||scene.ccd===false?"Aus":String(scene.ccdSubsteps||1);
+ const E=mechanicalEnergy(scene);
+ $("energyTotal").textContent=number(E.total,1)+" J";
+ $("energyChange").textContent=number(E.total-energyBaseline,1)+" J";
  drawChart();
 }
 function record(){
