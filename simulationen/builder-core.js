@@ -1,7 +1,7 @@
 import {contacts,solveContacts,contactImpulse,firstSweptImpact,safeContactInterval} from "./builder-collision.js";
 // DMP Mechanik-Baukasten – modellhafte 2D-Starrkörper mit Drehgelenken.
 // SI-Einheiten: Meter, Kilogramm, Sekunden, N·m. Kein Konstruktionsnachweis.
-export const BUILDER_VERSION="1.2.0";
+export const BUILDER_VERSION="1.3.0";
 export const DT=1/120;
 const LIMIT={bodies:20,joints:25};
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -55,7 +55,12 @@ export function deleteBody(scene,id){scene.bodies=scene.bodies.filter(b=>b.id!==
 export function deleteJoint(scene,id){scene.joints=scene.joints.filter(j=>j.id!==id)}
 export function sample(name="pendulum"){
  const s=blank();
- if(name==="fast"){
+ if(name==="chain"){
+  s.name="Dreier-Kettenstoß";s.gravity=0;s.restitution=0;s.friction=0;
+  addBody(s,"wheel",{name:"Antrieb",x:-1.5,y:-.8,length:.9,mass:2,startVx:12});
+  addBody(s,"wheel",{name:"Mittelrad",x:-.55,y:-.8,length:.9,mass:2});
+  addBody(s,"wheel",{name:"Zielrad",x:.4,y:-.8,length:.9,mass:2});
+ }else if(name==="fast"){
   s.name="Schneller Radstoß (CCD)";s.gravity=0;
   addBody(s,"wheel",{name:"Schneller Ball",length:.8,mass:2,x:-1.6,y:-.8,startVx:220});
   addBody(s,"wheel",{name:"Zielrad",length:.8,mass:2,x:-.7,y:-.8});
@@ -63,6 +68,18 @@ export function sample(name="pendulum"){
   s.name="Kollision: zwei Räder";
   addBody(s,"wheel",{name:"Rad A",length:1.2,mass:2,x:-1,y:-1.4,angle:0});
   addBody(s,"wheel",{name:"Rad B",length:1.2,mass:3,x:-.15,y:-1.4,angle:0});
+ }else if(name==="fourbar"){
+  s.name="Viergelenk-Mechanismus";
+  const left=addBody(s,"bar",{name:"Linke Schwinge",x:-1,y:0,length:2,mass:2,angle:Math.PI/2});
+  const top=addBody(s,"bar",{name:"Koppelstange",x:0,y:-1,length:2,mass:2,angle:0});
+  const right=addBody(s,"bar",{name:"Rechte Schwinge",x:1,y:0,length:2,mass:2,angle:Math.PI/2});
+  const bottom=addBody(s,"bar",{name:"Unterer Träger",x:0,y:1,length:2,mass:2,angle:0});
+  addHinge(s,left.id,top.id,-1,-1);
+  addHinge(s,top.id,right.id,1,-1);
+  addHinge(s,right.id,bottom.id,1,1);
+  addHinge(s,bottom.id,left.id,-1,1);
+  const drive=addHinge(s,0,left.id,0,-1);
+  drive.motor=true;drive.rpm=14;drive.torque=12;
  }else if(name==="motor"){
   s.name="Motorarm";
   const a=addBody(s,"bar",{name:"Motorhebel",x:0,y:-.9,length:2,angle:Math.PI/2,mass:3});
@@ -195,7 +212,12 @@ function discreteStep(scene,dt=DT){
   // Design view contains actual runtime coordinates and angles. Snapshot is saved only while paused/reset.
  }
  if(scene.collisions!==false){
-  for(const c of contacts(scene))contactImpulse(scene,c);
+  // Iterative Gauss-Seidel velocity impulses. Apply restitution on the first
+  // pass only: repeated bounces would otherwise add energy in contact chains.
+  const active=contacts(scene);
+  for(let pass=0;pass<5;pass++){
+   for(const c of active)contactImpulse(scene,c,pass===0?null:0);
+  }
   for(const b of scene.bodies){
    b.vx=clamp(b.vx,-500,500);b.vy=clamp(b.vy,-500,500);b.omega=clamp(b.omega,-30,30);
   }
@@ -229,6 +251,19 @@ export function step(scene,dt=DT){
  scene.contactsNow=maxContacts;
  return{jointError:maxError,bodies:scene.bodies.length,joints:scene.joints.length,
         contacts:maxContacts,ccdSubsteps:count,ccdImpacts:impacts};
+}
+// Diagnostics in joules. Height is measured above y=2.2m (screen axis down).
+// Motor input work, drag, contact and ground losses mean ΔE is NOT necessarily zero.
+export function mechanicalEnergy(scene){
+ let translation=0,rotation=0,gravity=0;
+ for(const b of scene.bodies){
+  const mass=b.mass;
+  const invI=b.invI;
+  translation+=.5*mass*(b.vx*b.vx+b.vy*b.vy);
+  rotation+=.5*(1/invI)*(b.omega*b.omega);
+  gravity+=mass*scene.gravity*(2.2-b.y);
+ }
+ return{translation,rotation,gravity,total:translation+rotation+gravity};
 }
 export function jointError(scene){
  return scene.joints.map(j=>{
