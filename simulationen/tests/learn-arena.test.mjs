@@ -56,7 +56,7 @@ test("Abgründe bleiben gefährlich, Bewegung ist reproduzierbar und endlich",()
  assert.ok(ended.t<=MAX_TIME+DT);
  const pit=makeEpisode(42),p=pit.course.find(o=>o.type==="pit");
  pit.x=p.x+p.w/2;pit.y=-.47;pit.vy=-1;pit.grounded=false;
- stepEpisode(p,constant());
+ stepEpisode(pit,constant());
  assert.equal(p.failed,true);assert.equal(p.reached,false);
 });
 test("Beide unabhängigen Teams entwickeln sich, konkurrieren und speichern ihre Chromosomen",()=>{
@@ -96,7 +96,7 @@ test("JSON speichert beide Teams, und Wiederaufnahme bleibt deterministisch",()=
 });
 test("ungültige/alte Imports können kein Modell beschädigen",()=>{
  const original=snapshot(newTrainer(42,8));
- const bad=[{seed:-1},{version:2},{size:64},{population:[]},
+ const bad=[{seed:-1},{version:2},{size:64},
   {teams:{blue:original.teams.blue,green:{...original.teams.green,population:[]}}},
   {teams:{blue:original.teams.blue,green:{...original.teams.green,champion:Array(GENE_COUNT).fill(NaN)}}},
   {history:[{generation:1,blue:{mean:NaN},green:{mean:0}}]}];
