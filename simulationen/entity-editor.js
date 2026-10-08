@@ -47,10 +47,34 @@ function svg(tag,attrs={},focus=""){
  if(focus){e.dataset.focus=focus;e.style.cursor="pointer";}
  $("bodyDrawing").append(e);return e;
 }
-function limb(x1,y1,x2,y2,c,w=11){svg("line",{x1,y1,x2,y2,stroke:c,"stroke-width":w,"stroke-linecap":"round"},"limb");}
-function ball(x,y,r,c,focus=""){svg("circle",{cx:x,cy:y,r,fill:c,stroke:"#d5fff2","stroke-width":2},focus);}
-function rect(x,y,w,h,c,r=12,focus=""){svg("rect",{x,y,width:w,height:h,rx:r,fill:c,stroke:"#c2e9df","stroke-width":2},focus);}
-function joint(x,y){ball(x,y,5,"#f5e8cd");}
+function tone(hex,delta){
+ const src=/^#[0-9a-f]{6}$/i.test(hex)?hex:"#65e4b9";
+ return "#"+[1,3,5].map(i=>Math.max(0,Math.min(255,parseInt(src.slice(i,i+2),16)+delta)).toString(16).padStart(2,"0")).join("");
+}
+function limb(x1,y1,x2,y2,c,w=11){
+ const dark=svg("line",{x1,y1,x2,y2,stroke:tone(c,-65),"stroke-width":w+6,"stroke-linecap":"round"});dark.setAttribute("pointer-events","none");
+ svg("line",{x1,y1,x2,y2,stroke:c,"stroke-width":w,"stroke-linecap":"round"},"limb");
+ const sx=x1+(x2-x1)*.07,sy=y1+(y2-y1)*.07,ex=x1+(x2-x1)*.80,ey=y1+(y2-y1)*.80;
+ const highlight=svg("line",{x1:sx,y1:sy,x2:ex,y2:ey,stroke:"#ffffff66","stroke-width":Math.max(2,w*.18),"stroke-linecap":"round"});
+ highlight.setAttribute("pointer-events","none");
+}
+function ball(x,y,r,c,focus=""){
+ const under=svg("circle",{cx:x,cy:y+3,r:r+3,fill:"#081f2c",opacity:.5});under.setAttribute("pointer-events","none");
+ svg("circle",{cx:x,cy:y,r,fill:c,stroke:tone(c,68),"stroke-width":2.5},focus);
+ const light=svg("ellipse",{cx:x-r*.24,cy:y-r*.35,rx:r*.38,ry:r*.18,fill:"#ffffff65"});
+ light.setAttribute("pointer-events","none");
+}
+function rect(x,y,w,h,c,r=12,focus=""){
+ const under=svg("rect",{x:x+2,y:y+4,width:w,height:h,rx:r,fill:"#061826",opacity:.45});under.setAttribute("pointer-events","none");
+ svg("rect",{x,y,width:w,height:h,rx:r,fill:c,stroke:tone(c,63),"stroke-width":2.4},focus);
+ const light=svg("rect",{x:x+5,y:y+4,width:Math.max(1,w-10),height:Math.min(5,h*.24),rx:2,fill:"#ffffff5b"});
+ light.setAttribute("pointer-events","none");
+}
+function joint(x,y){
+ const a=svg("circle",{cx:x,cy:y,r:8,fill:"#0b293b",stroke:"#d8fff4","stroke-width":2},"limb");
+ const b=svg("circle",{cx:x,cy:y,r:3,fill:"#f8d389"});b.setAttribute("pointer-events","none");
+}
+
 function draw(){
  $("bodyDrawing").replaceChildren();
  const e=validateEntity(draft),stats=e?toArena(e):null;
@@ -82,6 +106,20 @@ function draw(){
  }
  const label=svg("text",{x:25,y:37,fill:"#98dfc5","font-size":15,"font-family":"system-ui"});
  label.textContent=(draft.kind==="biped"?"ZWEIBEINER":"VIERBEINER")+" · "+draft.name.slice(0,24).toUpperCase();
+
+ // Blueprint annotations are visual aids, not additional physics calculations.
+ const centerX=draft.kind==="biped"?280:277;
+ const centerY=draft.kind==="biped"?272:249;
+ const ring=svg("circle",{cx:centerX,cy:centerY,r:24,fill:"none",stroke:"#f2c77e",opacity:.78,"stroke-width":1.3,"stroke-dasharray":"4 5"});
+ ring.setAttribute("pointer-events","none");
+ const point=svg("circle",{cx:centerX,cy:centerY,r:4.5,fill:"#ffd993",stroke:"#112d38","stroke-width":1.5});
+ point.setAttribute("pointer-events","none");
+ const leader=svg("path",{d:"M"+(centerX+25)+" "+centerY+" L410 "+(centerY-38)+" H488",fill:"none",stroke:"#9bd5d1",opacity:.7,"stroke-width":1.6});
+ leader.setAttribute("pointer-events","none");
+ const massText=svg("text",{x:414,y:centerY-45,fill:"#d5f8e9","font-size":11,"font-family":"system-ui","font-weight":700});massText.textContent="SCHWERPUNKT";
+ const detail=svg("text",{x:26,y:439,fill:"#a4cbd2","font-size":11,"font-family":"system-ui"});detail.textContent="SEGMENTE + GELENKE  ·  "+(draft.kind==="biped"?"2 BEINE":"4 BEINE")+"  ·  "+draft.mass+" kg";
+ const sub=svg("text",{x:26,y:459,fill:"#7caab9","font-size":10,"font-family":"system-ui"});sub.textContent="SCHEMATISCHE KÖRPERANSICHT  /  KEIN ANATOMISCHES MODELL";
+
 }
 function exportJSON(){
  const valid=validateEntity({...draft,name:$("name").value.trim()});
