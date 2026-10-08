@@ -327,7 +327,8 @@ async function loadBundledDGM(){
   applyTerrain(cells,m);
   info("✓ Amtliche LGL-DGM1-Höhen automatisch eingebunden ("+data.acquiredAt.slice(0,10)+
     "): "+digits(data.minM,2)+"–"+digits(data.maxM,2)+
-    " m. 2.400 Rasterzellen; Karten-/Abflussmodell bleibt didaktisch und unkalibriert.");
+    " m. 2.400 Rasterzellen; Karte und Abfluss bleiben unkalibriert."+
+   (data.maxM>154.2?" Einzelne Höhenwerte überschreiten den Gemeindehöchstpunkt; GIS-Plausibilitätsprüfung offen.":""));
   status("Schutterwald-Höfen: verfügbare amtliche Höhendaten geladen. Maßnahmen und A/B-Versuch sind bereit.");
  }catch(e){
   if(geosource.type==="osm")
