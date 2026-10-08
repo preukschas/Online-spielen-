@@ -1,10 +1,10 @@
 // DMP Sim Lab – deterministische, bewusst vereinfachte Lehrmodelle
-export const VERSION="1.0.0";
+export const VERSION="1.1.0";
 export const CONFIG={
  physics:{title:"Physik-Spielwiese",presets:[["fall","Freier Fall"],["pendulum","Pendel"],["ramp","Schiefe Ebene"],["collision","Kugelkollision"]],limit:"Lehrmodell mit idealisierten Körpern, festem Zeitschritt und angenommener Reibung. Nicht für technische Nachweise."},
  crash:{title:"Crashtest",presets:[["barrier","Auto gegen Barriere"]],limit:"Feder-Dämpfer-Modell einer Knautschzone; kein realer Fahrzeugcrash, keine Verletzungsprognose und keine Sicherheitsbewertung."},
- bio:{title:"Biomechanik",presets:[["walker","Zweibeiner: Balance & Gang"]],limit:"Stark vereinfachte Regelungs- und Kinematikdemo. Lernen optimiert Modellparameter, keine anatomisch korrekte Mensch-/Tier-Simulation."},
- arena:{title:"Arena",presets:[["race","Hindernisrennen"]],limit:"Regelbasiertes Rennen vereinfachter Agenten; Sieger entstehen aus transparenten Spielregeln, nicht aus realen biomechanischen Fähigkeiten."}
+ bio:{title:"Biomechanik",presets:[["walker","Zweibeiner: Balance & Gang"],["quad","Vierbeiner: Traben lernen"]],limit:"Zweibeiner-/Vierbeinermodell mit begrenzten Gelenkmotoren und vereinfachter Fußkontaktregel. Keine anatomisch vollständige oder medizinische Simulation."},
+ arena:{title:"Arena",presets:[["race","Hindernisrennen"],["sprint","Sprint ohne Hindernisse"]],limit:"Regelbasiertes Rennen vereinfachter Agenten; Sieger entstehen aus transparenten Spielregeln, nicht aus realen biomechanischen Fähigkeiten."}
 };
 export const FIELDS={
  fall:[["gravity","Schwerkraft",0,20,0.5,"m/s²",9.81],["height","Starthöhe",2,22,1,"m",16],["bounce","Rückprall",0,1,.05,"",.65]],
@@ -13,6 +13,8 @@ export const FIELDS={
  collision:[["massA","Masse A",1,10,.5,"kg",3],["massB","Masse B",1,10,.5,"kg",5],["velocity","Starttempo A",.5,8,.5,"m/s",4],["bounce","Elastizität",0,1,.05,"",.85]],
  barrier:[["mass","Fahrzeugmasse",600,2500,100,"kg",1250],["velocity","Aufpralltempo",10,90,5,"km/h",50],["stiffness","Federsteifigkeit",80,600,20,"kN/m",280],["damping","Dämpfung",1,25,1,"kNs/m",10],["crush","Knautschweg",.2,1.3,.1,"m",.75]],
  walker:[["mass","Körpermasse",30,120,5,"kg",70],["amplitude","Schrittweite",.2,1,.05,"",.55],["frequency","Schrittfrequenz",.7,2.6,.1,"Hz",1.5],["feedback","Balance-Regler",1,8,.25,"",4.5],["traction","Bodenhaftung",.2,1,.1,"",.8]],
+ quad:[["mass","Körpermasse",10,120,5,"kg",40],["amplitude","Schrittweite",.2,1,.05,"",.65],["frequency","Schrittfrequenz",.7,2.6,.1,"Hz",1.8],["feedback","Balance-Regler",1,8,.25,"",4.5],["traction","Bodenhaftung",.2,1,.1,"",.8]],
+ sprint:[["speedA","Tempo A",1,6,.2,"m/s",3.5],["speedB","Tempo B",1,6,.2,"m/s",3.3],["staminaA","Ausdauer A",.2,1,.1,"",.8],["staminaB","Ausdauer B",.2,1,.1,"",.9]],
  race:[["speedA","Tempo A",1,6,.2,"m/s",3.5],["speedB","Tempo B",1,6,.2,"m/s",3.3],["staminaA","Ausdauer A",.2,1,.1,"",.8],["staminaB","Ausdauer B",.2,1,.1,"",.9],["obstacle","Hindernisschwierigkeit",0,1,.1,"",.6]]
 };
 export function initialParams(preset){return Object.fromEntries((FIELDS[preset]||[]).map(f=>[f[0],f[6]]))}
@@ -27,23 +29,57 @@ export function makeSim(mode,preset,params,seed=42){
   if(preset==="collision")s.body={x1:-3.3,x2:2.8,v1:p.velocity,v2:-p.velocity*.25,hit:false};
  }
  if(mode==="crash")s.body={x:-5,v:p.velocity/3.6,force:0,maxG:0,compression:0,maxCompression:0,energy:.5*p.mass*(p.velocity/3.6)**2};
- if(mode==="bio"){s.body=makeWalker(p,r);s.training={running:false,generation:0,best:null,history:[],score:-Infinity,validation:null};}
+ if(mode==="bio"){p.gait=preset;s.body=makeWalker(p,r,preset);s.training={running:false,generation:0,best:null,history:[],score:-Infinity,validation:null};}
  if(mode==="arena"){s.body={racers:[{name:String(p.nameA||"Entität A").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaA,base:p.speedA,penalty:0},{name:String(p.nameB||"Entität B").slice(0,24),x:0,v:0,finish:null,stamina:p.staminaB,base:p.speedB,penalty:0}],winner:null,seed};}
  record(s);
  return s;
 }
-function makeWalker(p,r){return{x:0,y:0,theta:(r()-.5)*.15,omega:0,phase:0,v:.05,energy:0,fallen:false,fallTime:null,stepCount:0};}
+function makeWalker(p,r,preset="walker"){
+ const count=preset==="quad"?4:2;
+ const legs=Array.from({length:count},(_,i)=>({hip:0,knee:.15,hipRate:0,kneeRate:0,contact:false,torque:0}));
+ return{x:0,y:0,theta:(r()-.5)*.15,omega:0,phase:0,v:.05,energy:0,fallen:false,fallTime:null,stepCount:0,legs,contacts:0};
+}
+// Gelenkregler mit begrenzten Antrieben (didaktische, nicht vollständige Starrkörperdynamik).
+// Hüft- und Kniegelenkwinkel fließen in die Fußkontakt- und Vortriebsregel ein.
 function updateWalker(b,p,dt,r){
  if(b.fallen)return;
- const phaseBefore=b.phase;b.phase+=2*Math.PI*p.frequency*dt;
- if(Math.floor(b.phase/Math.PI)>Math.floor(phaseBefore/Math.PI))b.stepCount++;
- const h=Math.max(.05,Math.cos(b.theta)**2),drive=(1.18*p.amplitude*p.frequency*p.traction*h)*(0.86+.14*Math.sin(b.phase)**2);
+ const previous=b.phase;
+ b.phase+=2*Math.PI*p.frequency*dt;
+ if(Math.floor(b.phase/Math.PI)>Math.floor(previous/Math.PI))b.stepCount++;
+ let contacts=0,motorWork=0;
+ const count=b.legs.length;
+ for(let i=0;i<count;i++){
+  const leg=b.legs[i];
+  const offset=count===2?i*Math.PI:[0,Math.PI,Math.PI,0][i];
+  const phase=b.phase+offset;
+  const hipTarget=.52*p.amplitude*Math.cos(phase);
+  const kneeTarget=.09+.87*p.amplitude*Math.max(0,Math.sin(phase));
+  const torqueHip=clamp(17*(hipTarget-leg.hip)-3.1*leg.hipRate,-7,7);
+  const torqueKnee=clamp(22*(kneeTarget-leg.knee)-3.6*leg.kneeRate,-8,8);
+  leg.hipRate=clamp(leg.hipRate+((torqueHip/2.2)-.18*leg.hipRate)*dt,-4,4);
+  leg.kneeRate=clamp(leg.kneeRate+((torqueKnee/1.5)-.18*leg.kneeRate)*dt,-5,5);
+  leg.hip=clamp(leg.hip+leg.hipRate*dt,-.85,.85);
+  leg.knee=clamp(leg.knee+leg.kneeRate*dt,0,1.6);
+  if((leg.hip===-.85&&leg.hipRate<0)||(leg.hip===.85&&leg.hipRate>0))leg.hipRate=0;
+  if((leg.knee===0&&leg.kneeRate<0)||(leg.knee===1.6&&leg.kneeRate>0))leg.kneeRate=0;
+  const verticalReach=(Math.cos(leg.hip)+Math.cos(leg.hip-leg.knee))/2;
+  leg.contact=verticalReach>.84;
+  if(leg.contact)contacts++;
+  leg.torque=Math.abs(torqueHip)+Math.abs(torqueKnee);
+  motorWork+=Math.abs(torqueHip*leg.hipRate)+Math.abs(torqueKnee*leg.kneeRate);
+ }
+ b.contacts=contacts;
+ const support=clamp(contacts/count,.12,1);
+ const stability=count===4?1.35:1;
  const damping=.35+.23*p.feedback;
- const torque=2.5*Math.sin(b.theta)-.74*p.feedback*b.theta-damping*b.omega+.45*p.amplitude*Math.sin(b.phase)+(.06*r()-.03);
+ const torque=(2.5*Math.sin(b.theta)-.74*p.feedback*stability*b.theta-damping*b.omega+.3*p.amplitude*Math.sin(b.phase)/Math.sqrt(count)+(.06*r()-.03))/(.7+.5*support);
  b.omega+=torque*dt;b.theta+=b.omega*dt;
+ const alignment=Math.max(.05,Math.cos(b.theta)**2);
+ const drive=1.18*p.amplitude*p.frequency*p.traction*alignment*(.55+.65*support);
  const target=Math.max(0,drive*(1-.10*Math.abs(p.frequency-1.7)));
- b.v+=(target-b.v)*Math.min(1,3*dt);b.x+=b.v*dt;
- b.energy+=dt*p.mass*(.011+.022*p.amplitude*p.amplitude*p.frequency*p.frequency+.007*p.feedback);
+ b.v+=(target-b.v)*Math.min(1,(1+3*support)*dt);
+ b.x+=b.v*dt;
+ b.energy+=dt*(p.mass*(.011+.006*p.feedback)+motorWork*.045);
  if(Math.abs(b.theta)>.88){b.fallen=true;b.fallTime=b.x;}
 }
 export function stepSim(s,dt=1/120){
@@ -71,7 +107,7 @@ export function stepSim(s,dt=1/120){
   for(let i=0;i<2;i++){const racer=b.racers[i];if(racer.finish!==null)continue;
    racer.v+=(racer.base*(.72+.28*racer.stamina)-racer.v)*dt*2;
    racer.x+=racer.v*dt;
-   for(const pos of [8,17,25]){const key="passed"+pos;if(!racer[key]&&racer.x>=pos){racer[key]=true;const hazard=.75+.7*random(s.seed+pos*173+i*719)();racer.penalty+=p.obstacle*hazard;racer.v=Math.max(0,racer.v*(1-.65*p.obstacle));}}
+   for(const pos of (s.preset==="race"?[8,17,25]:[])){const key="passed"+pos;if(!racer[key]&&racer.x>=pos){racer[key]=true;const hazard=.75+.7*random(s.seed+pos*173+i*719)();racer.penalty+=p.obstacle*hazard;racer.v=Math.max(0,racer.v*(1-.65*p.obstacle));}}
    racer.stamina=Math.max(.1,racer.stamina-.008*dt);
    if(racer.x>=32){racer.x=32;racer.finish=s.time;}
   }
@@ -88,12 +124,13 @@ export function measure(s){
   return{plot:b.v1,chart:"Geschwindigkeit Kugel A (m/s)",read:[["Tempo A",fmt(b.v1)+" m/s"],["Tempo B",fmt(b.v2)+" m/s"],["Kontakt",b.hit?"Ja":"Nein"],["Zeit",fmt(s.time,1)+" s"]]};
  }
  if(s.mode==="crash")return{plot:b.force/1000,chart:"Kontaktkraft (kN)",read:[["Aktuelle Kraft",fmt(b.force/1000,1)+" kN"],["Spitzenlast",fmt(b.maxG,1)+" g"],["Max. Stauchung",fmt(b.maxCompression*100,0)+" cm"],["Tempo",fmt(Math.abs(b.v)*3.6,1)+" km/h"]]};
- if(s.mode==="bio")return{plot:b.x,chart:"Gelaufene Strecke (m)",read:[["Strecke",fmt(b.x,2)+" m"],["Stabilität",b.fallen?"Gestürzt":"Aufrecht"],["Energie (Modell)",fmt(b.energy,0)+" E"],["Training",s.training.generation+" Gen."]]};
+ if(s.mode==="bio")return{plot:b.x,chart:"Gelaufene Strecke (m)",read:[["Strecke",fmt(b.x,2)+" m"],["Kontakte",b.contacts+" / "+b.legs.length],["Energie (Modell)",fmt(b.energy,0)+" E"],["Training",s.training.generation+" Gen."]]};
  const [a,c]=b.racers;return{plot:a.x-c.x,chart:"Vorsprung A − B (m)",read:[["Entität A",fmt(a.x,1)+" / 32 m"],["Entität B",fmt(c.x,1)+" / 32 m"],["Zeit",fmt(s.time,1)+" s"],["Sieger",b.winner||"–"]]};
 }
-function record(s){const m=measure(s);s.history.push({t:s.time,v:m.plot});if(s.history.length>240)s.history.shift();}
+function record(s){const m=measure(s);s.history.push({t:s.time,v:m.plot});if(s.history.length>12000)s.history.shift();}
+function presetForWalker(p){return p.gait==="quad"?"quad":"walker";}
 export function evaluateWalker(p,genome,seed=17){
- const q={...p,...genome},r=random(seed),b=makeWalker(q,r);const dt=1/60;
+ const q={...p,...genome},r=random(seed),b=makeWalker(q,r,presetForWalker(p));const dt=1/60;
  for(let t=0;t<14;t+=dt){updateWalker(b,q,dt,r);if(b.fallen)break;}
  const score=b.x-(b.fallen?4:0)-b.energy*.028;
  return{score,distance:b.x,fallen:b.fallen,energy:b.energy};
@@ -113,11 +150,11 @@ export function trainOneGeneration(s){
  if(tr.generation>=25)tr.running=false;
 }
 export function trainedToArena(genome){return clamp(1.8+genome.amplitude*genome.frequency*1.15,1,6);}
-export function arenaBatch(params,seed=42,count=10){
+export function arenaBatch(params,seed=42,count=10,preset="race"){
  let wins=[0,0,0];
  for(let i=0;i<count;i++){
   const q=i%2?{...params,speedA:params.speedB,speedB:params.speedA,staminaA:params.staminaB,staminaB:params.staminaA}:params;
-  const s=makeSim("arena","race",q,seed+i);
+  const s=makeSim("arena",preset,q,seed+Math.floor(i/2));
   for(let j=0;j<60*60&&!s.finished;j++)stepSim(s,1/60);
   const [a,b]=s.body.racers;let winner=a.finish===null?1:b.finish===null?0:Math.abs(a.finish-b.finish)<.001?2:a.finish<b.finish?0:1;
   if(i%2&&winner!==2)winner=1-winner;wins[winner]++;
@@ -146,22 +183,49 @@ export function drawScene(c,s){
   if(b.compression>0){box(c,barrier,370,Math.max(2,b.compression*92),10,"#f8bc6a");}
   txt(c,"MODELLIERTER KONTAKT",35,70,15);txt(c,"Max. Stauchung: "+(b.maxCompression*100).toFixed(0)+" cm",35,100,16,colors.b);
  }
- if(s.mode==="bio"){ground(c,480);const x=clamp(250+b.x*28,80,860),py=372+b.theta*35,phase=b.phase,amp=p.amplitude*80;
-  // zweigliedriges illustratives Strichmodell, Kopfausrichtung folgt Schwerpunktregelung
-  const hx=x+Math.sin(b.theta)*30;let kneeAX=hx+Math.sin(phase)*amp*.62,kneeBX=hx-Math.sin(phase)*amp*.62;
-  line(c,hx,py,hx+Math.sin(b.theta)*-10,py-112,colors.a,15);line(c,hx+Math.sin(b.theta)*-10,py-112,hx+Math.sin(b.theta)*-15,py-155,colors.a,5);
-  circle(c,hx-15*Math.sin(b.theta),py-175,28,"#f8cf99");
-  line(c,hx,py,kneeAX,py+57,"#7ccdb7",13);line(c,kneeAX,py+57,kneeAX+Math.sin(phase)*23,475-Math.max(0,Math.sin(phase))*25,"#7ccdb7",10);
-  line(c,hx,py,kneeBX,py+57,"#f8bc6a",13);line(c,kneeBX,py+57,kneeBX-Math.sin(phase)*23,475-Math.max(0,-Math.sin(phase))*25,"#f8bc6a",10);
-  line(c,hx,py-91,hx+Math.sin(phase)*43,py-15,"#70bfae",7);line(c,hx,py-91,hx-Math.sin(phase)*43,py-15,"#f8bc6a",7);
-  line(c,hx,180,hx,470,"#f0dd7999",1);txt(c,b.fallen?"GESTÜRZT":s.training.running?"EVOLUTION LÄUFT":"BALANCE & GANG",35,65,18,b.fallen?"#ff9999":colors.a);txt(c,"Training: "+s.training.generation+"/25 Generationen",35,96,14);
+ if(s.mode==="bio"){
+  ground(c,480);
+  const quad=b.legs.length===4,x=clamp(250+b.x*24,125,845);
+  const hipY=quad?350:360,seg=quad?53:61;
+  const baseY=hipY+b.theta*20;
+  if(quad){
+   const attachments=[-67,-32,35,68];
+   line(c,x-74,baseY-10,x+75,baseY-10,"#64cbb4",31);
+   line(c,x+62,baseY-15,x+94,baseY-50,"#64cbb4",16);
+   circle(c,x+98,baseY-60,23,"#f8cf99");
+   line(c,x+85,baseY-81,x+78,baseY-99,"#f8cf99",6);
+   b.legs.forEach((leg,i)=>{
+    const anchor=x+attachments[i],ky=baseY+seg*Math.cos(leg.hip),kx=anchor+seg*Math.sin(leg.hip);
+    const fx=kx+seg*Math.sin(leg.hip-leg.knee),fy=ky+seg*Math.cos(leg.hip-leg.knee);
+    const shade=i%2?colors.b:colors.a;
+    line(c,anchor,baseY,kx,ky,shade,10);line(c,kx,ky,fx,fy,shade,8);
+    circle(c,kx,ky,7,"#d9f4ec");line(c,fx-9,fy,fx+12,fy,"#d9f4ec",5);
+    if(leg.contact)circle(c,fx,fy,5,"#ffcf63");
+   });
+  }else{
+   line(c,x,baseY,x-12,baseY-124,colors.a,17);
+   circle(c,x-14,baseY-146,26,"#f8cf99");
+   b.legs.forEach((leg,i)=>{
+    const anchor=x+(i?12:-12),kx=anchor+seg*Math.sin(leg.hip),ky=baseY+seg*Math.cos(leg.hip);
+    const fx=kx+seg*Math.sin(leg.hip-leg.knee),fy=ky+seg*Math.cos(leg.hip-leg.knee);
+    const shade=i?colors.b:colors.a;
+    line(c,anchor,baseY,kx,ky,shade,12);line(c,kx,ky,fx,fy,shade,10);
+    circle(c,kx,ky,8,"#e8f8ed");line(c,fx-11,fy,fx+14,fy,"#e8f8ed",6);
+    if(leg.contact)circle(c,fx,fy,6,"#ffcf63");
+   });
+   line(c,x-10,baseY-95,x+42*Math.sin(b.phase),baseY-34,"#70bfae",7);
+   line(c,x-10,baseY-95,x-42*Math.sin(b.phase),baseY-34,"#f8bc6a",7);
+  }
+  line(c,x,185,x,465,"#f0dd7999",1);
+  txt(c,b.fallen?"GESTÜRZT":s.training.running?"EVOLUTION LÄUFT":quad?"VIERBEINER · GELENKMOTOREN":"ZWEIBEINER · GELENKMOTOREN",35,65,17,b.fallen?"#ff9999":colors.a);
+  txt(c,"Training: "+s.training.generation+"/25 Generationen · Kontakte: "+b.contacts+"/"+b.legs.length,35,96,14);
   if(b.fallen)txt(c,"Versuch beendet – Reset oder Training starten",500,180,20,"#ffb2a9","center");
  }
  if(s.mode==="arena"){ground(c,478);box(c,34,156,932,245,"#1d344a");line(c,34,270,966,270,"#496478",4);line(c,74,156,74,401,"#92b9c5",3);for(let i=0;i<13;i++){line(c,74+i*69,156,74+i*69,401,"#314c5e",1);}
-  for(const pos of [8,17,25]){const px=74+pos/32*850;for(const y of [213,325]){box(c,px-9,y-26,18,45,"#ee9a51");txt(c,"▲",px,y-33,17,colors.b,"center");}}
+  for(const pos of (s.preset==="race"?[8,17,25]:[])){const px=74+pos/32*850;for(const y of [213,325]){box(c,px-9,y-26,18,45,"#ee9a51");txt(c,"▲",px,y-33,17,colors.b,"center");}}
   const finish=924;for(let j=0;j<10;j++)for(let k=0;k<2;k++)box(c,finish+j%2*8,158+j*24+k*12,8,12,(j+k)%2?"#f8f8ff":"#16283b");
   for(let i=0;i<2;i++){const e=b.racers[i],x=74+e.x/32*850,y=i===0?207:327;circle(c,x,y,30,i===0?colors.a:colors.b);txt(c,i===0?"A":"B",x,y+8,23,"#122436","center");txt(c,e.name,55,y-45,16,i===0?colors.a:colors.b);}
-  if(b.winner)txt(c,"SIEGER: "+b.winner,500,78,29,colors.a,"center");else txt(c,"HINDERNISRENNEN · 32 m",500,78,20,"#bdd4de","center");
+  if(b.winner)txt(c,"SIEGER: "+b.winner,500,78,29,colors.a,"center");else txt(c,s.preset==="sprint"?"SPRINT · 32 m":"HINDERNISRENNEN · 32 m",500,78,20,"#bdd4de","center");
  }
  txt(c,"SIMULATION · v"+VERSION,23,540,12,"#7798a9");txt(c,t.toFixed(2)+" s",976,540,13,"#c5d4e1","right");
 }
