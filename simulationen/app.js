@@ -116,7 +116,12 @@ function applyEntityToLab(entity,target,slot="A"){
   params["speed"+side]=converted.speed;params["stamina"+side]=converted.stamina;
   params["name"+side]=converted.name;params["color"+side]=converted.color;
   params["kind"+side]=converted.kind;params["entity"+side]=entity.id;
-  if(preset==="duel")delete params["genome"+side];
+  // Importierte Kampflegenden starten mit ihren eigenen, editierbaren Spielgenen.
+  // Nachfolgende Generationen entwickeln sie im bestehenden Lernsystem weiter.
+  if(converted.genome)params["genome"+side]={...converted.genome};
+  else delete params["genome"+side];
+  if(converted.fighterStyle)params["fighterStyle"+side]=converted.fighterStyle;
+  else delete params["fighterStyle"+side];
  }else return;
  document.querySelectorAll(".module").forEach(b=>{const active=b.dataset.mode===mode;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active));});
  controls();resetSim();
@@ -158,6 +163,11 @@ function controls(){
  if(mode==="arena"){
   const link=document.createElement("a");link.className="extra-button";link.href="./joint-duel.html";link.textContent="🦿🥊 Gelernte Gelenkroboter im KI-Duell vergleichen ↗";link.style.display="block";link.style.textAlign="center";link.style.textDecoration="none";ex.append(link);
   addEntityPicker(ex,"A");addEntityPicker(ex,"B");
+  if(preset==="duel"&&(params.fighterStyleA||params.fighterStyleB)){
+   const info=document.createElement("p");info.className="micro";
+   info.textContent="🥊 Legenden-Startprofile: angepasste Schlag-, Tritt-, Schub-, Deckungs- und Bewegungsgene werden beim Duell verwendet und in neuen Generationen weiterentwickelt. Keine echte Disziplin-Simulation für Judo-Würfe, Bodenkampf oder Schwerter.";
+   ex.append(info);
+  }
   for(const [key,label,fallback] of [["nameA","Entität A benennen","Entität A"],["nameB","Entität B benennen","Entität B"]]){
    const title=document.createElement("label");title.className="field-label";title.textContent=label;title.htmlFor=key;
    const field=document.createElement("input");field.id=key;field.className="full";field.maxLength=24;field.value=String(params[key]||fallback);field.setAttribute("aria-label",label);
