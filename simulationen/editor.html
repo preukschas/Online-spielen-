@@ -22,9 +22,19 @@
    <div class="visual">
     <div class="canvas">
      <svg id="bodyPreview" role="img" viewBox="0 0 560 480" aria-label="Live-Vorschau deiner Entität">
-      <defs><pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#2b5360" stroke-width=".8"/></pattern></defs>
-      <rect width="560" height="480" fill="#091e2c"/><rect width="560" height="480" fill="url(#grid)" opacity=".8"/>
-      <path d="M20 413H540" fill="none" stroke="#67b5a8" stroke-width="4"/><g id="bodyDrawing"></g>
+      <defs>
+       <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#3b6b72" stroke-width=".8"/></pattern>
+       <radialGradient id="studioHalo"><stop offset="0" stop-color="#346e73" stop-opacity=".75"/><stop offset=".68" stop-color="#163748" stop-opacity=".27"/><stop offset="1" stop-color="#0a2030" stop-opacity="0"/></radialGradient>
+       <linearGradient id="studioFloor" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#224756"/><stop offset="1" stop-color="#0a2230"/></linearGradient>
+      </defs>
+      <rect width="560" height="480" fill="#081c2b"/>
+      <ellipse cx="280" cy="250" rx="235" ry="244" fill="url(#studioHalo)"/>
+      <rect width="560" height="480" fill="url(#grid)" opacity=".62"/>
+      <path d="M280 90V412" fill="none" stroke="#a8e8d5" stroke-opacity=".23" stroke-dasharray="6 9"/>
+      <ellipse cx="280" cy="409" rx="124" ry="17" fill="#020c16" opacity=".40"/>
+      <rect x="0" y="416" width="560" height="64" fill="url(#studioFloor)"/>
+      <path d="M20 413H540" fill="none" stroke="#85e6c8" stroke-width="3"/>
+      <g id="bodyDrawing"></g>
      </svg>
      <div class="canvas-footer"><span>SCHEMA · NICHT ANATOMISCH</span><span id="previewState">VORSCHAU</span></div>
     </div>
