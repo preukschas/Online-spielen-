@@ -130,6 +130,34 @@ async function testViewport(browser,name,opts){
    await page.locator("#play").click();await page.waitForTimeout(350);await page.locator("#reset").click();
    assert.match(await page.locator("#readouts").innerText(),/Punkte/);
  });
+ await check(name+" Duell-Schnellaktionen direkt rechts unter Canvas",async()=>{
+  await page.locator('.module[data-mode="arena"]').click();
+  await page.locator("#preset").selectOption("duel");
+  const quick=page.locator("#duelQuickbar");
+  assert.equal(await quick.isVisible(),true);
+  assert.equal(await quick.evaluate(el=>el.previousElementSibling?.classList.contains("canvas-wrap")),true);
+  for(const id of ["duelAdd1","duelAdd100","duelCompare10","duelCompare50"])
+   assert.equal(await page.locator("#"+id).isVisible(),true,id);
+  await page.locator("#duelAdd1").click();
+  await page.waitForFunction(()=>/Generation [1-9]/.test(document.querySelector("#duelQuickGeneration")?.textContent||""),null,{timeout:40000});
+  const one=await page.locator("#duelQuickGeneration").innerText();
+  const before=Number(one.match(/Generation (\\d+)/)?.[1]||0);
+  await page.locator("#duelAdd100").click();
+  await page.waitForFunction(start=>{
+   const t=document.querySelector("#duelQuickGeneration")?.textContent||"";
+   return Number(t.match(/\\/ (\\d+)/)?.[1]||0)>=start+100;
+  },before,{timeout:12000});
+  await page.locator("#duelTrainButton").click(); // lange Trainingsserie pausieren
+  await page.locator("#duelCompare10").click();
+  await page.waitForFunction(()=>document.querySelector("#duelQuickResult")?.textContent?.includes("10 Duelle:"),null,{timeout:120000});
+  assert.match(await page.locator("#duelQuickResult").innerText(),/Entität A \\d+ Siege · Entität B \\d+ Siege/);
+  if(name==="chromium-desktop"||name==="webkit-ipad"){
+   await page.locator("#duelCompare50").click();
+   await page.waitForFunction(()=>document.querySelector("#duelQuickResult")?.textContent?.includes("50 Duelle:"),null,{timeout:120000});
+   assert.match(await page.locator("#duelQuickResult").innerText(),/50 Duelle: Entität A \\d+ Siege/);
+  }
+  await page.locator("#reset").click();
+ });
  await check(name+" CSV-Export und A-B-Vergleich",async()=>{
    await page.locator('.module[data-mode="physics"]').click();
    await page.locator("#scenarioName").fill("Messreihe "+name);
