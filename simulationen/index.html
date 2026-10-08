@@ -1,61 +1,113 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101926"><meta name="description" content="DMP Simulationswerkstatt – Physik, Crashtest, Biomechanik und Arena im Browser.">
-<title>DMP Simulationswerkstatt</title>
-<link rel="stylesheet" href="./style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1725">
+<meta name="description" content="DMP SIM LAB – die Werkstatt für Simulationen, Crashtests, Bewegung und Physik. Experimente auswählen, messen und speichern.">
+<title>DMP SIM LAB · Simulationswerkstatt</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1725;--panel:#172b3e;--border:#304b60;--accent:#6de9bf;--text:#eef9f7;--muted:#aec5cf;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:85px}body{margin:0;background:radial-gradient(ellipse 850px 610px at 80% -14%,#28535b 0%,transparent 65%),radial-gradient(ellipse 700px 630px at -10% 50%,#142d3e 0%,transparent 75%),var(--bg);color:var(--text);min-height:100vh}a{color:inherit;text-decoration:none}button,input{font:inherit}button{cursor:pointer}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}[hidden]{display:none!important}.skip{position:absolute;left:-9999px;top:0;padding:10px;background:var(--accent);color:#102d23;z-index:20}.skip:focus{left:10px}.container{max-width:1330px;padding:0 clamp(17px,3.6vw,52px);margin:0 auto}.header{min-height:83px;display:flex;align-items:center;gap:18px;border-bottom:1px solid #ffffff19}.brand{display:flex;align-items:center;gap:12px;font-weight:900;font-size:20px;white-space:nowrap;letter-spacing:.035em}.mark{display:grid;place-items:center;background:linear-gradient(135deg,#7df3d0,#2fa8a6);color:#102d31;width:43px;height:43px;border-radius:13px;font-size:25px;box-shadow:0 0 28px #50d5bc33}.brand small{display:block;font-size:10px;letter-spacing:.24em;color:var(--accent)}.nav{display:flex;gap:23px;margin-left:auto;align-items:center}.nav a{color:#bdd0d8;font-size:13px;font-weight:700}.nav a:hover{color:var(--accent)}.games{border:1px solid #426071;border-radius:11px;padding:11px 14px;font-weight:800;font-size:13px;white-space:nowrap}.games:hover{background:#274251}.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.91fr);gap:clamp(26px,5vw,65px);align-items:center;padding:68px 0 43px}.eyebrow{color:var(--accent);letter-spacing:.2em;font-size:11px;font-weight:850;text-transform:uppercase}.eyebrow:before{content:"";display:inline-block;width:18px;height:2px;background:var(--accent);vertical-align:middle;margin-right:9px}.hero h1{font-size:clamp(43px,6.2vw,82px);letter-spacing:-.065em;line-height:1.05;margin:18px 0 22px;font-weight:900}.hero h1 em{color:var(--accent);font-style:normal}.lead{font-size:16px;max-width:560px;line-height:1.78;color:var(--muted);margin:0 0 28px}.buttons{display:flex;flex-wrap:wrap;gap:10px}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;border:1px solid #476578;padding:12px 17px;border-radius:12px;font-size:14px;font-weight:800}.btn.primary{color:#102a23;background:var(--accent);border-color:var(--accent);box-shadow:0 13px 28px #1eb7951d}.btn.primary:hover{background:#a8ffe0}.btn.outline{background:#ffffff0b}.btn.outline:hover{background:#ffffff1b}.subline{display:flex;gap:10px;flex-wrap:wrap;color:#9ebdc9;margin-top:23px;font-size:12px}.subline span+span:before{content:"•";margin-right:10px;color:#5b7f8b}.display{border:1px solid #416c74;background:linear-gradient(145deg,#1c3b46,#0d1f30);border-radius:22px;box-shadow:0 24px 62px #0007,0 0 65px #43b5ae17;overflow:hidden}.display-head{padding:14px 17px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #ffffff1b;font-size:10px;letter-spacing:.13em;color:#aecbd4;font-weight:800}.display-head i{width:8px;height:8px;border-radius:50%;background:#eeb77b}.display-head i:nth-child(2){background:#d5d07b}.display-head i:nth-child(3){background:var(--accent)}.display-head span{margin-left:10px}.display-head b{margin-left:auto;color:var(--accent)}.display svg{width:100%;height:auto;display:block}.display-foot{display:flex;justify-content:space-between;gap:9px;padding:13px 18px;border-top:1px solid #ffffff1b;font-size:11px;color:#acc6ce}.display-foot strong{font-size:10px;color:var(--accent)}.indicators{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}.indicator{background:#102637;border:1px solid #ffffff22;border-radius:13px;padding:13px}.indicator strong{display:block;font-size:24px;letter-spacing:-.04em}.indicator span{display:block;font-size:11px;color:#b1c9cf;margin-top:3px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin:53px 0 24px}.section-head h2,.archive h2{font-size:clamp(27px,3.3vw,39px);line-height:1.18;letter-spacing:-.045em;margin:9px 0}.section-head p,.archive p{font-size:14px;line-height:1.7;color:#b0c8d0;max-width:690px;margin:0}.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:13px}.filter{background:#142a3b;border:1px solid #3b5b69;border-radius:30px;color:#bad0d7;font-size:12px;font-weight:700;padding:9px 15px}.filter[aria-pressed=true]{color:#bfffe7;border-color:var(--accent);background:#215046}.search{margin-left:auto;background:#102737;border:1px solid #3b5669;border-radius:11px;color:var(--text);min-height:40px;width:248px;padding:0 12px;font-size:13px}.search::placeholder{color:#89a9b3}.result{font-size:12px;color:#95b8c0;margin:11px 0 15px;min-height:16px}.catalog{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}.sim{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;min-height:289px;background:linear-gradient(145deg,#1c3b4b,#102638 62%,#112030);border:1px solid #34586a;border-radius:18px;padding:21px;transition:transform .17s,border-color .17s,box-shadow .17s}.sim:before{content:"";position:absolute;right:-65px;top:-65px;width:180px;height:180px;border-radius:100%;z-index:-1;background:radial-gradient(circle,var(--glow,#66e5c4) 0%,transparent 70%);opacity:.2}.sim.available:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 18px 35px #0005}.sim.planned{background:linear-gradient(145deg,#152e3f,#101e2d);opacity:.88}.sim-top{display:flex;justify-content:space-between;align-items:center;gap:8px}.sim-icon{font-size:25px;display:grid;place-items:center;width:50px;height:50px;border-radius:13px;background:#ffffff13;border:1px solid #ffffff19}.tag{border-radius:22px;background:#1d4f42;border:1px solid #4c9d83;color:#b2f6d5;white-space:nowrap;font-size:10px;font-weight:850;padding:5px 9px}.planned .tag{background:#2a3b49;border-color:#506171;color:#c2d0d8}.sim h3{font-size:20px;letter-spacing:-.035em;line-height:1.22;margin:19px 0 8px}.sim p{font-size:13px;line-height:1.67;color:#b3cbd2;margin:0 0 20px}.sim-bottom{display:flex;justify-content:space-between;gap:7px;align-items:center;border-top:1px solid #ffffff19;margin-top:auto;padding-top:15px;font-size:11px;color:#a2c0c9}.sim-bottom strong{color:var(--accent);font-size:12px;white-space:nowrap}.planned .sim-bottom strong{color:#b5cad0}.nothing{display:none;margin-top:15px;padding:18px;border:1px solid #3a576a;border-radius:12px;color:#c2d6db}.nothing.visible{display:block}.archive{display:grid;grid-template-columns:1fr 1.1fr;gap:28px;align-items:center;margin-top:64px;background:linear-gradient(110deg,#173d4a,#122d41 70%,#102638);border:1px solid #3b5d6a;border-radius:23px;padding:clamp(22px,3vw,35px)}.archive p{margin-top:10px}.saved-items{display:grid;gap:9px}.saved-empty{background:#0c2533;border:1px dashed #4e6a77;border-radius:13px;padding:26px;color:#acc4ca;font-size:13px;line-height:1.6}.saved-entry{display:flex;justify-content:space-between;align-items:center;background:#0b2434;border:1px solid #38596b;border-radius:12px;padding:13px 15px;gap:12px}.saved-entry:hover{border-color:var(--accent)}.saved-entry strong{font-size:13px;display:block;overflow-wrap:anywhere}.saved-entry small{display:block;font-size:11px;color:#9dbac4;margin-top:4px}.saved-entry>span:last-child{color:var(--accent);font-size:12px;font-weight:800;white-space:nowrap}.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.step{border:1px solid #2e4a5a;border-radius:16px;background:#132b3c;padding:23px}.step b{color:var(--accent);font-size:12px;letter-spacing:.15em}.step h3{font-size:18px;margin:11px 0 7px}.step p{color:#abc5cf;font-size:13px;line-height:1.7;margin:0}.warning{font-size:12px;line-height:1.7;color:#b6cad2;background:#132433;border:1px solid #344b5b;border-radius:12px;padding:15px 18px;margin-top:26px}.footer{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-top:53px;padding:25px 0 43px;border-top:1px solid #ffffff20;font-size:12px;color:#9cb9c3}.footer a:hover{color:var(--accent)}
+@media(max-width:1100px){.catalog{grid-template-columns:repeat(2,minmax(0,1fr))}.nav{gap:14px}.hero h1{font-size:clamp(43px,5.8vw,65px)}}
+@media(max-width:745px){.header{flex-wrap:wrap;padding:15px 0;row-gap:14px}.nav{order:3;width:100%;margin:0;border-top:1px solid #ffffff1b;padding-top:13px;justify-content:space-between}.games{margin-left:auto}.hero{display:block;padding:43px 0 24px}.hero h1{font-size:clamp(44px,10.5vw,66px)}.lead{font-size:15px}.display{max-width:650px;margin-top:32px}.archive{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.search{width:100%;margin-left:0;flex:1 1 100%}}
+@media(max-width:460px){.brand{font-size:16px}.mark{width:38px;height:38px;font-size:22px}.games{font-size:11px;padding:9px}.nav a{font-size:12px}.hero h1{font-size:42px}.buttons .btn{width:100%}.catalog{grid-template-columns:1fr}.sim{min-height:240px}.indicators{gap:6px}.indicator{padding:10px 8px}.indicator strong{font-size:19px}.display-foot{font-size:9px}.display-foot strong{font-size:9px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+</style>
 </head>
 <body>
-<header class="sitebar">
-  <div class="brand"><span class="brandmark">D</span><span><strong>DMP</strong> <em>SIM LAB</em></span></div>
-  <div class="sitehint">Experimentieren · Beobachten · Vergleichen</div>
-  <button id="help" class="ghost" type="button">ⓘ Hilfe</button>
+<a href="#main" class="skip">Zum Inhalt springen</a>
+<div class="container">
+<header class="header">
+ <a href="./" class="brand"><span class="mark" aria-hidden="true">D</span><span>DMP <span style="color:var(--accent)">SIM LAB</span><small>SIMULATIONSWERKSTATT</small></span></a>
+ <nav class="nav" aria-label="Hauptnavigation"><a href="./" aria-current="page">Start</a><a href="#simulatoren">Simulatoren</a><a href="#gespeichert">Meine Versuche</a></nav>
+ <a class="games" href="../">← DMP Games</a>
 </header>
-<main>
+<main id="main">
  <section class="hero">
-  <div><div class="eyebrow">INTERAKTIVE SIMULATIONEN</div><h1>Deine eigene <span>Versuchswerkstatt.</span></h1><p>Physik entdecken, Zusammenstöße untersuchen, Bewegung trainieren und Entitäten gegeneinander antreten lassen.</p></div>
-  <div class="hero-number"><strong id="heroTime">0,0</strong><span>Simulationssekunden</span></div>
- </section>
- <nav class="modules" id="modules" aria-label="Simulator auswählen">
-  <button class="module active" data-mode="physics" type="button"><span>⚛️</span><strong>Physik</strong><small>4 Experimente</small></button>
-  <button class="module" data-mode="crash" type="button"><span>🚗</span><strong>Crashtest</strong><small>Kollision & Kräfte</small></button>
-  <button class="module" data-mode="bio" type="button"><span>🦿</span><strong>Biomechanik</strong><small>Laufen lernen</small></button>
-  <button class="module" data-mode="arena" type="button"><span>🏁</span><strong>Arena</strong><small>Entitäten-Rennen</small></button>
- </nav>
- <div class="workspace">
-  <section class="viewer">
-   <div class="viewer-head"><div><span class="status-dot"></span><strong id="sceneTitle">Freier Fall</strong><span id="sceneSubtitle" class="viewer-sub"></span></div><span class="scene-tag" id="sceneTag">2D · MODELL</span></div>
-   <div class="canvas-wrap"><canvas id="scene" aria-label="Animierte Simulation" width="1000" height="560"></canvas><div class="overlay-message" id="overlay">Drücke Start, um die Simulation auszuführen.</div></div>
-   <div class="playbar">
-    <button id="play" type="button" class="primary">▶ Start</button>
-    <button id="step" type="button" class="secondary">⏭ Einzelschritt</button>
-    <button id="reset" type="button" class="secondary">↺ Reset</button>
-    <label class="speedlabel" for="speed">Tempo <select id="speed"><option value="1">1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option></select></label>
+  <div>
+   <div class="eyebrow">Das interaktive Forschungslabor</div>
+   <h1>Ideen werden <em>Experimente.</em></h1>
+   <p class="lead">Was passiert, wenn du die Regeln veränderst? Teste Kräfte und Kollisionen, trainiere virtuelle Läufer oder lasse Entitäten gegeneinander antreten. Experimentiere selbst – mit Reglern, Messkurven und wiederholbaren Versuchen.</p>
+   <div class="buttons"><a class="btn primary" href="./lab.html?mode=physics">▶ Labor öffnen ↗</a><a class="btn outline" href="#simulatoren">Simulatoren entdecken ↓</a></div>
+   <div class="subline"><span>4 verfügbare Demonstratoren</span><span>6 weitere geplant</span><span>Mobil und Desktop</span></div>
+  </div>
+  <div>
+   <div class="display">
+    <div class="display-head"><i></i><i></i><i></i><span>SIM CORE // PHYSIK</span><b>SCHEMATISCHE VORSCHAU</b></div>
+    <svg viewBox="0 0 540 322" role="img" aria-label="Schematische Illustration mit bewegter Kugel, Flugbahn und Messdiagramm">
+      <defs><linearGradient id="ball" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d2fff1"/><stop offset="1" stop-color="#33bdad"/></linearGradient></defs>
+      <rect x="11" y="9" width="518" height="300" rx="13" fill="#0c2635" stroke="#315163"/>
+      <path d="M20 57H520M20 104H520M20 151H520M20 198H520M20 245H520M75 18V302M130 18V302M185 18V302M240 18V302M295 18V302M350 18V302M405 18V302M460 18V302" fill="none" stroke="#ffffff12"/>
+      <path d="M34 239H507" stroke="#8bbac2" stroke-width="3"/>
+      <path d="M67 62Q170 63 248 112T389 231" fill="none" stroke="#67e6bd" stroke-width="3" stroke-dasharray="8 9"/>
+      <circle cx="86" cy="65" r="14" fill="#5ae4ba" opacity=".15"/><circle cx="174" cy="83" r="15" fill="#5ae4ba" opacity=".23"/><circle cx="250" cy="112" r="16" fill="#5ae4ba" opacity=".32"/>
+      <circle cx="335" cy="166" r="21" fill="url(#ball)" stroke="#d9fff3" stroke-width="2"/>
+      <path d="M335 195V225l-8-10m8 10 8-10" fill="none" stroke="#f3ce80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="29" y="22" width="125" height="25" rx="6" fill="#16404b" stroke="#398276"/><text x="39" y="39" font-size="11" fill="#bcffe7" font-family="system-ui">OBJEKT · 2D</text>
+      <rect x="367" y="40" width="144" height="110" rx="9" fill="#132e41" stroke="#3a6072"/><text x="377" y="58" fill="#b2cbd2" font-size="10" font-family="system-ui">MESSKURVE</text><path d="M379 128H499M379 72V128" fill="none" stroke="#75929b" stroke-width="1.5"/><path d="M382 119Q410 119 425 101T471 78T496 73" fill="none" stroke="#6de9bf" stroke-width="2.5"/>
+      <text x="30" y="282" font-size="11" fill="#8cadb9" font-family="system-ui">ILLUSTRATION – KEINE LIVE-MESSUNG</text>
+    </svg>
+    <div class="display-foot"><span>● Virtuelle Versuchswerkstatt</span><strong>PARAMETER · MESSEN · VERGLEICHEN</strong></div>
    </div>
-   <div class="readouts" id="readouts" aria-live="off"></div>
-   <section class="chart-panel"><div class="section-top"><h2>Live-Messung</h2><span id="chartLabel">Bewegung über Zeit</span></div><canvas id="chart" aria-label="Messwertverlauf" width="900" height="180"></canvas></section>
-  </section>
-  <aside class="sidebar">
-   <section class="panel"><div class="section-top"><h2>Einstellungen</h2><span class="mini-tag" id="configTag">VERSUCH 01</span></div>
-    <label for="preset" class="field-label">Versuchsaufbau</label><select id="preset" class="full"></select>
-    <div id="parameters"></div>
-    <div id="extraActions"></div>
-    <p id="modelLimit" class="model-note"></p>
-   </section>
-   <section class="panel"><h2>Experimente speichern</h2><p class="micro">Startwerte, Zufallsstartwert und Modellversion werden gespeichert. Ein gespeicherter Versuch lässt sich erneut starten.</p>
-    <label for="scenarioName" class="field-label">Name des Versuchs</label><input id="scenarioName" class="full" type="text" maxlength="60" placeholder="Mein Experiment">
-    <div class="two-buttons"><button id="save" class="secondary" type="button">💾 Speichern</button><button id="export" class="secondary" type="button">↓ JSON-Export</button></div>
-    <label for="saved" class="field-label">Gespeicherte Experimente</label><select id="saved" class="full"></select>
-    <div class="two-buttons"><button id="load" class="secondary" type="button">↗ Laden</button><button id="importButton" class="secondary" type="button">↑ Importieren</button></div>
-    <div class="two-buttons"><button id="csvExport" class="secondary" type="button">↓ Messwerte CSV</button><button id="compare" class="secondary" type="button">⇄ A/B-Vergleich</button></div>
-    <input id="importFile" type="file" accept=".json,application/json" hidden>
-    <p id="notice" role="status" class="notice"></p>
-   </section>
-  </aside>
- </div>
- <section class="bottom-info"><strong>Hinweis:</strong> Diese interaktiven Demonstratoren nutzen vereinfachte Modelle für Bildung und Experimente. Sie sind keine sicherheitstechnischen, medizinischen oder ingenieurwissenschaftlichen Nachweise.</section>
+   <div class="indicators"><div class="indicator"><strong>04</strong><span>Labore</span></div><div class="indicator"><strong>06</strong><span>Ideen</span></div><div class="indicator"><strong id="savedCount">0</strong><span>Eigene Versuche</span></div></div>
+  </div>
+ </section>
+ <section id="simulatoren" aria-labelledby="catalogTitle">
+  <div class="section-head"><div><div class="eyebrow">Der Katalog</div><h2 id="catalogTitle">Wähle dein Forschungsgebiet.</h2><p>Vier bereits implementierte Lehrmodelle lassen sich sofort starten. Die anderen Themen bleiben als geplante Module sichtbar – ohne irreführende Startbuttons.</p></div></div>
+  <div class="filters" role="group" aria-label="Bereiche filtern"><button class="filter" data-filter="all" aria-pressed="true">Alle 10</button><button class="filter" data-filter="ready" aria-pressed="false">4 verfügbar</button><button class="filter" data-filter="planned" aria-pressed="false">6 geplant</button><input id="search" class="search" type="search" aria-label="Simulator suchen" placeholder="Simulator suchen …" autocomplete="off"></div>
+  <p class="result" id="resultCount" role="status">10 Bereiche im Katalog</p>
+  <div class="catalog">
+   <a class="sim available" data-status="ready" data-search="physik fall pendel rampe kugelkollision" style="--glow:#6de9bf" href="./lab.html?mode=physics"><div class="sim-top"><span class="sim-icon" aria-hidden="true">⚛️</span><span class="tag">DEMO</span></div><h3>Physik</h3><p>Freier Fall, Pendel, Rampe und Kugelkollision. Werte verändern und Bewegungen untersuchen.</p><div class="sim-bottom"><span>4 Experimente</span><strong>Starten ↗</strong></div></a>
+   <a class="sim available" data-status="ready" data-search="crashtest fahrzeug aufprall knautschzone" style="--glow:#f0ae7a" href="./lab.html?mode=crash"><div class="sim-top"><span class="sim-icon" aria-hidden="true">🚗</span><span class="tag">DEMO</span></div><h3>Crashtest</h3><p>Fahrzeug und Barriere im vereinfachten Modell. Knautschzonen im A/B-Vergleich testen.</p><div class="sim-bottom"><span>Aufprallmodell</span><strong>Starten ↗</strong></div></a>
+   <a class="sim available" data-status="ready" data-search="biomechanik laufen lernen evolution zweibeiner" style="--glow:#98b1ff" href="./lab.html?mode=bio"><div class="sim-top"><span class="sim-icon" aria-hidden="true">🦿</span><span class="tag">DEMO</span></div><h3>Biomechanik</h3><p>Mit einem vereinfachten Zweibeiner-Modell Balance und Laufen trainieren.</p><div class="sim-bottom"><span>25 Lern-Generationen</span><strong>Starten ↗</strong></div></a>
+   <a class="sim available" data-status="ready" data-search="arena entitäten gegeneinander duell rennen" style="--glow:#f4c678" href="./lab.html?mode=arena"><div class="sim-top"><span class="sim-icon" aria-hidden="true">🏁</span><span class="tag">DEMO</span></div><h3>Entitäten-Arena</h3><p>Zwei Entitäten benennen, gegeneinander antreten lassen und mehrere Rennen vergleichen.</p><div class="sim-bottom"><span>Rennen &amp; Duelle</span><strong>Starten ↗</strong></div></a>
+   <article class="sim planned" data-status="planned" data-search="wasser starkregen hochwasser versickerung"><div class="sim-top"><span class="sim-icon" aria-hidden="true">🌧️</span><span class="tag">GEPLANT</span></div><h3>Wasser &amp; Starkregen</h3><p>Regen, Versiegelung und Rückhalt in einer virtuellen Landschaft untersuchen.</p><div class="sim-bottom"><span>Umwelt</span><strong>Noch nicht verfügbar</strong></div></article>
+   <article class="sim planned" data-status="planned" data-search="verkehr straßen ampeln mobilität"><div class="sim-top"><span class="sim-icon" aria-hidden="true">🚦</span><span class="tag">GEPLANT</span></div><h3>Verkehr</h3><p>Geschwindigkeit, Ampeln und Verkehrsströme in einem Modellort vergleichen.</p><div class="sim-bottom"><span>Mobilität</span><strong>Noch nicht verfügbar</strong></div></article>
+   <article class="sim planned" data-status="planned" data-search="energie solar photovoltaik batterie strom"><div class="sim-top"><span class="sim-icon" aria-hidden="true">⚡</span><span class="tag">GEPLANT</span></div><h3>Energie &amp; Speicher</h3><p>PV-Strom, Verbrauch und Batteriespeicher im Quartier abstimmen.</p><div class="sim-bottom"><span>Energiewende</span><strong>Noch nicht verfügbar</strong></div></article>
+   <article class="sim planned" data-status="planned" data-search="natur lebensräume tiere population ökologie"><div class="sim-top"><span class="sim-icon" aria-hidden="true">🌿</span><span class="tag">GEPLANT</span></div><h3>Natur &amp; Lebensräume</h3><p>Lebensräume vernetzen und die Entwicklung von Populationen beobachten.</p><div class="sim-bottom"><span>Ökologie</span><strong>Noch nicht verfügbar</strong></div></article>
+   <article class="sim planned" data-status="planned" data-search="gemeindeentwicklung dorf stadt flächen infrastruktur"><div class="sim-top"><span class="sim-icon" aria-hidden="true">🏘️</span><span class="tag">GEPLANT</span></div><h3>Gemeindeentwicklung</h3><p>Bevölkerung, Wohngebiete, Flächen und Infrastruktur zusammendenken.</p><div class="sim-bottom"><span>Kommunalplanung</span><strong>Noch nicht verfügbar</strong></div></article>
+   <article class="sim planned" data-status="planned" data-search="maschinen mechanik hebel gelenke antriebe"><div class="sim-top"><span class="sim-icon" aria-hidden="true">⚙️</span><span class="tag">GEPLANT</span></div><h3>Maschinen &amp; Mechanik</h3><p>Virtuelle Körper, Hebel und Gelenke zu beweglichen Konstruktionen verbinden.</p><div class="sim-bottom"><span>Maschinenbau</span><strong>Noch nicht verfügbar</strong></div></article>
+  </div>
+  <p class="nothing" id="nothing" role="status">Keine passenden Module gefunden. Versuche einen anderen Suchbegriff oder „Alle 10“.</p>
+ </section>
+ <section id="gespeichert" class="archive" aria-labelledby="archiveTitle">
+  <div><div class="eyebrow">Dein Experimentarchiv</div><h2 id="archiveTitle">Wo warst du stehen geblieben?</h2><p>Im Labor gespeicherte Versuche kannst du hier erneut aufrufen. Sie bleiben auf diesem Gerät im jeweiligen Browser gespeichert. Für andere Geräte kannst du sie als JSON-Datei exportieren.</p></div>
+  <div class="saved-items" id="savedList"><div class="saved-empty">Noch keine Versuche gespeichert. Öffne ein Labor, passe Werte an und wähle dort „Speichern“.</div></div>
+ </section>
+ <section aria-labelledby="stepsTitle">
+  <div class="section-head"><div><div class="eyebrow">In drei Schritten</div><h2 id="stepsTitle">Von der Idee zum Ergebnis.</h2></div></div>
+  <div class="steps"><div class="step"><b>01 / ENTDECKEN</b><h3>Simulator auswählen</h3><p>Starte ein vorhandenes Modul und wähle einen Versuchsaufbau.</p></div><div class="step"><b>02 / TESTEN</b><h3>Parameter ändern</h3><p>Starte, pausiere oder beschleunige und beobachte die Messkurven.</p></div><div class="step"><b>03 / VERGLEICHEN</b><h3>Experimente sichern</h3><p>Speichere deine Einstellungen, wiederhole Versuche und exportiere Daten.</p></div></div>
+ </section>
+ <aside class="warning"><strong>Wichtig:</strong> Alle vier verfügbaren Simulationen sind vereinfachte Lehrmodelle. Besonders Crashtest und Biomechanik liefern keine realen medizinischen, sicherheitstechnischen oder ingenieurwissenschaftlichen Prognosen.</aside>
 </main>
-<dialog id="helpDialog"><h2>So funktioniert die Simulationswerkstatt</h2><p>1. Modul und Versuch wählen. 2. Werte einstellen. 3. Start drücken. 4. Messungen beobachten. 5. Szenario speichern oder exportieren.</p><p>Die Simulation läuft mit festem Zeitschritt unabhängig von der Bildwiederholrate. Einzelschritt bewegt den Zustand um 1/120 Sekunde weiter. Parameteränderungen setzen den Versuch zurück.</p><p>Die Modelle sind bewusst vereinfacht. Besonders Crashtest, Biomechanik und Arena liefern keine realen Prognosen.</p><button id="closeHelp" class="primary" type="button">Schließen</button></dialog>
-<script type="module" src="./app.js"></script>
-</body></html>
+<footer class="footer"><span>© DMP SIM LAB · Experimentieren · Beobachten · Vergleichen</span><span><a href="../">DMP Games</a> &nbsp;·&nbsp; <a href="./lab.html">Direkt ins Labor</a> &nbsp;·&nbsp; <a href="#main">Nach oben ↑</a></span></footer>
+</div>
+<script>
+(function(){
+ "use strict";
+ const cards=Array.from(document.querySelectorAll(".sim"));
+ const buttons=Array.from(document.querySelectorAll("[data-filter]"));
+ const search=document.getElementById("search");
+ const count=document.getElementById("resultCount");
+ const none=document.getElementById("nothing");
+ let filter="all";
+ function norm(str){return String(str||"").toLocaleLowerCase("de-DE").normalize("NFD").replace(/[\u0300-\u036f]/g,"");}
+ function refresh(){
+  const term=norm(search.value.trim());let visible=0;
+  cards.forEach(card=>{const show=(filter==="all"||card.dataset.status===filter)&&(!term||norm(card.dataset.search+" "+card.textContent).includes(term));card.hidden=!show;if(show)visible++;});
+  count.textContent=visible+" "+(visible===1?"Bereich":"Bereiche")+" angezeigt";
+  none.classList.toggle("visible",visible===0);
+ }
+ buttons.forEach(btn=>btn.addEventListener("click",()=>{filter=btn.dataset.filter;buttons.forEach(b=>b.setAttribute("aria-pressed",String(btn===b)));refresh();}));
+ search.addEventListener("input",refresh);refresh();
+ const modes={physics:"Physik",crash:"Crashtest",bio:"Biomechanik",arena:"Arena"};
+ let records=[];
+ try{const parsed=JSON.parse(localStorage.getItem("dmp_simlab_scenarios_v1")||"[]");if(Array.isArray(parsed))records=parsed.filter(r=>r&&typeof r.name==="string").slice(0,100);}catch(e){}
+ const list=document.getElementById("savedList");
+ const items=records.map((item,index)=>({item,index})).filter(r=>r.item.format==="DMP_SIM_SCENARIO"&&Object.prototype.hasOwnProperty.call(modes,r.item.mode)&&typeof r.item.preset==="string");
+ document.getElementById("savedCount").textContent=String(items.length);
+ if(items.length){list.replaceChildren();items.slice(0,4).forEach(r=>{const link=document.createElement("a");link.className="saved-entry";link.href="./lab.html?saved="+r.index;const left=document.createElement("span"),name=document.createElement("strong"),sub=document.createElement("small"),right=document.createElement("span");name.textContent=r.item.name.slice(0,60);sub.textContent=modes[r.item.mode]+" · gespeichertes Experiment";right.textContent="Öffnen ↗";left.append(name,sub);link.append(left,right);list.append(link);});}
+})();
+</script>
+</body>
+</html>
