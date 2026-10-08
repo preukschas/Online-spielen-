@@ -292,6 +292,7 @@ $("delete").addEventListener("click",()=>{
  if(write(library().filter(e=>e.id!==chosen.id))){newDraft();notice("Entität gelöscht.");}
 });
 $("bio").addEventListener("click",()=>send("bio"));
+$("joint").addEventListener("click",()=>{if(store())location.assign("./joint-walker.html?entity="+encodeURIComponent(draft.id));});
 $("arenaA").addEventListener("click",()=>send("arena","A"));
 $("arenaB").addEventListener("click",()=>send("arena","B"));
 $("animate").addEventListener("click",()=>{
