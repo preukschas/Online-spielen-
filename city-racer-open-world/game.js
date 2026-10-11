@@ -71,7 +71,9 @@ const ground=box(scene,2600,0.5,1250,'#719368',620,-.43,0);
 const roads=[-315,-210,-105,0,105,210,315];
 const additionalEastRoads=[420,525];
 const solids=[],shops=[],cars=[],npcs=[],traffic=[],collectibles=[],objects=[];
-const obstacles=[],trafficLights=[],bicycles=[];
+const obstacles=[],trafficLights=[],bicycles=[],mountainBases=[],burglarHomes=[];
+const home={x:-157.5,z:-157.5,w:40,d:35,roof:null};
+const crimeState={wanted:0,seconds:0,punchWait:0,attackTime:0,arrestTime:0};
 const rail={x:-351,stations:[{name:'Hauptbahnhof CITY',z:-190},{name:'Walddorf',z:248}],train:null,onboard:false,tickets:0,phase:0,dir:1,stop:0,locked:false,gates:[],gateClosed:false};
 const airports=[
   {name:'CITY INTERNATIONAL',country:'Deutschland',gate:{x:735,z:-120},terminal:{x:735,z:-172},runway:{x:935,z:-220},parkX:835},
@@ -536,7 +538,9 @@ function buildCity() {
       if(x===station.x&&z===station.z)createGasStation();
       else if(x===prison.x&&z===prison.z)createPrison();
       else if(specialty)createShop(specialty);
-      else if(x===-157.5&&z===-157.5){sign('BAUGRUNDSTÜCK',x,4,z-27,25,'#ffe2a8','#395747');}else genericBuilding(x,z,54+rng()*11,52+rng()*16,13+Math.floor(rng()*8)*4.2);
+      else if(x===home.x&&z===home.z){box(scene,83,.16,83,'#668b65',x,.07,z);}
+      else if((x===-262.5&&z===-157.5)||(x===367.5&&z===52.5))createTargetHome(x,z);
+      else genericBuilding(x,z,54+rng()*11,52+rng()*16,13+Math.floor(rng()*8)*4.2);
       for(let k=-1;k<=1;k+=2){
         tree(x+k*39,z+38,0.75+rng()*.25);
       }
@@ -545,6 +549,7 @@ function buildCity() {
   createRailway();
   createLevelCrossing();
   createAirports();
+  createMountains();
   createAirliner();
   createTrafficLights();
   // A riverside park, additional skyline and city border
@@ -657,6 +662,37 @@ function createCar(color='#eec277',sport=false){
   group.userData={length};
   return {group,color,sport};
 }
+function makeMotorbike(){
+  const g=new THREE.Group();
+  for(const wz of [-1.15,1.1]){
+    const tire=cyl(g,.62,.27,'#22282f',0,.66,wz);
+    tire.rotation.z=Math.PI/2;
+    const rim=cyl(g,.36,.30,'#a3b6c0',0,.66,wz);
+    rim.rotation.z=Math.PI/2;
+  }
+  box(g,.45,.35,2.2,'#293840',0,1.02,0);
+  box(g,.84,.43,1.3,'#ce4e35',0,1.42,-.22);
+  box(g,.66,.25,.77,'#27282e',0,1.63,.60);
+  box(g,1.45,.12,.20,'#bbc9d1',0,2.06,-.91);
+  cyl(g,.12,.65,'#a3b5c0',0,1.73,-.97);
+  sphere(g,.3,'#fff2cc',0,1.42,-1.25);
+  box(g,.45,.23,.30,'#be302d',0,1.13,1.20);
+  for(const side of [-1,1])box(g,.14,.14,.9,'#a1acb1',side*.47,.9,.32);
+  const rider=makeHuman('#23435d','#bb917b');
+  rider.group.scale.set(.63,.63,.63);
+  rider.group.position.set(0,.71,.35);
+  g.add(rider.group);
+  return {group:g,rider};
+}
+function addMotorbike(){
+  const obj=makeMotorbike(),x=-153,z=-192;
+  obj.group.position.set(x,0,z);scene.add(obj.group);
+  sign('DEIN MOTORRAD',x+8,5.0,z+1,15,'#fff3d7','#4d392f');
+  const bike={group:obj.group,name:'DMP Moto 250',x,z,heading:0,speed:0,max:37,
+    accel:24,health:100,fuel:100,loaner:true,owned:true,bike:true,price:0,rider:obj.rider};
+  cars.push(bike);
+  return bike;
+}
 let player={x:5,z:20,y:0,vertical:0,heading:0,cameraYaw:0,camPitch:0.15,car:null};
 const avatar=makeHuman('#253d55');
 scene.add(avatar.group);
@@ -682,7 +718,7 @@ function createNPCs(){
     const t=-330+rng()*660;
     npc.group.position.set(axis==='z'?fixed:t,0,axis==='z'?t:fixed);
     scene.add(npc.group);
-    npcs.push({g:npc.group,legs:npc.legs,axis,fixed,t,dir:i%3===0?-1:1,speed:.8+rng()*1.2,phase:rng()*5});
+    npcs.push({g:npc.group,legs:npc.legs,axis,fixed,t,dir:i%3===0?-1:1,speed:.8+rng()*1.2,phase:rng()*5,robbed:false,stunned:0});
   }
 }
 function createTraffic(){
@@ -729,7 +765,7 @@ function updatePoliceAndHeli(dt){
     helicopter.rotation.y=-elapsed*.12;
     heliBlades.rotation.y+=dt*16;
   }
-  if(patrolCar){
+  if(patrolCar&&!crimeState.wanted){
     const u=(elapsed*9)%620;
     patrolCar.group.position.set(-315,0,-310+u);
     patrolCar.group.rotation.y=Math.PI;
@@ -781,7 +817,7 @@ function marker(x,z,color='#ffd35f'){
   scene.add(g);return g;
 }
 const savedKey='dmp_city_racer_3d_demo_01';
-let state={cash:0,wins:0,owned:false,deliveries:0,inventory:[],built:false,job:false,jobTarget:-1};
+let state={cash:0,wins:0,owned:false,deliveries:0,inventory:[],built:false,burgled:[],job:false,jobTarget:-1};
 try{
   const data=JSON.parse(localStorage.getItem(savedKey)||'null');
   if(data&&typeof data==='object'){
@@ -791,6 +827,7 @@ try{
     state.deliveries=Math.max(0,Number(data.deliveries)||0);
     state.inventory=Array.isArray(data.inventory)?data.inventory.slice(0,40):[];
     state.built=!!data.built;
+    state.burgled=Array.isArray(data.burgled)?data.burgled.filter(Number.isInteger).slice(0,20):[];
     rail.tickets=Math.max(0,Math.min(99,Number(data.trainTickets)||0));
     flight.tickets=Math.max(0,Math.min(99,Number(data.flightTickets)||0));
     flight.side=data.flightSide===1?1:0;
@@ -817,32 +854,147 @@ function collectiblesCreate(){
     s.scale.set(1,.20,1);collectibles.push({x,z,obj:s,taken:false,phase:i});
   });
 }
+function wall(x,z,w,d,h=7,color='#d4c7a8'){
+  box(scene,w,h,d,color,x,h/2,z);
+  solids.push({x,z,w,d});
+}
 function buildHouse(){
-  if(state.built)return;
-  const x=-157.5,z=-157.5;
-  box(scene,25,.30,25,'#b0b0a6',x,.17,z);
-  box(scene,21,9,20,'#cfbf9e',x,4.65,z);
-  box(scene,24,1,23,'#514842',x,9.6,z);
-  box(scene,3.3,5,.15,'#654d38',x,2.7,z-10.1);
-  box(scene,5.5,3,.16,'#83b5c4',x-6,5,z-10.1);
+  // An accessible starter home is always present, including when an old save says built=true.
+  const {x,z,w,d}=home;
+  box(scene,w,.28,d,'#a9a59c',x,.15,z);
+  box(scene,w,0.13,d,'#cfb99e',x,.26,z);
+  wall(x-w/2,z,1,d);
+  wall(x+w/2,z,1,d);
+  wall(x,z+d/2,w,1);
+  // Front entrance: a real passable opening between two wall sections.
+  wall(x-12,z-d/2,16,1);
+  wall(x+12,z-d/2,16,1);
+  box(scene,8,.75,1,'#e0e5dd',x,6.6,z-d/2);
+  box(scene,8,.14,2,'#a5b4bb',x,.13,z-d/2-1.4);
+  // Windows and lighting.
+  for(const xx of [x-13,x+13]){
+    box(scene,5.2,3.2,.15,'#75aabc',xx,3.8,z-d/2-.64);
+    box(scene,5.5,.15,.55,'#fff5dd',xx,2.15,z-d/2-.78);
+  }
+  box(scene,1.3,5.6,.2,'#714d37',x-4.6,3,z-d/2-.66);
+  box(scene,1.3,5.6,.2,'#714d37',x+4.6,3,z-d/2-.66);
+  home.roof=box(scene,w+2,1.1,d+2,'#465b63',x,7.65,z);
+  sign('🏠 MEIN ZUHAUSE',x,8.6,z-d/2-1.35,28,'#fff9dd','#285e55');
+  // Living room: sofa and TV.
+  box(scene,10,1.1,3.3,'#5b8277',x-10,.74,z-5);
+  box(scene,10,1.8,.9,'#5b8277',x-10,1.75,z-3.7);
+  box(scene,7,.7,2.8,'#986e52',x-8,.49,z-10);
+  box(scene,8,3.8,.27,'#2d3f47',x-13,2.5,z+5);
+  // Functional kitchen: countertop, cabinets, sink, oven.
+  box(scene,15,2,3.2,'#d8d8cf',x-10,1,z+11.2);
+  box(scene,15,.25,3.4,'#8e9b9e',x-10,2.08,z+11.2);
+  box(scene,3.2,2.7,2.8,'#e3ebe8',x-16,1.35,z+8);
+  box(scene,2.5,.12,2.5,'#232a2e',x-8,2.29,z+11.0);
+  for(const xx of [x-8.85,x-7.25]){
+    for(const zz of [z+10.4,z+11.8]){
+      const burner=cyl(scene,.36,.04,'#777f84',xx,2.38,zz);
+    }
+  }
+  sign('KÜCHE',x-10,5.6,z+15.9,12,'#f7e7c7','#405e60');
+  // Bathroom with real partition and doorway (south opening for the player).
+  wall(x+5,z+6.5,1,21,6,'#d1dedf');
+  wall(x+12.5,z+16.5,15,1,6,'#d1dedf');
+  wall(x+12.5,z-3.5,15,1,6,'#d1dedf');
+  // Inward bathroom access has a doorway in the partition gap z = -8 ... -4.
+  // Clear that doorway by replacing its lower middle wall section via passage collision below.
+  const bathPartition=solids.find(o=>o.x===x+5&&o.z===z+6.5);
+  if(bathPartition){const idx=solids.indexOf(bathPartition);solids.splice(idx,1);}
+  // Split partition around passage.
+  wall(x+5,z+13,1,8,6,'#d1dedf');
+  wall(x+5,z+2,1,8,6,'#d1dedf');
+  box(scene,4,2.5,4,'#edf1f0',x+13,1.25,z+11);
+  box(scene,2,1.4,1.9,'#f9fcfb',x+13,.75,z+3);
+  cyl(scene,.63,.23,'#f4f8fa',x+13,1.55,z+3);
+  box(scene,3.2,1.6,1.1,'#dceaf0',x+9,.83,z+14);
+  sign('WC + BAD',x+12,5.8,z+15.9,11,'#eefaff','#4d707e');
+  // Sleeping corner.
+  box(scene,8,.78,9,'#806e57',x+11,.44,z-10.5);
+  box(scene,7.4,.45,8,'#92aaa3',x+11,1.08,z-10.5);
+  box(scene,6,.35,1.8,'#e9e8e1',x+11,1.45,z-13.5);
+  sign('SCHLAFEN',x+11,5.7,z-15,9,'#f7eed5','#617780');
+  state.built=true;
+}
+function createTargetHome(x,z){
+  box(scene,52,.15,54,'#719275',x,.08,z);
+  const centerZ=z+2,front=z-14;
+  // Hollow residence: the front doorway can be opened by in-game burglary,
+  // and the visitor can actually enter a modeled room.
+  wall(x-18.5,centerZ,1,32,10,'#c1b398');
+  wall(x+18.5,centerZ,1,32,10,'#c1b398');
+  wall(x,centerZ+15.5,38,1,10,'#c1b398');
+  wall(x-12,front,14,1,10,'#c1b398');
+  wall(x+12,front,14,1,10,'#c1b398');
+  box(scene,40,1,34,'#855c50',x,10.5,centerZ);
+  const roof=scene.children[scene.children.length-1];
+  for(const dx of [-12,12])box(scene,5,4,.2,'#51849e',x+dx,5,front-.55);
+  const door=box(scene,7.6,6,.25,'#674c38',x,3,front-.55);
+  const lock={x,z:front,w:7.6,d:.6};
+  solids.push(lock);
+  sign('WOHNHAUS',x,12,front-.6,20,'#fff8dd','#4f625b');
+  // Interior furniture is visible when the roof hides.
+  box(scene,8,1.1,3,'#7b968c',x-8,.65,centerZ+4);
+  box(scene,8,2,.8,'#72918b',x-8,1.6,centerZ+5);
+  box(scene,7,.7,3,'#936c4e',x+8,.5,centerZ+4);
+  box(scene,7,.9,9,'#907c68',x-8,.58,centerZ-6);
+  box(scene,3,2.5,2.5,'#f0eee9',x+12,1.3,centerZ+12);
+  box(scene,3,1.9,8,'#c4c9c0',x+14,.95,centerZ-4);
+  const loot=box(scene,2.4,1.8,2.2,'#d6bd66',x,1.05,centerZ+10);
+  sign('WERTSACHEN',x,4,centerZ+10,12,'#ffefa1','#645b30');
+  const id=burglarHomes.length,looted=state.burgled.includes(id);
+  burglarHomes.push({id,x,z:front,centerZ,open:looted,looted,door,lock,roof,loot});
+  if(looted){door.visible=false;loot.visible=false;const idx=solids.indexOf(lock);if(idx>=0)solids.splice(idx,1);}
+}
+function createMountains(){
+  const peaks=[
+    {x:-80,z:-510,r:98,h:80},{x:80,z:-536,r:105,h:105},
+    {x:260,z:-521,r:108,h:142},{x:455,z:-544,r:94,h:121},
+    {x:595,z:-518,r:100,h:91}
+  ];
+  for(const [i,m] of peaks.entries()){
+    const stone=new THREE.Mesh(new THREE.ConeGeometry(m.r,m.h,9,4),material(i%2?'#637878':'#71817b'));
+    stone.position.set(m.x,m.h/2,m.z);scene.add(stone);
+    const cap=new THREE.Mesh(new THREE.ConeGeometry(m.r*.29,m.h*.29,9),material('#e5ebea'));
+    cap.position.set(m.x,m.h*.855,m.z);scene.add(cap);
+    mountainBases.push({x:m.x,z:m.z,r:m.r*.64});
+    for(let n=0;n<5;n++){
+      const angle=(n/5)*Math.PI*2;
+      const tx=m.x+Math.cos(angle)*m.r*.91,tz=m.z+Math.sin(angle)*m.r*.91;
+      if(tz> -405)continue;
+      tree(tx,tz,.8+rng()*.55);
+    }
+  }
+  // Scenic access road and viewpoint before the mountain wall.
+  box(scene,13,.16,120,'#69746e',0,.1,-385);
+  box(scene,46,.16,27,'#7f8a84',0,.16,-442);
+  sign('BERGE & PANORAMA',0,7,-456,31,'#faf6d2','#325648');
+  box(scene,12,5,10,'#8b7058',-38,2.5,-450);
+  box(scene,14,1,12,'#655248',-38,5.5,-450);
+  solids.push({x:-38,z:-450,w:12,d:10});
 }
 function initialise(){
-  buildCity();createNPCs();createTraffic();createBicycles();collectiblesCreate();createPoliceAndHeli();createRobberyEvent();
-  if(state.built)buildHouse();
+  buildCity();createNPCs();createTraffic();createBicycles();collectiblesCreate();createPoliceAndHeli();createRobberyEvent();addMotorbike();
+  buildHouse();
   avatar.group.position.set(player.x,0,player.z);
   camera.position.set(player.x,8,player.z+15);
   renderHUD();
 }
 function renderHUD(){
   $('cash').textContent=state.cash.toLocaleString('de-DE')+' €';
-  $('vehicle').textContent=flight.onboard?'✈️ Im Flugzeug':rail.onboard?'🚆 Im Zug':player.car?'🚗 '+player.car.name:'🚶 Zu Fuß';
+  $('vehicle').textContent=flight.onboard?'✈️ Im Flugzeug':rail.onboard?'🚆 Im Zug':player.car?(player.car.bike?'🏍️ ':'🚗 ')+player.car.name:'🚶 Zu Fuß';
   $('speed').textContent=player.car?Math.round(Math.abs(player.car.speed)*3.6)+' km/h · ⛽ '+Math.round(player.car.fuel)+'%':'0 km/h';
   $('progress').textContent='🏁 '+state.wins+' Siege';
+  $('wanted').textContent=crimeState.wanted?'🚓 Fahndung '+crimeState.wanted+'/3':'🟢 Keine Fahndung';
   const goal=airports[flight.side].gate;
   const distance=Math.hypot(goal.x-player.x,goal.z-player.z);
   $('navigation').textContent=flight.onboard?'✈️ '+airports[1-flight.stop].country+' · im Flug':
     '✈️ Flughafen '+airports[flight.side].country+': '+Math.round(distance)+' m '+(goal.x>player.x+20?'→ Osten':goal.x<player.x-20?'← Westen':goal.z<player.z?'↑ Norden':'↓ Süden');
   document.body.classList.toggle('driving',!!player.car);
+  document.body.classList.toggle('wanted',crimeState.wanted>0);
   if(flight.onboard){$('mission').textContent='✈️ Flug nach '+airports[1-flight.stop].country+' · '+Math.round(flight.progress*100)+' % Strecke';}
   else if(rail.onboard){$('mission').textContent='🚆 Zugreise nach '+rail.stations[1-rail.stop].name+' · Ticket eingelöst';}
   else if(race){
@@ -859,7 +1011,7 @@ function renderHUD(){
 function save(){
   try{localStorage.setItem(savedKey,JSON.stringify({
     cash:state.cash,wins:state.wins,owned:state.owned,deliveries:state.deliveries,
-    inventory:state.inventory,built:state.built,trainTickets:rail.tickets,
+    inventory:state.inventory,built:state.built,burgled:state.burgled,trainTickets:rail.tickets,
     flightTickets:flight.tickets,flightSide:flight.side
   }));}catch(e){}
 }
@@ -890,6 +1042,7 @@ function showInventory(){
       {label:'🧃 Getränk verwenden',disabled:!state.inventory.includes('Getränk'),run:()=>useItem('Getränk')},
       {label:'🥪 Sandwich essen',disabled:!state.inventory.includes('Sandwich'),run:()=>useItem('Sandwich')},
       {label:'🍰 Kuchen essen',disabled:!state.inventory.includes('Kuchen'),run:()=>useItem('Kuchen')},
+      {label:'🍞 Toast essen',disabled:!state.inventory.includes('Toast'),run:()=>useItem('Toast')},
       {label:'Schließen',primary:true,run:()=>{}}
   ]);
 }
@@ -953,7 +1106,7 @@ function tryVehicle(){
   if(car&&near(player,car,7)){
     if(!car.owned&&!car.loaner){toast('Dieses Fahrzeug ist noch nicht gekauft!');return;}
     setCar(car);
-  }else toast('Gehe zuerst zu einem Auto! Der goldene Wagen ist frei.');
+  }else toast('Gehe zu einem Auto oder Motorrad! Goldener Leihwagen und rotes Motorrad sind kostenlos.');
 }
 const track=[{x:0,z:-105},{x:-105,z:-105},{x:-105,z:0},{x:0,z:0},{x:0,z:-30}];
 const start={x:0,z:-30};
@@ -1006,12 +1159,141 @@ function openFuelMenu(car){
     {label:'Schließen',run:()=>{}}
   ]);
 }
+function showHomeWelcome(){
+  openModal('🏠 Mein Wohnhaus','Das Haus gehört dir! Gehe durch die offene Haustür. Drinnen gibt es Küche, Badezimmer mit WC, Wohnzimmer und ein Bett.',[
+    {label:'🏠 Haus betreten',primary:true,run:()=>{player.x=home.x;player.z=home.z-10;player.y=0;avatar.group.position.set(player.x,0,player.z);toast('🏠 Willkommen zu Hause!',3)}},
+    {label:'Schließen',run:()=>{}}
+  ]);
+}
+function insideHome(){return Math.abs(player.x-home.x)<home.w/2-1&&Math.abs(player.z-home.z)<home.d/2-1;}
+function homeAction(){
+  if(insideHome()){
+    if(near(player,{x:home.x-8,z:home.z+11},5)){
+      openModal('🍳 Deine Küche','Du kannst etwas kochen oder Wasser trinken.',[
+        {label:'🥪 Toast zubereiten (kostenlos)',primary:true,run:()=>{state.inventory.push('Toast');save();toast('🍳 Toast in deinem Inventar!')}},
+        {label:'🚰 Wasser trinken',run:()=>toast('💧 Erfrischt!',2)}
+      ]);return true;
+    }
+    if(near(player,{x:home.x+13,z:home.z+3},5)){
+      openModal('🚽 Dein Badezimmer','Das ist dein eigenes WC mit Waschbecken und Badewanne.',[
+        {label:'🚽 Toilette benutzen',primary:true,run:()=>toast('✅ Badezimmer benutzt.',2)},
+        {label:'🧼 Hände waschen',run:()=>toast('🫧 Hände gewaschen.',2)}
+      ]);return true;
+    }
+    if(near(player,{x:home.x+11,z:home.z-10.5},5)){
+      openModal('🛏️ Dein Schlafzimmer','Du kannst im Bett schlafen und den Tagesablauf weiterschalten.',[
+        {label:'🌙 Schlafen',primary:true,run:()=>{day=(day+.18)%1;toast('😴 Ausgeschlafen!',3)}}
+      ]);return true;
+    }
+  }
+  if(near(player,{x:home.x,z:home.z-18},7)){showHomeWelcome();return true;}
+  return false;
+}
+function closestNPC(dist=5){
+  let best=null,d=dist;
+  for(const n of npcs){
+    const distance=Math.hypot(player.x-n.g.position.x,player.z-n.g.position.z);
+    if(distance<d){d=distance;best=n;}
+  }
+  return best;
+}
+function markWanted(level){
+  crimeState.wanted=Math.max(crimeState.wanted,level);
+  crimeState.seconds=Math.max(crimeState.seconds,25+level*12);
+  renderHUD();
+}
+function punchAction(){
+  if(!playing||showModal||player.car||rail.onboard||flight.onboard||crimeState.arrestTime>0)return;
+  if(crimeState.punchWait>0)return;
+  crimeState.punchWait=.7;crimeState.attackTime=.5;
+  const target=closestNPC(4.3);
+  if(target){
+    target.stunned=4;target.dir*=-1;
+    markWanted(1);toast('🥊 Treffer! Die Person flieht und die Polizei wird informiert.',3);
+  }else toast('🥊 Schlag ins Leere. Gehe näher zu einer Spielfigur.',2);
+}
+function burglaryAction(){
+  for(const b of burglarHomes){
+    if(!b.open&&near(player,{x:b.x,z:b.z-2},7)){
+      b.open=true;b.door.visible=false;
+      const idx=solids.indexOf(b.lock);if(idx>=0)solids.splice(idx,1);
+      markWanted(2);toast('🚨 Einbruch im Spiel! Die Haustür ist offen – Polizei alarmiert!',4);
+      return true;
+    }
+    if(b.open&&near(player,{x:b.x,z:b.centerZ+10},5)){
+      if(b.looted){toast('📦 Hier sind keine Wertsachen mehr.',2);return true;}
+      b.looted=true;b.loot.visible=false;state.burgled.push(b.id);
+      state.cash+=180;markWanted(3);save();renderHUD();
+      toast('💰 Wertsachen eingesammelt: +180 € Spielgeld · Polizei sucht dich!',4);
+      return true;
+    }
+  }
+  return false;
+}
+function robAction(){
+  if(!playing||showModal||player.car||rail.onboard||flight.onboard||crimeState.arrestTime>0)return;
+  // Fictional game-only robbery, with police consequences and no gore.
+  const n=closestNPC(5.3);
+  if(n){
+    if(n.robbed){toast('Die Spielfigur hat kein Spielgeld mehr.',2);return;}
+    n.robbed=true;n.stunned=5;n.dir*=-1;
+    const money=40+Math.floor(rng()*75);
+    state.cash+=money;markWanted(2);save();renderHUD();
+    toast('💰 '+money+' € Spielgeld erbeutet – Polizei verständigt!',4);
+    return;
+  }
+  if(burglaryAction())return;
+  toast('🔎 Keine Person in Reichweite. Vor einem fremden Haus kannst du einen Einbruch versuchen.',3);
+}
+function updateWanted(dt){
+  crimeState.punchWait=Math.max(0,crimeState.punchWait-dt);
+  crimeState.attackTime=Math.max(0,crimeState.attackTime-dt);
+  if(avatar.group.children.length>0){
+    avatar.group.rotation.z=crimeState.attackTime>0?Math.sin((.5-crimeState.attackTime)*18)*.16:0;
+  }
+  if(crimeState.arrestTime>0){
+    crimeState.arrestTime=Math.max(0,crimeState.arrestTime-dt);
+    if(crimeState.arrestTime===0){
+      player.x=prison.x;player.z=prison.z-42;player.y=0;player.vertical=0;
+      avatar.group.position.set(player.x,0,player.z);
+      toast('🚔 Entlassen. Fahndung beendet.',4);renderHUD();
+    }
+    return;
+  }
+  if(!crimeState.wanted||rail.onboard||flight.onboard)return;
+  crimeState.seconds-=dt;
+  if(crimeState.seconds<=0){crimeState.wanted=0;crimeState.seconds=0;toast('🟢 Fahndung beendet.',2);renderHUD();return;}
+  // An active police patrol visibly follows the culprit through the street grid.
+  if(patrolCar){
+    const g=patrolCar.group,x=g.position.x,z=g.position.z,dx=player.x-x,dz=player.z-z;
+    const distance=Math.hypot(dx,dz);
+    if(distance>2&&distance<1000){
+      const step=dt*24, nx=x+dx/distance*step,nz=z+dz/distance*step;
+      if(!wallCollision(nx,nz,2,true))g.position.set(nx,0,nz);
+      else if(!wallCollision(nx,z,2,true))g.position.x=nx;
+      else if(!wallCollision(x,nz,2,true))g.position.z=nz;
+      g.rotation.y=-Math.atan2(dx,-dz);
+    }
+    if(distance<6&&crimeState.wanted>=2&&!player.car){
+      const fine=Math.min(state.cash,60+crimeState.wanted*20);
+      state.cash-=fine;crimeState.wanted=0;crimeState.seconds=0;
+      crimeState.arrestTime=7;
+      player.x=prison.x;player.z=prison.z-42;
+      player.y=0;player.vertical=0;
+      avatar.group.position.set(player.x,0,player.z);
+      save();renderHUD();toast('🚔 Festgenommen! 7 Sekunden Arrest, '+fine+' € Spielgeld Strafe.',5);
+    }
+  }
+}
+
 function interact(){
-  if(!playing||showModal)return;
+  if(!playing||showModal||crimeState.arrestTime>0)return;
   if(rail.onboard||flight.onboard)return;
   if(airportAction())return;
   if(!player.car&&trainAction())return;
   if(nearPump()){openFuelMenu(player.car);return;}
+  if(!player.car&&homeAction())return;
+  if(!player.car&&burglaryAction())return;
   if(state.job&&near(player,targets[state.jobTarget],9)){finishJob();return;}
   const pick=collectibles.find(c=>!c.taken&&near(player,c,5.5));
   if(pick){pick.taken=true;pick.obj.visible=false;state.cash+=20;state.inventory.push('Fundmünze');toast('🪙 Münze eingesammelt · +20 €!');save();renderHUD();return;}
@@ -1019,11 +1301,7 @@ function interact(){
     const s=shops.find(s=>Math.abs(player.x-s.x)<s.w/2+6&&player.z>s.front-8&&player.z<s.z+s.d/2+7);
     if(s){showShop(s);return;}
     if(near(player,{x:-27,z:21},13)){startJob();return;}
-    if(near(player,{x:-157,z:-157},25)&&!state.built){
-      openModal('🏠 Baugrundstück','Errichte auf diesem Bauplatz für 400 € dein erstes kleines Haus.',[
-        {label:'Haus bauen · 400 €',primary:true,run:()=>spend(400,()=>{state.built=true;buildHouse();toast('🏠 Dein erstes Haus steht!')})}
-      ]);return;
-    }
+    if(near(player,{x:home.x,z:home.z-18},8)){showHomeWelcome();return;}
   }else if(near(player,start,19)){startRace();return;}
   toast(player.car?'🏁 Fahre zum blauen Rennmarker oder steige aus!':'Betritt einen Laden oder folge dem gelben Jobmarker.');
 }
@@ -1032,6 +1310,7 @@ function wallCollision(x,z,radius=.65,isVehicle=false){
   if(x< -680+radius||x>1920-radius||Math.abs(z)>620-radius)return true;
   if(isVehicle&&crossingCollision(x,z,radius))return true;
   if(isVehicle)for(const o of obstacles){if(Math.hypot(x-o.x,z-o.z)<o.r+radius)return true;}
+  for(const hill of mountainBases){if(Math.hypot(x-hill.x,z-hill.z)<hill.r+radius)return true;}
   for(const b of solids){
     if(Math.abs(x-b.x)<b.w/2+radius&&Math.abs(z-b.z)<b.d/2+radius)return true;
   }
@@ -1094,7 +1373,7 @@ function updateCar(dt){
   let hit=false;
   for(let j=0;j<steps;j++){
     const nx=c.x+dx/steps,nz=c.z+dz/steps;
-    if(wallCollision(nx,nz,2.0,true)){hit=true;break;}
+    if(wallCollision(nx,nz,c.bike?1.05:2.0,true)){hit=true;break;}
     c.x=nx;c.z=nz;
   }
   if(hit){
@@ -1134,7 +1413,8 @@ function updateTraffic(dt){
 }
 function updateNPCs(dt){
   for(const n of npcs){
-    n.t+=n.dir*n.speed*dt;
+    if(n.stunned>0)n.stunned=Math.max(0,n.stunned-dt);
+    n.t+=n.dir*n.speed*(n.stunned>0?2.5:1)*dt;
     if(n.t>338){n.t=338;n.dir=-1;}
     if(n.t< -338){n.t=-338;n.dir=1;}
     n.g.position.set(n.axis==='z'?n.fixed:n.t,0,n.axis==='z'?n.t:n.fixed);
@@ -1168,6 +1448,10 @@ function updateMission(dt){
   }
 }
 function updateShopsRoof(){
+  if(home.roof)home.roof.visible=!(Math.abs(player.x-home.x)<home.w/2-1&&Math.abs(player.z-home.z)<home.d/2-1);
+  for(const b of burglarHomes){
+    b.roof.visible=!(b.open&&Math.abs(player.x-b.x)<18&&player.z>b.z&&player.z<b.centerZ+16);
+  }
   for(const s of shops){
     s.roof.visible=!(Math.abs(player.x-s.x)<s.w/2-1&&player.z>s.front&&player.z<s.z+s.d/2);
   }
@@ -1205,6 +1489,8 @@ function drawMap(){
     c.fillRect(-88,(r-player.z)*scale-3,176,6);
   }
   const dots=[
+    {x:home.x,z:home.z,color:'#a8ed9b'},
+    {x:260,z:-510,color:'#e6e6eb'},
     ...rail.stations.map(st=>({x:rail.x+14,z:st.z,color:'#fce7a1'})),
     {x:rail.x,z:0,color:rail.gateClosed?'#fa4141':'#e8e4ad'},
     ...airports.map(a=>({x:a.gate.x,z:a.gate.z,color:'#9bdcfb'})),
@@ -1225,7 +1511,16 @@ function drawMap(){
 }
 function hint(){
   let text='';
-  if(flight.onboard)text='✈️ Flug nach '+airports[1-flight.stop].country;
+  if(!player.car&&insideHome()){
+    if(near(player,{x:home.x-8,z:home.z+11},6))text='🍳 E / AKTION: Küche benutzen';
+    else if(near(player,{x:home.x+13,z:home.z+3},6))text='🚽 E / AKTION: WC benutzen';
+    else if(near(player,{x:home.x+11,z:home.z-10.5},6))text='🛏️ E / AKTION: Schlafen';
+    else text='🏠 Dein Wohnhaus: Küche, WC, Schlafzimmer, Wohnzimmer';
+  }
+  else if(!player.car&&burglarHomes.some(b=>!b.open&&near(player,{x:b.x,z:b.z-2},9)))text='🚪 E / AKTION: In fremdes Haus einbrechen';
+  else if(!player.car&&burglarHomes.some(b=>b.open&&near(player,{x:b.x,z:b.centerZ+10},6)))text='💰 E / AKTION: Wertsachen einsammeln';
+  else if(!player.car&&closestNPC(4.5))text='🥊 G / SCHLAG oder H / RAUB (Polizei!)';
+  else if(flight.onboard)text='✈️ Flug nach '+airports[1-flight.stop].country;
   else if(!player.car&&airportIndexNearby()>=0)text='✈️ E / AKTION: Flugtickets / Boarding';
   else if(rail.onboard)text='🚆 Unterwegs nach '+rail.stations[1-rail.stop].name;
   else if(!player.car&&nearestRailStop()>=0)text='🎫 E / AKTION: Fahrkartenautomat und Zug';
@@ -1242,7 +1537,7 @@ function hint(){
     else if(near(player,prison,54))text='🚔 Stadtgefängnis: Hier werden festgenommene Räuber untergebracht';
     else if(collectibles.some(c=>!c.taken&&near(player,c,5.5)))text='🪙 E / AKTION: Gegenstand einsammeln';
     else if(near(player,{x:-27,z:21},14))text='📦 E / Aktion: Lieferjob annehmen';
-    else if(c&&near(player,c,7))text='🚗 F / AUTO: '+(c.loaner?'Leihwagen fahren':'Einsteigen');
+    else if(c&&near(player,c,7))text=(c.bike?'🏍️ F / MOTORRAD: ':'🚗 F / AUTO: ')+(c.loaner?(c.bike?'Motorrad fahren':'Leihwagen fahren'):'Einsteigen');
     else if(near(player,{x:-157,z:-157},25)&&!state.built)text='🏠 E / Aktion: Haus bauen';
   }
   $('prompt').textContent=text;$('prompt').classList.toggle('show',!!text);
@@ -1264,11 +1559,11 @@ function tick(t){
     input.side=Number(!!keys.KeyD||!!keys.ArrowRight)-Number(!!keys.KeyA||!!keys.ArrowLeft)+stickValue.x;
     input.forward=THREE.MathUtils.clamp(input.forward,-1,1);input.side=THREE.MathUtils.clamp(input.side,-1,1);
     input.sprint=!!keys.ShiftLeft||!!keys.ShiftRight||touchSprint;
-    if(rail.onboard||flight.onboard){}else if(player.car)updateCar(dt);else updateFoot(dt);
+    if(crimeState.arrestTime>0||rail.onboard||flight.onboard){}else if(player.car)updateCar(dt);else updateFoot(dt);
     updateRail(dt);
     updateFlight(dt);
     updateLevelCrossing(dt);
-    updateNPCs(dt);updateTrafficLights();updateTraffic(dt);updateBicycles(dt);updatePoliceAndHeli(dt);updateCrime(dt);updateMission(dt);updateShopsRoof();
+    updateNPCs(dt);updateWanted(dt);updateTrafficLights();updateTraffic(dt);updateBicycles(dt);updatePoliceAndHeli(dt);updateCrime(dt);updateMission(dt);updateShopsRoof();
   }
   updateCamera(dt);
   if(playing){
@@ -1299,6 +1594,8 @@ function setupControls(){
     if(e.code==='KeyF')tryVehicle();
     if(e.code==='KeyV')changeCamera();
     if(e.code==='KeyI')showInventory();
+    if(e.code==='KeyG')punchAction();
+    if(e.code==='KeyH')robAction();
     if(e.code==='Space')jump();
     if(e.code==='KeyR'&&player.car&&near(player,start,35))startRace();
     if(e.code==='Escape')closeModal();
@@ -1310,6 +1607,8 @@ function setupControls(){
   $('btnCar').addEventListener('click',tryVehicle);
   $('btnUse').addEventListener('click',interact);
   $('btnJump').addEventListener('click',jump);
+  $('btnHit').addEventListener('click',punchAction);
+  $('btnRob').addEventListener('click',robAction);
   $('btnSprint').addEventListener('pointerdown',e=>{e.preventDefault();touchSprint=true;});
   for(const event of ['pointerup','pointercancel','pointerleave'])$('btnSprint').addEventListener(event,()=>{touchSprint=false;});
   for(const [id,key] of [['btnGas','gas'],['btnBrake','brake']]){
@@ -1318,7 +1617,7 @@ function setupControls(){
   }
   $('closeModal').addEventListener('click',closeModal);
   $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal();});
-  $('help').addEventListener('click',()=>openModal('🎮 Steuerung & Ziele','iPad: linker Joystick bewegt den Menschen bzw. lenkt das Auto. Gas und Bremse im Auto rechts. Wische rechts über die Stadt, um dich umzusehen. PC: WASD, E Aktion, F Ein-/Aussteigen, V Perspektive, Leertaste springen, Shift sprinten, R Rennen am blauen Marker. Der goldene Wagen ist kostenlos geliehen. Jobs bringen 350 €, Rennen bis 650 €. Der rote Sportwagen kostet 950 €. NEU: Flughafen im Osten (der Wegweiser zeigt die Entfernung). Flugticket am Terminal für 100 € kaufen, beim stehenden Flugzeug mit AKTION einsteigen und nach Frankreich fliegen. Rückflüge brauchen ebenfalls ein Ticket. Der Bahnübergang liegt westlich der City: Bei herannahendem Zug schließen Schranken automatisch – davor halten!',[{label:'Alles klar!',primary:true,run:()=>{}}]));
+  $('help').addEventListener('click',()=>openModal('🎮 Steuerung & Ziele','iPad: linker Joystick bewegt den Menschen bzw. lenkt das Auto. Gas und Bremse im Auto rechts. Wische rechts über die Stadt, um dich umzusehen. PC: WASD, E Aktion, F Ein-/Aussteigen, V Perspektive, Leertaste springen, Shift sprinten, R Rennen am blauen Marker. Der goldene Wagen ist kostenlos geliehen. Jobs bringen 350 €, Rennen bis 650 €. Der rote Sportwagen kostet 950 €. NEU: Flughafen im Osten (der Wegweiser zeigt die Entfernung). Flugticket am Terminal für 100 € kaufen, beim stehenden Flugzeug mit AKTION einsteigen und nach Frankreich fliegen. Rückflüge brauchen ebenfalls ein Ticket. Der Bahnübergang liegt westlich der City: Bei herannahendem Zug schließen Schranken automatisch – davor halten! NEU: Dein eigenes Wohnhaus liegt im Südwesten (Küche mit Toast, WC und Bett). Das rote Motorrad steht neben dem Haus, kostenlos fahren mit F. G = Schlagen, H = Spielfiguren berauben bzw. Einbruch an einer fremden Tür, E = Wertsachen mitnehmen. Alles nur im Spiel ohne Blut; die Polizei fahndet bei Straftaten. Berge mit Aussichtspunkt liegen nördlich der Stadt.',[{label:'Alles klar!',primary:true,run:()=>{}}]));
   $('fullscreen').addEventListener('click',()=>{const e=document.documentElement;if(document.fullscreenElement)document.exitFullscreen();else if(e.requestFullscreen)e.requestFullscreen().catch(()=>toast('Vollbild nicht verfügbar'));});
   $('start').addEventListener('click',()=>{$('veil').style.display='none';playing=true;lastFrame=performance.now();toast('Willkommen in City Racer! Folge dem gelben Marker.',4);});
   const area=$('stick');let pointer=null;
