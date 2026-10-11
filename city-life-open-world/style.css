@@ -41,3 +41,8 @@ body.pseudo-fullscreen #app{position:fixed;inset:0;width:100%;max-width:none;mar
 body.pseudo-fullscreen .layout{min-height:calc(100% - 62px)}
 body.pseudo-fullscreen canvas{max-height:calc(100vh - 235px)}
 @media(max-width:700px){.topbar{align-items:flex-start;flex-direction:column}.top-actions{width:100%;justify-content:stretch}.top-actions button{flex:1 1 30%}}
+
+body{background:radial-gradient(circle at 50% -20%,#263843 0,#0c1115 58%)}
+.game-card,.panel{backdrop-filter:blur(6px)}
+.stage{background:#10191f}
+#app:fullscreen .sidebar,#app:-webkit-full-screen .sidebar{opacity:.92}
