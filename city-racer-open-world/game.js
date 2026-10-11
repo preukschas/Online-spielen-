@@ -293,7 +293,13 @@ function buildCity() {
 function createGasStation(){
   const {x,z}=station;
   box(scene,87,.22,87,'#69737a',x,.12,z);
-  box(scene,48,7,23,'#d4d8d5',x,3.55,z+28);
+  // Open-front visual shell: the customer can see staff behind the transparent glass.
+  box(scene,48,7,1,'#d4d8d5',x,3.55,z+39);
+  box(scene,1,7,23,'#d4d8d5',x-23.5,3.55,z+28);
+  box(scene,1,7,23,'#d4d8d5',x+23.5,3.55,z+28);
+  box(scene,48,1.3,1,'#d4d8d5',x,6.35,z+16.5);
+  const shopGlass=new THREE.MeshStandardMaterial({color:'#a9d4d9',transparent:true,opacity:.22,roughness:.17,metalness:.1,side:THREE.DoubleSide});
+  box(scene,48,5.6,.12,null,x,3.2,z+16.5,shopGlass);
   box(scene,50,1.2,26,'#315a63',x,7.35,z+28);
   box(scene,11,4,.13,'#487382',x,3.3,z+16.35);
   sign('CITY TANK',x,8.8,z+15.95,24,'#fcf3dc','#22586a');
