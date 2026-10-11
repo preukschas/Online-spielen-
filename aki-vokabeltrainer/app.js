@@ -25,7 +25,7 @@ function choose(){
  if(mode==="new"){const b=a.filter(w=>get(w.id).n===0);if(b.length)a=b;}
  if(mode==="focus"){
  const b=a.filter(w=>{const s=get(w.id);return s.bad>0&&!mastered(s)||(s.n>0&&s.due<=Date.now());});
- if(b.length)a=b;
+ if(b.length)a=b;else{const starter=new Set(["AKI-047","AKI-056","AKI-083","AKI-088","AKI-095"]);a=a.filter(w=>starter.has(w.id));}
  }
  a=shuffle(a);
  if(mode==="focus"||mode==="mixed")a.sort((x,y)=>{
