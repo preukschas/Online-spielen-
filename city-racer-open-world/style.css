@@ -3,3 +3,10 @@
 
 #navigation{display:inline-block;margin-top:5px;background:#0c3444dc;border:1px solid #83cddb7a;border-radius:7px;padding:6px 9px;color:#f4f6d5;font-size:11px;line-height:1.3;font-weight:800;text-shadow:0 1px 2px #000}#navigation:empty{display:none}
 @media(max-width:680px){#navigation{font-size:10px;max-width:250px}#mission{max-width:250px}}
+
+/* v1.2: responsive action controls for non-graphic open world play */
+#stats #wanted{color:#c4f8dd;border-color:#3fa57a}#stats #wanted:not(:empty){font-weight:850}#btnHit{background:#6c5b45;border-color:#f2b37d;color:#fff}#btnRob{background:#704653;border-color:#e8b6c6;color:#fff}#touch .buttons button:active{filter:brightness(1.3)}
+@media(hover:none),(pointer:coarse){#touch{bottom:calc(env(safe-area-inset-bottom) + 18px)}}
+@media(max-width:680px){#stats #wanted{font-size:10px;padding:5px}#btnHit,#btnRob{font-size:20px}}
+
+body.wanted #stats #wanted{color:#ffb3a9;border-color:#d46c60;background:#562a2fcc}
