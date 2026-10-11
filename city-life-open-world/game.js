@@ -33,21 +33,39 @@ const hemi=new THREE.HemisphereLight(0xcbe8ff,0x536348,1.45);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff1d0,2.35);sun.position.set(-90,150,-70);sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-220;sun.shadow.camera.right=220;sun.shadow.camera.top=220;sun.shadow.camera.bottom=-220;sun.shadow.camera.near=1;sun.shadow.camera.far=420;scene.add(sun);
 
+function setupDynamicLights(){
+  flashlightTarget=new THREE.Object3D();flashlightTarget.position.set(0,-.08,-12);camera.add(flashlightTarget);
+  flashlight=new THREE.SpotLight(0xfff0cf,0,48,.31,.52,1.65);flashlight.position.set(.18,-.10,-.12);flashlight.target=flashlightTarget;flashlight.castShadow=false;camera.add(flashlight);
+
+  flashlightModel=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(.055,.07,.34,12),new THREE.MeshStandardMaterial({color:0x2e3438,roughness:.45,metalness:.55}));
+  body.rotation.z=Math.PI/2;body.position.set(.17,-.31,-.54);flashlightModel.add(body);
+  const rim=new THREE.Mesh(new THREE.CylinderGeometry(.085,.085,.07,12),new THREE.MeshStandardMaterial({color:0x535c61,roughness:.32,metalness:.65,emissive:0xffe8b6,emissiveIntensity:.15}));
+  rim.rotation.z=Math.PI/2;rim.position.set(.34,-.31,-.54);flashlightModel.add(rim);flashlightModel.visible=false;camera.add(flashlightModel);
+
+  carHeadTarget=new THREE.Object3D();scene.add(carHeadTarget);
+  carHeadLightL=new THREE.SpotLight(0xfff1cc,0,58,.25,.56,1.7);carHeadLightR=new THREE.SpotLight(0xfff1cc,0,58,.25,.56,1.7);
+  carHeadLightL.castShadow=false;carHeadLightR.castShadow=false;carHeadLightL.target=carHeadTarget;carHeadLightR.target=carHeadTarget;scene.add(carHeadLightL,carHeadLightR);
+
+  for(let i=0;i<10;i++){const l=new THREE.PointLight(0xffd990,0,23,2);l.castShadow=false;scene.add(l);lampLightPool.push(l)}
+}
+
 const WORLD_W=620,WORLD_D=420,ROAD_W=24.4,SIDEWALK=4.0;
 const roadsX=[65,185,307,431,555],roadsZ=[52,157,264,369];
-const keys=new Set(),buildingMeshes=[],solidBoxes=[],cars=[],traffic=[],npcs=[],police=[],effects=[],pickups=[],climbables=[];
+const keys=new Set(),buildingMeshes=[],solidBoxes=[],cars=[],traffic=[],npcs=[],police=[],effects=[],pickups=[],climbables=[],streetLamps=[],lampLightPool=[];
 const interiors={},customBuildings=[];
 const raycaster=new THREE.Raycaster();
 const centerNdc=new THREE.Vector2(0,0);
-let toastTimer=0,last=performance.now(),lookDragging=false,lastPX=0,lastPY=0,pointerLocked=false,saveTimer=0,raceMarker=null,weaponHolder=null,waterWeapon=null,pistolWeapon=null,muzzleFlash=null,muzzleTimer=0;
+let toastTimer=0,last=performance.now(),lookDragging=false,lastPX=0,lastPY=0,pointerLocked=false,saveTimer=0,raceMarker=null,weaponHolder=null,waterWeapon=null,pistolWeapon=null,muzzleFlash=null,muzzleTimer=0,flashlight=null,flashlightTarget=null,flashlightModel=null,carHeadLightL=null,carHeadLightR=null,carHeadTarget=null;
 const SAVE_KEY='city-life-v5-1-save';
 let savedData={};
 
 const state={
  x:117,z:157,yaw:0,pitch:0,money:1000,hp:100,heat:0,lastCrime:99,
  sprint:false,vehicle:null,speedKmh:0,firstPerson:true,inventory:[],activeWeapon:null,
- sprayCd:0,shootCd:0,punchCd:0,worldTime:16.2,mode:'outside',currentBuilding:null,returnPos:null,jumpY:0,jumpV:0,grounded:true,race:{active:false,index:0,time:0,best:null}
+ sprayCd:0,shootCd:0,punchCd:0,worldTime:16.2,flashlight:false,headlightsOn:true,cameraShake:0,mode:'outside',currentBuilding:null,returnPos:null,jumpY:0,jumpV:0,grounded:true,race:{active:false,index:0,time:0,best:null}
 };
+setupDynamicLights();
 
 const buildings=[
  {id:'market',x:8,z:7,w:45,d:32,name:'FRISCHMARKT',type:'shop',color:0xb86c53,door:[30.5,41.5],items:[['Getränk',4,'🥤',4],['Snack',6,'🥪',8],['Lebensmittel',25,'🛍️',0],['Wasserpistole',35,'💦',0]]},
@@ -220,12 +238,28 @@ function populateTrees(){
  for(const z of rows){let n=0;for(let x=22;x<WORLD_W-12;x+=36){const tx=x+((n++%3)-1)*3.4;if(roadsX.some(v=>Math.abs(tx-v)<21)||roadsZ.some(v=>Math.abs(z-v)<21))continue;if(buildings.some(b=>{if(b.type==='park')return false;const q=structureRect(b);return tx>q.x-3&&tx<q.x+q.w+3&&z>q.z-3&&z<q.z+q.d+3}))continue;makeTree(tx,z,.8+(n%3)*.08)}}
  const p=buildings.find(b=>b.id==='park');for(let i=0;i<24;i++)makeTree(p.x+6+(i*9.7)%(p.w-12),p.z+6+(i*7.1)%(p.d-12),.72+(i%3)*.08)
 }
-function makeLamp(x,z){
- const g=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.08,.11,4.6,8),mat(0x424a4e,.7,.35));pole.position.y=2.3;pole.castShadow=true;g.add(pole);const arm=addBox(.45,4.48,0,.9,.08,.08,0x424a4e,.7,.35,g);const lamp=addBox(.86,4.40,0,.35,.15,.30,0xd9dcda,.35,.1,g);g.position.set(x,0,z);scene.add(g)
+function makeLamp(x,z,rot=0){
+ const g=new THREE.Group();
+ const pole=new THREE.Mesh(new THREE.CylinderGeometry(.08,.11,4.6,8),mat(0x424a4e,.7,.35));pole.position.y=2.3;pole.castShadow=true;g.add(pole);
+ addBox(.45,4.48,0,.9,.08,.08,0x424a4e,.7,.35,g);
+ const shell=addBox(.86,4.40,0,.40,.17,.34,0x394247,.45,.45,g);
+ const bulbMat=new THREE.MeshStandardMaterial({color:0xffe4ac,roughness:.28,metalness:.02,emissive:0xffd27a,emissiveIntensity:0});
+ const bulb=new THREE.Mesh(new THREE.BoxGeometry(.27,.055,.22),bulbMat);bulb.position.set(.86,4.31,0);g.add(bulb);
+ const halo=new THREE.Mesh(new THREE.SphereGeometry(.20,9,7),new THREE.MeshBasicMaterial({color:0xffd58c,transparent:true,opacity:0,depthWrite:false}));
+ halo.position.set(.86,4.18,0);g.add(halo);
+ g.position.set(x,0,z);g.rotation.y=rot;scene.add(g);const lightX=x+Math.cos(rot)*.86,lightZ=z-Math.sin(rot)*.86;streetLamps.push({x,z,lightX,lightZ,group:g,bulb,halo,shell})
 }
 function populateProps(){
- for(const z of roadsZ)for(let x=26;x<WORLD_W-18;x+=52){if(roadsX.some(v=>Math.abs(x-v)<23))continue;makeLamp(x,z-ROAD_W/2-SIDEWALK-1.1);makeLamp(x,z+ROAD_W/2+SIDEWALK+1.1)}
- for(const x of roadsX)for(let z=25;z<WORLD_D-15;z+=57){if(roadsZ.some(v=>Math.abs(z-v)<23))continue;makeLamp(x-ROAD_W/2-SIDEWALK-1.1,z);makeLamp(x+ROAD_W/2+SIDEWALK+1.1,z)}
+ for(const z of roadsZ)for(let x=26;x<WORLD_W-18;x+=52){
+  if(roadsX.some(v=>Math.abs(x-v)<23))continue;
+  makeLamp(x,z-ROAD_W/2-SIDEWALK-1.1,-Math.PI/2);
+  makeLamp(x,z+ROAD_W/2+SIDEWALK+1.1,Math.PI/2)
+ }
+ for(const x of roadsX)for(let z=25;z<WORLD_D-15;z+=57){
+  if(roadsZ.some(v=>Math.abs(z-v)<23))continue;
+  makeLamp(x-ROAD_W/2-SIDEWALK-1.1,z,0);
+  makeLamp(x+ROAD_W/2+SIDEWALK+1.1,z,Math.PI)
+ }
 }
 
 function buildClimbables(){
@@ -285,6 +319,51 @@ function spawnNPCs(){
   const g=createHuman(colors[i%colors.length],0xd0a078,false);g.position.set(x,0,z);scene.add(g);npcs.push({mesh:g,x,z,horizontal,dir:i%3?1:-1,speed:1.0+(i%5)*.08,phase:i,stun:0,pirate:false})
  }
 }
+function addVehicleLights(g,length,width,isBike=false){
+ const headMat=new THREE.MeshStandardMaterial({color:0xfff0c8,roughness:.22,metalness:.02,emissive:0xffe0a0,emissiveIntensity:.10});
+ const tailMat=new THREE.MeshStandardMaterial({color:0xa42128,roughness:.28,metalness:.02,emissive:0xe62931,emissiveIntensity:.12});
+ const head=[],tail=[];
+ if(isBike){
+   const h=new THREE.Mesh(new THREE.BoxGeometry(.10,.14,.34),headMat);h.position.set(length*.46,.84,0);g.add(h);head.push(h);
+   const t=new THREE.Mesh(new THREE.BoxGeometry(.08,.12,.28),tailMat);t.position.set(-length*.46,.76,0);g.add(t);tail.push(t)
+ }else{
+   for(const z of [-width*.31,width*.31]){
+    const h=new THREE.Mesh(new THREE.BoxGeometry(.055,.14,.34),headMat.clone());h.position.set(length*.495,.69,z);g.add(h);head.push(h);
+    const t=new THREE.Mesh(new THREE.BoxGeometry(.055,.14,.34),tailMat.clone());t.position.set(-length*.495,.69,z);g.add(t);tail.push(t)
+   }
+ }
+ return {head,tail}
+}
+function addWindshieldCracks(g,length,width,height){
+ const cracks=[];
+ const frontX=length*.15+.015,baseY=.98+(height-1)*.25,halfH=Math.max(.52,height*.55*.90),halfW=width*.78*.88;
+ const patterns=[
+  [[0,0,.02,.18],[.02,.18,-.05,.34],[.02,.18,.12,.29],[0,0,-.13,.13],[0,0,.16,-.08],[-.13,.13,-.24,.22],[.16,-.08,.27,-.19]],
+  [[-.06,-.05,-.20,-.14],[-.20,-.14,-.29,-.28],[-.20,-.14,-.31,-.05],[-.06,-.05,.04,-.24],[.04,-.24,.18,-.33],[.04,-.24,.20,-.16]]
+ ];
+ for(const pat of patterns){
+  const pos=[];
+  for(const seg of pat){
+   const [z1,y1,z2,y2]=seg;
+   pos.push(frontX,baseY+y1*halfH,z1*halfW,frontX,baseY+y2*halfH,z2*halfW)
+  }
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  const line=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:0xdbe8ec,transparent:true,opacity:.78,depthTest:true}));
+  line.visible=false;g.add(line);cracks.push(line)
+ }
+ return cracks
+}
+function addPanelCracks(g,length,width){
+ const pos=[],y=1.045,cx=length*.31;
+ const segs=[
+  [cx-.18,-.04,cx+.02,.02],[cx+.02,.02,cx+.18,.16],[cx+.02,.02,cx+.20,-.13],
+  [cx-.18,-.04,cx-.34,.11],[cx-.18,-.04,cx-.30,-.18],
+  [cx+.20,-.13,cx+.34,-.22]
+ ];
+ for(const [x1,z1,x2,z2] of segs)pos.push(x1,y,z1*width,x2,y,z2*width);
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+ const line=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:0x24292b,transparent:true,opacity:.92}));line.visible=false;g.add(line);return line
+}
 function makeCarMesh(name,policeCar=false){
  const sp=vehicleSpecs[name]||vehicleSpecs['City Sedan'],g=new THREE.Group();
  if(sp.type==='bike'){
@@ -299,26 +378,34 @@ function makeCarMesh(name,policeCar=false){
   const seat=meshBox(.52,.16,.42,0x202427,.8,.05);seat.position.set(-.36,1.03,0);g.add(seat);
   const fork=meshBox(.08,.78,.08,0xb7bdc0,.35,.65);fork.position.set(.63,.78,0);fork.rotation.z=-.22;g.add(fork);
   addBox(.70,1.18,0,.12,.08,.76,0x3b4144,.55,.5,g);
-  addBox(.92,.84,0,.10,.12,.34,0xf2e6ae,.25,.1,g);
-  g.userData={dim:{length:2.05,width:.78,height:1.35},body:frame,hood:tank,cabin:seat,wheels,baseColor:sp.color,damageStage:-1};return g
+  const lights=addVehicleLights(g,2.05,.78,true);
+  g.userData={dim:{length:2.05,width:.78,height:1.35},body:frame,hood:tank,cabin:seat,wheels,baseColor:sp.color,damageStage:-1,headLights:lights.head,tailLights:lights.tail,sirenLights:[],cracks:[],panelCrack:null,frontBumper:null,rearBumper:null};return g
  }
  const sport=sp.type==='sport',suv=sp.type==='suv',van=sp.type==='van';
  const length=sport?4.5:van?5.0:suv?4.7:4.4,width=sport?1.92:suv?1.95:1.82,height=sport?1.0:suv?1.65:van?1.75:1.42;
- const bodyColor=policeCar?0xe7ecef:sp.color;
+ const bodyColor=policeCar?0xe7ecef:sp.color;let sirenLights=[];
  const body=meshBox(length,.48,width,bodyColor,.40,.38);body.position.y=.62;g.add(body);
  const hood=meshBox(length*.34,.22,width*.90,bodyColor,.38,.38);hood.position.set(length*.30,.92,0);g.add(hood);
  const cabin=meshBox(length*.42,height*.55,width*.78,0x335564,.22,.12);cabin.position.set(-length*.06,.98+(height-1)*.25,0);g.add(cabin);
- if(policeCar){addBox(-length*.10,1.55,0,.65,.11,.28,0x22272a,.4,.2,g);addBox(-length*.22,1.62,0,.28,.09,.22,0xd33b3b,.3,.1,g);addBox(.02,1.62,0,.28,.09,.22,0x3475da,.3,.1,g)}
+ if(policeCar){
+  addBox(-length*.10,1.55,0,.65,.11,.28,0x22272a,.4,.2,g);
+  const rm=new THREE.MeshStandardMaterial({color:0xd33b3b,roughness:.25,metalness:.05,emissive:0xff2020,emissiveIntensity:.25});
+  const bm=new THREE.MeshStandardMaterial({color:0x3475da,roughness:.25,metalness:.05,emissive:0x2478ff,emissiveIntensity:.25});
+  const red=new THREE.Mesh(new THREE.BoxGeometry(.28,.09,.22),rm);red.position.set(-length*.22,1.62,0);g.add(red);
+  const blue=new THREE.Mesh(new THREE.BoxGeometry(.28,.09,.22),bm);blue.position.set(.02,1.62,0);g.add(blue);sirenLights=[red,blue]
+ }
  const wheelMat=mat(0x17191a,.95,.05),hubMat=mat(0x8d9498,.45,.7),wheels=[];
  for(const sx of [-1,1])for(const sz of [-1,1]){
   const wx=sx*length*.31,wz=sz*width*.52,w=new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.20,12),wheelMat);w.rotation.x=Math.PI/2;w.position.set(wx,.37,wz);w.castShadow=true;g.add(w);wheels.push(w);
   const hub=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.205,10),hubMat);hub.rotation.x=Math.PI/2;hub.position.copy(w.position);g.add(hub)
  }
- addBox(length*.49,.68,-width*.32,.05,.13,.36,0xf3e7ae,.25,.1,g);addBox(length*.49,.68,width*.32,.05,.13,.36,0xf3e7ae,.25,.1,g);
- addBox(-length*.49,.68,-width*.32,.05,.13,.36,0xb52f32,.35,.1,g);addBox(-length*.49,.68,width*.32,.05,.13,.36,0xb52f32,.35,.1,g);
+ const lights=addVehicleLights(g,length,width,false);
+ const frontBumper=meshBox(.14,.18,width*.84,0x30363a,.62,.32);frontBumper.position.set(length*.50,.48,0);g.add(frontBumper);
+ const rearBumper=meshBox(.14,.16,width*.82,0x30363a,.66,.28);rearBumper.position.set(-length*.50,.48,0);g.add(rearBumper);
+ const cracks=addWindshieldCracks(g,length,width,height);const panelCrack=addPanelCracks(g,length,width);
  if(name.includes('Bugatti')){const grille=new THREE.Mesh(new THREE.TorusGeometry(.34,.07,6,16,Math.PI*1.5),mat(0x1d2529,.3,.75));grille.rotation.y=Math.PI/2;grille.position.set(length*.51,.62,0);g.add(grille)}
  if(name.includes('Lamborghini'))addBox(length*.12,.72,0,.06,.25,width*.74,0x1b2226,.35,.45,g);
- g.userData={dim:{length,width,height},body,hood,cabin,wheels,baseColor:bodyColor,damageStage:-1};return g
+ g.userData={dim:{length,width,height},body,hood,cabin,wheels,baseColor:bodyColor,damageStage:-1,headLights:lights.head,tailLights:lights.tail,sirenLights,cracks,panelCrack,frontBumper,rearBumper};return g
 }
 function addCar(name,x,z,a=0,opt={}){
  const sp=vehicleSpecs[name],mesh=makeCarMesh(name,!!opt.police);mesh.position.set(x,0,z);mesh.rotation.y=-a;scene.add(mesh);
@@ -595,39 +682,73 @@ function vehicleAction(){
  state.vehicle=c;state.speedKmh=c.speed||0;state.yaw=c.a;state._lookOffsetYaw=0;toast('Eingestiegen: '+c.name)
 }
 
-function applyDamageVisual(c,force=false){
- if(!c||!c.mesh)return;
- const u=c.mesh.userData,stage=damageStage(c.hp);if(!force&&u.damageStage===stage)return;u.damageStage=stage;
- const body=u.body,hood=u.hood,cabin=u.cabin,wheels=u.wheels||[];
- if(body){
-  body.rotation.z=stage>=5?.055:0;body.rotation.y=stage>=3?.018:0;
-  if(body.material){body.material.roughness=clamp(.40+stage*.09,.4,.9);body.material.color.setHex(u.baseColor||c.spec.color)}
+function spawnCrashFX(c,amount){
+ const count=clamp(Math.round(amount*.45),3,10),origin=new THREE.Vector3(c.x,.7,c.z);
+ for(let i=0;i<count;i++){
+  const spark=new THREE.Mesh(new THREE.SphereGeometry(.025+(i%3)*.012,5,4),new THREE.MeshBasicMaterial({color:i%3===0?0xfff0a3:0xff8a32,transparent:true,opacity:.95}));
+  spark.position.copy(origin).add(new THREE.Vector3((Math.random()-.5)*1.2,Math.random()*.45,(Math.random()-.5)*1.2));scene.add(spark);
+  effects.push({mesh:spark,ttl:.22+Math.random()*.28,velocity:new THREE.Vector3((Math.random()-.5)*5,2+Math.random()*4,(Math.random()-.5)*5),gravity:9.5,fade:true})
  }
- if(hood){hood.rotation.z=stage>=2?.07:0;hood.rotation.y=stage>=4?.045:0}
- if(cabin){cabin.rotation.z=stage>=3?-.035:0;if(cabin.material){cabin.material.roughness=stage>=3?.55:.22}}
- wheels.forEach((w,i)=>{w.rotation.z=stage>=5&&i===0?.28:0});
- if(!u.damageMarks){
-  u.damageMarks=[];
-  for(let i=0;i<4;i++){const mark=meshBox(.24,.03,.62,0x26292b,.95,.02);mark.position.set(.45-i*.35,1.02,(i%2?-.55:.55));mark.visible=false;c.mesh.add(mark);u.damageMarks.push(mark)}
+}
+function ensureDamageParts(c){
+ const u=c.mesh.userData;if(u.damageReady)return;u.damageReady=true;
+ u.base={
+  bodyPos:u.body?u.body.position.clone():null,bodyScale:u.body?u.body.scale.clone():null,bodyRot:u.body?u.body.rotation.clone():null,
+  hoodPos:u.hood?u.hood.position.clone():null,hoodScale:u.hood?u.hood.scale.clone():null,hoodRot:u.hood?u.hood.rotation.clone():null,
+  cabinPos:u.cabin?u.cabin.position.clone():null,cabinScale:u.cabin?u.cabin.scale.clone():null,cabinRot:u.cabin?u.cabin.rotation.clone():null,
+  wheelRots:(u.wheels||[]).map(w=>w.rotation.clone()),wheelPos:(u.wheels||[]).map(w=>w.position.clone()),
+  frontBumperPos:u.frontBumper?u.frontBumper.position.clone():null,frontBumperRot:u.frontBumper?u.frontBumper.rotation.clone():null,
+  rearBumperPos:u.rearBumper?u.rearBumper.position.clone():null,rearBumperRot:u.rearBumper?u.rearBumper.rotation.clone():null
+ };
+ u.damageMarks=[];
+ const dim=u.dim||{length:4,width:2};
+ for(let i=0;i<5;i++){
+  const mark=meshBox(.28+.05*(i%2),.025,.60+.09*(i%3),0x24282a,.98,.02);mark.position.set(dim.length*.20-i*.25,.94+(i%2)*.08,(i%2?-.43:.43)*Math.min(1,dim.width));mark.rotation.y=(i-2)*.16;mark.visible=false;c.mesh.add(mark);u.damageMarks.push(mark)
  }
- u.damageMarks.forEach((m,i)=>m.visible=stage>=i+1);
  if(!u.smoke){
-  const smoke=new THREE.Mesh(new THREE.SphereGeometry(.25,7,6),new THREE.MeshStandardMaterial({color:0x4c4f50,transparent:true,opacity:.32,roughness:1}));
-  smoke.position.set(.9,1.35,0);smoke.visible=false;c.mesh.add(smoke);u.smoke=smoke
+  u.smoke=new THREE.Group();
+  for(let i=0;i<4;i++){const puff=new THREE.Mesh(new THREE.SphereGeometry(.18+i*.055,7,5),new THREE.MeshStandardMaterial({color:0x434748,transparent:true,opacity:.0,roughness:1}));puff.position.set(i*.10,i*.22,(i%2?-.10:.10));u.smoke.add(puff)}
+  u.smoke.position.set(dim.length*.28,1.18,0);c.mesh.add(u.smoke)
  }
- u.smoke.visible=stage>=4;
+}
+function applyDamageVisual(c,force=false){
+ if(!c||!c.mesh)return;ensureDamageParts(c);
+ const u=c.mesh.userData,stage=damageStage(c.hp);if(!force&&u.damageStage===stage)return;u.damageStage=stage;const b=u.base;
+ const body=u.body,hood=u.hood,cabin=u.cabin,wheels=u.wheels||[];
+ if(body&&b.bodyPos){body.position.copy(b.bodyPos);body.scale.copy(b.bodyScale);body.rotation.copy(b.bodyRot);body.scale.x=Math.max(.91,1-stage*.014);body.position.x-=stage*.025;body.rotation.z=stage>=4?.025*(stage-3):0;body.rotation.y=stage>=3?.012*(stage-2):0;if(body.material){body.material.roughness=clamp(.40+stage*.095,.4,.92);body.material.color.setHex(u.baseColor||c.spec.color)}}
+ if(hood&&b.hoodPos){hood.position.copy(b.hoodPos);hood.scale.copy(b.hoodScale);hood.rotation.copy(b.hoodRot);hood.position.x-=stage*.045;hood.scale.x=Math.max(.72,1-stage*.055);hood.rotation.z=stage>=2?.045*stage:0;hood.rotation.y=stage>=4?.05:0}
+ if(cabin&&b.cabinPos){cabin.position.copy(b.cabinPos);cabin.scale.copy(b.cabinScale);cabin.rotation.copy(b.cabinRot);cabin.rotation.z=stage>=3?-.018*(stage-2):0;cabin.position.y-=stage>=5?.06:0;if(cabin.material)cabin.material.roughness=stage>=3?.60:.22}
+ wheels.forEach((w,i)=>{if(b.wheelRots[i])w.rotation.copy(b.wheelRots[i]);if(b.wheelPos[i])w.position.copy(b.wheelPos[i]);if(stage>=3&&i===0)w.rotation.z+=.12;if(stage>=4&&i===1)w.rotation.z-=.18;if(stage>=5&&i===2){w.rotation.z+=.34;w.position.y-=.08}});
+ if(u.frontBumper&&b.frontBumperPos){u.frontBumper.position.copy(b.frontBumperPos);u.frontBumper.rotation.copy(b.frontBumperRot);u.frontBumper.position.x-=stage*.055;if(stage>=3)u.frontBumper.rotation.z=.06*(stage-2);if(stage>=5)u.frontBumper.position.y-=.22}
+ if(u.rearBumper&&b.rearBumperPos){u.rearBumper.position.copy(b.rearBumperPos);u.rearBumper.rotation.copy(b.rearBumperRot);if(stage>=4)u.rearBumper.rotation.z=-.05*(stage-3)}
+ (u.cracks||[]).forEach((line,i)=>{line.visible=stage>=i+2;line.material.opacity=stage>=4?.96:.72});
+ if(u.panelCrack)u.panelCrack.visible=stage>=3;
+ u.damageMarks.forEach((m,i)=>m.visible=stage>=i+1);
+ if(u.smoke){u.smoke.visible=stage>=4;u.smoke.children.forEach((p,i)=>{p.material.opacity=stage>=5?.30+(i*.035):.18+(i*.025)})}
+ if(stage===0){(u.headLights||[]).forEach(m=>m.visible=true);(u.tailLights||[]).forEach(m=>m.visible=true)}
+}
+function updateVehicleDamageFX(dt){
+ for(const c of cars){
+  const u=c.mesh.userData,stage=damageStage(c.hp);if(!u.smoke||stage<4)continue;
+  u.smoke.rotation.y+=dt*.55;
+  u.smoke.children.forEach((p,i)=>{p.position.y=(i*.22)+Math.sin(performance.now()*.002+i)*.05;p.position.x=i*.10+Math.sin(performance.now()*.0014+i)*.035})
+ }
 }
 function vehicleDamage(c,amount){
- const now=performance.now()/1000;if(now-c.lastDamage<.42)return;c.lastDamage=now;const before=damageStage(c.hp);c.hp=clamp(c.hp-amount,0,100);const after=damageStage(c.hp);applyDamageVisual(c);if(after>before)toast(damageLabel(c.hp));if(c.hp<=0){c.speed=0;state.speedKmh=0}
+ const now=performance.now()/1000;if(now-c.lastDamage<.42)return;c.lastDamage=now;const before=damageStage(c.hp);c.hp=clamp(c.hp-amount,0,100);const after=damageStage(c.hp);applyDamageVisual(c);spawnCrashFX(c,amount);
+ if(c===state.vehicle)state.cameraShake=Math.max(state.cameraShake,clamp(amount*.008,.045,.22));
+ if(after>before)toast(damageLabel(c.hp));if(c.hp<=0){c.speed=0;if(c===state.vehicle)state.speedKmh=0}
 }
 function updateVehicle(dt){
  const c=state.vehicle;if(!c)return;
  const up=keys.has('w')||keys.has('ArrowUp'),down=keys.has('s')||keys.has('ArrowDown'),left=keys.has('a')||keys.has('ArrowLeft'),right=keys.has('d')||keys.has('ArrowRight');
- const speedCap=state.mode==='interior'?Math.min(38,c.spec.max):c.spec.max;
- if(c.hp<=0){c.speed*=.93}else{
-  if(up)c.speed+=c.spec.acc*dt;if(down)c.speed-=c.spec.acc*.92*dt;
-  c.speed*=Math.pow(.985,dt*60);c.speed=clamp(c.speed,-28,speedCap);
-  const steer=(right?1:0)-(left?1:0),factor=clamp(Math.abs(c.speed)/45,.18,1.1);c.a+=steer*c.spec.turn*dt*factor*(c.speed>=0?1:-1)
+ const ds=damageStage(c.hp),speedFactor=[1,.96,.86,.70,.48,0][ds],accFactor=[1,.98,.90,.76,.55,0][ds];
+ const rawCap=state.mode==='interior'?Math.min(38,c.spec.max):c.spec.max,speedCap=rawCap*speedFactor;
+ if(c.hp<=0){c.speed*=.90}else{
+  if(up)c.speed+=c.spec.acc*accFactor*dt;if(down)c.speed-=c.spec.acc*.92*dt;
+  c.speed*=Math.pow(.985,dt*60);c.speed=clamp(c.speed,-28*speedFactor,speedCap);
+  const steer=(right?1:0)-(left?1:0),factor=clamp(Math.abs(c.speed)/45,.18,1.1);c.a+=steer*c.spec.turn*dt*factor*(c.speed>=0?1:-1);
+  if(ds>=4&&Math.abs(c.speed)>25)c.a+=Math.sin(performance.now()*.004)*.00075*(ds-3)
  }
  const ms=c.speed/3.6,nx=c.x+Math.cos(c.a)*ms*dt,nz=c.z+Math.sin(c.a)*ms*dt;
  let moved=false;
@@ -667,7 +788,7 @@ function updateTraffic(dt){
   else{c.z+=c.dir*ms*dt;if(c.z>WORLD_D+8)c.z=-8;if(c.z<-8)c.z=WORLD_D+8;c.a=c.dir>0?Math.PI/2:-Math.PI/2}
   c.mesh.position.set(c.x,0,c.z);c.mesh.rotation.y=-c.a;
   if(state.vehicle&&state.mode==='outside'&&dist2(c.x,c.z,state.vehicle.x,state.vehicle.z)<2.4){
-   vehicleDamage(state.vehicle,Math.min(18,4+(Math.abs(c.speed)+Math.abs(state.vehicle.speed||0))*.035));state.vehicle.speed*=.72
+   const impact=Math.min(18,4+(Math.abs(c.speed)+Math.abs(state.vehicle.speed||0))*.035);vehicleDamage(state.vehicle,impact);vehicleDamage(c,impact*.58);state.vehicle.speed*=.72;c.speed*=.82
   }
  }
 }
@@ -699,13 +820,69 @@ function updatePolice(dt){
    const az=ax===0?Math.sign(nearestZ-p.z):0;p.x+=ax*Math.min(ms*dt,1.2);p.z+=az*Math.min(ms*dt,1.2)
   }
   p.mesh.position.set(p.x,0,p.z);p.mesh.rotation.y=-a
-  if(dist2(p.x,p.z,state.x,state.z)<2.5){state.heat=Math.max(0,state.heat-25*dt);state.hp=Math.max(0,state.hp-2*dt)}
+  if(dist2(p.x,p.z,state.x,state.z)<2.5){
+   state.heat=Math.max(0,state.heat-25*dt);
+   if(state.vehicle){vehicleDamage(state.vehicle,5.5);vehicleDamage(p,3.0);state.vehicle.speed*=.90;p.speed*=.82}
+   else state.hp=Math.max(0,state.hp-2*dt)
+  }
  }
  if(state.heat<20)for(const p of police)p._active=false
 }
+function daylightLevel(){
+ const t=state.worldTime%24;return clamp(Math.sin((t-6)/12*Math.PI),0,1)
+}
+function updateStreetLights(day){
+ const night=clamp((.48-day)/.40,0,1);
+ for(const l of streetLamps){l.bulb.material.emissiveIntensity=.15+night*4.2;l.halo.material.opacity=night*.34}
+ for(const p of lampLightPool)p.intensity=0;
+ if(state.mode!=='outside'||night<.04)return;
+ const near=streetLamps.map(l=>({l,d:dist2(state.x,state.z,l.x,l.z)})).filter(o=>o.d<72).sort((a,b)=>a.d-b.d).slice(0,lampLightPool.length);
+ near.forEach((o,i)=>{const p=lampLightPool[i];p.position.set(o.l.lightX,4.14,o.l.lightZ);p.intensity=night*38*(1-o.d/100);p.distance=24})
+}
+function updateCarLights(day){
+ const night=clamp((.52-day)/.42,0,1);
+ for(const c of cars){
+  const u=c.mesh.userData,stage=damageStage(c.hp),manual=(c===state.vehicle?state.headlightsOn:true);
+  const on=(night>.03||c===state.vehicle)&&manual&&stage<5;
+  (u.headLights||[]).forEach((m,i)=>{const broken=stage>=4&&i===0||stage>=5;m.visible=!broken;m.material.emissiveIntensity=broken?0:(on?2.8+night*3.2:.10)});
+  const braking=c===state.vehicle&&(keys.has('s')||keys.has('ArrowDown'));
+  (u.tailLights||[]).forEach((m,i)=>{const broken=stage>=5&&i===1;m.visible=!broken;m.material.emissiveIntensity=broken?0:(.22+night*1.7+(braking?3.0:0))});
+  if(u.sirenLights&&u.sirenLights.length===2){const phase=Math.sin(performance.now()*.018)>0;u.sirenLights[0].material.emissiveIntensity=c.police&&c.mesh.visible?(phase?6:.25):.12;u.sirenLights[1].material.emissiveIntensity=c.police&&c.mesh.visible?(phase?.25:6):.12}
+ }
+ carHeadLightL.intensity=0;carHeadLightR.intensity=0;
+ const c=state.vehicle;
+ if(!c||state.mode!=='outside'||!state.headlightsOn||c.hp<=0)return;
+ const u=c.mesh.userData,dim=u.dim||{length:4.4,width:1.8},stage=damageStage(c.hp),f=Math.max(.75,night);
+ const fx=Math.cos(c.a),fz=Math.sin(c.a),lx=-Math.sin(c.a),lz=Math.cos(c.a),front=dim.length*.46;
+ const leftBroken=stage>=4,rightBroken=stage>=5;
+ const baseX=c.x+fx*front,baseZ=c.z+fz*front;
+ carHeadLightL.position.set(baseX+lx*dim.width*.26,.72,baseZ+lz*dim.width*.26);
+ carHeadLightR.position.set(baseX-lx*dim.width*.26,.72,baseZ-lz*dim.width*.26);
+ carHeadTarget.position.set(c.x+fx*36,.55,c.z+fz*36);
+ carHeadLightL.intensity=leftBroken?0:92*f;carHeadLightR.intensity=rightBroken?0:92*f
+}
+function toggleFlashlight(){
+ if(state.vehicle)return toast('Taschenlampe nur zu Fuß');
+ state.flashlight=!state.flashlight;
+ if(state.flashlight&&!state.firstPerson){state.firstPerson=true;document.getElementById('viewBtn').textContent='👁 Ich-Perspektive'}
+ const b=document.getElementById('flashlightBtn');if(b)b.textContent=state.flashlight?'🔦 Lampe AN':'🔦 Taschenlampe';
+ toast(state.flashlight?'🔦 Taschenlampe an':'🔦 Taschenlampe aus')
+}
+function toggleHeadlights(){
+ if(!state.vehicle)return toast('Autolicht im Fahrzeug umschalten');
+ state.headlightsOn=!state.headlightsOn;const b=document.getElementById('headlightBtn');if(b)b.textContent=state.headlightsOn?'💡 Licht AN':'💡 Licht AUS';
+ toast(state.headlightsOn?'💡 Autolicht an':'💡 Autolicht aus')
+}
+function updatePersonalLights(){
+ const day=daylightLevel();
+ flashlight.intensity=state.flashlight&&!state.vehicle?110:0;
+ flashlightModel.visible=state.flashlight&&!state.vehicle&&state.firstPerson;
+ if(flashlightModel.visible){const rim=flashlightModel.children[1];if(rim&&rim.material)rim.material.emissiveIntensity=2.2}
+ updateStreetLights(day);updateCarLights(day)
+}
 function updateLighting(dt){
  state.worldTime=(state.worldTime+dt*.03)%24;const t=state.worldTime,day=clamp(Math.sin((t-6)/12*Math.PI),0,1);hemi.intensity=.25+1.3*day;sun.intensity=.12+2.3*day;
- const sky=new THREE.Color(day>.15?0x9fc8df:0x17263a);scene.background.lerp(sky,.03);scene.fog.color.copy(scene.background);sun.position.set(Math.cos(t/24*Math.PI*2)*140,35+day*150,Math.sin(t/24*Math.PI*2)*120)
+ const sky=new THREE.Color(day>.15?0x9fc8df:0x17263a);scene.background.lerp(sky,.03);scene.fog.color.copy(scene.background);sun.position.set(Math.cos(t/24*Math.PI*2)*140,35+day*150,Math.sin(t/24*Math.PI*2)*120);updatePersonalLights()
 }
 
 function cameraDir(){
@@ -723,9 +900,10 @@ function updateCamera(){
  }else{
   const behind=new THREE.Vector3(state.x-Math.cos(state.yaw)*5.5,3.2+state.jumpY,state.z-Math.sin(state.yaw)*5.5);camera.position.lerp(behind,.18);camera.lookAt(state.x,1.15+state.jumpY,state.z)
  }
+ if(state.cameraShake>0){camera.position.x+=(Math.random()-.5)*state.cameraShake;camera.position.y+=(Math.random()-.5)*state.cameraShake*.55;camera.position.z+=(Math.random()-.5)*state.cameraShake}
 }
 state._lookOffsetYaw=0;
-function toggleView(){state.firstPerson=!state.firstPerson;document.getElementById('viewBtn').textContent=state.firstPerson?'👁 Ich-Perspektive':'🎥 Verfolgerkamera';toast(state.firstPerson?'Ich-Perspektive':'Verfolgerkamera')}
+function toggleView(){state.firstPerson=!state.firstPerson;if(!state.firstPerson&&state.flashlight){state.flashlight=false;const fb=document.getElementById('flashlightBtn');if(fb)fb.textContent='🔦 Taschenlampe'}document.getElementById('viewBtn').textContent=state.firstPerson?'👁 Ich-Perspektive':'🎥 Verfolgerkamera';toast(state.firstPerson?'Ich-Perspektive':'Verfolgerkamera')}
 
 function spawnBeam(color,length,radius,ttl){
  const dir=cameraDir().normalize(),start=camera.position.clone().add(dir.clone().multiplyScalar(.55)),mid=start.clone().add(dir.clone().multiplyScalar(length*.5));
@@ -733,7 +911,11 @@ function spawnBeam(color,length,radius,ttl){
  beam.position.copy(mid);beam.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);scene.add(beam);effects.push({mesh:beam,ttl})
 }
 function updateEffects(dt){
- for(const e of effects)e.ttl-=dt;
+ for(const e of effects){
+  e.ttl-=dt;
+  if(e.velocity){e.mesh.position.addScaledVector(e.velocity,dt);e.velocity.y-=(e.gravity||0)*dt}
+  if(e.fade&&e.mesh.material)e.mesh.material.opacity=clamp(e.ttl*3.2,0,1)
+ }
  for(let i=effects.length-1;i>=0;i--)if(effects[i].ttl<=0){scene.remove(effects[i].mesh);effects[i].mesh.geometry.dispose();effects[i].mesh.material.dispose();effects.splice(i,1)}
 }
 function hitNPC(max=18){
@@ -789,7 +971,13 @@ function runSelfTest(){
  check('Rennstrecke vorhanden',state.race.checkpoints&&state.race.checkpoints.length>=7);
  check('Waffenmodelle vorhanden',!!waterWeapon&&!!pistolWeapon);
  check('Lokales Speichern verfügbar',typeof localStorage!=='undefined');
- const failed=results.filter(r=>!r.ok);window.CityLifeDiagnostics={version:'5.1',results,passed:results.length-failed.length,failed:failed.length};
+ check('Straßenlampen vorhanden',streetLamps.length>20&&lampLightPool.length===10);
+ check('Taschenlampe vorhanden',!!flashlight&&!!flashlightModel);
+ check('Auto-Scheinwerfer vorhanden',cars.every(c=>(c.mesh.userData.headLights||[]).length>0));
+ check('Scheibenrisse/Crashdetails vorhanden',cars.filter(c=>c.spec.type!=='bike').every(c=>(c.mesh.userData.cracks||[]).length>=2));
+ check('Schäden beeinflussen Fahrleistung',[1,.96,.86,.70,.48,0][5]===0);
+ check('Polizei-Blaulicht/Rotlicht vorhanden',police.every(c=>(c.mesh.userData.sirenLights||[]).length===2));
+ const failed=results.filter(r=>!r.ok);window.CityLifeDiagnostics={version:'5.2',results,passed:results.length-failed.length,failed:failed.length};
  log('🧪 Selbsttest: '+(results.length-failed.length)+'/'+results.length+' bestanden.');
  if(failed.length)console.warn('City Life Selbsttest fehlgeschlagen',failed);else console.info('City Life Selbsttest bestanden',results);
  return window.CityLifeDiagnostics
@@ -799,7 +987,7 @@ runSelfTest();
 function normalizeKey(e){return e.key.length===1?e.key.toLowerCase():e.key}
 document.addEventListener('keydown',e=>{
  const k=normalizeKey(e);if(['w','a','s','d','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(k)){keys.add(k);e.preventDefault()}
- if(k==='e'){action();e.preventDefault()}if(k==='f'){vehicleAction();e.preventDefault()}if(k==='g'){sprayWater();e.preventDefault()}if(k==='r'){shootPistol();e.preventDefault()}if(k==='v'){toggleView();e.preventDefault()}if(k==='q'){punch();e.preventDefault()}if(k==='b'){buildStructure();e.preventDefault()}if(k==='t'){startRace();e.preventDefault()}if(e.code==='Space'){tryJump();e.preventDefault()}if(e.key==='Shift')state.sprint=true
+ if(k==='e'){action();e.preventDefault()}if(k==='f'){vehicleAction();e.preventDefault()}if(k==='l'){toggleFlashlight();e.preventDefault()}if(k==='h'){toggleHeadlights();e.preventDefault()}if(k==='g'){sprayWater();e.preventDefault()}if(k==='r'){shootPistol();e.preventDefault()}if(k==='v'){toggleView();e.preventDefault()}if(k==='q'){punch();e.preventDefault()}if(k==='b'){buildStructure();e.preventDefault()}if(k==='t'){startRace();e.preventDefault()}if(e.code==='Space'){tryJump();e.preventDefault()}if(e.key==='Shift')state.sprint=true
 });
 document.addEventListener('keyup',e=>{keys.delete(normalizeKey(e));if(e.key==='Shift')state.sprint=false});
 window.addEventListener('blur',()=>{keys.clear();state.sprint=false});
@@ -812,14 +1000,14 @@ canvas.addEventListener('pointerup',()=>lookDragging=false);canvas.addEventListe
 
 const dirMap={up:'w',down:'s',left:'a',right:'d'};
 document.querySelectorAll('[data-dir]').forEach(btn=>{const k=dirMap[btn.dataset.dir];const on=e=>{e.preventDefault();keys.add(k);try{btn.setPointerCapture(e.pointerId)}catch(_){}};const off=e=>{keys.delete(k);try{btn.releasePointerCapture(e.pointerId)}catch(_){}};btn.addEventListener('pointerdown',on);btn.addEventListener('pointerup',off);btn.addEventListener('pointercancel',off)});
-document.getElementById('actionBtn').onclick=action;document.getElementById('vehicleBtn').onclick=vehicleAction;document.getElementById('punchBtn').onclick=punch;document.getElementById('jumpBtn').onclick=tryJump;document.getElementById('buildBtn').onclick=buildStructure;document.getElementById('raceBtn').onclick=startRace;document.getElementById('sprayBtn').onclick=sprayWater;document.getElementById('shootBtn').onclick=shootPistol;
+document.getElementById('actionBtn').onclick=action;document.getElementById('vehicleBtn').onclick=vehicleAction;document.getElementById('flashlightBtn').onclick=toggleFlashlight;document.getElementById('headlightBtn').onclick=toggleHeadlights;document.getElementById('punchBtn').onclick=punch;document.getElementById('jumpBtn').onclick=tryJump;document.getElementById('buildBtn').onclick=buildStructure;document.getElementById('raceBtn').onclick=startRace;document.getElementById('sprayBtn').onclick=sprayWater;document.getElementById('shootBtn').onclick=shootPistol;
 document.getElementById('sprintBtn').onclick=()=>{state.sprint=!state.sprint;toast(state.sprint?'Sprint an':'Sprint aus')};document.getElementById('resetBtn').onclick=resetGame;document.getElementById('viewBtn').onclick=toggleView;document.getElementById('fullscreenBtn').onclick=toggleFullscreen;
 
 function loop(now){
  const dt=Math.min(.033,(now-last)/1000||.016);last=now;state.sprayCd=Math.max(0,state.sprayCd-dt);state.shootCd=Math.max(0,state.shootCd-dt);state.punchCd=Math.max(0,state.punchCd-dt);
- if(state.vehicle)updateVehicle(dt);else updateFoot(dt);updateTraffic(dt);updateNPCs(dt);updatePolice(dt);updateLighting(dt);updatePickups(dt);updateRace(dt);updateCamera();updateHeldWeapons(dt);updateEffects(dt);saveTimer+=dt;if(saveTimer>5){saveTimer=0;saveGame()}hud();renderer.render(scene,camera);requestAnimationFrame(loop)
+ state.cameraShake=Math.max(0,state.cameraShake-dt*.72);if(state.vehicle)updateVehicle(dt);else updateFoot(dt);updateTraffic(dt);updateNPCs(dt);updatePolice(dt);updateLighting(dt);updatePickups(dt);updateRace(dt);updateVehicleDamageFX(dt);updateCamera();updateHeldWeapons(dt);updateEffects(dt);saveTimer+=dt;if(saveTimer>5){saveTimer=0;saveGame()}hud();renderer.render(scene,camera);requestAnimationFrame(loop)
 }
-log('🌆 City Life 5.1: Vollständigkeits- und Troubleshooting-Version gestartet.');
+log('🌆 City Life 5.2: Licht- und Schadens-Overhaul gestartet.');
 log('🚗 Ein freier City Sedan steht nahe dem Start. Mit F einsteigen.');
 hud();requestAnimationFrame(loop);
 })();
