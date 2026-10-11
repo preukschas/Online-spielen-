@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0a1824">
+<meta name="description" content="City Racer – echtes 3D-Stadtspiel: laufen, Auto fahren, Jobs, Einkauf, Rennen.">
+<title>City Racer – Open World 3D Demo</title>
+<script src="../fun-access.js"></script>
+<script>window.DMPFunAccess.requireAccess({backHref:"../"});</script>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div id="game" aria-label="Steuerbare 3D-Stadt"></div>
+<div id="veil">
+ <div class="splash"><div class="splash-kicker">DMP GAMES · 3D DEMO 0.1</div><h1>CITY<span>RACER</span></h1>
+ <p>Deine Stadt. Deine Regeln. Starte mit <strong>0 €</strong>, verdiene Spielgeld, kauf ein Auto und gewinne dein erstes Rennen.</p>
+ <div class="pill-row"><span>🏙️ Echte 3D-Welt</span><span>🚗 Fahrphysik</span><span>🛍️ Läden</span><span>🏁 KI-Rennen</span></div>
+ <p class="sub">iPad: linker Joystick &amp; Touchbuttons · Computer: WASD, E Aktion, F Auto, V Kamera, Leertaste springen.</p>
+ <p id="loadmsg">3D-Stadt wird geladen …</p>
+ <button id="start" disabled>🎮 Demo starten</button>
+ <a href="../" class="back-link">← Zur Spielezentrale</a></div>
+</div>
+<div id="hud">
+ <div id="brand">🏎️ CITY RACER <small>3D DEMO 0.1</small></div>
+ <div id="stats"><b id="cash">0 €</b><span id="vehicle">🚶 Zu Fuß</span><span id="speed">0 km/h</span><span id="progress">🏁 0 Siege</span></div>
+ <div id="mission">📦 Finde den gelben Jobmarker und verdiene dein erstes Spielgeld.</div>
+</div>
+<div id="toptools"><button id="camera" aria-label="Kamera wechseln">👁 Kamera</button><button id="fullscreen" aria-label="Vollbild">⛶</button><button id="help" aria-label="Hilfe">?</button></div>
+<canvas id="minimap" width="176" height="176" aria-label="Minikarte"></canvas>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="prompt"></div>
+<div id="touch">
+ <div class="stick-wrap" id="stick" aria-label="Joystick"><div id="stickknob"></div><label>BEWEGEN / LENKEN</label></div>
+ <div class="buttons">
+   <button id="btnJump" class="walk-only">⬆<small>SPRUNG</small></button>
+   <button id="btnSprint" class="walk-only">⚡<small>SPRINT</small></button>
+   <button id="btnUse">✋<small>AKTION</small></button>
+   <button id="btnCar">🚗<small>AUTO</small></button>
+   <button id="btnGas" class="drive-only">▲<small>GAS</small></button>
+   <button id="btnBrake" class="drive-only">▼<small>BREMSE</small></button>
+ </div>
+</div>
+<div id="modal" class="hidden" role="dialog" aria-modal="true"><div class="modal-card"><button class="x" id="closeModal">✕</button><h2 id="modalTitle"></h2><p id="modalText"></p><div id="modalOptions"></div></div></div>
+<div id="crosshair" aria-hidden="true">+</div>
+<div id="footerhint">WASD · E Aktion · F Einsteigen · V Kamera · Leertaste springen · R Rennen</div>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
