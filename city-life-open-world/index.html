@@ -2,20 +2,20 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0d1318">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#101820">
 <script src="../fun-access.js"></script>
 <script>window.DMPFunAccess.requireAccess({backHref:"../"});</script>
 <link rel="stylesheet" href="../game-interaction-guard.css">
-<title>City Life – Open World</title>
+<title>City Life – Open World 5.0 3D</title>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <div id="app">
   <header class="topbar">
     <div>
-      <h1>City Life – Open World 4.9</h1>
-      <p>Realismus-Upgrade · Ich-Perspektive · Licht & Schatten · detaillierte Stadt · Luxusautos</p>
+      <h1>City Life – Open World 5.0 3D</h1>
+      <p>Echte 3D-Engine · Ich-Perspektive · 3D-Stadt · Fahrzeuge · Verkehr · Polizei</p>
     </div>
     <div class="top-actions">
       <button id="viewBtn">👁 Ich-Perspektive</button>
@@ -26,14 +26,15 @@
 
   <div class="layout">
     <main class="game-card">
-      <div class="stage">
-        <canvas id="game" width="1280" height="720" aria-label="City Life Spielfläche"></canvas>
+      <div class="stage" id="stage">
+        <canvas id="game3d" aria-label="City Life 3D Spielfläche"></canvas>
+        <div class="crosshair" aria-hidden="true"><span></span><i></i></div>
         <div id="toast" class="toast" aria-live="polite"></div>
+        <div class="look-hint">Ziehen = umsehen · Desktop: ins Bild klicken für Mausblick</div>
       </div>
 
       <div class="controls">
-        <div class="desktop-hint">WASD/Pfeile · V Perspektive · E Aktion · F Fahrzeug · G Wasserpistole · R Pistole · Shift Sprint · Leertaste Hauen</div>
-
+        <div class="desktop-hint">WASD/Pfeile bewegen · Maus/Ziehen umsehen · E Aktion · F Fahrzeug · V Kamera · G Wasser · R Pistole · Shift Sprint · Leertaste Hauen</div>
         <div class="touch-grid" aria-label="Touch-Steuerung">
           <button data-dir="up" class="up">▲</button>
           <button data-dir="left" class="left">◀</button>
@@ -41,7 +42,6 @@
           <button data-dir="right" class="right">▶</button>
           <button data-dir="down" class="down">▼</button>
         </div>
-
         <div class="action-buttons">
           <button id="vehicleBtn">🚗 Fahrzeug</button>
           <button id="punchBtn">👊 Hauen</button>
@@ -52,7 +52,7 @@
       </div>
 
       <section id="interactionPanel" class="interaction-panel">
-        Fahre zum Autohaus oder Parkhaus. Die Fahrzeuge stehen wirklich im Gebäude und werden selbst durch die Ausfahrt hinausgefahren.
+        5.0 läuft jetzt auf einer echten Three.js/WebGL-3D-Engine. Gehe zu Gebäuden oder Fahrzeugen und drücke E/F.
       </section>
     </main>
 
@@ -64,35 +64,21 @@
         <div id="vehicleName" class="strong">Zu Fuß</div>
         <div id="speed" class="subvalue">0 km/h</div>
       </section>
-
       <section class="panel gauges">
         <div class="gauge-row"><span>Gesundheit</span><span id="hpText">100%</span></div>
         <div class="gauge"><span id="hpBar" class="hp"></span></div>
-
         <div class="gauge-row gap-top"><span>Fahrzeug</span><span id="carHpText">–</span></div>
         <div class="gauge"><span id="carHpBar" class="car"></span></div>
-
-        <div class="gauge-row gap-top"><span>Polizeiaufmerksamkeit</span><span id="heatText">0%</span></div>
+        <div class="gauge-row gap-top"><span>Polizei</span><span id="heatText">0%</span></div>
         <div class="gauge"><span id="heatBar" class="heat"></span></div>
       </section>
-
-      <section class="panel">
-        <div class="strong">📍 Ort</div>
-        <div id="place">Innenstadt</div>
-      </section>
-
-      <section class="panel">
-        <div class="strong">🎒 Inventar</div>
-        <div id="inventory" class="muted">Leer</div>
-      </section>
-
-      <section class="panel">
-        <div class="strong">📜 Ereignisse</div>
-        <div id="log" class="log"><div>Du startest in der Innenstadt.</div></div>
-      </section>
+      <section class="panel"><div class="strong">📍 Ort</div><div id="place">Innenstadt</div></section>
+      <section class="panel"><div class="strong">🎒 Inventar</div><div id="inventory" class="muted">Leer</div></section>
+      <section class="panel"><div class="strong">📜 Ereignisse</div><div id="log" class="log"><div>3D-Engine gestartet.</div></div></section>
     </aside>
   </div>
 </div>
-<script src="./game.js?v=4.9-realism-1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.1/three.min.js"></script>
+<script src="./game.js?v=5.0-three-1"></script>
 </body>
 </html>
