@@ -7,15 +7,15 @@
 <script src="../fun-access.js"></script>
 <script>window.DMPFunAccess.requireAccess({backHref:"../"});</script>
 <link rel="stylesheet" href="../game-interaction-guard.css">
-<title>City Life – Open World 5.4 3D</title>
+<title>City Life – Open World 5.5 3D</title>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <div id="app">
   <header class="topbar">
     <div>
-      <h1>City Life – Open World 5.4 3D</h1>
-      <p>3D · Ampeln & Verkehrsregeln · 5 Fahndungsstufen · Hubschrauber · KI-Rennen · Boote · Cockpit & Spiegel</p>
+      <h1>City Life – Open World 5.5 3D</h1>
+      <p>3D · Sound · Wetter · Tag/Nacht · Schatten · individuelle Innenräume · Türen · Klettern · Baumodus · Physikobjekte</p>
     </div>
     <div class="top-actions">
       <button id="viewBtn">👁 Ich-Perspektive</button>
@@ -53,6 +53,7 @@
           <button id="handbrakeBtn">🛑 Handbremse</button>
           <button id="heliUpBtn">🚁 Hoch</button>
           <button id="heliDownBtn">🚁 Runter</button>
+          <button id="weatherBtn">🌦️ Wetter</button>
           <button id="sprayBtn">💦 Spritzen</button>
           <button id="shootBtn">🔫 Schießen</button>
           <button id="sprintBtn">🏃 Sprint</button>
@@ -60,7 +61,7 @@
       </div>
 
       <section id="interactionPanel" class="interaction-panel">
-        5.4: Jetzt mit sichtbarer eigener Spielfigur in der Verfolgerkamera und eigenen Armen/Händen in der Ich-Perspektive.
+        5.5: Sound, dynamisches Wetter, nasse Fahrbahn, beleuchtete Nachtstadt, bessere Schatten und weitere Welt-/Gebäude-Systeme.
       </section>
     </main>
 
@@ -81,6 +82,7 @@
         <div class="gauge"><span id="heatBar" class="heat"></span></div>
         <div id="wantedStars" class="wanted-stars">☆☆☆☆☆</div>
         <div id="racePlace" class="muted gap-top">Rennen: –</div>
+        <div id="weatherText" class="muted gap-top">☀️ Klar</div>
       </section>
       <section class="panel"><div class="strong">📍 Ort</div><div id="place">Innenstadt</div></section>
       <section class="panel"><div class="strong">🎒 Inventar</div><div id="inventory" class="muted">Leer</div></section>
@@ -89,6 +91,6 @@
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.1/three.min.js"></script>
-<script src="./game.js?v=5.4-player-avatar-1"></script>
+<script src="./game.js?v=5.5-next10-1"></script>
 </body>
 </html>
