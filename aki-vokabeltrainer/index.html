@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#102d2b">
+<meta name="description" content="Aki Englischtrainer Klasse 6: 97 Unit-1-Vokabeln richtig schreiben, wiederholen und Fortschritt speichern.">
+<title>Aki · English Lab · Unit 1</title>
+<style>
+:root{color-scheme:dark;--bg:#102d2b;--pane:#183c36;--pane2:#20473f;--stroke:#40655a;--cream:#faf1da;--muted:#b1c4b9;--mint:#a7ecb8;--lime:#dfff93;--yellow:#ffd78e;--red:#ffb2a2;--shadow:0 20px 55px #09201dcc}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 10% 12%,#28554b 0,#102d2b 41%,#0d2423 100%);color:var(--cream);font:16px/1.48 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--lime);outline-offset:3px}a{color:inherit}a:hover{color:var(--lime)}.wrap{max-width:1220px;margin:auto;padding:22px 22px 64px}
+header{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:28px}.brand{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:900;letter-spacing:.045em;font-size:17px}.mark{height:42px;width:42px;border-radius:14px;background:var(--lime);color:#133429;display:grid;place-items:center;box-shadow:0 6px 0 #4e9673;font-size:23px}.topmeta{display:flex;gap:12px;align-items:center;color:var(--muted);font-size:13px}.tag{border:1px solid var(--stroke);border-radius:999px;padding:7px 13px;color:var(--lime);font-weight:800;white-space:nowrap}
+.hero{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:end;margin:16px 0 26px}.eyebrow{color:var(--lime);font-size:13px;letter-spacing:.19em;font-weight:900}.hero h1{font-size:clamp(36px,6vw,70px);line-height:1.02;letter-spacing:-.05em;margin:12px 0;font-weight:950}.hero h1 span{color:var(--lime)}.hero p{color:var(--muted);max-width:590px;font-size:17px;margin:0}.hero-decoration{width:150px;height:150px;display:grid;place-items:center;border-radius:34px;background:#dfff9317;border:1px solid #dfff934a;transform:rotate(8deg);font-size:86px}
+.statbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:24px}.stat{background:#f5ecd90a;border:1px solid var(--stroke);border-radius:16px;padding:16px}.stat small{display:block;color:var(--muted);font-weight:700;font-size:12px}.stat strong{display:block;font-size:29px;line-height:1.15;margin:5px 0 1px;font-variant-numeric:tabular-nums}.stat .hint{color:var(--lime);font-size:12px}
+.layout{display:grid;grid-template-columns:284px minmax(0,1fr);align-items:start;gap:20px}.sidebar{display:grid;gap:16px}.panel,.exercise{border:1px solid var(--stroke);border-radius:23px;background:linear-gradient(145deg,var(--pane),#153630);box-shadow:var(--shadow)}.panel{padding:21px}.sectionname{font-size:12px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin:0 0 15px}.mode-list{display:grid;gap:8px}.mode{width:100%;text-align:left;padding:12px 13px;border:1px solid #4d6f61;border-radius:14px;background:#214a41;color:var(--cream);transition:.15s}.mode:hover{background:#2a5a4e}.mode.active{background:var(--lime);color:#16332b;border-color:var(--lime);font-weight:900}.mode .icon{margin-right:7px}.mode small{font-size:11px;opacity:.85;display:block;padding-left:25px;line-height:1.3;margin-top:2px}.fieldlabel{font-size:13px;color:var(--muted);font-weight:700;display:block;margin:8px 0}.select{width:100%;border-radius:13px;border:1px solid var(--stroke);background:#12352e;color:var(--cream);padding:12px}.subtle{color:var(--muted);font-size:12px}.button{border:0;border-radius:15px;background:var(--lime);color:#17352d;font-weight:900;padding:13px 18px;min-height:48px}.button:hover{filter:brightness(1.04)}.button.secondary{background:transparent;border:1px solid var(--stroke);color:var(--cream)}.button.ghost{background:#315c50;color:var(--cream)}.button.smol{min-height:38px;padding:8px 12px;font-size:13px}.sideactions{display:grid;gap:8px}
+.exercise{min-height:500px;padding:28px 31px 33px;position:relative;overflow:hidden}.exercise::before{content:"";position:absolute;width:210px;height:210px;border:1px solid #dfff9320;border-radius:50%;right:-80px;top:-110px;pointer-events:none}.flex{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.minihead{color:var(--muted);font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.meter{height:10px;border-radius:99px;background:#0d2721;border:1px solid #33594a;overflow:hidden;margin:15px 0 27px}.fill{height:100%;width:0;background:linear-gradient(90deg,#80d4a6,var(--lime));transition:width .3s;border-radius:inherit}
+.cardtopic{display:flex;align-items:center;gap:7px;color:var(--mint);font-size:13px;font-weight:800}.prompt{font-size:clamp(29px,4.4vw,47px);line-height:1.16;letter-spacing:-.03em;font-weight:900;margin:18px 0 14px;max-width:660px;overflow-wrap:anywhere}.taskhint{font-size:14px;color:var(--muted);margin-bottom:18px}.promptbox{border-radius:18px;background:#09292360;padding:21px 22px;margin:6px 0 24px;border:1px solid #426757}.label{display:block;font-size:13px;color:var(--muted);font-weight:800;margin-bottom:9px}.answer{display:block;width:100%;border:2px solid #7b9a84;border-radius:17px;min-height:60px;background:#102e2a;color:#fff9ea;font-size:clamp(18px,2.4vw,24px);padding:14px 18px;outline:0;letter-spacing:.01em}.answer:focus{border-color:var(--lime)}.answer::placeholder{color:#92a79e}.actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:17px}.actions .button.primary{min-width:168px}.feedback{margin:20px 0 0;border:1px solid #a2ac7a;border-radius:17px;padding:15px 18px;background:#54603733;font-weight:650;line-height:1.5}.feedback.ok{border-color:#86caa1;background:#294c38}.feedback.bad{border-color:#f0b49c;background:#79443335}.feedback strong{font-size:17px}.answer-reveal{margin:8px 0;font-size:19px;font-weight:900;color:var(--lime);overflow-wrap:anywhere}.feedback p{margin:6px 0 0}.result{padding-top:15px}.result h2{font-size:clamp(30px,5vw,48px);margin:8px 0}.result .big{font-size:82px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}.badge-num{color:var(--lime);font-weight:900}.tabbar{display:flex;gap:6px;padding:4px;background:#173930;border-radius:13px;border:1px solid #436957}.tabbar button{border:0;color:#e8e1cf;background:transparent;border-radius:10px;padding:8px 11px;font-weight:800;font-size:13px}.tabbar button.selected{background:var(--lime);color:#15352e}
+.liststat{display:grid;gap:9px;margin-top:15px;max-height:480px;overflow:auto;padding-right:6px}.wordrow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:11px 13px;background:#244b41;border-radius:11px;border:1px solid #537363}.wordrow small{display:block;color:var(--muted);font-size:11px}.wordrow b{font-size:14px}.wordrow .numbers{text-align:right;font-size:12px;color:var(--lime);white-space:nowrap}.empty{padding:28px;color:var(--muted);text-align:center}.footnote{color:var(--muted);font-size:12px;margin-top:23px}.hidden{display:none!important}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{grid-template-columns:1fr 1fr}.statbar{grid-template-columns:repeat(2,1fr)}.hero-decoration{display:none}}
+@media(max-width:590px){.wrap{padding:13px 13px 50px}.hero{margin:24px 0}.statbar{gap:8px}.stat{padding:11px}.stat strong{font-size:24px}.sidebar{grid-template-columns:1fr}.exercise{padding:20px 18px;min-height:440px}.promptbox{padding:16px}.actions .button{flex:1;min-width:0}.topmeta .desktop{display:none}.hero h1{font-size:40px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+</style>
+<script src="./data.js" defer></script>
+<script src="./app.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="brand" href="../"><span class="mark" aria-hidden="true">✏</span><span>AKI / <strong>ENGLISH LAB</strong></span></a>
+  <div class="topmeta"><span class="desktop">Englisch · Klasse 6 · Unit 1</span><span class="tag">97 VOKABELN</span></div>
+</header>
+<section class="hero">
+  <div><div class="eyebrow">LEVEL UP YOUR ENGLISH</div><h1>Schreiben.<br><span>Merken. Können.</span></h1><p>Dein Vokabeltraining mit echten Wörtern aus dem Schulbuch. Keine Lösungen vor dem Antworten – nur du und dein Wissen.</p></div>
+  <div class="hero-decoration" aria-hidden="true">⚡</div>
+</section>
+<section class="statbar" aria-label="Lernstatistik">
+  <div class="stat"><small>Wörter im Buch</small><strong id="totalWords">97</strong><span class="hint">Unit 1 komplett</span></div>
+  <div class="stat"><small>Schon trainiert</small><strong id="tried">0</strong><span class="hint">auf diesem Gerät</span></div>
+  <div class="stat"><small>Sicher in der App</small><strong id="mastered">0</strong><span class="hint">3× richtig, 80 %</span></div>
+  <div class="stat"><small>Deine Lernpunkte</small><strong id="xp">0</strong><span class="hint">XP sammeln</span></div>
+</section>
+<div class="layout">
+  <aside class="sidebar">
+    <section class="panel">
+      <div class="sectionname">Deine Trainingsrunde</div>
+      <div class="mode-list">
+        <button class="mode active" type="button" data-mode="mixed"><span class="icon">🎯</span>Gemischte Runde<small>10 Wörter aus der ganzen Unit</small></button>
+        <button class="mode" type="button" data-mode="focus"><span class="icon">🔥</span>Schwierige Wörter<small>Deine Fehler und offene Wiederholungen</small></button>
+        <button class="mode" type="button" data-mode="new"><span class="icon">🌱</span>Ungeübte Wörter<small>Nur Wörter, die du noch nicht trainiert hast</small></button>
+        <button class="mode" type="button" data-mode="all"><span class="icon">🏁</span>Die große Challenge<small>Alle 97 Vokabeleinträge</small></button>
+      </div>
+      <label class="fieldlabel" for="topic">Thema</label>
+      <select class="select" id="topic"><option value="">Alle Themen</option></select>
+      <div class="actions"><button class="button" id="start" type="button" style="width:100%">Runde starten →</button></div>
+    </section>
+    <section class="panel">
+      <div class="sectionname">Dein Lernfortschritt</div>
+      <div class="sideactions">
+        <button class="button secondary smol" id="viewStats" type="button">📊 Wörter & Fehler ansehen</button>
+        <button class="button secondary smol" id="export" type="button">⬇ Fortschritt als CSV</button>
+        <button class="button secondary smol" id="reset" type="button">↺ Gerät zurücksetzen</button>
+      </div>
+      <p class="subtle">Dein Fortschritt wird nur in diesem Browser gespeichert, nicht automatisch in Google Drive. Über die CSV-Datei kann er später übertragen werden.</p>
+    </section>
+  </aside>
+  <main class="exercise" id="main">
+    <div id="trainer" aria-live="polite">
+      <div class="flex"><span class="minihead" id="roundLabel">Bereit für die nächste Runde?</span><span class="tag" id="counter">0 / 10</span></div>
+      <div class="meter" role="progressbar" aria-label="Fortschritt der Runde" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="meter"><div class="fill" id="fill"></div></div>
+      <div class="promptbox">
+        <div class="cardtopic" id="topicName">✦ UNIT 1 · ENGLISH</div>
+        <div class="prompt" id="prompt">Wie gut kennst du deine Wörter?</div>
+        <div class="taskhint" id="extra">Wähle links eine Runde und starte das Training.</div>
+      </div>
+      <form id="answerForm" autocomplete="off">
+        <label class="label" for="answer">Schreibe die englische Übersetzung</label>
+        <input id="answer" class="answer" type="text" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" placeholder="Deine Antwort …" disabled>
+        <div class="actions">
+          <button class="button primary" type="submit" id="check" disabled>Prüfen ✓</button>
+          <button class="button ghost" type="button" id="tip" disabled>🔎 Buchstaben-Tipp</button>
+          <button class="button secondary" type="button" id="skip" disabled>Lösung aufdecken</button>
+          <button class="button" type="button" id="next" hidden>Nächstes Wort →</button>
+        </div>
+      </form>
+      <div class="feedback hidden" id="feedback" role="status"></div>
+    </div>
+    <div id="statsView" class="hidden">
+      <div class="flex"><h2 style="margin:0">Dein Lernstand</h2><button id="backTrain" class="button secondary smol" type="button">← Zurück</button></div>
+      <p class="subtle">Hier siehst du deinen Fortschritt auf diesem Gerät. Die englischen Lösungen erscheinen erst nach einer Antwort im Training.</p>
+      <div class="two-col"><div class="stat"><small>Versuche</small><strong id="statAttempts">0</strong></div><div class="stat"><small>Trefferquote</small><strong id="statRate">–</strong></div></div>
+      <label class="fieldlabel" for="filterWords">Wörter filtern</label>
+      <select class="select" id="filterWords"><option value="all">Alle 97</option><option value="weak">Fehler & offen</option><option value="mastered">Sichere Wörter</option><option value="new">Noch nie geübt</option></select>
+      <div class="liststat" id="wordRows"></div>
+    </div>
+  </main>
+</div>
+<p class="footnote">Aki · Englisch Klasse 6 · Unit 1 · 97 Schulbuchvokabeln · Lokal gespeichert · Ohne Login & Werbung</p>
+</div>
+</body></html>
