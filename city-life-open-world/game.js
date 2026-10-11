@@ -240,7 +240,7 @@ function crime(amount,msg){state.heat=clamp(state.heat+amount,0,100);state.lastC
 function structureRect(b){
   if(b.type==='park')return {x:b.x,y:b.y,w:b.w,h:b.h};
   let x=b.x+18,y=b.y+18,w=Math.max(80,b.w-36),h=Math.max(80,b.h-36);
-  const safe=178;
+  const safe=240;
   for(const rx of roadsX){
     if(x<rx&&x+w>rx-safe)w=Math.max(80,rx-safe-x);
     else if(x>rx&&x<rx+safe){const right=x+w;x=rx+safe;w=Math.max(80,right-x);}
@@ -1027,8 +1027,15 @@ function fpBuildingHeight(b){
   if(b.type==='parking')return 92;
   return 78;
 }
+function fpRoadsideBoundary(forward,side){
+  const horizon=310,gy=fpGroundY(forward);
+  const t=clamp((gy-horizon)/(H-horizon),0,1);
+  if(side<0)return (W*.405)*(1-t);
+  return W-(W*.405)*(1-t);
+}
 function fpRoadHalfScreen(p){
-  return clamp(175*p.scale+42,68,W*.44);
+  const edge=fpRoadsideBoundary(p.forward,p.side||1);
+  return p.side<0?W/2-edge:edge-W/2;
 }
 function drawFirstPersonBuilding(b,p){
   const q=structureRect(b);
@@ -1036,13 +1043,14 @@ function drawFirstPersonBuilding(b,p){
   const bw=clamp(worldFront*p.scale,40,500);
   const bh=clamp(fpBuildingHeight(b)*p.scale,30,430);
   const gy=fpGroundY(p.forward);
-  const roadHalf=fpRoadHalfScreen(p);
   let x=p.sx-bw/2;
+  const innerEdge=fpRoadsideBoundary(p.forward,p.side);
+  const streetGap=34;
 
-  // Gebäude bleiben optisch neben der Fahrbahn und schneiden nicht durch die Straße.
-  if(p.side<0)x=Math.min(x,W/2-roadHalf-bw-28);
-  else x=Math.max(x,W/2+roadHalf+28);
-  x=clamp(x,-bw*.65,W-bw*.35);
+  // Harte Regel: der komplette Baukörper bleibt außerhalb von Fahrbahn + Gehweg.
+  if(p.side<0)x=Math.min(x,innerEdge-streetGap-bw);
+  else x=Math.max(x,innerEdge+streetGap);
+  if(x+bw<-30||x>W+30)return;
   const y=gy-bh;
 
   // breiter Gehweg-/Vorgartenstreifen vor der Fassade
@@ -1096,10 +1104,10 @@ function drawFirstPersonBuilding(b,p){
 }
 function drawFirstPersonTree(x,y,r,p){
   const gy=fpGroundY(p.forward),h=clamp(r*4.8*p.scale,24,250),w=h*.72;
-  const roadHalf=fpRoadHalfScreen(p);
   let sx=p.sx;
-  if(p.side<0)sx=Math.min(sx,W/2-roadHalf-w*.60-10);
-  else sx=Math.max(sx,W/2+roadHalf+w*.60+10);
+  const innerEdge=fpRoadsideBoundary(p.forward,p.side);
+  if(p.side<0)sx=Math.min(sx,innerEdge-w*.60-28);
+  else sx=Math.max(sx,innerEdge+w*.60+28);
   if(sx<-w||sx>W+w)return;
 
   ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(sx,gy+2,w*.28,h*.06,0,0,Math.PI*2);ctx.fill();
@@ -1164,6 +1172,43 @@ function drawFirstPersonOverlay(){
   const water=state.waterFx.find(f=>f.mode==='outside'&&f.ttl>0);
   if(water){ctx.strokeStyle='rgba(100,210,255,.9)';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(W*.78,H-80);ctx.lineTo(W*.52,H*.53);ctx.stroke();}
 }
+function drawFirstPersonStreetSurface(horizon,road,align,onRoad){
+  if(onRoad&&align>.50){
+    const asphalt=ctx.createLinearGradient(0,horizon,0,H);
+    asphalt.addColorStop(0,'#596267');asphalt.addColorStop(.55,'#444b50');asphalt.addColorStop(1,'#30363a');
+    ctx.fillStyle=asphalt;ctx.beginPath();ctx.moveTo(W*.455,horizon);ctx.lineTo(W*.545,horizon);ctx.lineTo(W*.92,H);ctx.lineTo(W*.08,H);ctx.closePath();ctx.fill();
+
+    // Gehwege: bewusst über der Szenerie gezeichnet, damit kein Haus/Baum die Straße übermalen kann.
+    const sidewalk=ctx.createLinearGradient(0,horizon,0,H);
+    sidewalk.addColorStop(0,'#c1c0ba');sidewalk.addColorStop(1,'#999b98');
+    ctx.fillStyle=sidewalk;
+    ctx.beginPath();ctx.moveTo(W*.405,horizon);ctx.lineTo(W*.455,horizon);ctx.lineTo(W*.08,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(W*.545,horizon);ctx.lineTo(W*.595,horizon);ctx.lineTo(W,H);ctx.lineTo(W*.92,H);ctx.closePath();ctx.fill();
+
+    ctx.strokeStyle='#e0ded6';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(W*.455,horizon);ctx.lineTo(W*.08,H);ctx.moveTo(W*.545,horizon);ctx.lineTo(W*.92,H);ctx.stroke();
+    ctx.strokeStyle='rgba(90,92,91,.35)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(W*.405,horizon);ctx.lineTo(0,H);ctx.moveTo(W*.595,horizon);ctx.lineTo(W,H);ctx.stroke();
+
+    // Mittelmarkierung
+    ctx.strokeStyle='#e5dca5';
+    for(let i=1;i<11;i++){
+      const t=i/11,y=horizon+(H-horizon)*t*t;
+      ctx.lineWidth=2+7*t;ctx.beginPath();ctx.moveTo(W/2,y);ctx.lineTo(W/2,y+10+25*t);ctx.stroke();
+    }
+
+    // Asphaltstruktur nur auf der Fahrbahn.
+    ctx.fillStyle='rgba(255,255,255,.035)';
+    for(let i=0;i<55;i++){
+      const t=(i%11+1)/12,y=horizon+(H-horizon)*t*t;
+      const half=(W*.045)+(W*.375)*t;
+      const x=W/2-half+(i*73%(Math.max(12,half*2)));
+      ctx.fillRect(x,y+(i%4)*3,2+(i%2),1);
+    }
+  }else if(onRoad){
+    ctx.fillStyle='#aaa9a3';ctx.fillRect(0,horizon,W,H-horizon);
+    ctx.fillStyle='#474e53';ctx.beginPath();ctx.moveTo(0,horizon+95);ctx.lineTo(W,horizon+95);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
+  }
+}
+
 function nearestRoadInfo(){
   let best={dist:Infinity,axis:'h',coord:0};
   for(const y of roadsY){const d=Math.abs(state.y-y);if(d<best.dist)best={dist:d,axis:'h',coord:y};}
@@ -1182,68 +1227,45 @@ function drawFirstPerson(){
   const align=Math.abs(Math.cos(state.a-roadAngle));
   const onRoad=road.dist<170;
 
-  if(onRoad&&align>.50){
-    // Fahrbahn, Gehwege und Bordsteine laufen sauber nach vorne.
-    const asphalt=ctx.createLinearGradient(0,horizon,0,H);asphalt.addColorStop(0,'#555d61');asphalt.addColorStop(1,'#343a3e');
-    ctx.fillStyle=asphalt;ctx.beginPath();ctx.moveTo(W*.455,horizon);ctx.lineTo(W*.545,horizon);ctx.lineTo(W*.92,H);ctx.lineTo(W*.08,H);ctx.closePath();ctx.fill();
-
-    ctx.fillStyle='#aeadab';
-    ctx.beginPath();ctx.moveTo(W*.405,horizon);ctx.lineTo(W*.455,horizon);ctx.lineTo(W*.08,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
-    ctx.beginPath();ctx.moveTo(W*.545,horizon);ctx.lineTo(W*.595,horizon);ctx.lineTo(W,H);ctx.lineTo(W*.92,H);ctx.closePath();ctx.fill();
-
-    ctx.strokeStyle='#d5d3ca';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(W*.455,horizon);ctx.lineTo(W*.08,H);ctx.moveTo(W*.545,horizon);ctx.lineTo(W*.92,H);ctx.stroke();
-
-    ctx.strokeStyle='rgba(255,255,255,.14)';ctx.lineWidth=2;
-    for(let i=2;i<10;i+=2){
-      const t=i/10,y=horizon+(H-horizon)*t*t,spread=55+430*t;
-      ctx.beginPath();ctx.moveTo(W/2-spread,y);ctx.lineTo(W/2-spread*.96,y+18);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(W/2+spread,y);ctx.lineTo(W/2+spread*.96,y+18);ctx.stroke();
-    }
-
-    ctx.strokeStyle='#ded59d';
-    for(let i=1;i<11;i++){
-      const t=i/11,y=horizon+(H-horizon)*t*t;
-      ctx.lineWidth=2+7*t;ctx.beginPath();ctx.moveTo(W/2,y);ctx.lineTo(W/2,y+10+25*t);ctx.stroke();
-    }
-  }else if(onRoad){
-    // Beim Blick quer zur Straße wird keine falsche Straße "nach vorne" erfunden.
-    ctx.fillStyle='#aaa9a3';ctx.fillRect(0,horizon,W,H-horizon);
-    ctx.fillStyle='#474e53';ctx.beginPath();ctx.moveTo(0,horizon+95);ctx.lineTo(W,horizon+95);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
-  }
-
-  const drawables=[];
+  // 1. Hintergrundszenerie zuerst: Häuser und Bäume.
+  const scenery=[];
   for(const b of buildings){
     if(b.type==='park')continue;
     const q=structureRect(b),cx=q.x+q.w/2,cy=q.y+q.h/2;
     const p=fpProject(cx,cy);
-    if(p&&p.forward<1650&&Math.abs(p.side)>150){
-      drawables.push({d:p.forward,fn:()=>drawFirstPersonBuilding(b,p)});
+    if(p&&p.forward<1650&&Math.abs(p.side)>230){
+      scenery.push({d:p.forward,fn:()=>drawFirstPersonBuilding(b,p)});
     }
   }
-
   for(const t of cityTrees){
     const p=fpProject(t.x,t.y);
-    if(p&&p.forward<1450)drawables.push({d:p.forward,fn:()=>drawFirstPersonTree(t.x,t.y,t.r,p)});
+    if(p&&p.forward<1450&&Math.abs(p.side)>205)scenery.push({d:p.forward,fn:()=>drawFirstPersonTree(t.x,t.y,t.r,p)});
   }
+  scenery.sort((a,b)=>b.d-a.d);scenery.forEach(o=>o.fn());
 
+  // 2. Straße und Gehwege als harte Vordergrundmaske.
+  // Dadurch kann die Fahrbahn niemals von Gebäuden oder Bäumen übermalt werden.
+  drawFirstPersonStreetSurface(horizon,road,align,onRoad);
+
+  // 3. Bewegliche Objekte kommen auf die Straße/Gehwege zurück.
+  const actors=[];
   for(const c of traffic){
     if(c.dead)continue;const p=fpProject(c.x,c.y);
-    if(p&&p.forward<1250)drawables.push({d:p.forward,fn:()=>drawFirstPersonCar(c,p,false)});
+    if(p&&p.forward<1250)actors.push({d:p.forward,fn:()=>drawFirstPersonCar(c,p,false)});
   }
   worldCars.forEach((c,i)=>{
     if(i===state.worldCar)return;const p=fpProject(c.x,c.y);
-    if(p&&p.forward<1250)drawables.push({d:p.forward,fn:()=>drawFirstPersonCar(c,p,false)});
+    if(p&&p.forward<1250)actors.push({d:p.forward,fn:()=>drawFirstPersonCar(c,p,false)});
   });
   for(const person of people){
     const p=fpProject(person.x,person.y);
-    if(p&&p.forward<850)drawables.push({d:p.forward,fn:()=>drawFirstPersonPerson(person,p)});
+    if(p&&p.forward<850)actors.push({d:p.forward,fn:()=>drawFirstPersonPerson(person,p)});
   }
   for(const pc of police){
     const p=fpProject(pc.x,pc.y);
-    if(p&&p.forward<1300)drawables.push({d:p.forward,fn:()=>drawFirstPersonCar({w:68,h:34,color:'#e8edf0',name:'Polizei',hp:100},p,true)});
+    if(p&&p.forward<1300)actors.push({d:p.forward,fn:()=>drawFirstPersonCar({w:68,h:34,color:'#e8edf0',name:'Polizei',hp:100},p,true)});
   }
-
-  drawables.sort((a,b)=>b.d-a.d);drawables.forEach(o=>o.fn());
+  actors.sort((a,b)=>b.d-a.d);actors.forEach(o=>o.fn());
 
   ctx.save();ctx.textRendering='optimizeLegibility';ctx.fillStyle='rgba(255,255,255,.72)';ctx.font='600 14px system-ui';ctx.fillText('ICH-PERSPEKTIVE',18,28);ctx.restore();
   drawFirstPersonOverlay();
