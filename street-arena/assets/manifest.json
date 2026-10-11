@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "basePath": "./assets/",
+  "cover": "title/arena-zero-cover.webp",
+  "fighters": {
+    "sergej": "fighters/sergej.webp",
+    "aki": "fighters/aki.webp",
+    "moe": "fighters/moe.webp",
+    "domi": "fighters/domi.webp"
+  },
+  "vs": {
+    "aki-domi": "vs/domi-vs-aki.webp",
+    "aki-moe": "vs/aki-vs-moe.webp",
+    "aki-sergej": "vs/sergej-vs-aki.webp",
+    "domi-moe": "vs/domi-vs-moe.webp",
+    "domi-sergej": "vs/sergej-vs-domi.webp",
+    "moe-sergej": "vs/sergej-vs-moe.webp"
+  },
+  "status": "artwork prepared; binary uploads pending"
+}
