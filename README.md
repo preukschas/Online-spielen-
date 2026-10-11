@@ -53,7 +53,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Spielewelt | Domi Run | `/domi-run/` | Entwickelte Standalone-Datei V0.2 |
 | Spielewelt | Micha auf'm Wasen | `/micha-wasen-run/` | `preukschas/DMP-Games` → `projects/micha-wasen-run/` (V0.1) |
 | Spielewelt | Ronja Race | `/ronja-race/` | `preukschas/DMP-Games` → `projects/ronja-race/` (V0.5.1 Touch-/Swipe-Hotfix) |
-| Spielewelt | City Racer – Open World 3D (Ari) | `/city-racer-open-world/` | `preukschas/DMP-Games` → `projects/city-racer-open-world/` (3D-Demo 1.0; KI-Rennen, Jobs, Zug, zwei Flughäfen, Flug nach Frankreich, Flugtickets, Schranken-Bahnübergang, iPad/PC, Eltern-PIN) |
+| Spielewelt | City Racer – Open World 3D (Ari) | `/city-racer-open-world/` | `preukschas/DMP-Games` → `projects/city-racer-open-world/` (3D-Demo 1.2; KI-Rennen, Autos/Motorrad, Wohnhaus mit Küche/WC, Bergen, Arcade-Krimi mit Polizeifahndung, Zug, Flughafen nach Frankreich, iPad/PC, Eltern-PIN) |
 | Spielewelt | City Life – Open World | `/city-life-open-world/` | `preukschas/DMP-Games` → `projects/city-life-open-world/` (V5.6 3D) |
 | Spielewelt | Bett Battle | `/bett-battle/` | `preukschas/DMP-Games` → `projects/bett-battle/` (Final 1.0) |
 | Specials | Franz – Meister der Fuge | `/franz-fliesenleger/` | `preukschas/DMP-Games` → `projects/franz-fliesenleger/` (V1.0) |
