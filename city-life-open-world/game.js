@@ -3,7 +3,20 @@
 
 const canvas=document.getElementById('game');
 const ctx=canvas.getContext('2d');
-const W=canvas.width,H=canvas.height;
+const W=1280,H=720;
+let renderScale=1;
+function configureHiDPI(){
+  const dpr=window.devicePixelRatio||1;
+  renderScale=Math.max(1.5,Math.min(2.25,dpr));
+  const bw=Math.round(W*renderScale),bh=Math.round(H*renderScale);
+  if(canvas.width!==bw||canvas.height!==bh){
+    canvas.width=bw;canvas.height=bh;
+  }
+  ctx.setTransform(renderScale,0,0,renderScale,0,0);
+  ctx.imageSmoothingEnabled=true;
+  if('imageSmoothingQuality' in ctx)ctx.imageSmoothingQuality='high';
+}
+configureHiDPI();
 const WORLD_W=6200,WORLD_H=4200;
 const keys=new Set();
 
@@ -1232,7 +1245,7 @@ function drawFirstPerson(){
 
   drawables.sort((a,b)=>b.d-a.d);drawables.forEach(o=>o.fn());
 
-  ctx.fillStyle='rgba(255,255,255,.62)';ctx.font='bold 14px system-ui';ctx.fillText('ICH-PERSPEKTIVE',18,28);
+  ctx.save();ctx.textRendering='optimizeLegibility';ctx.fillStyle='rgba(255,255,255,.72)';ctx.font='600 14px system-ui';ctx.fillText('ICH-PERSPEKTIVE',18,28);ctx.restore();
   drawFirstPersonOverlay();
 }
 
@@ -1416,8 +1429,8 @@ document.getElementById('sprintBtn').addEventListener('click',()=>{state.sprint=
 document.getElementById('resetBtn').addEventListener('click',resetGame);
 document.getElementById('viewBtn').addEventListener('click',toggleView);
 document.getElementById('fullscreenBtn').addEventListener('click',toggleFullscreen);
-document.addEventListener('fullscreenchange',updateFullscreenButton);document.addEventListener('webkitfullscreenchange',updateFullscreenButton);
+document.addEventListener('fullscreenchange',()=>{configureHiDPI();updateFullscreenButton();});document.addEventListener('webkitfullscreenchange',()=>{configureHiDPI();updateFullscreenButton();});window.addEventListener('resize',configureHiDPI);
 updateViewButton();updateFullscreenButton();
 
-hud();requestAnimationFrame(frame);
+log('🖥️ Hochauflösende Darstellung aktiv: '+Math.round(W*renderScale)+'×'+Math.round(H*renderScale)+'.');hud();requestAnimationFrame(frame);
 })();
