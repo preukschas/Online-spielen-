@@ -34,6 +34,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 
 | Bereich | Spiel | Öffentlicher Pfad | Entwicklungsquelle |
 |---|---|---|---|
+| Lernwelt | Aki – English Lab (Klasse 6, Unit 1) | `/aki-vokabeltrainer/` | `preukschas/Lernspiele--bei-DMP` → `projects/aki-vokabeltrainer/` (97 Wörter, adaptiver Schreibtrainer, Browser-Speicherung) |
 | Lernwelt | Moe's English World | `/moes-english-world/` | `preukschas/Lernspiele--bei-DMP` → `projects/moes-english-world/` |
 | Lernwelt | Europa-Express | `/europa-express/` | `preukschas/Lernspiele--bei-DMP` → `projects/europa-express/` |
 | Lernwelt | Kokos-Vokabelspiel | `/kokos-vokabelspiel/` | Entwickelte Grafikversion V3 |
