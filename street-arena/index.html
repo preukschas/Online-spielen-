@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#090b17">
-<title>ARENA ZERO — 3D Fighter</title>
+<title>ARENA ZERO — Classic Console Fighter</title>
 <style>
 :root{--gold:#ffe0a0;--a:#44def2;--b:#ff627c;--ink:#080c16;--panel:rgba(10,15,30,.83)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;height:100%;background:#090e1b;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden;overscroll-behavior:none}button,select{font:inherit}button{cursor:pointer}#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;background:radial-gradient(ellipse at 50% 42%,#23334d,#080914 73%)}
@@ -20,6 +20,31 @@
 @media (max-height:520px){#menu .card{padding:18px}#menu .heroTitle{font-size:54px;margin:8px 0 12px}#menu .intro{font-size:12px;margin:4px 0}#menu .selectTitle{margin:13px 0 7px}#menu .pick{padding:9px}#menu .menuBottom{margin-top:14px}#menu .instructions{margin-top:15px;padding-top:9px}#topControls{top:77px}#controls{bottom:9px}.pad{width:140px;height:140px}.buttons{width:215px;grid-template-rows:repeat(2,52px)}}
 @media (max-width:460px){#hud{gap:5px;width:98vw}.fighterName{letter-spacing:.04em;font-size:10px}.fighterSub{display:none}#midHUD{min-width:50px}#matchState{letter-spacing:.06em;font-size:8px}.heroTitle{font-size:58px}.pick{padding:9px;gap:8px}.pickSymbol{font-size:26px}.pick .mini{font-size:9px}.buttons{width:47vw;gap:4px}.pad{width:35vw;height:35vw}#topControls{right:7px} .smallBtn{padding:6px 7px}}
 </style>
+<style id="ps2-style">
+/* PS2-era arcade presentation inspired by Tekken 5 / Virtua Fighter 4,
+   using original names, characters and art. */
+:root{--gold:#ffd66d;--a:#48c6ff;--b:#ff6258}
+#view{filter:contrast(1.11) saturate(.81)}
+#vignette{background:repeating-linear-gradient(0deg,rgba(0,0,0,.045) 0px,rgba(0,0,0,.045) 1px,transparent 1px,transparent 4px),linear-gradient(180deg,rgba(0,0,0,.22),transparent 29%,transparent 66%,rgba(0,0,0,.4));opacity:.75}
+#menu,#result,#pausePanel{backdrop-filter:none;background:linear-gradient(125deg,#040712ed,#091326c9,#160c13cc)}
+.card{border-radius:2px;border:2px solid #a7a2a45c;background:linear-gradient(132deg,#192338f4 0%,#10101ff4 55%,#241c23f4 100%);box-shadow:0 0 0 4px #0a0b12,0 0 0 5px #798aa062,0 20px 60px #000}
+.heroTitle{font-style:italic;font-weight:1000;text-shadow:3px 4px 0 #810f21,6px 8px 0 #030814,0 0 32px #f7933a66}
+.heroTitle span{color:#ffcf70}
+.eyebrow,.selectTitle{color:#ffca72}
+.pick{border-radius:2px;background:linear-gradient(110deg,#2b2530,#101925);border:2px solid #6f7880;box-shadow:inset 0 -4px #02081277}
+.pick.selected{border-color:#ffd37c;box-shadow:0 0 0 2px #352819,inset 0 0 35px #cb84313c;background:linear-gradient(120deg,#563e30,#1c2738)}
+.pickSymbol{font-size:clamp(34px,6vw,62px);filter:drop-shadow(3px 4px 0 #070b16)}
+.bigBtn{border-radius:2px;background:linear-gradient(#fff8be,#e9a64b 48%,#a75a28);border:2px solid #ffdea5;box-shadow:0 5px 0 #452514}
+.hpout{height:clamp(16px,2.5vw,25px);border:2px solid #f1d5a1;border-radius:0;background:#320b0c}
+.hpbar{background:linear-gradient(180deg,#fff7b3 0%,#f6b934 28%,#d95426 74%,#6a150e 100%);box-shadow:none}
+.right .hpbar{background:linear-gradient(180deg,#faffad 0%,#ffe151 28%,#eb8127 74%,#8a2420 100%);box-shadow:none}
+#timer{color:#fbe3a8;text-shadow:3px 4px 0 #7b2b20,0 0 18px #000}
+#announce{text-shadow:3px 5px 0 #7d1827,7px 9px 0 #0a0a14,-2px -2px 0 #fff5c1;-webkit-text-stroke:1px #fff4cd}
+.smallBtn,.fightBtn{border-radius:3px}
+.ps2ribbon{position:relative;display:inline-flex;align-items:center;gap:9px;padding:5px 12px 5px 8px;border-left:4px solid #edb44a;background:#0009;color:#ffe8b8;font-weight:900;font-size:10px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:2px}
+.ps2ribbon:before{content:"◆";color:#eb683e}
+@media(max-width:650px){.ps2ribbon{font-size:8px;letter-spacing:.1em}}
+</style>
 </head>
 <body>
 <canvas id="view" aria-label="3D-Kampfarena"></canvas><div id="vignette"></div>
@@ -27,7 +52,7 @@
 <div id="topControls"><button class="smallBtn" id="sound" aria-label="Sound umschalten">♫ AN</button><button class="smallBtn" id="fullscreen" aria-label="Vollbildmodus">⛶</button><button class="smallBtn" id="pause" aria-label="Pause">Ⅱ</button></div>
 <div id="announce"></div><div id="combo"></div><div id="bottomInfo"><span><b>WASD</b> BEWEGEN</span><span><b>J</b> SCHLAG</span><span><b>K</b> POWER</span><span><b>U</b> KICK</span><span><b>I</b> SWEEP</span><span><b>LEERTASTE</b> BLOCK</span><span><b>L</b> SPECIAL</span><span><b>SHIFT</b> DODGE</span></div>
 <div id="controls"><div class="pad" id="pad" aria-label="Bewegungs-Joystick"><div id="stick"></div></div><div class="buttons"><button class="fightBtn" data-act="jab">SCHLAG</button><button class="fightBtn" data-act="kick">TRITT</button><button class="fightBtn" data-act="heavy">POWER</button><button class="fightBtn" data-act="dodge">DODGE</button><button class="fightBtn" data-act="block">BLOCK</button><button class="fightBtn" data-act="special">★ SUPER</button></div></div>
-<section id="menu"><div class="card"><div class="eyebrow">DMP GAMES PRESENTS · 3D FIGHTING PROTOTYPE / V1</div><div class="heroTitle">ARENA<br><span>ZERO</span></div><p class="intro">Zwei Rivalen. Eine Arena. Kein Zurück. Ein echtes 3D-Duell mit Kombos, Blocken, Ausweichen, Spezialattacken und einem KI-Gegner. <b>Best of 3</b> – wer zuerst zwei Runden gewinnt, holt den Sieg.</p><div class="selectTitle">01 / WÄHLE DEINEN KÄMPFER</div><div class="pickGrid"><button class="pick kaito selected" data-fighter="kaito"><span class="pickSymbol">K.</span><span><strong>KAITO STORM</strong><span class="mini">Blitzschnell · Technik</span></span></button><button class="pick vex" data-fighter="vex"><span class="pickSymbol">V.</span><span><strong>VEX SHADOW</strong><span class="mini">Kraftvoll · Konter</span></span></button></div><div class="menuBottom"><div class="field"><label for="difficulty">02 / SCHWIERIGKEIT</label><select id="difficulty"><option value="easy">Einfach</option><option value="normal" selected>Normal</option><option value="hard">Schwer</option></select></div><button class="bigBtn" id="start">⚡ KAMPF STARTEN</button></div><div class="instructions"><span><b>PC:</b> WASD + J K U I / Leertaste / L / Shift</span><span><b>iPad:</b> Joystick + Aktionstasten</span><span>⛶ Vollbild · ♫ Sound · ESC Pause</span></div></div></section>
+<section id="menu"><div class="card"><div class="eyebrow">DMP GAMES · CLASSIC CONSOLE FIGHTER / V1.1</div><div class="ps2ribbon">CLASSIC 2000s · 3D ARCADE FIGHTING</div><div class="heroTitle">ARENA<br><span>ZERO</span></div><p class="intro">Klassisches Konsolen-Kampfspiel im Stil der frühen 2000er: direkter Zweikampf, präzise Treffer, kurze Kombos, Ausweichen und Spezialattacken. <b>Best of 3</b> – wer zuerst zwei Runden gewinnt, holt den Sieg.</p><div class="selectTitle">01 / WÄHLE DEINEN KÄMPFER</div><div class="pickGrid"><button class="pick kaito selected" data-fighter="kaito"><span class="pickSymbol">K.</span><span><strong>KAITO STORM</strong><span class="mini">Blitzschnell · Technik</span></span></button><button class="pick vex" data-fighter="vex"><span class="pickSymbol">V.</span><span><strong>VEX SHADOW</strong><span class="mini">Kraftvoll · Konter</span></span></button></div><div class="menuBottom"><div class="field"><label for="difficulty">02 / SCHWIERIGKEIT</label><select id="difficulty"><option value="easy">Einfach</option><option value="normal" selected>Normal</option><option value="hard">Schwer</option></select></div><button class="bigBtn" id="start">⚡ KAMPF STARTEN</button></div><div class="instructions"><span><b>PC:</b> WASD + J K U I / Leertaste / L / Shift</span><span><b>iPad:</b> Joystick + Aktionstasten</span><span>⛶ Vollbild · ♫ Sound · ESC Pause</span></div></div></section>
 <section id="result" class="hidden"><div class="card" style="max-width:550px;text-align:center"><div class="eyebrow">MATCH COMPLETE</div><h2 id="resultTitle">SIEG!</h2><p class="intro" style="margin:auto" id="resultDetail">Du hast den Kampf gewonnen.</p><div class="statrow" style="justify-content:center"><div><strong id="hitsStat">0</strong><span>Treffer</span></div><div><strong id="comboStat">0</strong><span>Max. Kombo</span></div><div><strong id="roundStat">0:0</strong><span>Runden</span></div></div><button class="bigBtn" id="again">NOCH EIN KAMPF</button><div style="margin-top:20px"><button class="smallBtn" id="mainMenu">KÄMPFER WECHSELN</button></div></div></section>
 <section id="pausePanel" class="hidden"><div class="card" style="max-width:420px;text-align:center"><div class="eyebrow">GAME PAUSED</div><h2>PAUSE</h2><p class="intro">Bereit für die nächste Runde?</p><button class="bigBtn" id="resume">WEITERKÄMPFEN</button><div style="margin-top:20px"><button class="smallBtn" id="backMenu">ZUM HAUPTMENÜ</button></div></div></section>
 <section id="gameError"><div><h2>3D-GRAFIK NICHT VERFÜGBAR</h2><p>Dieses Spiel braucht einen Browser mit WebGL-Unterstützung.<br>Bitte Safari, Chrome oder Firefox mit aktivierter Hardwarebeschleunigung verwenden.</p></div></section>
