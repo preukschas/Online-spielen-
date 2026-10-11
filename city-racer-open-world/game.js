@@ -234,6 +234,8 @@ let player={x:5,z:20,y:0,vertical:0,heading:0,cameraYaw:0,camPitch:0.15,car:null
 const avatar=makeHuman('#253d55');
 scene.add(avatar.group);
 const heroCars=[];
+let collisionCooldown=0;
+let qualitySamples=0,qualityTime=0,qualityReduced=false;
 function addHeroCar(x,z,color,name,price,owned=false,sport=false,loaner=false){
   const v=createCar(color,sport);
   v.group.position.set(x,0,z);
@@ -531,8 +533,11 @@ function updateCar(dt){
   const dx=Math.sin(c.heading)*c.speed*dt,dz=-Math.cos(c.heading)*c.speed*dt;
   const nx=c.x+dx,nz=c.z+dz;
   if(wallCollision(nx,nz,1.8)){
-    if(Math.abs(c.speed)>3){c.health=Math.max(8,c.health-Math.min(24,Math.abs(c.speed)*.8));toast('💥 Unfall! Fahrzeugzustand: '+Math.round(c.health)+'%',2);}
-    c.speed=-c.speed*.18;
+    if(collisionCooldown<=0 && Math.abs(c.speed)>3){
+      c.health=Math.max(8,c.health-Math.min(24,Math.abs(c.speed)*.8));
+      collisionCooldown=.65;toast('💥 Unfall! Fahrzeugzustand: '+Math.round(c.health)+'%',2);
+    }
+    c.speed=0;
   }else{c.x=nx;c.z=nz;}
   c.fuel=Math.max(0,c.fuel-Math.abs(c.speed)*dt*.008);
   c.group.position.set(c.x,0,c.z);c.group.rotation.y=-c.heading;
@@ -548,8 +553,10 @@ function updateTraffic(dt){
     if(t.z>254)t.z=-254;if(t.z< -254)t.z=254;
     t.g.position.set(t.x,0,t.z);
     t.g.rotation.y=t.axis==='z'?(t.dir>0?Math.PI:0):(t.dir>0?-Math.PI/2:Math.PI/2);
-    if(player.car&&near(t,player.car,2.9)&&Math.abs(player.car.speed)>3){
-      player.car.health=Math.max(8,player.car.health-12);player.car.speed*=-.18;
+    if(player.car&&near(t,player.car,3.4)&&Math.abs(player.car.speed)>2 && collisionCooldown<=0){
+      player.car.health=Math.max(8,player.car.health-Math.min(20,Math.abs(player.car.speed)*.7));
+      player.car.speed=0;
+      collisionCooldown=.85;
       toast('💥 Zusammenstoß mit dem Verkehr!',2);
     }
   }
@@ -610,6 +617,7 @@ function updateCamera(dt){
     const distance=player.car?13:10;
     const desired=new THREE.Vector3(
       tgt.x-Math.sin(angle)*distance,tgt.y+(player.car?6.8:5.4)+player.camPitch*5,tgt.z+Math.cos(angle)*distance);
+    desired.y=Math.max(2.3,desired.y);
     camera.position.lerp(desired,Math.min(1,dt*5));
     camera.lookAt(tgt.x,tgt.y+1.15,tgt.z);
   }
@@ -666,7 +674,7 @@ function tick(t){
   requestAnimationFrame(tick);
   const dt=Math.min(.05,Math.max(0,(t-lastFrame)/1000));lastFrame=t;
   if(playing&&!showModal){
-    elapsed+=dt;updateDay(dt);
+    elapsed+=dt;collisionCooldown=Math.max(0,collisionCooldown-dt);updateDay(dt);
     input.forward=Number(!!keys.KeyW||!!keys.ArrowUp)-Number(!!keys.KeyS||!!keys.ArrowDown)+stickValue.y;
     input.side=Number(!!keys.KeyD||!!keys.ArrowRight)-Number(!!keys.KeyA||!!keys.ArrowLeft)+stickValue.x;
     input.forward=THREE.MathUtils.clamp(input.forward,-1,1);input.side=THREE.MathUtils.clamp(input.side,-1,1);
@@ -681,6 +689,17 @@ function tick(t){
   }
   if(t>toastUntil)$('toast').classList.remove('show');
   renderer.render(scene,camera);
+  if(playing && !qualityReduced && dt>0 && dt<.05){
+    qualityTime+=dt;qualitySamples++;
+    if(qualityTime>12){
+      const fps=qualitySamples/qualityTime;
+      if(fps<29 && renderer.getPixelRatio()>1.01){
+        renderer.setPixelRatio(1);renderer.setSize(innerWidth,innerHeight);
+        qualityReduced=true;toast('⚙️ Grafik automatisch optimiert für flüssigeres Spielen.',3);
+      }
+      qualityTime=0;qualitySamples=0;
+    }
+  }
 }
 const stickValue={x:0,y:0};let touchSprint=false;
 function setupControls(){
