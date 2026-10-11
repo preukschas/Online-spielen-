@@ -7,15 +7,15 @@
 <script src="../fun-access.js"></script>
 <script>window.DMPFunAccess.requireAccess({backHref:"../"});</script>
 <link rel="stylesheet" href="../game-interaction-guard.css">
-<title>City Life – Open World 5.2 3D</title>
+<title>City Life – Open World 5.3 3D</title>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <div id="app">
   <header class="topbar">
     <div>
-      <h1>City Life – Open World 5.2 3D</h1>
-      <p>3D · dynamische Beleuchtung · Straßenlampen · Autolicht · Taschenlampe · Crash-Schäden</p>
+      <h1>City Life – Open World 5.3 3D</h1>
+      <p>3D · echte Objektkollisionen · bessere Fahrphysik · Handbremse · Licht · Crash-Schäden</p>
     </div>
     <div class="top-actions">
       <button id="viewBtn">👁 Ich-Perspektive</button>
@@ -34,7 +34,7 @@
       </div>
 
       <div class="controls">
-        <div class="desktop-hint">WASD/Pfeile bewegen · Maus/Ziehen umsehen · E Aktion · F Fahrzeug · V Kamera · L Taschenlampe · H Autolicht · Leertaste Springen/Klettern · Q Hauen · B Bauen · T Rennen · G Wasser · R Pistole</div>
+        <div class="desktop-hint">WASD/Pfeile bewegen · Maus/Ziehen umsehen · E Aktion · F Fahrzeug · V Kamera · L Taschenlampe · H Autolicht · Leertaste Springen / im Auto Handbremse · Q Hauen · B Bauen · T Rennen · G Wasser · R Pistole</div>
         <div class="touch-grid" aria-label="Touch-Steuerung">
           <button data-dir="up" class="up">▲</button>
           <button data-dir="left" class="left">◀</button>
@@ -50,6 +50,7 @@
           <button id="raceBtn">🏁 Rennen</button>
           <button id="flashlightBtn">🔦 Taschenlampe</button>
           <button id="headlightBtn">💡 Autolicht</button>
+          <button id="handbrakeBtn">🛑 Handbremse</button>
           <button id="sprayBtn">💦 Spritzen</button>
           <button id="shootBtn">🔫 Schießen</button>
           <button id="sprintBtn">🏃 Sprint</button>
@@ -57,7 +58,7 @@
       </div>
 
       <section id="interactionPanel" class="interaction-panel">
-        5.2: Dynamische Nachtbeleuchtung, Straßenlampen, Auto-Scheinwerfer, Taschenlampe und deutlich realistischere Crash-Schäden.
+        5.3: Fahrzeuge kollidieren jetzt zuverlässig mit Bäumen, Laternen, Hindernissen, Innenraum-Möbeln und anderen Fahrzeugen – auch bei hohem Tempo.
       </section>
     </main>
 
@@ -84,6 +85,6 @@
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.1/three.min.js"></script>
-<script src="./game.js?v=5.2-light-damage-1"></script>
+<script src="./game.js?v=5.3-collision-driving-1"></script>
 </body>
 </html>
