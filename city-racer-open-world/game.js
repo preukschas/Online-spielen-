@@ -71,6 +71,7 @@ const ground=box(scene,810,0.5,810,'#719368',0,-.43,0);
 const roads=[-315,-210,-105,0,105,210,315];
 const solids=[],shops=[],cars=[],npcs=[],traffic=[],collectibles=[],objects=[];
 const obstacles=[],trafficLights=[],bicycles=[];
+const rail={x:-351,stations:[{name:'Hauptbahnhof CITY',z:-190},{name:'Walddorf',z:248}],train:null,onboard:false,tickets:0,phase:0,dir:1,stop:0,locked:false};
 const law={suspect:null,arrestTimer:0,prisoner:null};
 const prison={x:262.5,z:-262.5,w:65,d:65};
 const station={x:262.5,z:157.5,pumps:[{x:242,z:143},{x:262,z:143},{x:282,z:143}]};
@@ -169,6 +170,95 @@ function streetLight(x,z){
   cyl(scene,.13,7.1,'#667c86',x,3.55,z);
   box(scene,2,.16,.25,'#70878f',x+.85,7.05,z);
   box(scene,1.35,.12,.30,'#fff1c4',x+1.1,6.96,z);
+}
+function createRailway(){
+  // Dedicated western railway: real animated 3D carriage, not teleport-only travel.
+  const x=rail.x,nearStop=rail.stations[0],farStop=rail.stations[1];
+  box(scene,11,.2,660,'#747d7f',x,.08,-10);
+  for(const offset of [-1.6,1.6])box(scene,.22,.25,660,'#8d9da5',x+offset,.24,-10);
+  for(let z=-336;z<=322;z+=5)box(scene,5.2,.15,.5,'#6b5445',x,.20,z);
+  rail.stations.forEach((stop,i)=>{
+    const z=stop.z;
+    box(scene,12,.55,64,'#c8c4b8',x+10,.32,z);
+    box(scene,11,1.4,19,'#c0cad1',x+19,1.1,z+12);
+    box(scene,12,.5,20,'#374f5d',x+19,4.8,z+12);
+    for(const side of [-1,1])box(scene,.3,4,.4,'#8399a6',x+15+side*4,2.6,z+7);
+    sign(i===0?'CITY HAUPTBAHNHOF':'WALDDORF BAHNHOF',x+21,6,z+12,34,'#ffffff','#19456d');
+    sign('🎫 TICKETS',x+15,3,z-20,10,'#ffe9bb','#285d74');
+    box(scene,2.3,3.7,2,'#266aa4',x+15,1.86,z-20);
+    box(scene,1.5,.9,.12,'#adced5',x+15,2.25,z-21.05);
+    sign('GLEIS 1',x+8,3,z+29,10,'#f9f1d8','#263f54');
+    for(let k=-1;k<=1;k++){
+      const passenger=makeHuman(k?'#495e6b':'#a46a4c');
+      passenger.group.position.set(x+9+k*2.4,0,z+4);
+      scene.add(passenger.group);
+    }
+  });
+  // Distinct settlement on the northern terminus, away from the central skyline.
+  sign('WILLKOMMEN IN WALDDORF',-270,8,314,32,'#f5e3ac','#45664e');
+  for(let i=0;i<5;i++){
+    const z=256+i*15;
+    const x=-270+(i%2)*25;
+    const h=4.5+i%3*1.8;
+    box(scene,12,h,11,'#d3bc97',x,h/2,z);
+    box(scene,13,1,12,'#775246',x,h+.6,z);
+    box(scene,2,3,.2,'#614938',x,1.5,z-5.6);
+  }
+  const train=new THREE.Group();
+  for(const offset of [-14,0,14]){
+    box(train,3.7,4.3,12.7,offset===-14?'#317da4':'#e2e6e4',0,3.4,offset);
+    box(train,3.9,.45,12.7,'#2f647e',0,5.65,offset);
+    for(const side of [-1,1]){
+      for(let k=-2;k<=2;k++)box(train,.11,1.25,1.4,'#448399',side*1.89,4.0,offset+k*2.0);
+    }
+    for(const wheel of [-3.7,3.7])for(const side of [-1,1]){
+      const w=cyl(train,.55,.25,'#303940',side*1.85,1,wheel+offset);w.rotation.z=Math.PI/2;
+    }
+    box(train,1.3,2.5,.13,'#99bfca',0,3.3,offset-6.4);
+  }
+  train.position.set(x,0,nearStop.z);
+  scene.add(train);
+  rail.train=train;rail.phase=0;rail.stop=0;rail.dir=1;
+}
+function nearestRailStop(){
+  return rail.stations.findIndex(st=>Math.hypot(player.x-(rail.x+14),player.z-st.z)<29);
+}
+function trainAction(){
+  if(rail.onboard){toast('🚆 Bitte bis zur nächsten Station mitfahren.',2);return true;}
+  const stop=nearestRailStop();
+  if(stop<0 || player.car)return false;
+  const board=()=>{const dst=rail.stop===0?1:0;
+    if(rail.stop!==stop||rail.phase>0){toast('🚆 Zug ist unterwegs. Bitte am Bahnsteig warten.');return;}
+    if(rail.tickets<1){toast('🎫 Erst ein Ticket am Automaten kaufen!');return;}
+    rail.tickets--;rail.onboard=true;save();
+    avatar.group.visible=false;
+    toast('🚆 Eingestiegen! Nächster Halt: '+rail.stations[dst].name,4);
+  };
+  const opts=[{label:'🎫 Ticket kaufen · 25 €',primary:true,run:()=>spend(25,()=>{rail.tickets++;toast('🎫 Ticket gekauft. Du kannst einsteigen!');})}];
+  if(rail.stop===stop&&rail.phase===0)opts.push({label:'🚆 Mit gültigem Ticket einsteigen ('+rail.tickets+' vorhanden)',disabled:rail.tickets<1,run:board});
+  opts.push({label:'Schließen',run:()=>{}});
+  openModal('🚉 '+rail.stations[stop].name,'Fahrkarte am blauen Automaten kaufen. Der Zug fährt wirklich zwischen Stadt und Dorf und hält an beiden Bahnhöfen. Fahrpreis: 25 € virtuelles Spielgeld.',opts);
+  return true;
+}
+function updateRail(dt){
+  if(!rail.train)return;
+  const from=rail.stations[rail.stop],to=rail.stations[1-rail.stop];
+  if(rail.phase===0){rail.phaseTime=(rail.phaseTime||0)+dt;if(rail.phaseTime>10){rail.phase=1;rail.phaseTime=0;}}
+  else{
+    const delta=to.z-rail.train.position.z;
+    const speed=Math.min(18,Math.max(4,Math.abs(delta)*.25));
+    const step=Math.sign(delta)*Math.min(Math.abs(delta),speed*dt);
+    rail.train.position.z+=step;
+    if(Math.abs(to.z-rail.train.position.z)<.3){
+      rail.train.position.z=to.z;rail.stop=1-rail.stop;rail.phase=0;rail.phaseTime=0;
+      if(rail.onboard){
+        rail.onboard=false;player.x=rail.x+13;player.z=to.z;
+        player.y=0;avatar.group.visible=true;save();
+        toast('🚉 Angekommen in '+to.name+'! Gute Reise.',5);
+      }
+    }
+  }
+  if(rail.onboard){player.x=rail.x;player.z=rail.train.position.z;avatar.group.visible=false;}
 }
 function createTrafficLights(){
   // Signals switch in two alternating phases: red really stops approaching cars.
@@ -276,6 +366,7 @@ function buildCity() {
       }
       streetLight(x-42,z-42);
     }
+  createRailway();
   createTrafficLights();
   // A riverside park, additional skyline and city border
   box(scene,150,.1,35,'#648d69',0,.1,360);
@@ -521,6 +612,7 @@ try{
     state.deliveries=Math.max(0,Number(data.deliveries)||0);
     state.inventory=Array.isArray(data.inventory)?data.inventory.slice(0,40):[];
     state.built=!!data.built;
+    rail.tickets=Math.max(0,Math.min(99,Number(data.trainTickets)||0));
   }
 }catch(e){}
 let day=0.27,playing=false,firstPerson=false,showModal=false,race=null,elapsed=0,toastUntil=0,lastFrame=performance.now();
@@ -560,11 +652,12 @@ function initialise(){
 }
 function renderHUD(){
   $('cash').textContent=state.cash.toLocaleString('de-DE')+' €';
-  $('vehicle').textContent=player.car?'🚗 '+player.car.name:'🚶 Zu Fuß';
+  $('vehicle').textContent=rail.onboard?'🚆 Im Zug':player.car?'🚗 '+player.car.name:'🚶 Zu Fuß';
   $('speed').textContent=player.car?Math.round(Math.abs(player.car.speed)*3.6)+' km/h · ⛽ '+Math.round(player.car.fuel)+'%':'0 km/h';
   $('progress').textContent='🏁 '+state.wins+' Siege';
   document.body.classList.toggle('driving',!!player.car);
-  if(race){
+  if(rail.onboard){$('mission').textContent='🚆 Zugreise nach '+rail.stations[1-rail.stop].name+' · Ticket eingelöst';}
+  else if(race){
     $('mission').textContent='🏁 Rennen! Checkpoint '+(race.index+1)+'/'+race.points.length+
       ' · '+Math.round(race.elapsed)+'s · Gegner: '+Math.round(race.aiProgress*100)+'%';
   }else if(state.job){
@@ -578,7 +671,7 @@ function renderHUD(){
 function save(){
   try{localStorage.setItem(savedKey,JSON.stringify({
     cash:state.cash,wins:state.wins,owned:state.owned,deliveries:state.deliveries,
-    inventory:state.inventory,built:state.built
+    inventory:state.inventory,built:state.built,trainTickets:rail.tickets
   }));}catch(e){}
 }
 function toast(text,seconds=3){
@@ -665,7 +758,7 @@ function setCar(car){
   renderHUD();
 }
 function tryVehicle(){
-  if(showModal||!playing)return;
+  if(showModal||!playing||rail.onboard)return;
   if(player.car){setCar(null);return;}
   const car=nearestCar();
   if(car&&near(player,car,7)){
@@ -726,6 +819,8 @@ function openFuelMenu(car){
 }
 function interact(){
   if(!playing||showModal)return;
+  if(rail.onboard)return;
+  if(!player.car&&trainAction())return;
   if(nearPump()){openFuelMenu(player.car);return;}
   if(state.job&&near(player,targets[state.jobTarget],9)){finishJob();return;}
   const pick=collectibles.find(c=>!c.taken&&near(player,c,5.5));
@@ -860,7 +955,7 @@ function updateMission(dt){
     c.obj.rotation.y+=dt*1.7;
     // Pickups are intentionally collected with the interaction button, not merely by walking over them.
   }
-  if(state.job && near(player,targets[state.jobTarget],7.5))finishJob();
+  if(!rail.onboard && state.job && near(player,targets[state.jobTarget],7.5))finishJob();
   if(race){
     race.elapsed+=dt;
     const aiDist=Math.min(raceTotal,race.elapsed*11.1);
@@ -883,9 +978,10 @@ function updateShopsRoof(){
   }
 }
 function updateCamera(dt){
-  const tgt=player.car?{x:player.car.x,y:1.4,z:player.car.z,yaw:player.cameraYaw}:
+  const tgt=rail.onboard?{x:rail.x,y:5,z:rail.train.position.z,yaw:Math.PI}:player.car?{x:player.car.x,y:1.4,z:player.car.z,yaw:player.cameraYaw}:
     {x:player.x,y:player.y+1.6,z:player.z,yaw:player.cameraYaw};
   const angle=tgt.yaw;
+  if(rail.onboard)player.cameraYaw=rail.stop===0?Math.PI:0;
   if(firstPerson){
     const shift=player.car?1.0:0;
     const eye=new THREE.Vector3(tgt.x,tgt.y+shift,tgt.z);
@@ -894,8 +990,8 @@ function updateCamera(dt){
     camera.lookAt(ahead);
     avatar.group.visible=false;
   }else{
-    avatar.group.visible=!player.car;
-    const distance=player.car?13:10;
+    avatar.group.visible=!(player.car||rail.onboard);
+    const distance=rail.onboard?21:(player.car?13:10);
     const desired=new THREE.Vector3(
       tgt.x-Math.sin(angle)*distance,tgt.y+(player.car?6.8:5.4)+player.camPitch*5,tgt.z+Math.cos(angle)*distance);
     desired.y=Math.max(2.3,desired.y);
@@ -914,6 +1010,7 @@ function drawMap(){
     c.fillRect(-88,(r-player.z)*scale-3,176,6);
   }
   const dots=[
+    ...rail.stations.map(st=>({x:rail.x+14,z:st.z,color:'#fce7a1'})),
     {x:station.x,z:station.z,color:'#36eea9'},
     {x:-27,z:21,color:'#fce277'},
     {x:0,z:-30,color:'#63dcff'},
@@ -931,7 +1028,9 @@ function drawMap(){
 }
 function hint(){
   let text='';
-  if(nearPump())text=player.car?'⛽ ANHALTEN · E / AKTION: Tanken':'⛽ Tanken nur mit einem Fahrzeug';
+  if(rail.onboard)text='🚆 Unterwegs nach '+rail.stations[1-rail.stop].name;
+  else if(!player.car&&nearestRailStop()>=0)text='🎫 E / AKTION: Fahrkartenautomat und Zug';
+  else if(nearPump())text=player.car?'⛽ ANHALTEN · E / AKTION: Tanken':'⛽ Tanken nur mit einem Fahrzeug';
   else if(state.job&&near(player,targets[state.jobTarget],13))text='📦 Ziel erreicht – Paket wird zugestellt';
   else if(player.car){
     if(near(player,start,22))text='🏁 E / Aktion: Rennen starten';
@@ -965,7 +1064,8 @@ function tick(t){
     input.side=Number(!!keys.KeyD||!!keys.ArrowRight)-Number(!!keys.KeyA||!!keys.ArrowLeft)+stickValue.x;
     input.forward=THREE.MathUtils.clamp(input.forward,-1,1);input.side=THREE.MathUtils.clamp(input.side,-1,1);
     input.sprint=!!keys.ShiftLeft||!!keys.ShiftRight||touchSprint;
-    if(player.car)updateCar(dt);else updateFoot(dt);
+    if(rail.onboard){}else if(player.car)updateCar(dt);else updateFoot(dt);
+    updateRail(dt);
     updateNPCs(dt);updateTrafficLights();updateTraffic(dt);updateBicycles(dt);updatePoliceAndHeli(dt);updateCrime(dt);updateMission(dt);updateShopsRoof();
   }
   updateCamera(dt);
