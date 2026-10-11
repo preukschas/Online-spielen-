@@ -72,6 +72,7 @@ const roads=[-315,-210,-105,0,105,210,315];
 const solids=[],shops=[],cars=[],npcs=[],traffic=[],collectibles=[],objects=[];
 const law={suspect:null,arrestTimer:0,prisoner:null};
 const prison={x:262.5,z:-262.5,w:65,d:65};
+const station={x:262.5,z:157.5,pumps:[{x:242,z:143},{x:262,z:143},{x:282,z:143}]};
 let seed=809;
 function rng(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
 function colorBuilding(){
@@ -191,7 +192,8 @@ function buildCity() {
     for(const z of [-262.5,-157.5,-52.5,52.5,157.5,262.5]){
       box(scene,87,.09,87,'#878f81',x,.02,z);
       const specialty=shopDefs.find(s=>s.x===x&&s.z===z);
-      if(x===prison.x&&z===prison.z)createPrison();
+      if(x===station.x&&z===station.z)createGasStation();
+      else if(x===prison.x&&z===prison.z)createPrison();
       else if(specialty)createShop(specialty);
       else if(x===-157.5&&z===-157.5){sign('BAUGRUNDSTÜCK',x,4,z-27,25,'#ffe2a8','#395747');}else genericBuilding(x,z,54+rng()*11,52+rng()*16,13+Math.floor(rng()*8)*4.2);
       for(let k=-1;k<=1;k+=2){
@@ -211,6 +213,25 @@ function buildCity() {
     // Decorative light urban stones in unused corners
     if(rng()>.5)box(scene,1.8,.32,1.4,'#a6a49a',x,.16,z);
   }
+}
+function createGasStation(){
+  const {x,z}=station;
+  box(scene,87,.22,87,'#69737a',x,.12,z);
+  box(scene,48,7,23,'#d4d8d5',x,3.55,z+28);
+  box(scene,50,1.2,26,'#315a63',x,7.35,z+28);
+  box(scene,11,4,.13,'#487382',x,3.3,z+16.35);
+  sign('CITY TANK',x,8.8,z+15.95,24,'#fcf3dc','#22586a');
+  solids.push({x,z:z+28,w:48,d:23});
+  box(scene,67,.85,28,'#f0f1e7',x,8,z-13);
+  for(const px of [x-29,x+29])for(const pz of [z-23,z-3])box(scene,.85,7,.85,'#d1d7d4',px,3.5,pz);
+  station.pumps.forEach((pump,i)=>{
+    box(scene,2.2,3.4,1.5,'#e4e8e5',pump.x,1.7,pump.z);
+    box(scene,2.4,.8,1.8,'#348b77',pump.x,3.6,pump.z);
+    box(scene,1.4,.9,.12,'#263f50',pump.x,2.5,pump.z-.82);
+    box(scene,.4,1.65,.4,'#152a32',pump.x+1.25,2,pump.z);
+    sign('PUMPE '+(i+1),pump.x,4.75,pump.z-1.1,5,'#fff6b1','#257a72');
+  });
+  sign('TANKSTELLE →',x,5.2,z-39,24,'#fff8ca','#205d63');
 }
 function createPrison(){
   const {x,z,w,d}=prison;
@@ -448,7 +469,7 @@ function initialise(){
 function renderHUD(){
   $('cash').textContent=state.cash.toLocaleString('de-DE')+' €';
   $('vehicle').textContent=player.car?'🚗 '+player.car.name:'🚶 Zu Fuß';
-  $('speed').textContent=player.car?Math.round(Math.abs(player.car.speed)*3.6)+' km/h':'0 km/h';
+  $('speed').textContent=player.car?Math.round(Math.abs(player.car.speed)*3.6)+' km/h · ⛽ '+Math.round(player.car.fuel)+'%':'0 km/h';
   $('progress').textContent='🏁 '+state.wins+' Siege';
   document.body.classList.toggle('driving',!!player.car);
   if(race){
@@ -600,8 +621,20 @@ function finishRace(){
   else{state.cash+=180;toast('🏁 Ziel erreicht! +180 € Teilnahmegeld',4);}
   save();renderHUD();
 }
+function nearPump(){return station.pumps.some(p=>Math.hypot(player.x-p.x,player.z-p.z)<10);}
+function openFuelMenu(car){
+  if(!car){toast('⛽ Fahre mit einem Auto zur Zapfsäule.');return;}
+  if(Math.abs(car.speed)>1.5){toast('⛽ Bitte zum Tanken anhalten!');return;}
+  const missing=Math.max(0,100-car.fuel),price=Math.ceil(missing*.45);
+  openModal('⛽ CITY TANK',car.name+' · Tank: '+Math.round(car.fuel)+' % · Volltanken: '+price+' € Spielgeld',[
+    {label:'⛽ Volltanken · '+price+' €',disabled:missing<.1,primary:true,run:()=>spend(price,()=>{car.fuel=100;toast('⛽ Vollgetankt!');renderHUD();})},
+    {label:'⛽ 20 % nachtanken · 9 €',disabled:missing<1,run:()=>spend(9,()=>{car.fuel=Math.min(100,car.fuel+20);toast('⛽ Getankt!');renderHUD();})},
+    {label:'Schließen',run:()=>{}}
+  ]);
+}
 function interact(){
   if(!playing||showModal)return;
+  if(nearPump()){openFuelMenu(player.car);return;}
   if(state.job&&near(player,targets[state.jobTarget],9)){finishJob();return;}
   const pick=collectibles.find(c=>!c.taken&&near(player,c,5.5));
   if(pick){pick.taken=true;pick.obj.visible=false;state.cash+=20;state.inventory.push('Fundmünze');toast('🪙 Münze eingesammelt · +20 €!');save();renderHUD();return;}
@@ -784,6 +817,7 @@ function drawMap(){
     c.fillRect(-88,(r-player.z)*scale-3,176,6);
   }
   const dots=[
+    {x:station.x,z:station.z,color:'#36eea9'},
     {x:-27,z:21,color:'#fce277'},
     {x:0,z:-30,color:'#63dcff'},
     {x:52.5,z:52.5,color:'#ef9e5d'},
@@ -800,7 +834,8 @@ function drawMap(){
 }
 function hint(){
   let text='';
-  if(state.job&&near(player,targets[state.jobTarget],13))text='📦 Ziel erreicht – Paket wird zugestellt';
+  if(nearPump())text=player.car?'⛽ ANHALTEN · E / AKTION: Tanken':'⛽ Tanken nur mit einem Fahrzeug';
+  else if(state.job&&near(player,targets[state.jobTarget],13))text='📦 Ziel erreicht – Paket wird zugestellt';
   else if(player.car){
     if(near(player,start,22))text='🏁 E / Aktion: Rennen starten';
     else text='🚗 F / AUTO: Aussteigen · Lenken + Gas + Bremse';
