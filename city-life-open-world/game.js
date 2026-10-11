@@ -56,7 +56,7 @@ const keys=new Set(),buildingMeshes=[],solidBoxes=[],cars=[],traffic=[],npcs=[],
 const interiors={},customBuildings=[];
 const raycaster=new THREE.Raycaster();
 const centerNdc=new THREE.Vector2(0,0);
-let toastTimer=0,last=performance.now(),lookDragging=false,lastPX=0,lastPY=0,pointerLocked=false,saveTimer=0,raceMarker=null,weaponHolder=null,waterWeapon=null,pistolWeapon=null,muzzleFlash=null,muzzleTimer=0,flashlight=null,flashlightTarget=null,flashlightModel=null,carHeadLightL=null,carHeadLightR=null,carHeadTarget=null,trafficClock=0,mirrorFrame=0,cockpit=null,mirrorSystem=null,playerHeli=null,policeHeli=null;
+let toastTimer=0,last=performance.now(),lookDragging=false,lastPX=0,lastPY=0,pointerLocked=false,saveTimer=0,raceMarker=null,weaponHolder=null,waterWeapon=null,pistolWeapon=null,muzzleFlash=null,muzzleTimer=0,flashlight=null,flashlightTarget=null,flashlightModel=null,carHeadLightL=null,carHeadLightR=null,carHeadTarget=null,trafficClock=0,mirrorFrame=0,cockpit=null,mirrorSystem=null,playerHeli=null,policeHeli=null,playerAvatar=null,firstPersonBody=null,playerAnimTime=0;
 const SAVE_KEY='city-life-v5-1-save';
 let savedData={};
 
@@ -144,7 +144,8 @@ function updateHeldWeapons(dt){
  weaponHolder.visible=state.firstPerson&&!state.vehicle&&!state.boat&&!state.aircraft;
  if(!weaponHolder.visible)return;
  waterWeapon.visible=state.activeWeapon==='water'&&state.inventory.includes('Wasserpistole');
- pistolWeapon.visible=state.activeWeapon==='pistol'&&state.inventory.includes('Pistole')
+ pistolWeapon.visible=state.activeWeapon==='pistol'&&state.inventory.includes('Pistole');
+ if(firstPersonBody)firstPersonBody.visible=state.firstPerson&&!state.vehicle&&!state.boat&&!state.aircraft&&!waterWeapon.visible&&!pistolWeapon.visible
 }
 function makeLabel(text,width=7){
  const c=document.createElement('canvas');c.width=512;c.height=128;const x=c.getContext('2d');x.fillStyle='rgba(23,29,32,.88)';x.fillRect(0,0,512,128);x.fillStyle='#fff';x.font='700 44px system-ui';x.textAlign='center';x.textBaseline='middle';x.fillText(text,256,64);
@@ -454,6 +455,66 @@ function createHuman(color=0x58758a,skin=0xd6a27e,pirate=false){
  const armMat=mat(skin,.92,0);const armL=new THREE.Mesh(new THREE.CylinderGeometry(.075,.085,.78,7),armMat),armR=armL.clone();armL.position.set(-.47,1.28,0);armR.position.set(.47,1.28,0);armL.rotation.z=.22;armR.rotation.z=-.22;g.add(armL,armR);
  if(pirate){const hat=addBox(0,2.32,0,.76,.10,.45,0x281f1b,.85,0,g);const band=addBox(0,2.17,.25,.50,.10,.08,0x9b2525,.9,0,g)}
  g.userData={legL,legR,armL,armR};return g
+}
+function createPlayerAvatar(){
+ const g=new THREE.Group();
+ const jacketMat=mat(0x2f7d55,.82,.03),shirtMat=mat(0xe7ece8,.92,0),pantsMat=mat(0x2d3439,.94,0),shoeMat=mat(0x171a1c,.96,.02),skinMat=mat(0xd2a078,.90,0),hairMat=mat(0x3a2b22,.92,0);
+ const torso=new THREE.Mesh(new THREE.CylinderGeometry(.35,.44,1.02,10),jacketMat);torso.position.y=1.28;torso.castShadow=true;g.add(torso);
+ const shirt=meshBox(.36,1.31,-.36,.34,.58,.05,0xe7ece8,.92,0);g.add(shirt);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.29,12,9),skinMat);head.position.y=2.03;head.castShadow=true;g.add(head);
+ const hair=new THREE.Mesh(new THREE.SphereGeometry(.295,12,8,0,Math.PI*2,0,Math.PI*.48),hairMat);hair.position.set(0,2.17,0);g.add(hair);
+ const legL=new THREE.Mesh(new THREE.CylinderGeometry(.105,.125,.78,8),pantsMat),legR=legL.clone();legL.position.set(-.16,.49,0);legR.position.set(.16,.49,0);legL.castShadow=legR.castShadow=true;g.add(legL,legR);
+ const shoeL=meshBox(-.16,.105,.08,.22,.15,.42,0x171a1c,.95,.02);const shoeR=meshBox(.16,.105,.08,.22,.15,.42,0x171a1c,.95,.02);g.add(shoeL,shoeR);
+ const armL=new THREE.Mesh(new THREE.CylinderGeometry(.08,.09,.80,8),jacketMat),armR=armL.clone();armL.position.set(-.48,1.30,0);armR.position.set(.48,1.30,0);armL.rotation.z=.20;armR.rotation.z=-.20;armL.castShadow=armR.castShadow=true;g.add(armL,armR);
+ const handL=new THREE.Mesh(new THREE.SphereGeometry(.095,8,6),skinMat),handR=handL.clone();handL.position.set(-.55,.91,0);handR.position.set(.55,.91,0);g.add(handL,handR);
+ g.userData={torso,head,legL,legR,armL,armR,shoeL,shoeR,handL,handR};
+ return g
+}
+function setupPlayerAvatar(){
+ playerAvatar=createPlayerAvatar();playerAvatar.position.set(state.x,state.jumpY,state.z);scene.add(playerAvatar);
+ firstPersonBody=new THREE.Group();camera.add(firstPersonBody);firstPersonBody.position.set(0,-.48,-.62);
+ const skin=mat(0xd2a078,.90,0),jacket=mat(0x2f7d55,.82,.03);
+ for(const side of [-1,1]){
+  const sleeve=new THREE.Mesh(new THREE.CylinderGeometry(.055,.07,.48,8),jacket);sleeve.rotation.z=side*.22;sleeve.rotation.x=-1.02;sleeve.position.set(side*.22,-.04,-.10);firstPersonBody.add(sleeve);
+  const hand=new THREE.Mesh(new THREE.SphereGeometry(.075,8,6),skin);hand.position.set(side*.26,-.18,-.32);firstPersonBody.add(hand)
+ }
+ firstPersonBody.visible=false
+}
+function updatePlayerAvatar(dt){
+ if(!playerAvatar||!firstPersonBody)return;
+ const u=playerAvatar.userData,moving=keys.has('w')||keys.has('a')||keys.has('s')||keys.has('d')||keys.has('ArrowUp')||keys.has('ArrowDown')||keys.has('ArrowLeft')||keys.has('ArrowRight');
+
+ if(state.vehicle){
+  const c=state.vehicle,isBike=c.spec.type==='bike';
+  playerAvatar.visible=!state.firstPerson&&!isBike;
+  firstPersonBody.visible=false;
+  if(playerAvatar.visible){
+   playerAvatar.position.set(c.x,.18,c.z);playerAvatar.rotation.set(0,-c.a+Math.PI/2,0);
+   u.legL.rotation.z=-1.05;u.legR.rotation.z=1.05;u.armL.rotation.z=.66;u.armR.rotation.z=-.66;
+   u.torso.rotation.z=0;playerAvatar.scale.set(.78,.78,.78)
+  }
+  return
+ }
+ if(state.boat){
+  const b=state.boat;playerAvatar.visible=!state.firstPerson;firstPersonBody.visible=false;
+  if(playerAvatar.visible){playerAvatar.scale.set(.88,.88,.88);playerAvatar.position.set(b.x,.34,b.z);playerAvatar.rotation.set(0,-b.a+Math.PI/2,0);u.legL.rotation.z=0;u.legR.rotation.z=0;u.armL.rotation.z=.35;u.armR.rotation.z=-.35}
+  return
+ }
+ if(state.aircraft){
+  const h=state.aircraft;playerAvatar.visible=!state.firstPerson;firstPersonBody.visible=false;
+  if(playerAvatar.visible){playerAvatar.scale.set(.72,.72,.72);playerAvatar.position.set(h.x,h.y+.32,h.z);playerAvatar.rotation.set(0,-h.a+Math.PI/2,0);u.legL.rotation.z=-.92;u.legR.rotation.z=.92;u.armL.rotation.z=.60;u.armR.rotation.z=-.60}
+  return
+ }
+
+ playerAvatar.scale.set(1,1,1);playerAvatar.visible=!state.firstPerson;
+ firstPersonBody.visible=state.firstPerson&&!state.activeWeapon;
+ if(moving)playerAnimTime+=dt*(state.sprint?10.5:7.2);
+ const swing=moving?Math.sin(playerAnimTime)*(state.sprint?.68:.45):0;
+ u.legL.rotation.z=swing;u.legR.rotation.z=-swing;u.armL.rotation.z=.20-swing*.62;u.armR.rotation.z=-.20+swing*.62;u.torso.rotation.z=0;
+ const bob=moving?Math.abs(Math.sin(playerAnimTime*2))*(state.sprint?.055:.032):0;
+ playerAvatar.position.set(state.x,state.jumpY+bob,state.z);playerAvatar.rotation.set(0,-state.yaw+Math.PI/2,0);
+ if(!state.grounded){u.legL.rotation.z=-.22;u.legR.rotation.z=.22;u.armL.rotation.z=.58;u.armR.rotation.z=-.58}
+ firstPersonBody.position.y=-.48-bob*.45
 }
 function spawnNPCs(){
  const colors=[0x56778e,0x8b5d4c,0x65794e,0x765f88,0x92734f];
@@ -824,7 +885,7 @@ function tryJump(){
 function setupWorld(){
  loadPersistentState();setupHeldWeapons();buildGround();buildings.forEach(makeBuilding);populateTrees();populateProps();buildTrafficLights();buildClimbables();buildInteriors();spawnNPCs();spawnCars();spawnPolice();buildHarbor();setupHelicopters();spawnPickups();setupRace();restoreOwnedCars()
 }
-setupWorld();setupCockpitAndMirrors();
+setupWorld();setupCockpitAndMirrors();setupPlayerAvatar();
 
 function currentCar(){return state.vehicle}
 function nearestCar(max=4.6){
@@ -1285,12 +1346,12 @@ function updateCockpit(){
 function renderMirrors(){
  const c=state.vehicle;if(!mirrorSystem||!c||!state.firstPerson||c.spec.type==='bike')return;
  mirrorFrame++;if(mirrorFrame%3!==0)return;
- const wasCockpit=cockpit.visible,wasCar=c.mesh.visible;cockpit.visible=false;c.mesh.visible=false;
+ const wasCockpit=cockpit.visible,wasCar=c.mesh.visible,wasFP=firstPersonBody?firstPersonBody.visible:false;cockpit.visible=false;c.mesh.visible=false;if(firstPersonBody)firstPersonBody.visible=false;
  const oldTarget=renderer.getRenderTarget();
  setMirrorCamera(mirrorSystem.rearCam,c,Math.PI,0);renderer.setRenderTarget(mirrorSystem.rearTarget);renderer.clear();renderer.render(scene,mirrorSystem.rearCam);
  setMirrorCamera(mirrorSystem.leftCam,c,Math.PI*.80,-.72);renderer.setRenderTarget(mirrorSystem.leftTarget);renderer.clear();renderer.render(scene,mirrorSystem.leftCam);
  setMirrorCamera(mirrorSystem.rightCam,c,-Math.PI*.80,.72);renderer.setRenderTarget(mirrorSystem.rightTarget);renderer.clear();renderer.render(scene,mirrorSystem.rightCam);
- renderer.setRenderTarget(oldTarget);c.mesh.visible=wasCar;cockpit.visible=wasCockpit
+ renderer.setRenderTarget(oldTarget);c.mesh.visible=wasCar;cockpit.visible=wasCockpit;if(firstPersonBody)firstPersonBody.visible=wasFP
 }
 function renderMainScene(){
  updateCockpit();renderMirrors();
@@ -1414,6 +1475,7 @@ function runSelfTest(){
  check('Motorradphysik/Fahrer vorhanden',!!vehicleSpecs['Ducati Panigale']&&typeof updateVehicle==='function');
  check('3D-Cockpit vorhanden',!!cockpit&&!!cockpit.userData.wheel&&!!cockpit.userData.speedTex);
  check('Rück-/Seitenspiegel-Kameras vorhanden',!!mirrorSystem&&mirrorSystem.rearCam instanceof THREE.PerspectiveCamera&&mirrorSystem.leftCam instanceof THREE.PerspectiveCamera&&mirrorSystem.rightCam instanceof THREE.PerspectiveCamera);
+ check('Spielerfigur sichtbar',!!playerAvatar&&!!firstPersonBody&&playerAvatar.userData.legL&&playerAvatar.userData.armR);
  const failed=results.filter(r=>!r.ok);window.CityLifeDiagnostics={version:'5.4',results,passed:results.length-failed.length,failed:failed.length};
  log('🧪 Selbsttest: '+(results.length-failed.length)+'/'+results.length+' bestanden.');
  if(failed.length)console.warn('City Life Selbsttest fehlgeschlagen',failed);else console.info('City Life Selbsttest bestanden',results);
@@ -1448,7 +1510,7 @@ document.getElementById('sprintBtn').onclick=()=>{state.sprint=!state.sprint;toa
 
 function loop(now){
  const dt=Math.min(.033,(now-last)/1000||.016);last=now;state.sprayCd=Math.max(0,state.sprayCd-dt);state.shootCd=Math.max(0,state.shootCd-dt);state.punchCd=Math.max(0,state.punchCd-dt);
- state.cameraShake=Math.max(0,state.cameraShake-dt*.72);if(state.aircraft)updateHelicopter(dt);else if(state.boat)updateBoat(dt);else if(state.vehicle)updateVehicle(dt);else updateFoot(dt);updateTrafficLights(dt);updateTraffic(dt);updateNPCs(dt);updatePolice(dt);updatePoliceHelicopter(dt);updateLighting(dt);updatePickups(dt);updateRace(dt);updateVehicleDamageFX(dt);updateCamera();updateHeldWeapons(dt);updateEffects(dt);saveTimer+=dt;if(saveTimer>5){saveTimer=0;saveGame()}hud();renderMainScene();requestAnimationFrame(loop)
+ state.cameraShake=Math.max(0,state.cameraShake-dt*.72);if(state.aircraft)updateHelicopter(dt);else if(state.boat)updateBoat(dt);else if(state.vehicle)updateVehicle(dt);else updateFoot(dt);updateTrafficLights(dt);updateTraffic(dt);updateNPCs(dt);updatePolice(dt);updatePoliceHelicopter(dt);updateLighting(dt);updatePickups(dt);updateRace(dt);updateVehicleDamageFX(dt);updatePlayerAvatar(dt);updateCamera();updateHeldWeapons(dt);updateEffects(dt);saveTimer+=dt;if(saveTimer>5){saveTimer=0;saveGame()}hud();renderMainScene();requestAnimationFrame(loop)
 }
 log('🌆 City Life 5.4: Top-10 Open-World-Ausbau gestartet.');
 log('🚗 Ein freier City Sedan steht nahe dem Start. Mit F einsteigen.');
