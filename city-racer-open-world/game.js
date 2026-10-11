@@ -70,6 +70,8 @@ function sign(text,x,y,z,width=10,color='#ffffff',bg='#163047',parent=scene) {
 const ground=box(scene,810,0.5,810,'#719368',0,-.43,0);
 const roads=[-315,-210,-105,0,105,210,315];
 const solids=[],shops=[],cars=[],npcs=[],traffic=[],collectibles=[],objects=[];
+const law={suspect:null,arrestTimer:0,prisoner:null};
+const prison={x:262.5,z:-262.5,w:65,d:65};
 let seed=809;
 function rng(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
 function colorBuilding(){
@@ -98,6 +100,14 @@ function genericBuilding(x,z,w,d,h) {
   const color=colorBuilding();
   box(scene,w,h,d,color,x,h/2,z);
   box(scene,w+1.5,1.0,d+1.5,'#67757a',x,h+.5,z);
+  // Architectural details add silhouette depth with modest GPU cost.
+  box(scene,w+.7,.45,d+.7,'#c5c6be',x,3.3,z);
+  box(scene,w+.6,.35,d+.6,'#4d606b',x,h-1,z);
+  box(scene,w*.23,.55,d*.18,'#64757d',x-w*.25,h+1.5,z);
+  for(const side of [-1,1]){
+    box(scene,.22,h-3,.36,'#d0d2cb',x+side*(w/2+.2),(h-3)/2+2,z-d/2-.25);
+    box(scene,w*.17,.22,1.2,'#556d76',x+side*w*.32,5.2,z-d/2-1.0);
+  }
   box(scene,w+.2,2.3,d+.2,'#68777a',x,1.15,z);
   windowsForBuilding(x,z,w,d,h);
   if(rng()>.45)box(scene,w*.22,1.2,d*.20,'#777e78',x+w*.27,h+1.1,z);
@@ -181,7 +191,8 @@ function buildCity() {
     for(const z of [-262.5,-157.5,-52.5,52.5,157.5,262.5]){
       box(scene,87,.09,87,'#878f81',x,.02,z);
       const specialty=shopDefs.find(s=>s.x===x&&s.z===z);
-      if(specialty)createShop(specialty);
+      if(x===prison.x&&z===prison.z)createPrison();
+      else if(specialty)createShop(specialty);
       else if(x===-157.5&&z===-157.5){sign('BAUGRUNDSTÜCK',x,4,z-27,25,'#ffe2a8','#395747');}else genericBuilding(x,z,54+rng()*11,52+rng()*16,13+Math.floor(rng()*8)*4.2);
       for(let k=-1;k<=1;k+=2){
         tree(x+k*39,z+38,0.75+rng()*.25);
@@ -200,6 +211,27 @@ function buildCity() {
     // Decorative light urban stones in unused corners
     if(rng()>.5)box(scene,1.8,.32,1.4,'#a6a49a',x,.16,z);
   }
+}
+function createPrison(){
+  const {x,z,w,d}=prison;
+  box(scene,w,13,d,'#82929c',x,6.5,z);
+  box(scene,w+1,1.1,d+1,'#455764',x,13.6,z);
+  box(scene,w+1,1.5,d+1,'#657883',x,1,z);
+  for(let side of [-1,1]){
+    for(let k=0;k<5;k++){
+      const xx=x-23+k*11;
+      box(scene,4,4,.18,'#243b4d',xx,8,z+side*(d/2+.12));
+      for(let bar=0;bar<3;bar++)box(scene,.15,4,.25,'#a7b3bb',xx-1.35+bar*1.35,8,z+side*(d/2+.28));
+    }
+  }
+  // A guarded entrance and exterior fence form a visible prison campus.
+  box(scene,9,6,.25,'#4a5660',x,3,z-d/2-.22);
+  box(scene,4,5,.28,'#253440',x,2.6,z-d/2-.44);
+  sign('STADTGEFÄNGNIS',x,15,z-d/2-1,34,'#f5ebd2','#25394b');
+  for(const side of [-1,1])for(let k=-1;k<=1;k++){
+    box(scene,.27,4.8,10,'#b9c2c5',x+side*36,2.4,z+k*12);
+  }
+  solids.push({x,z,w,d});
 }
 function makeHuman(clothes='#27384b',skin='#d5a785'){
   const g=new THREE.Group();
@@ -220,6 +252,12 @@ function createCar(color='#eec277',sport=false){
   const length=sport?4.8:4.25;
   box(group,2.14,.55,length,null,0,.68,0,paint);
   box(group,1.75,.58,sport?2.1:2.3,'#354a59',0,1.2,.24);
+  box(group,1.69,.035,.35,'#9ac7d4',0,1.34,-.42);
+  box(group,1.72,.08,.36,'#d1d9d8',0,.78,-length/2+.28);
+  for(const side of [-1,1]){
+    box(group,.13,.18,.5,'#192e39',side*1.02,1.08,-.12);
+    box(group,.13,.16,.7,'#bdcbd0',side*.90,.52,-length/2+.22);
+  }
   box(group,1.73,.10,1.0,null,0,1.51,.40,paint);
   box(group,1.80,.06,.27,'#e6f0ec',0,.98,-1.92);
   for(const side of [-1,1])for(const front of [-1,1]){
@@ -315,6 +353,43 @@ function updatePoliceAndHeli(dt){
   }
 }
 
+function createRobberyEvent(){
+  // Fictional NPC wrongdoing: a thief is apprehended by the patrol and taken to prison.
+  const thief=makeHuman('#6c4350','#b88973');
+  thief.group.position.set(-240,0,-300);
+  scene.add(thief.group);
+  law.suspect=thief.group;
+  law.arrestTimer=0;
+  const guard=makeHuman('#213d72','#bd9377');
+  guard.group.position.set(prison.x-38,0,prison.z-35);
+  scene.add(guard.group);
+  law.guard=guard.group;
+  law.messageShown=false;
+  law.prisoner=false;
+  sign('POLIZEIWACHE',-315,7,-337,23,'#ebf5fa','#244764');
+}
+function updateCrime(dt){
+  if(!law.suspect)return;
+  law.arrestTimer+=dt;
+  const t=law.arrestTimer;
+  if(t<22){
+    law.suspect.visible=true;
+    law.suspect.position.set(-240+Math.min(t*3,45),0,-300);
+  }else if(t<37){
+    law.suspect.visible=false;
+    if(!law.messageShown){
+      law.messageShown=true;
+      toast('🚓 Polizei: Ein NPC wurde nach einem Raub festgenommen.',5);
+    }
+  }else{
+    law.suspect.visible=true;
+    law.suspect.position.set(prison.x,0,prison.z+3);
+    if(!law.prisoner){
+      law.prisoner=true;
+      toast('🚔 Der festgenommene Räuber sitzt nun im Stadtgefängnis.',5);
+    }
+  }
+}
 function marker(x,z,color='#ffd35f'){
   const g=new THREE.Group();g.position.set(x,0,z);
   const ring=new THREE.Mesh(new THREE.TorusGeometry(2.45,.23,8,32),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9}));
@@ -364,7 +439,7 @@ function buildHouse(){
   box(scene,5.5,3,.16,'#83b5c4',x-6,5,z-10.1);
 }
 function initialise(){
-  buildCity();createNPCs();createTraffic();collectiblesCreate();createPoliceAndHeli();
+  buildCity();createNPCs();createTraffic();collectiblesCreate();createPoliceAndHeli();createRobberyEvent();
   if(state.built)buildHouse();
   avatar.group.position.set(player.x,0,player.z);
   camera.position.set(player.x,8,player.z+15);
@@ -542,14 +617,17 @@ function interact(){
   }else if(near(player,start,19)){startRace();return;}
   toast(player.car?'🏁 Fahre zum blauen Rennmarker oder steige aus!':'Betritt einen Laden oder folge dem gelben Jobmarker.');
 }
-function wallCollision(x,z,radius=.65){
-  if(Math.abs(x)>371||Math.abs(z)>371)return true;
+function wallCollision(x,z,radius=.65,isVehicle=false){
+  // Enlarged vehicle bounds: cars MUST stay outside every building including shop doors.
+  if(Math.abs(x)>371-radius||Math.abs(z)>371-radius)return true;
   for(const b of solids){
     if(Math.abs(x-b.x)<b.w/2+radius&&Math.abs(z-b.z)<b.d/2+radius)return true;
   }
   for(const s of shops){
     const dx=Math.abs(x-s.x),front=s.front,back=s.z+s.d/2, half=s.w/2;
     if(dx<half+radius && z>front-radius && z<back+radius){
+      // Shop doors are for pedestrians, never for vehicles.
+      if(isVehicle)return true;
       const sidewall=dx>half-0.3-radius;
       const rearwall=z>back-0.3-radius;
       const frontwall=z<front+0.5+radius && dx>s.door/2-radius;
@@ -596,15 +674,22 @@ function updateCar(dt){
   if(Math.abs(c.speed)>.25){
     c.heading+=steer*dt*(1.35+Math.min(Math.abs(c.speed)/27,.9))*Math.sign(c.speed);
   }
+  // Continuous collision sweep avoids tunnelling through walls at high speed.
   const dx=Math.sin(c.heading)*c.speed*dt,dz=-Math.cos(c.heading)*c.speed*dt;
-  const nx=c.x+dx,nz=c.z+dz;
-  if(wallCollision(nx,nz,1.8)){
+  const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.65));
+  let hit=false;
+  for(let j=0;j<steps;j++){
+    const nx=c.x+dx/steps,nz=c.z+dz/steps;
+    if(wallCollision(nx,nz,2.0,true)){hit=true;break;}
+    c.x=nx;c.z=nz;
+  }
+  if(hit){
     if(collisionCooldown<=0 && Math.abs(c.speed)>3){
       c.health=Math.max(8,c.health-Math.min(24,Math.abs(c.speed)*.8));
       collisionCooldown=.65;toast('💥 Unfall! Fahrzeugzustand: '+Math.round(c.health)+'%',2);
     }
     c.speed=0;
-  }else{c.x=nx;c.z=nz;}
+  }
   c.fuel=Math.max(0,c.fuel-Math.abs(c.speed)*dt*.008);
   c.group.position.set(c.x,0,c.z);c.group.rotation.y=-c.heading;
   player.x=c.x;player.z=c.z;
@@ -702,7 +787,8 @@ function drawMap(){
     {x:-27,z:21,color:'#fce277'},
     {x:0,z:-30,color:'#63dcff'},
     {x:52.5,z:52.5,color:'#ef9e5d'},
-    {x:157.5,z:52.5,color:'#ee876d'}
+    {x:157.5,z:52.5,color:'#ee876d'},
+    {x:prison.x,z:prison.z,color:'#cdddf3'}
   ];
   if(state.job)dots.push({...targets[state.jobTarget],color:'#57ff98'});
   if(race)dots.push({...race.points[race.index],color:'#44fcff'});
@@ -722,6 +808,7 @@ function hint(){
     const s=shops.find(s=>Math.abs(player.x-s.x)<s.w/2+6&&player.z>s.front-8&&player.z<s.z+s.d/2+7);
     const c=nearestCar();
     if(s)text='🚪 Durch die offene Tür gehen · E / Aktion: '+s.name;
+    else if(near(player,prison,54))text='🚔 Stadtgefängnis: Hier werden festgenommene Räuber untergebracht';
     else if(collectibles.some(c=>!c.taken&&near(player,c,5.5)))text='🪙 E / AKTION: Gegenstand einsammeln';
     else if(near(player,{x:-27,z:21},14))text='📦 E / Aktion: Lieferjob annehmen';
     else if(c&&near(player,c,7))text='🚗 F / AUTO: '+(c.loaner?'Leihwagen fahren':'Einsteigen');
@@ -747,7 +834,7 @@ function tick(t){
     input.forward=THREE.MathUtils.clamp(input.forward,-1,1);input.side=THREE.MathUtils.clamp(input.side,-1,1);
     input.sprint=!!keys.ShiftLeft||!!keys.ShiftRight||touchSprint;
     if(player.car)updateCar(dt);else updateFoot(dt);
-    updateNPCs(dt);updateTraffic(dt);updatePoliceAndHeli(dt);updateMission(dt);updateShopsRoof();
+    updateNPCs(dt);updateTraffic(dt);updatePoliceAndHeli(dt);updateCrime(dt);updateMission(dt);updateShopsRoof();
   }
   updateCamera(dt);
   if(playing){
