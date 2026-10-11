@@ -7,15 +7,15 @@
 <script src="../fun-access.js"></script>
 <script>window.DMPFunAccess.requireAccess({backHref:"../"});</script>
 <link rel="stylesheet" href="../game-interaction-guard.css">
-<title>City Life – Open World 5.3 3D</title>
+<title>City Life – Open World 5.4 3D</title>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <div id="app">
   <header class="topbar">
     <div>
-      <h1>City Life – Open World 5.3 3D</h1>
-      <p>3D · echte Objektkollisionen · bessere Fahrphysik · Handbremse · Licht · Crash-Schäden</p>
+      <h1>City Life – Open World 5.4 3D</h1>
+      <p>3D · Ampeln & Verkehrsregeln · 5 Fahndungsstufen · Hubschrauber · KI-Rennen · Boote · Cockpit & Spiegel</p>
     </div>
     <div class="top-actions">
       <button id="viewBtn">👁 Ich-Perspektive</button>
@@ -34,7 +34,7 @@
       </div>
 
       <div class="controls">
-        <div class="desktop-hint">WASD/Pfeile bewegen · Maus/Ziehen umsehen · E Aktion · F Fahrzeug · V Kamera · L Taschenlampe · H Autolicht · Leertaste Springen / im Auto Handbremse · Q Hauen · B Bauen · T Rennen · G Wasser · R Pistole</div>
+        <div class="desktop-hint">WASD/Pfeile bewegen · Maus/Ziehen umsehen · E Aktion · F Fahrzeug/Boot/Heli · V Kamera · L Taschenlampe · H Autolicht · Leertaste Springen/Handbremse/Heli hoch · Shift Heli runter · Q Hauen · B Bauen · T Rennen</div>
         <div class="touch-grid" aria-label="Touch-Steuerung">
           <button data-dir="up" class="up">▲</button>
           <button data-dir="left" class="left">◀</button>
@@ -51,6 +51,8 @@
           <button id="flashlightBtn">🔦 Taschenlampe</button>
           <button id="headlightBtn">💡 Autolicht</button>
           <button id="handbrakeBtn">🛑 Handbremse</button>
+          <button id="heliUpBtn">🚁 Hoch</button>
+          <button id="heliDownBtn">🚁 Runter</button>
           <button id="sprayBtn">💦 Spritzen</button>
           <button id="shootBtn">🔫 Schießen</button>
           <button id="sprintBtn">🏃 Sprint</button>
@@ -58,7 +60,7 @@
       </div>
 
       <section id="interactionPanel" class="interaction-panel">
-        5.3: Fahrzeuge kollidieren jetzt zuverlässig mit Bäumen, Laternen, Hindernissen, Innenraum-Möbeln und anderen Fahrzeugen – auch bei hohem Tempo.
+        5.4: Ampeln, Fußgängerregeln, 5 Fahndungsstufen, bessere Polizei, Hubschrauber, KI-Rennen, steuerbare Boote, Motorradphysik, Cockpit und echte Spiegelkameras.
       </section>
     </main>
 
@@ -77,6 +79,8 @@
         <div class="gauge"><span id="carHpBar" class="car"></span></div>
         <div class="gauge-row gap-top"><span>Polizei</span><span id="heatText">0%</span></div>
         <div class="gauge"><span id="heatBar" class="heat"></span></div>
+        <div id="wantedStars" class="wanted-stars">☆☆☆☆☆</div>
+        <div id="racePlace" class="muted gap-top">Rennen: –</div>
       </section>
       <section class="panel"><div class="strong">📍 Ort</div><div id="place">Innenstadt</div></section>
       <section class="panel"><div class="strong">🎒 Inventar</div><div id="inventory" class="muted">Leer</div></section>
@@ -85,6 +89,6 @@
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.1/three.min.js"></script>
-<script src="./game.js?v=5.3-collision-driving-1"></script>
+<script src="./game.js?v=5.4-top10-1"></script>
 </body>
 </html>
