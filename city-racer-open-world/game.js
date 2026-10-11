@@ -70,6 +70,7 @@ function sign(text,x,y,z,width=10,color='#ffffff',bg='#163047',parent=scene) {
 const ground=box(scene,810,0.5,810,'#719368',0,-.43,0);
 const roads=[-315,-210,-105,0,105,210,315];
 const solids=[],shops=[],cars=[],npcs=[],traffic=[],collectibles=[],objects=[];
+const obstacles=[],trafficLights=[],bicycles=[];
 const law={suspect:null,arrestTimer:0,prisoner:null};
 const prison={x:262.5,z:-262.5,w:65,d:65};
 const station={x:262.5,z:157.5,pumps:[{x:242,z:143},{x:262,z:143},{x:282,z:143}]};
@@ -157,15 +158,89 @@ function createShop(def){
   shops.push({...def,w,d,front,door:gap,roof});
 }
 function tree(x,z,size=1){
+  obstacles.push({x,z,r:.55*size});
   cyl(scene,.37*size,3.6*size,'#66503b',x,1.8*size,z);
   sphere(scene,2.4*size,'#32674d',x,5.5*size,z);
   sphere(scene,1.9*size,'#437b59',x-1.5*size,4.4*size,z);
   sphere(scene,1.8*size,'#3a744f',x+1.4*size,4.7*size,z);
 }
 function streetLight(x,z){
+  obstacles.push({x,z,r:.55});
   cyl(scene,.13,7.1,'#667c86',x,3.55,z);
   box(scene,2,.16,.25,'#70878f',x+.85,7.05,z);
   box(scene,1.35,.12,.30,'#fff1c4',x+1.1,6.96,z);
+}
+function createTrafficLights(){
+  // Signals switch in two alternating phases: red really stops approaching cars.
+  for(const cross of [[0,0],[-105,0],[105,0],[0,-105],[0,105]]){
+    const [x,z]=cross;
+    for(const side of [-1,1]){
+      const postX=x+side*12.3,postZ=z+side*12.3;
+      cyl(scene,.2,7,'#506872',postX,3.5,postZ);
+      const housing=box(scene,1.1,3.0,.7,'#25313a',postX,7.2,postZ);
+      const lamps=[];
+      for(const [i,color] of ['#fa3c3c','#f0c148','#50f07a'].entries()){
+        const lamp=sphere(scene,.36,color,postX,8.2-i*1.0,postZ-.43);
+        lamps.push(lamp);
+      }
+      trafficLights.push({x,z,axis:side===-1?'x':'z',lamps});
+      obstacles.push({x:postX,z:postZ,r:.60});
+    }
+  }
+}
+function signalGreen(axis){
+  const cycle=(elapsed%24);
+  return axis==='x'?cycle<10:(cycle>=12&&cycle<22);
+}
+function updateTrafficLights(){
+  for(const s of trafficLights){
+    const green=signalGreen(s.axis);
+    for(let i=0;i<3;i++)s.lamps[i].material=material(i===0?(green?'#482a30':'#ff2424'):i===1?((elapsed%24>=10&&elapsed%24<12)||(elapsed%24>=22)?'#ffe348':'#66542c'):(green?'#3afc63':'#21442f'),.4);
+  }
+}
+function makeBicycle(x,z,color='#32b0a8'){
+  const g=new THREE.Group();
+  for(const offset of [-1.0,1.0]){
+    const wheel=new THREE.Mesh(new THREE.TorusGeometry(.55,.09,8,14),material('#252f36'));
+    wheel.position.set(0,.62,offset);g.add(wheel);
+  }
+  const frame=box(g,.12,.2,1.9,color,0,1.02,0);frame.rotation.x=.12;
+  box(g,.85,.10,.14,color,0,1.55,-.90);
+  box(g,.85,.13,.3,'#252b31',0,1.32,.38);
+  cyl(g,.1,.6,'#718b93',0,1.36,-.85);
+  const rider=makeHuman('#6678a0','#d8ad88');rider.group.position.set(0,.50,.15);rider.group.scale.set(.7,.7,.7);g.add(rider.group);
+  g.position.set(x,0,z);scene.add(g);return g;
+}
+function createBicycles(){
+  for(const [i,p] of [[1,[-18,30]],[2,[23,118]],[3,[-118,-18]],[4,[115,218]]]){
+    const model=makeBicycle(p[0],p[1],i%2?'#2ac3af':'#ce805b');
+    bicycles.push({group:model,x:p[0],z:p[1],dir:i%2?1:-1});
+  }
+}
+function updateBicycles(dt){
+  for(const b of bicycles){
+    b.z+=b.dir*dt*3.2;
+    if(b.z>344)b.z=-344;if(b.z< -344)b.z=344;
+    b.group.position.set(b.x,0,b.z);
+    b.group.rotation.y=b.dir<0?0:Math.PI;
+  }
+}
+function mustStopAtRed(x,z,heading,speed){
+  if(speed<=0)return false;
+  const horizontal=Math.abs(Math.sin(heading))>.70;
+  for(const c of [[0,0],[-105,0],[105,0],[0,-105],[0,105]]){
+    const [cx,cz]=c;
+    if(horizontal){
+      if(Math.abs(z-cz)>7||signalGreen('x'))continue;
+      const d=cx-x,forward=Math.sign(Math.sin(heading));
+      if(d*forward>0&&d*forward<18)return true;
+    }else{
+      if(Math.abs(x-cx)>7||signalGreen('z'))continue;
+      const d=cz-z,forward=-Math.sign(Math.cos(heading));
+      if(d*forward>0&&d*forward<18)return true;
+    }
+  }
+  return false;
 }
 function buildCity() {
   for(const p of roads){
@@ -201,6 +276,7 @@ function buildCity() {
       }
       streetLight(x-42,z-42);
     }
+  createTrafficLights();
   // A riverside park, additional skyline and city border
   box(scene,150,.1,35,'#648d69',0,.1,360);
   for(let i=0;i<14;i++){
@@ -225,12 +301,22 @@ function createGasStation(){
   box(scene,67,.85,28,'#f0f1e7',x,8,z-13);
   for(const px of [x-29,x+29])for(const pz of [z-23,z-3])box(scene,.85,7,.85,'#d1d7d4',px,3.5,pz);
   station.pumps.forEach((pump,i)=>{
+    obstacles.push({x:pump.x,z:pump.z,r:2});
     box(scene,2.2,3.4,1.5,'#e4e8e5',pump.x,1.7,pump.z);
     box(scene,2.4,.8,1.8,'#348b77',pump.x,3.6,pump.z);
     box(scene,1.4,.9,.12,'#263f50',pump.x,2.5,pump.z-.82);
     box(scene,.4,1.65,.4,'#152a32',pump.x+1.25,2,pump.z);
     sign('PUMPE '+(i+1),pump.x,4.75,pump.z-1.1,5,'#fff6b1','#257a72');
   });
+  // Counter is visible behind the glass, staffed by two cashiers.
+  box(scene,13,1.4,2.8,'#7b5d46',x,1.0,z+26);
+  box(scene,12,.15,2.9,'#e0c9a6',x,1.75,z+26);
+  for(const px of [x-4,x+4]){
+    const clerk=makeHuman('#286358','#c79d7e');
+    clerk.group.position.set(px,0,z+30.5);
+    scene.add(clerk.group);
+    box(scene,1.3,.45,.35,'#354b56',px,2.2,z+26);
+  }
   sign('TANKSTELLE →',x,5.2,z-39,24,'#fff8ca','#205d63');
 }
 function createPrison(){
@@ -460,7 +546,7 @@ function buildHouse(){
   box(scene,5.5,3,.16,'#83b5c4',x-6,5,z-10.1);
 }
 function initialise(){
-  buildCity();createNPCs();createTraffic();collectiblesCreate();createPoliceAndHeli();createRobberyEvent();
+  buildCity();createNPCs();createTraffic();createBicycles();collectiblesCreate();createPoliceAndHeli();createRobberyEvent();
   if(state.built)buildHouse();
   avatar.group.position.set(player.x,0,player.z);
   camera.position.set(player.x,8,player.z+15);
@@ -653,6 +739,7 @@ function interact(){
 function wallCollision(x,z,radius=.65,isVehicle=false){
   // Enlarged vehicle bounds: cars MUST stay outside every building including shop doors.
   if(Math.abs(x)>371-radius||Math.abs(z)>371-radius)return true;
+  if(isVehicle)for(const o of obstacles){if(Math.hypot(x-o.x,z-o.z)<o.r+radius)return true;}
   for(const b of solids){
     if(Math.abs(x-b.x)<b.w/2+radius&&Math.abs(z-b.z)<b.d/2+radius)return true;
   }
@@ -708,6 +795,7 @@ function updateCar(dt){
     c.heading+=steer*dt*(1.35+Math.min(Math.abs(c.speed)/27,.9))*Math.sign(c.speed);
   }
   // Continuous collision sweep avoids tunnelling through walls at high speed.
+  if(mustStopAtRed(c.x,c.z,c.heading,c.speed)){c.speed=Math.max(0,c.speed-45*dt);if(c.speed<1)c.speed=0;}
   const dx=Math.sin(c.heading)*c.speed*dt,dz=-Math.cos(c.heading)*c.speed*dt;
   const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.65));
   let hit=false;
@@ -731,8 +819,11 @@ function updateCar(dt){
 }
 function updateTraffic(dt){
   for(const t of traffic){
-    if(t.axis==='z') t.z+=t.speed*t.dir*dt;
-    else t.x+=t.speed*t.dir*dt;
+    const nearSignal=trafficLights.some(s=>s.axis===t.axis&&
+      (t.axis==='z'?Math.abs(t.x-s.x)<8&&Math.abs(t.z-s.z)<18:Math.abs(t.z-s.z)<8&&Math.abs(t.x-s.x)<18));
+    const move=(!signalGreen(t.axis)&&nearSignal)?0:t.speed*dt;
+    if(t.axis==='z')t.z+=move*t.dir;
+    else t.x+=move*t.dir;
     if(t.x>364)t.x=-364;if(t.x< -364)t.x=364;
     if(t.z>364)t.z=-364;if(t.z< -364)t.z=364;
     t.g.position.set(t.x,0,t.z);
@@ -869,7 +960,7 @@ function tick(t){
     input.forward=THREE.MathUtils.clamp(input.forward,-1,1);input.side=THREE.MathUtils.clamp(input.side,-1,1);
     input.sprint=!!keys.ShiftLeft||!!keys.ShiftRight||touchSprint;
     if(player.car)updateCar(dt);else updateFoot(dt);
-    updateNPCs(dt);updateTraffic(dt);updatePoliceAndHeli(dt);updateCrime(dt);updateMission(dt);updateShopsRoof();
+    updateNPCs(dt);updateTrafficLights();updateTraffic(dt);updateBicycles(dt);updatePoliceAndHeli(dt);updateCrime(dt);updateMission(dt);updateShopsRoof();
   }
   updateCamera(dt);
   if(playing){
