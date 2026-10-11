@@ -7,7 +7,7 @@
 <script src="../fun-access.js"></script>
 <script>window.DMPFunAccess.requireAccess({backHref:"../"});</script>
 <link rel="stylesheet" href="../game-interaction-guard.css">
-<title>City Life – Open World 5.0 3D</title>
+<title>City Life – Open World 5.1 3D</title>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
   <header class="topbar">
     <div>
       <h1>City Life – Open World 5.0 3D</h1>
-      <p>Echte 3D-Engine · Ich-Perspektive · 3D-Stadt · Fahrzeuge · Verkehr · Polizei</p>
+      <p>3D · begehbare Innenräume · Showrooms/Parkhaus · Springen/Klettern · Rennen · Bauen</p>
     </div>
     <div class="top-actions">
       <button id="viewBtn">👁 Ich-Perspektive</button>
@@ -34,7 +34,7 @@
       </div>
 
       <div class="controls">
-        <div class="desktop-hint">WASD/Pfeile bewegen · Maus/Ziehen umsehen · E Aktion · F Fahrzeug · V Kamera · G Wasser · R Pistole · Shift Sprint · Leertaste Hauen</div>
+        <div class="desktop-hint">WASD/Pfeile bewegen · Maus/Ziehen umsehen · E Aktion · F Fahrzeug · V Kamera · Leertaste Springen/Klettern · Q Hauen · B Bauen · T Rennen · G Wasser · R Pistole</div>
         <div class="touch-grid" aria-label="Touch-Steuerung">
           <button data-dir="up" class="up">▲</button>
           <button data-dir="left" class="left">◀</button>
@@ -44,7 +44,10 @@
         </div>
         <div class="action-buttons">
           <button id="vehicleBtn">🚗 Fahrzeug</button>
+          <button id="jumpBtn">⬆️ Springen</button>
           <button id="punchBtn">👊 Hauen</button>
+          <button id="buildBtn">🏗️ Bauen</button>
+          <button id="raceBtn">🏁 Rennen</button>
           <button id="sprayBtn">💦 Spritzen</button>
           <button id="shootBtn">🔫 Schießen</button>
           <button id="sprintBtn">🏃 Sprint</button>
@@ -52,7 +55,7 @@
       </div>
 
       <section id="interactionPanel" class="interaction-panel">
-        5.0 läuft jetzt auf einer echten Three.js/WebGL-3D-Engine. Gehe zu Gebäuden oder Fahrzeugen und drücke E/F.
+        5.1: Gebäude sind begehbar, Showrooms/Parkhaus befahrbar. E interagiert/sammelt/betritt, F steigt ein/aus.
       </section>
     </main>
 
@@ -79,6 +82,6 @@
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.1/three.min.js"></script>
-<script src="./game.js?v=5.0-three-1"></script>
+<script src="./game.js?v=5.1-complete-1"></script>
 </body>
 </html>
