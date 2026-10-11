@@ -1,20 +1,20 @@
 {
   "version": "1.0",
   "basePath": "./assets/",
-  "cover": "title/arena-zero-cover.webp",
+  "cover": "title/arena-zero-cover.png",
   "fighters": {
-    "sergej": "fighters/sergej.webp",
-    "aki": "fighters/aki.webp",
-    "moe": "fighters/moe.webp",
-    "domi": "fighters/domi.webp"
+    "sergej": "fighters/sergej.png",
+    "aki": "fighters/aki.png",
+    "moe": "fighters/moe.png",
+    "domi": "fighters/domi.png"
   },
   "vs": {
-    "aki-domi": "vs/domi-vs-aki.webp",
-    "aki-moe": "vs/aki-vs-moe.webp",
-    "aki-sergej": "vs/sergej-vs-aki.webp",
-    "domi-moe": "vs/domi-vs-moe.webp",
-    "domi-sergej": "vs/sergej-vs-domi.webp",
-    "moe-sergej": "vs/sergej-vs-moe.webp"
+    "aki-domi": "vs/domi-vs-aki.png",
+    "aki-moe": "vs/aki-vs-moe.png",
+    "aki-sergej": "vs/sergej-vs-aki.png",
+    "domi-moe": "vs/domi-vs-moe.png",
+    "domi-sergej": "vs/sergej-vs-domi.png",
+    "moe-sergej": "vs/sergej-vs-moe.png"
   },
-  "status": "artwork prepared; binary uploads pending"
+  "status": "11 uploaded PNG files linked by Git blob and referenced by the game; two previously unknown UUID filenames assigned to cover and Aki card (visual verification pending)."
 }
