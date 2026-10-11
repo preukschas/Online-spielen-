@@ -67,8 +67,8 @@ function sign(text,x,y,z,width=10,color='#ffffff',bg='#163047',parent=scene) {
   m.position.set(x,y,z);parent.add(m);
   return m;
 }
-const ground=box(scene,590,0.5,590,'#719368',0,-.43,0);
-const roads=[-210,-105,0,105,210];
+const ground=box(scene,810,0.5,810,'#719368',0,-.43,0);
+const roads=[-315,-210,-105,0,105,210,315];
 const solids=[],shops=[],cars=[],npcs=[],traffic=[],collectibles=[],objects=[];
 let seed=809;
 function rng(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
@@ -124,7 +124,13 @@ function createShop(def){
   const glazing=new THREE.MeshStandardMaterial({color:'#9bc4d5',roughness:.16,metalness:.15,transparent:true,opacity:.34});
   box(root,side-3,4.4,.1,null,x-(gap+side)/2,3.9,front-.60,glazing);
   box(root,side-3,4.4,.1,null,x+(gap+side)/2,3.9,front-.60,glazing);
-  box(root,gap,5.4,.1,null,x,2.7,front-.35,glazing);
+  // Two visible sliding door leaves; passage stays open between them.
+  box(root,.24,5.25,.3,'#d0e3e8',x-gap/2,2.7,front-.42);
+  box(root,.24,5.25,.3,'#d0e3e8',x+gap/2,2.7,front-.42);
+  box(root,2.1,4.8,.09,null,x-gap/2+1.14,2.45,front-.35,glazing);
+  box(root,2.1,4.8,.09,null,x+gap/2-1.14,2.45,front-.35,glazing);
+  box(root,1.1,.12,.25,'#e9dfb5',x-gap/2+2.9,2.6,front-.55);
+  box(root,1.1,.12,.25,'#e9dfb5',x+gap/2-2.9,2.6,front-.55);
   box(root,w,1.5,d,'#425563',x,wall+.75,z);
   const roof=box(root,w,.55,d,'#323f49',x,wall+1.67,z);
   sign(def.name,x,7.8,front-1.12,Math.min(w*.70,29),'#ffe6aa','#162b3b',root);
@@ -152,13 +158,13 @@ function streetLight(x,z){
 }
 function buildCity() {
   for(const p of roads){
-    box(scene,18,.09,550,'#3f5056',p,.03,0);
-    box(scene,550,.09,18,'#3f5056',0,.035,p);
-    box(scene,2.3,.16,550,'#a8a9a2',p-10.3,.08,0);
-    box(scene,2.3,.16,550,'#a8a9a2',p+10.3,.08,0);
-    box(scene,550,.16,2.3,'#a8a9a2',0,.08,p-10.3);
-    box(scene,550,.16,2.3,'#a8a9a2',0,.08,p+10.3);
-    for(let t=-247;t<=247;t+=18){
+    box(scene,18,.09,760,'#3f5056',p,.03,0);
+    box(scene,760,.09,18,'#3f5056',0,.035,p);
+    box(scene,2.3,.16,760,'#a8a9a2',p-10.3,.08,0);
+    box(scene,2.3,.16,760,'#a8a9a2',p+10.3,.08,0);
+    box(scene,760,.16,2.3,'#a8a9a2',0,.08,p-10.3);
+    box(scene,760,.16,2.3,'#a8a9a2',0,.08,p+10.3);
+    for(let t=-352;t<=352;t+=18){
       if(roads.some(other=>Math.abs(t-other)<18))continue;
       box(scene,.22,.12,8,'#d0cebf',p,.10,t);
       box(scene,8,.12,.22,'#d0cebf',t,.10,p);
@@ -171,8 +177,8 @@ function buildCity() {
       box(scene,3.3,.15,1.6,'#d6d9ce',a+13.5,.14,b+v);
     }
   }
-  for(const x of [-157.5,-52.5,52.5,157.5])
-    for(const z of [-157.5,-52.5,52.5,157.5]){
+  for(const x of [-262.5,-157.5,-52.5,52.5,157.5,262.5])
+    for(const z of [-262.5,-157.5,-52.5,52.5,157.5,262.5]){
       box(scene,87,.09,87,'#878f81',x,.02,z);
       const specialty=shopDefs.find(s=>s.x===x&&s.z===z);
       if(specialty)createShop(specialty);
@@ -183,13 +189,13 @@ function buildCity() {
       streetLight(x-42,z-42);
     }
   // A riverside park, additional skyline and city border
-  box(scene,96,.1,35,'#648d69',0,.1,255);
+  box(scene,150,.1,35,'#648d69',0,.1,360);
   for(let i=0;i<14;i++){
-    const x=-255+i*37;
-    if(Math.abs(x)<225)tree(x,244,0.75+rng()*.5);
+    const x=-350+i*50;
+    if(Math.abs(x)<315)tree(x,350,0.75+rng()*.5);
   }
   for(let i=0;i<15;i++){
-    const x=-272+rng()*544,z=-272+rng()*544;
+    const x=-360+rng()*720,z=-360+rng()*720;
     if(roads.some(r=>Math.abs(x-r)<23||Math.abs(z-r)<23))continue;
     // Decorative light urban stones in unused corners
     if(rng()>.5)box(scene,1.8,.32,1.4,'#a6a49a',x,.16,z);
@@ -252,22 +258,63 @@ function createNPCs(){
     const pathRoad=roads[i%roads.length];
     const axis=i%2?'x':'z';
     const fixed=pathRoad+(i%4<2?-14:14);
-    const t=-220+rng()*440;
+    const t=-330+rng()*660;
     npc.group.position.set(axis==='z'?fixed:t,0,axis==='z'?t:fixed);
     scene.add(npc.group);
     npcs.push({g:npc.group,legs:npc.legs,axis,fixed,t,dir:i%3===0?-1:1,speed:.8+rng()*1.2,phase:rng()*5});
   }
 }
 function createTraffic(){
-  for(let i=0;i<13;i++){
+  for(let i=0;i<18;i++){
     const c=createCar(['#889ca7','#b6aa99','#7f9291','#b4bac5','#b06f61','#6e8496'][i%6],i%7===0);
     scene.add(c.group);
     const axis=i%2?'x':'z', road=roads[(i+2)%roads.length];
     const dir=i%3===0?-1:1;
-    traffic.push({g:c.group,x:axis==='z'?road+(dir>0?3:-3):(-235+i*36),
-      z:axis==='x'?road+(dir>0?-3:3):(-235+i*36),axis,dir,speed:8+(i%5)*1.8});
+    traffic.push({g:c.group,x:axis==='z'?road+(dir>0?3:-3):(-335+i*36),
+      z:axis==='x'?road+(dir>0?-3:3):(-335+i*36),axis,dir,speed:8+(i%5)*1.8});
   }
 }
+let helicopter=null;
+let heliBlades=null;
+let patrolCar=null;
+function createPoliceAndHeli(){
+  // Patrol vehicle stays on the northern extension, safely off the initial road crossing.
+  patrolCar=createCar('#eff2f5',false);
+  scene.add(patrolCar.group);
+  box(patrolCar.group,1.2,.18,.7,'#203da8',0,1.65,0);
+  box(patrolCar.group,.45,.14,.35,'#e33d3d',-.38,1.78,0);
+  box(patrolCar.group,.45,.14,.35,'#5f9fff',.38,1.78,0);
+  patrolCar.group.position.set(-315,0,-330);
+  sign('POLIZEI',-315,7,-337,20,'#d9eeff','#193e67');
+  helicopter=new THREE.Group();
+  box(helicopter,4.5,1.9,7,'#3d5969',0,0,0);
+  box(helicopter,3.2,.85,3.3,'#7cb4cb',0,.7,-1.1);
+  box(helicopter,1.1,.65,7,'#455a67',0,.3,5);
+  box(helicopter,3.2,.2,1.2,'#273e4c',0,.9,8.4);
+  for(const x of [-2,2]){
+    box(helicopter,.18,.2,7,'#d5d6d2',x,-1.3,0);
+    box(helicopter,.13,1,.15,'#b5c5c8',x,-.9,-2);
+    box(helicopter,.13,1,.15,'#b5c5c8',x,-.9,2);
+  }
+  heliBlades=new THREE.Group();
+  box(heliBlades,20,.16,.55,'#272a2e');
+  box(heliBlades,.55,.16,20,'#272a2e');
+  heliBlades.position.y=1.8;helicopter.add(heliBlades);
+  scene.add(helicopter);
+}
+function updatePoliceAndHeli(dt){
+  if(helicopter){
+    helicopter.position.set(-220+Math.cos(elapsed*.12)*90,55+Math.sin(elapsed*.36)*6,-222+Math.sin(elapsed*.12)*90);
+    helicopter.rotation.y=-elapsed*.12;
+    heliBlades.rotation.y+=dt*16;
+  }
+  if(patrolCar){
+    const u=(elapsed*9)%620;
+    patrolCar.group.position.set(-315,0,-310+u);
+    patrolCar.group.rotation.y=Math.PI;
+  }
+}
+
 function marker(x,z,color='#ffd35f'){
   const g=new THREE.Group();g.position.set(x,0,z);
   const ring=new THREE.Mesh(new THREE.TorusGeometry(2.45,.23,8,32),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9}));
@@ -317,7 +364,7 @@ function buildHouse(){
   box(scene,5.5,3,.16,'#83b5c4',x-6,5,z-10.1);
 }
 function initialise(){
-  buildCity();createNPCs();createTraffic();collectiblesCreate();
+  buildCity();createNPCs();createTraffic();collectiblesCreate();createPoliceAndHeli();
   if(state.built)buildHouse();
   avatar.group.position.set(player.x,0,player.z);
   camera.position.set(player.x,8,player.z+15);
@@ -363,6 +410,23 @@ function openModal(title,desc,options){
   $('modal').classList.remove('hidden');
 }
 function closeModal(){showModal=false;$('modal').classList.add('hidden');}
+function showInventory(){
+  if(!playing)return;
+  const counts=new Map();
+  for(const item of state.inventory)counts.set(item,(counts.get(item)||0)+1);
+  const lines=counts.size?[...counts].map(([item,count])=>item+' × '+count).join(' · '):'Du hast noch keine Sachen. Besuche den City Markt oder das Café.';
+  openModal('🎒 Dein Inventar',lines+'\n\n'+(state.owned?'🚗 Fahrzeug: Veloce GT.':'🚶 Noch kein eigenes Auto.')+
+    '\n💰 Guthaben: '+state.cash+' €',[
+      {label:'🧃 Getränk verwenden',disabled:!state.inventory.includes('Getränk'),run:()=>useItem('Getränk')},
+      {label:'🥪 Sandwich essen',disabled:!state.inventory.includes('Sandwich'),run:()=>useItem('Sandwich')},
+      {label:'🍰 Kuchen essen',disabled:!state.inventory.includes('Kuchen'),run:()=>useItem('Kuchen')},
+      {label:'Schließen',primary:true,run:()=>{}}
+  ]);
+}
+function useItem(name){
+  const at=state.inventory.indexOf(name);
+  if(at>=0){state.inventory.splice(at,1);save();toast('✅ '+name+' verwendet!');}
+}
 function spend(cost,success){if(state.cash<cost){toast('Nicht genug Spielgeld! Du brauchst '+cost+' €.');return;}state.cash-=cost;success();save();renderHUD();}
 function showShop(s){
   if(s.id==='markt'){
@@ -464,6 +528,8 @@ function finishRace(){
 function interact(){
   if(!playing||showModal)return;
   if(state.job&&near(player,targets[state.jobTarget],9)){finishJob();return;}
+  const pick=collectibles.find(c=>!c.taken&&near(player,c,5.5));
+  if(pick){pick.taken=true;pick.obj.visible=false;state.cash+=20;state.inventory.push('Fundmünze');toast('🪙 Münze eingesammelt · +20 €!');save();renderHUD();return;}
   if(!player.car){
     const s=shops.find(s=>Math.abs(player.x-s.x)<s.w/2+6&&player.z>s.front-8&&player.z<s.z+s.d/2+7);
     if(s){showShop(s);return;}
@@ -477,7 +543,7 @@ function interact(){
   toast(player.car?'🏁 Fahre zum blauen Rennmarker oder steige aus!':'Betritt einen Laden oder folge dem gelben Jobmarker.');
 }
 function wallCollision(x,z,radius=.65){
-  if(Math.abs(x)>266||Math.abs(z)>266)return true;
+  if(Math.abs(x)>371||Math.abs(z)>371)return true;
   for(const b of solids){
     if(Math.abs(x-b.x)<b.w/2+radius&&Math.abs(z-b.z)<b.d/2+radius)return true;
   }
@@ -549,8 +615,8 @@ function updateTraffic(dt){
   for(const t of traffic){
     if(t.axis==='z') t.z+=t.speed*t.dir*dt;
     else t.x+=t.speed*t.dir*dt;
-    if(t.x>254)t.x=-254;if(t.x< -254)t.x=254;
-    if(t.z>254)t.z=-254;if(t.z< -254)t.z=254;
+    if(t.x>364)t.x=-364;if(t.x< -364)t.x=364;
+    if(t.z>364)t.z=-364;if(t.z< -364)t.z=364;
     t.g.position.set(t.x,0,t.z);
     t.g.rotation.y=t.axis==='z'?(t.dir>0?Math.PI:0):(t.dir>0?-Math.PI/2:Math.PI/2);
     if(player.car&&near(t,player.car,3.4)&&Math.abs(player.car.speed)>2 && collisionCooldown<=0){
@@ -564,8 +630,8 @@ function updateTraffic(dt){
 function updateNPCs(dt){
   for(const n of npcs){
     n.t+=n.dir*n.speed*dt;
-    if(n.t>233){n.t=233;n.dir=-1;}
-    if(n.t< -233){n.t=-233;n.dir=1;}
+    if(n.t>338){n.t=338;n.dir=-1;}
+    if(n.t< -338){n.t=-338;n.dir=1;}
     n.g.position.set(n.axis==='z'?n.fixed:n.t,0,n.axis==='z'?n.t:n.fixed);
     n.g.rotation.y=n.axis==='z'?(n.dir>0?Math.PI:0):(n.dir>0?-Math.PI/2:Math.PI/2);
     n.legs[0].rotation.x=Math.sin(elapsed*9+n.phase)*.27;
@@ -577,7 +643,7 @@ function updateMission(dt){
     if(c.taken)continue;
     c.obj.position.y=1.3+Math.sin(elapsed*2+i)*.3;
     c.obj.rotation.y+=dt*1.7;
-    if(near(player,c,2.2)){c.taken=true;c.obj.visible=false;state.cash+=20;toast('🪙 +20 € Spielgeld');save();}
+    // Pickups are intentionally collected with the interaction button, not merely by walking over them.
   }
   if(state.job && near(player,targets[state.jobTarget],7.5))finishJob();
   if(race){
@@ -655,7 +721,8 @@ function hint(){
   }else{
     const s=shops.find(s=>Math.abs(player.x-s.x)<s.w/2+6&&player.z>s.front-8&&player.z<s.z+s.d/2+7);
     const c=nearestCar();
-    if(s)text='✋ E / Aktion: '+s.name+' betreten / benutzen';
+    if(s)text='🚪 Durch die offene Tür gehen · E / Aktion: '+s.name;
+    else if(collectibles.some(c=>!c.taken&&near(player,c,5.5)))text='🪙 E / AKTION: Gegenstand einsammeln';
     else if(near(player,{x:-27,z:21},14))text='📦 E / Aktion: Lieferjob annehmen';
     else if(c&&near(player,c,7))text='🚗 F / AUTO: '+(c.loaner?'Leihwagen fahren':'Einsteigen');
     else if(near(player,{x:-157,z:-157},25)&&!state.built)text='🏠 E / Aktion: Haus bauen';
@@ -680,7 +747,7 @@ function tick(t){
     input.forward=THREE.MathUtils.clamp(input.forward,-1,1);input.side=THREE.MathUtils.clamp(input.side,-1,1);
     input.sprint=!!keys.ShiftLeft||!!keys.ShiftRight||touchSprint;
     if(player.car)updateCar(dt);else updateFoot(dt);
-    updateNPCs(dt);updateTraffic(dt);updateMission(dt);updateShopsRoof();
+    updateNPCs(dt);updateTraffic(dt);updatePoliceAndHeli(dt);updateMission(dt);updateShopsRoof();
   }
   updateCamera(dt);
   if(playing){
@@ -710,6 +777,7 @@ function setupControls(){
     if(e.code==='KeyE')interact();
     if(e.code==='KeyF')tryVehicle();
     if(e.code==='KeyV')changeCamera();
+    if(e.code==='KeyI')showInventory();
     if(e.code==='Space')jump();
     if(e.code==='KeyR'&&player.car&&near(player,start,35))startRace();
     if(e.code==='Escape')closeModal();
@@ -717,6 +785,7 @@ function setupControls(){
   window.addEventListener('keyup',e=>{keys[e.code]=false;});
   window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;input.gas=false;input.brake=false;touchSprint=false;stickValue.x=0;stickValue.y=0;centerStick();save();});
   $('camera').addEventListener('click',changeCamera);
+  $('inventory').addEventListener('click',showInventory);
   $('btnCar').addEventListener('click',tryVehicle);
   $('btnUse').addEventListener('click',interact);
   $('btnJump').addEventListener('click',jump);
