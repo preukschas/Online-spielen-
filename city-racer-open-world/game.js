@@ -28,8 +28,8 @@ renderer.toneMappingExposure = 1.2;
 $('game').appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#92bdd7');
-scene.fog = new THREE.Fog('#a6c4d6', 170, 430);
-const camera = new THREE.PerspectiveCamera(68, innerWidth/innerHeight, 0.1, 850);
+scene.fog = new THREE.Fog('#a6c4d6', 200, 570);
+const camera = new THREE.PerspectiveCamera(68, innerWidth/innerHeight, 0.1, 1250);
 const ambient = new THREE.HemisphereLight(0xcbe4ff, 0x708064, 2.0);
 scene.add(ambient);
 const sun = new THREE.DirectionalLight(0xffedc5, 2.15);
@@ -67,11 +67,17 @@ function sign(text,x,y,z,width=10,color='#ffffff',bg='#163047',parent=scene) {
   m.position.set(x,y,z);parent.add(m);
   return m;
 }
-const ground=box(scene,810,0.5,810,'#719368',0,-.43,0);
+const ground=box(scene,2600,0.5,1250,'#719368',620,-.43,0);
 const roads=[-315,-210,-105,0,105,210,315];
+const additionalEastRoads=[420,525];
 const solids=[],shops=[],cars=[],npcs=[],traffic=[],collectibles=[],objects=[];
 const obstacles=[],trafficLights=[],bicycles=[];
-const rail={x:-351,stations:[{name:'Hauptbahnhof CITY',z:-190},{name:'Walddorf',z:248}],train:null,onboard:false,tickets:0,phase:0,dir:1,stop:0,locked:false};
+const rail={x:-351,stations:[{name:'Hauptbahnhof CITY',z:-190},{name:'Walddorf',z:248}],train:null,onboard:false,tickets:0,phase:0,dir:1,stop:0,locked:false,gates:[],gateClosed:false};
+const airports=[
+  {name:'CITY INTERNATIONAL',country:'Deutschland',gate:{x:735,z:-120},terminal:{x:735,z:-172},runway:{x:935,z:-220},parkX:835},
+  {name:'RIVIÈRE AÉROPORT',country:'Frankreich',gate:{x:1510,z:-120},terminal:{x:1510,z:-172},runway:{x:1420,z:-220},parkX:1480}
+];
+const flight={plane:null,tickets:0,side:0,stop:0,phase:'parked',phaseTime:0,progress:0,onboard:false};
 const law={suspect:null,arrestTimer:0,prisoner:null};
 const prison={x:262.5,z:-262.5,w:65,d:65};
 const station={x:262.5,z:157.5,pumps:[{x:242,z:143},{x:262,z:143},{x:282,z:143}]};
@@ -260,6 +266,168 @@ function updateRail(dt){
   }
   if(rail.onboard){player.x=rail.x;player.z=rail.train.position.z;avatar.group.visible=false;}
 }
+function createLevelCrossing(){
+  const x=rail.x;
+  box(scene,30,.19,19,'#b7adb0',x,.13,0);
+  for(const z of [-7,7]){
+    box(scene,12,.22,.55,'#fbf6e8',x,.28,z);
+    for(const side of [-1,1]){
+      box(scene,.48,5.4,.48,'#e9e3da',x+side*17,2.7,z+side*8);
+    }
+  }
+  for(const gx of [x-15,x+15]){
+    const pivot=new THREE.Group();
+    pivot.position.set(gx,1.9,0);
+    box(pivot,.45,.38,22,'#f6eeea',0,0,0);
+    for(let d=-9;d<=9;d+=3)box(pivot,.55,.40,1.2,'#e04138',0,.02,d);
+    scene.add(pivot);
+    box(scene,1.2,2.5,1.1,'#414f57',gx,1.25,12.5);
+    const red=sphere(scene,.5,'#9d2422',gx,3,12.5);
+    red.material=new THREE.MeshBasicMaterial({color:'#8c2724'});
+    rail.gates.push({x:gx,pivot,signal:red});
+  }
+  sign('BAHNÜBERGANG',x+28,5,13,20,'#ffefda','#752e27');
+}
+function updateLevelCrossing(dt){
+  if(!rail.train)return;
+  const active=rail.phase!==0&&Math.abs(rail.train.position.z)<85;
+  rail.gateClosed=active;
+  for(const g of rail.gates){
+    const target=active?0:1.3;
+    g.pivot.rotation.x=THREE.MathUtils.lerp(g.pivot.rotation.x,target,Math.min(1,dt*3));
+    g.signal.material.color.set(active&&Math.floor(elapsed*4)%2===0?'#ff3838':'#632725');
+  }
+}
+function crossingCollision(x,z,radius=2){
+  return rail.gateClosed&&Math.abs(z)<12+radius&&rail.gates.some(g=>Math.abs(x-g.x)<.7+radius);
+}
+function createAirliner(){
+  const g=new THREE.Group();
+  const white='#e6ecf0',navy='#24638b';
+  const tube=cyl(g,2.15,26,white,0,4,0);tube.rotation.z=Math.PI/2;
+  sphere(g,2.0,white,13,4,0);
+  box(g,2.3,.5,29,navy,1,4,0); // two long wings
+  box(g,5,.22,10,navy,-10,6.0,0);
+  box(g,5,4,.34,navy,-11,6,0);
+  box(g,5,.38,2.2,'#1f465c',12,4.7,0);
+  for(const z of [-2.1,2.1]){
+    for(let x=-7.5;x<10;x+=2.3)box(g,.8,.67,.08,'#538dab',x,4.4,z>0?2.1:-2.1);
+    const engine=cyl(g,.95,4.3,'#a5b5bb',2,2,z*3.5);engine.rotation.z=Math.PI/2;
+  }
+  for(const xx of [-8,9]){
+    for(const z of [-1.8,1.8]){
+      const w=cyl(g,.48,.27,'#313c46',xx,1.2,z);w.rotation.x=Math.PI/2;
+    }
+  }
+  sign('REGIONAL AIR',0,6.7,0,10,'#fff','#285c88',g);
+  g.position.set(airports[0].parkX,0,-220);
+  scene.add(g);
+  flight.plane=g;
+}
+function airportIndexNearby(){
+  if(player.car||rail.onboard||flight.onboard)return -1;
+  return airports.findIndex(a=>near(player,a.gate,23));
+}
+function airportAction(){
+  const here=airportIndexNearby();
+  if(here<0)return false;
+  const dest=airports[1-here];
+  const boardingAllowed=flight.phase==='parked'&&flight.stop===here&&flight.phaseTime<17;
+  const options=[{
+    label:'🎫 Flugticket nach '+dest.country+' kaufen · 100 €',primary:true,
+    run:()=>spend(100,()=>{flight.tickets++;toast('🎫 Flugticket gekauft!');})
+  }];
+  options.push({
+    label:'✈️ Einsteigen ('+flight.tickets+' Ticket'+(flight.tickets===1?'':'s')+' vorhanden)',
+    disabled:!boardingAllowed||flight.tickets<1,
+    run:()=>{
+      if(!(flight.phase==='parked'&&flight.stop===here&&flight.tickets>0))return;
+      flight.tickets--;flight.onboard=true;if(firstPerson)changeCamera();avatar.group.visible=false;save();renderHUD();
+      toast('✈️ Boarding abgeschlossen · Ziel: '+dest.country+'!',4);
+    }
+  });
+  options.push({label:'Schließen',run:()=>{}});
+  openModal('✈️ '+airports[here].name,
+    'Flug von '+airports[here].country+' nach '+dest.country+'. Flugticket am blauen Automaten: 100 € Spielgeld. '+(boardingAllowed?'Flugzeug steht bereit.':'Flugzeug unterwegs – auf die nächste Landung warten.'),options);
+  return true;
+}
+function updateFlight(dt){
+  if(!flight.plane)return;
+  if(flight.phase==='parked'){
+    flight.phaseTime+=dt;
+    flight.plane.position.set(airports[flight.stop].parkX,0,-220);
+    flight.plane.rotation.y=flight.stop===0?0:Math.PI;
+    flight.plane.rotation.z=0;
+    if(flight.phaseTime>=20){
+      flight.phase='flying';flight.progress=0;flight.phaseTime=0;
+      if(flight.onboard){toast('🛫 Start! Wir fliegen nach '+airports[1-flight.stop].country+'.',4);}
+    }
+  }else{
+    flight.progress=Math.min(1,flight.progress+dt/29);
+    const a=airports[flight.stop],b=airports[1-flight.stop],t=flight.progress;
+    flight.plane.position.set(a.parkX+(b.parkX-a.parkX)*t,Math.sin(Math.PI*t)*118,-220);
+    flight.plane.rotation.y=flight.stop===0?0:Math.PI;
+    flight.plane.rotation.z=(flight.stop===0?1:-1)*.11*Math.cos(Math.PI*t);
+    if(t>=1){
+      flight.stop=1-flight.stop;flight.phase='parked';flight.phaseTime=0;flight.progress=0;
+      flight.plane.rotation.z=0;
+      if(flight.onboard){
+        flight.onboard=false;flight.side=flight.stop;
+        player.x=airports[flight.side].gate.x;player.z=airports[flight.side].gate.z;
+        player.y=0;player.vertical=0;avatar.group.visible=true;avatar.group.position.set(player.x,0,player.z);
+        player.cameraYaw=0;save();renderHUD();
+        toast('🛬 Angekommen in '+airports[flight.side].country+'! Willkommen am Flughafen.',5);
+      }
+    }
+  }
+  if(flight.onboard){
+    player.x=flight.plane.position.x;player.z=flight.plane.position.z;
+    avatar.group.visible=false;
+  }
+}
+function createAirports(){
+  airports.forEach((a,i)=>{
+    const {x,z}=a.terminal,runway=a.runway;
+    box(scene,365,.08,110,'#546167',runway.x,.02,runway.z);
+    box(scene,270,.11,48,'#343d44',runway.x,.10,runway.z);
+    for(let xx=runway.x-118;xx<runway.x+120;xx+=24)box(scene,11,.13,.7,'#eff0e5',xx,.21,runway.z);
+    for(const dz of [-22,22])for(let xx=runway.x-127;xx<runway.x+130;xx+=20)
+      box(scene,2,.22,.35,'#fff9bb',xx,.23,runway.z+dz);
+    box(scene,103,.18,56,'#8d9fa8',x,.10,z);
+    box(scene,88,11,36,i?'#b8c3c6':'#c6d0d3',x,5.5,z);
+    box(scene,94,1.1,43,'#516772',x,11.5,z);
+    const glass=new THREE.MeshStandardMaterial({color:'#83b8ce',roughness:.19,metalness:.14,transparent:true,opacity:.48});
+    box(scene,78,7,.17,null,x,5,z+18.3,glass);
+    for(let k=-3;k<=3;k++)box(scene,.4,7,.3,'#d2e0e3',x+k*10,5,z+18.45);
+    box(scene,20,1.8,7,'#e6e2cb',x,1,z+22);
+    const towerX=x+44;
+    cyl(scene,4.0,27,'#99b1be',towerX,13.5,z-10);
+    box(scene,13,4,13,'#405965',towerX,29,z-10);
+    box(scene,15,.7,15,'#253743',towerX,31.4,z-10);
+    sign(i?'FRANCE – RIVIÈRE':'CITY AIRPORT',x,13.2,z+19.5,45,'#f2f5ff','#1f557c');
+    sign('FLUGTICKETS',a.gate.x,4.3,a.gate.z-3.5,15,'#ffeaba','#28558b');
+    box(scene,2.8,4.2,2.0,'#3166ae',a.gate.x,2.1,a.gate.z-4);
+    box(scene,1.7,1.2,.15,'#99d6ef',a.gate.x,2.65,a.gate.z-5.05);
+    for(let k=0;k<5;k++){
+      const traveler=makeHuman(k%2?'#527089':'#b36d55');
+      traveler.group.position.set(x-26+k*12,0,z+24);
+      scene.add(traveler.group);
+    }
+    solids.push({x,z:z-3,w:88,d:36});
+  });
+  box(scene,410,.10,18,'#43545b',560,.07,-105);
+  box(scene,280,.10,18,'#455561',1530,.07,-105);
+  box(scene,18,.1,340,'#53616a',1620,.06,30);
+  for(let i=0;i<8;i++){
+    const xx=1590+(i%3)*25,zz=-42+Math.floor(i/3)*80;
+    const h=8+(i%3)*4;
+    box(scene,20,h,18,i%2?'#dec8b0':'#d4bcb3',xx,h/2,zz);
+    box(scene,23,1,20,'#ae745e',xx,h+.6,zz);
+    box(scene,3,4,.16,'#517f99',xx-5,4,zz-9.1);
+    solids.push({x:xx,z:zz,w:20,d:18});
+  }
+  sign('BIENVENUE EN FRANCE',1580,8,180,38,'#f4efdf','#325f7d');
+}
 function createTrafficLights(){
   // Signals switch in two alternating phases: red really stops approaching cars.
   for(const cross of [[0,0],[-105,0],[105,0],[0,-105],[0,105]]){
@@ -335,25 +503,33 @@ function mustStopAtRed(x,z,heading,speed){
 function buildCity() {
   for(const p of roads){
     box(scene,18,.09,760,'#3f5056',p,.03,0);
-    box(scene,760,.09,18,'#3f5056',0,.035,p);
+    box(scene,1140,.09,18,'#3f5056',170,.035,p);
     box(scene,2.3,.16,760,'#a8a9a2',p-10.3,.08,0);
     box(scene,2.3,.16,760,'#a8a9a2',p+10.3,.08,0);
-    box(scene,760,.16,2.3,'#a8a9a2',0,.08,p-10.3);
-    box(scene,760,.16,2.3,'#a8a9a2',0,.08,p+10.3);
+    box(scene,1140,.16,2.3,'#a8a9a2',170,.08,p-10.3);
+    box(scene,1140,.16,2.3,'#a8a9a2',170,.08,p+10.3);
     for(let t=-352;t<=352;t+=18){
       if(roads.some(other=>Math.abs(t-other)<18))continue;
       box(scene,.22,.12,8,'#d0cebf',p,.10,t);
       box(scene,8,.12,.22,'#d0cebf',t,.10,p);
     }
   }
-  for(const a of roads)for(const b of roads){
+  for(const x of additionalEastRoads){
+    box(scene,18,.09,760,'#3f5056',x,.03,0);
+    for(const side of [-1,1])box(scene,2.3,.16,760,'#a8a9a2',x+side*10.3,.08,0);
+    for(let z=-352;z<=352;z+=22){
+      if(roads.some(r=>Math.abs(r-z)<14))continue;
+      box(scene,.22,.12,8,'#d0cebf',x,.10,z);
+    }
+  }
+  for(const a of roads.concat(additionalEastRoads))for(const b of roads){
     if(a===-210||a===210||b===-210||b===210)continue;
     for(let v=-7;v<=7;v+=3.5){
       box(scene,1.6,.15,3.3,'#d6d9ce',a+v,.14,b+13.5);
       box(scene,3.3,.15,1.6,'#d6d9ce',a+13.5,.14,b+v);
     }
   }
-  for(const x of [-262.5,-157.5,-52.5,52.5,157.5,262.5])
+  for(const x of [-262.5,-157.5,-52.5,52.5,157.5,262.5,367.5,472.5])
     for(const z of [-262.5,-157.5,-52.5,52.5,157.5,262.5]){
       box(scene,87,.09,87,'#878f81',x,.02,z);
       const specialty=shopDefs.find(s=>s.x===x&&s.z===z);
@@ -367,6 +543,9 @@ function buildCity() {
       streetLight(x-42,z-42);
     }
   createRailway();
+  createLevelCrossing();
+  createAirports();
+  createAirliner();
   createTrafficLights();
   // A riverside park, additional skyline and city border
   box(scene,150,.1,35,'#648d69',0,.1,360);
@@ -613,6 +792,10 @@ try{
     state.inventory=Array.isArray(data.inventory)?data.inventory.slice(0,40):[];
     state.built=!!data.built;
     rail.tickets=Math.max(0,Math.min(99,Number(data.trainTickets)||0));
+    flight.tickets=Math.max(0,Math.min(99,Number(data.flightTickets)||0));
+    flight.side=data.flightSide===1?1:0;
+    flight.stop=flight.side;
+    if(flight.side===1){player.x=airports[1].gate.x;player.z=airports[1].gate.z;}
   }
 }catch(e){}
 let day=0.27,playing=false,firstPerson=false,showModal=false,race=null,elapsed=0,toastUntil=0,lastFrame=performance.now();
@@ -628,7 +811,7 @@ const personal=addHeroCar(157,21,'#c74237','Veloce GT',950,state.owned,true,fals
 personal.group.visible=state.owned; // Showroom preview is already inside. Purchased car appears outside.
 const npcRace=createCar('#46bee6',true);scene.add(npcRace.group);npcRace.group.visible=false;
 function collectiblesCreate(){
-  const locs=[[-16,-70],[40,-109],[-175,-110],[-95,74],[105,115],[175,-105],[-213,140],[0,206],[-178,0],[104,-209],[207,28],[-3,-206]];
+  const locs=[[-16,-70],[40,-109],[-175,-110],[-95,74],[105,115],[175,-105],[-213,140],[0,206],[-178,0],[104,-209],[207,28],[-3,-206],[1510,-108],[1545,-70],[1610,160],[1550,180],[1625,210]];
   locs.forEach(([x,z],i)=>{
     const s=sphere(scene,.72,'#f6cc55',x,1.4,z);
     s.scale.set(1,.20,1);collectibles.push({x,z,obj:s,taken:false,phase:i});
@@ -652,11 +835,16 @@ function initialise(){
 }
 function renderHUD(){
   $('cash').textContent=state.cash.toLocaleString('de-DE')+' €';
-  $('vehicle').textContent=rail.onboard?'🚆 Im Zug':player.car?'🚗 '+player.car.name:'🚶 Zu Fuß';
+  $('vehicle').textContent=flight.onboard?'✈️ Im Flugzeug':rail.onboard?'🚆 Im Zug':player.car?'🚗 '+player.car.name:'🚶 Zu Fuß';
   $('speed').textContent=player.car?Math.round(Math.abs(player.car.speed)*3.6)+' km/h · ⛽ '+Math.round(player.car.fuel)+'%':'0 km/h';
   $('progress').textContent='🏁 '+state.wins+' Siege';
+  const goal=airports[flight.side].gate;
+  const distance=Math.hypot(goal.x-player.x,goal.z-player.z);
+  $('navigation').textContent=flight.onboard?'✈️ '+airports[1-flight.stop].country+' · im Flug':
+    '✈️ Flughafen '+airports[flight.side].country+': '+Math.round(distance)+' m '+(goal.x>player.x+20?'→ Osten':goal.x<player.x-20?'← Westen':goal.z<player.z?'↑ Norden':'↓ Süden');
   document.body.classList.toggle('driving',!!player.car);
-  if(rail.onboard){$('mission').textContent='🚆 Zugreise nach '+rail.stations[1-rail.stop].name+' · Ticket eingelöst';}
+  if(flight.onboard){$('mission').textContent='✈️ Flug nach '+airports[1-flight.stop].country+' · '+Math.round(flight.progress*100)+' % Strecke';}
+  else if(rail.onboard){$('mission').textContent='🚆 Zugreise nach '+rail.stations[1-rail.stop].name+' · Ticket eingelöst';}
   else if(race){
     $('mission').textContent='🏁 Rennen! Checkpoint '+(race.index+1)+'/'+race.points.length+
       ' · '+Math.round(race.elapsed)+'s · Gegner: '+Math.round(race.aiProgress*100)+'%';
@@ -671,7 +859,8 @@ function renderHUD(){
 function save(){
   try{localStorage.setItem(savedKey,JSON.stringify({
     cash:state.cash,wins:state.wins,owned:state.owned,deliveries:state.deliveries,
-    inventory:state.inventory,built:state.built,trainTickets:rail.tickets
+    inventory:state.inventory,built:state.built,trainTickets:rail.tickets,
+    flightTickets:flight.tickets,flightSide:flight.side
   }));}catch(e){}
 }
 function toast(text,seconds=3){
@@ -692,7 +881,7 @@ function openModal(title,desc,options){
 }
 function closeModal(){showModal=false;$('modal').classList.add('hidden');}
 function showInventory(){
-  if(!playing)return;
+  if(!playing||rail.onboard||flight.onboard)return;
   const counts=new Map();
   for(const item of state.inventory)counts.set(item,(counts.get(item)||0)+1);
   const lines=counts.size?[...counts].map(([item,count])=>item+' × '+count).join(' · '):'Du hast noch keine Sachen. Besuche den City Markt oder das Café.';
@@ -758,7 +947,7 @@ function setCar(car){
   renderHUD();
 }
 function tryVehicle(){
-  if(showModal||!playing||rail.onboard)return;
+  if(showModal||!playing||rail.onboard||flight.onboard)return;
   if(player.car){setCar(null);return;}
   const car=nearestCar();
   if(car&&near(player,car,7)){
@@ -819,7 +1008,8 @@ function openFuelMenu(car){
 }
 function interact(){
   if(!playing||showModal)return;
-  if(rail.onboard)return;
+  if(rail.onboard||flight.onboard)return;
+  if(airportAction())return;
   if(!player.car&&trainAction())return;
   if(nearPump()){openFuelMenu(player.car);return;}
   if(state.job&&near(player,targets[state.jobTarget],9)){finishJob();return;}
@@ -839,7 +1029,8 @@ function interact(){
 }
 function wallCollision(x,z,radius=.65,isVehicle=false){
   // Enlarged vehicle bounds: cars MUST stay outside every building including shop doors.
-  if(Math.abs(x)>371-radius||Math.abs(z)>371-radius)return true;
+  if(x< -680+radius||x>1920-radius||Math.abs(z)>620-radius)return true;
+  if(isVehicle&&crossingCollision(x,z,radius))return true;
   if(isVehicle)for(const o of obstacles){if(Math.hypot(x-o.x,z-o.z)<o.r+radius)return true;}
   for(const b of solids){
     if(Math.abs(x-b.x)<b.w/2+radius&&Math.abs(z-b.z)<b.d/2+radius)return true;
@@ -876,7 +1067,7 @@ function updateFoot(dt){
   const walk=Math.sin(elapsed*(input.sprint?19:13))*(moving?.33:0);
   avatar.legs[0].rotation.x=walk;avatar.legs[1].rotation.x=-walk;
 }
-function jump(){if(player.car||!playing||showModal)return;if(player.y===0){player.vertical=9;toast('⬆ Spring! ',.8);}}
+function jump(){if(player.car||rail.onboard||flight.onboard||!playing||showModal)return;if(player.y===0){player.vertical=9;toast('⬆ Spring! ',.8);}}
 function updateCar(dt){
   const c=player.car;
   if(!c)return;
@@ -885,6 +1076,7 @@ function updateCar(dt){
   if(input.gas)pedal=1;
   if(input.brake)brake=1;
   if(c.fuel<=0){pedal=0;if(Math.abs(c.speed)<.3)toast('⛽ Tank leer! Werkstatt aufsuchen.',1);}
+  if(rail.gateClosed&&Math.abs(c.z)<9&&Math.abs(c.x-rail.x)<33&&Math.abs(c.speed)>2)c.speed*=Math.exp(-1.6*dt);
   const accel=c.accel*(c.health/100*.65+.35);
   if(pedal)c.speed+=accel*pedal*dt;
   if(brake)c.speed-=24*brake*dt;
@@ -922,7 +1114,10 @@ function updateTraffic(dt){
   for(const t of traffic){
     const nearSignal=trafficLights.some(s=>s.axis===t.axis&&
       (t.axis==='z'?Math.abs(t.x-s.x)<8&&Math.abs(t.z-s.z)<18:Math.abs(t.z-s.z)<8&&Math.abs(t.x-s.x)<18));
-    const move=(!signalGreen(t.axis)&&nearSignal)?0:t.speed*dt;
+    const nearClosedGate=rail.gateClosed&&t.axis==='x'&&Math.abs(t.z)<9&&
+      ((t.dir<0&&t.x>rail.x+14&&t.x<rail.x+34)||
+      (t.dir>0&&t.x<rail.x-14&&t.x>rail.x-34));
+    const move=((!signalGreen(t.axis)&&nearSignal)||nearClosedGate)?0:t.speed*dt;
     if(t.axis==='z')t.z+=move*t.dir;
     else t.x+=move*t.dir;
     if(t.x>364)t.x=-364;if(t.x< -364)t.x=364;
@@ -955,7 +1150,7 @@ function updateMission(dt){
     c.obj.rotation.y+=dt*1.7;
     // Pickups are intentionally collected with the interaction button, not merely by walking over them.
   }
-  if(!rail.onboard && state.job && near(player,targets[state.jobTarget],7.5))finishJob();
+  if(!rail.onboard&&!flight.onboard&&state.job&&near(player,targets[state.jobTarget],7.5))finishJob();
   if(race){
     race.elapsed+=dt;
     const aiDist=Math.min(raceTotal,race.elapsed*11.1);
@@ -978,7 +1173,7 @@ function updateShopsRoof(){
   }
 }
 function updateCamera(dt){
-  const tgt=rail.onboard?{x:rail.x,y:5,z:rail.train.position.z,yaw:Math.PI}:player.car?{x:player.car.x,y:1.4,z:player.car.z,yaw:player.cameraYaw}:
+  const tgt=flight.onboard?{x:flight.plane.position.x,y:flight.plane.position.y+5,z:flight.plane.position.z,yaw:flight.stop===0?Math.PI/2:-Math.PI/2}:rail.onboard?{x:rail.x,y:5,z:rail.train.position.z,yaw:Math.PI}:player.car?{x:player.car.x,y:1.4,z:player.car.z,yaw:player.cameraYaw}:
     {x:player.x,y:player.y+1.6,z:player.z,yaw:player.cameraYaw};
   const angle=tgt.yaw;
   if(rail.onboard)player.cameraYaw=rail.stop===0?Math.PI:0;
@@ -990,8 +1185,8 @@ function updateCamera(dt){
     camera.lookAt(ahead);
     avatar.group.visible=false;
   }else{
-    avatar.group.visible=!(player.car||rail.onboard);
-    const distance=rail.onboard?21:(player.car?13:10);
+    avatar.group.visible=!(player.car||rail.onboard||flight.onboard);
+    const distance=flight.onboard?33:(rail.onboard?21:(player.car?13:10));
     const desired=new THREE.Vector3(
       tgt.x-Math.sin(angle)*distance,tgt.y+(player.car?6.8:5.4)+player.camPitch*5,tgt.z+Math.cos(angle)*distance);
     desired.y=Math.max(2.3,desired.y);
@@ -1011,6 +1206,8 @@ function drawMap(){
   }
   const dots=[
     ...rail.stations.map(st=>({x:rail.x+14,z:st.z,color:'#fce7a1'})),
+    {x:rail.x,z:0,color:rail.gateClosed?'#fa4141':'#e8e4ad'},
+    ...airports.map(a=>({x:a.gate.x,z:a.gate.z,color:'#9bdcfb'})),
     {x:station.x,z:station.z,color:'#36eea9'},
     {x:-27,z:21,color:'#fce277'},
     {x:0,z:-30,color:'#63dcff'},
@@ -1028,12 +1225,15 @@ function drawMap(){
 }
 function hint(){
   let text='';
-  if(rail.onboard)text='🚆 Unterwegs nach '+rail.stations[1-rail.stop].name;
+  if(flight.onboard)text='✈️ Flug nach '+airports[1-flight.stop].country;
+  else if(!player.car&&airportIndexNearby()>=0)text='✈️ E / AKTION: Flugtickets / Boarding';
+  else if(rail.onboard)text='🚆 Unterwegs nach '+rail.stations[1-rail.stop].name;
   else if(!player.car&&nearestRailStop()>=0)text='🎫 E / AKTION: Fahrkartenautomat und Zug';
   else if(nearPump())text=player.car?'⛽ ANHALTEN · E / AKTION: Tanken':'⛽ Tanken nur mit einem Fahrzeug';
   else if(state.job&&near(player,targets[state.jobTarget],13))text='📦 Ziel erreicht – Paket wird zugestellt';
   else if(player.car){
-    if(near(player,start,22))text='🏁 E / Aktion: Rennen starten';
+    if(rail.gateClosed&&Math.abs(player.x-rail.x)<48&&Math.abs(player.z)<25)text='🚧 Schranken geschlossen – Zug hat Vorrang!';
+    else if(near(player,start,22))text='🏁 E / Aktion: Rennen starten';
     else text='🚗 F / AUTO: Aussteigen · Lenken + Gas + Bremse';
   }else{
     const s=shops.find(s=>Math.abs(player.x-s.x)<s.w/2+6&&player.z>s.front-8&&player.z<s.z+s.d/2+7);
@@ -1064,8 +1264,10 @@ function tick(t){
     input.side=Number(!!keys.KeyD||!!keys.ArrowRight)-Number(!!keys.KeyA||!!keys.ArrowLeft)+stickValue.x;
     input.forward=THREE.MathUtils.clamp(input.forward,-1,1);input.side=THREE.MathUtils.clamp(input.side,-1,1);
     input.sprint=!!keys.ShiftLeft||!!keys.ShiftRight||touchSprint;
-    if(rail.onboard){}else if(player.car)updateCar(dt);else updateFoot(dt);
+    if(rail.onboard||flight.onboard){}else if(player.car)updateCar(dt);else updateFoot(dt);
     updateRail(dt);
+    updateFlight(dt);
+    updateLevelCrossing(dt);
     updateNPCs(dt);updateTrafficLights();updateTraffic(dt);updateBicycles(dt);updatePoliceAndHeli(dt);updateCrime(dt);updateMission(dt);updateShopsRoof();
   }
   updateCamera(dt);
@@ -1116,7 +1318,7 @@ function setupControls(){
   }
   $('closeModal').addEventListener('click',closeModal);
   $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal();});
-  $('help').addEventListener('click',()=>openModal('🎮 Steuerung & Ziele','iPad: linker Joystick bewegt den Menschen bzw. lenkt das Auto. Gas und Bremse im Auto rechts. Wische rechts über die Stadt, um dich umzusehen. PC: WASD, E Aktion, F Ein-/Aussteigen, V Perspektive, Leertaste springen, Shift sprinten, R Rennen am blauen Marker. Der goldene Wagen ist kostenlos geliehen. Jobs bringen 350 €, Rennen bis 650 €. Der rote Sportwagen kostet 950 €.',[{label:'Alles klar!',primary:true,run:()=>{}}]));
+  $('help').addEventListener('click',()=>openModal('🎮 Steuerung & Ziele','iPad: linker Joystick bewegt den Menschen bzw. lenkt das Auto. Gas und Bremse im Auto rechts. Wische rechts über die Stadt, um dich umzusehen. PC: WASD, E Aktion, F Ein-/Aussteigen, V Perspektive, Leertaste springen, Shift sprinten, R Rennen am blauen Marker. Der goldene Wagen ist kostenlos geliehen. Jobs bringen 350 €, Rennen bis 650 €. Der rote Sportwagen kostet 950 €. NEU: Flughafen im Osten (der Wegweiser zeigt die Entfernung). Flugticket am Terminal für 100 € kaufen, beim stehenden Flugzeug mit AKTION einsteigen und nach Frankreich fliegen. Rückflüge brauchen ebenfalls ein Ticket. Der Bahnübergang liegt westlich der City: Bei herannahendem Zug schließen Schranken automatisch – davor halten!',[{label:'Alles klar!',primary:true,run:()=>{}}]));
   $('fullscreen').addEventListener('click',()=>{const e=document.documentElement;if(document.fullscreenElement)document.exitFullscreen();else if(e.requestFullscreen)e.requestFullscreen().catch(()=>toast('Vollbild nicht verfügbar'));});
   $('start').addEventListener('click',()=>{$('veil').style.display='none';playing=true;lastFrame=performance.now();toast('Willkommen in City Racer! Folge dem gelben Marker.',4);});
   const area=$('stick');let pointer=null;
