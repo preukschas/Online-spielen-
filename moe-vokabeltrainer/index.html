@@ -31,7 +31,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:18px;fl
   <div class="topmeta"><span class="desktop">Englisch · Klasse 5 · Unit 1</span><span class="tag">165 VOKABELN</span></div>
 </header>
 <section class="hero">
-  <div><div class="eyebrow">LEVEL UP YOUR ENGLISH</div><h1>Schreiben.<br><span>Merken. Leveln.</span></h1><p>Dein Vokabeltraining mit echten Wörtern aus dem Schulbuch. Keine Lösungen vor dem Antworten – nur du und dein Wissen.</p></div>
+  <div><div class="eyebrow">LEVEL UP YOUR ENGLISH</div><h1>Schreiben.<br><span>Merken. Leveln.</span></h1><p>Dein Vokabeltraining mit echten Wörtern aus dem Schulbuch. Keine Weiter-Taste bei falschen Antworten. Korrigiere das Wort, dann geht es weiter.</p></div>
   <div class="hero-decoration" aria-hidden="true">🚀</div>
 </section>
 <section class="statbar" aria-label="Lernstatistik">
@@ -48,7 +48,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:18px;fl
         <button class="mode active" type="button" data-mode="mixed"><span class="icon">🎯</span>Gemischte Runde<small>10 Wörter aus der ganzen Unit</small></button>
         <button class="mode" type="button" data-mode="focus"><span class="icon">🔥</span>Schwierige Wörter<small>Deine Fehler und offene Wiederholungen</small></button>
         <button class="mode" type="button" data-mode="new"><span class="icon">🌱</span>Ungeübte Wörter<small>Nur Wörter, die du noch nicht trainiert hast</small></button>
-        <button class="mode" type="button" data-mode="pages"><span class="icon">📖</span>Neue Seiten 190–191<small>10 Wörter nur von den beiden neuen Seiten</small></button>
+        <button class="mode" type="button" data-mode="pages"><span class="icon">📖</span>Auf aktuellen Test üben<small>10 Wörter aus Seite 190–191</small></button>
         <button class="mode" type="button" data-mode="all"><span class="icon">🏁</span>Die große Challenge<small>Alle 165 Vokabeleinträge</small></button>
       </div>
       <label class="fieldlabel" for="topic">Thema</label>
@@ -80,7 +80,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:18px;fl
         <div class="actions">
           <button class="button primary" type="submit" id="check" disabled>Prüfen ✓</button>
           <button class="button ghost" type="button" id="tip" disabled>🔎 Buchstaben-Tipp</button>
-          <button class="button secondary" type="button" id="skip" disabled>Lösung aufdecken</button>
+          <button class="button secondary" type="button" id="skip" disabled>Lösung als Lernhilfe</button>
           <button class="button" type="button" id="next" hidden>Nächstes Wort →</button>
         </div>
       </form>
@@ -88,7 +88,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:18px;fl
     </div>
     <div id="statsView" class="hidden">
       <div class="flex"><h2 style="margin:0">Dein Lernstand</h2><button id="backTrain" class="button secondary smol" type="button">← Zurück</button></div>
-      <p class="subtle">Hier siehst du deinen Fortschritt auf diesem Gerät. Die englischen Lösungen erscheinen erst nach einer Antwort im Training.</p>
+      <p class="subtle">Hier siehst du deinen Fortschritt auf diesem Gerät. Bei falschen Antworten bleibt das Wort aktiv, bis es korrekt geschrieben wurde.</p>
       <div class="two-col"><div class="stat"><small>Versuche</small><strong id="statAttempts">0</strong></div><div class="stat"><small>Trefferquote</small><strong id="statRate">–</strong></div></div>
       <label class="fieldlabel" for="filterWords">Wörter filtern</label>
       <select class="select" id="filterWords"><option value="all">Alle 165</option><option value="weak">Fehler & offen</option><option value="mastered">Sichere Wörter</option><option value="new">Noch nie geübt</option></select>
