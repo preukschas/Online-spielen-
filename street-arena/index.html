@@ -167,7 +167,7 @@ function strike(f,g){
  const yDist=Math.abs(f.y-g.y);
  const verticalOK=m.level==='air'?(yDist<230):yDist<(g.y<0?148:103);
  if(distance>m.range||!facing||!verticalOK||g.inv>0)return;
- const low=m.level==='low',blocked=g.guard&&g.y===0&&(low?g.duck:!g.duck);
+ const low=m.level==='low';let blocked=g.guard&&g.y===0&&(low?g.duck:!g.duck);
  const parried=blocked&&g.parryT>0&&!low;
  if(parried){
   g.parryT=0;g.counterT=.65;g.power=clamp(g.power+12,0,100);
@@ -178,6 +178,11 @@ function strike(f,g){
   if(!g.ai)announce('PERFEKTER BLOCK!',.65);
   return;
  }
+ let guardBroken=false;
+ if(blocked){g.stamina=clamp(g.stamina-m.damage*1.15,0,100);
+  if(g.stamina<=0){guardBroken=true;blocked=false;g.guard=false;g.stun=.28;effect(g.x,400,'#d0fbff',10)}
+ }
+ if(guardBroken&&!g.ai)announce('BLOCK GEBROCHEN!',.6);
  const inCombo=f.chain>1&&f.chainT>0;
  let style=1;
  if(f.id==='sergej'&&f.action==='heavy')style=1.12;
