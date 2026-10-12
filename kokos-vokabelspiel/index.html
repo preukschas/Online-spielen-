@@ -136,9 +136,9 @@ async function moeRefreshVocabulary(){
   const next=[],seen=new Set();
   for(const row of data.words){
    if(!row||!row.en||!row.de)continue;
-   // Nur die 104 freigegebenen Vokabeln der ersten vier Seiten.
+   // Nur die 165 aktiven Vokabeln bis einschließlich Schulbuchseite 191.
    const approvedId=Number(String(row.id||'').replace(/^MOE-/,''));
-   if(!Number.isInteger(approvedId)||approvedId<1||approvedId>104)continue;
+   if(!Number.isInteger(approvedId)||approvedId<1||approvedId>165)continue;
    const key=moeKey(row.en);if(seen.has(key))continue;seen.add(key);
    next.push([String(row.de),String(row.en)]);
   }
