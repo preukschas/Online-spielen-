@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "updated": "2026-10-08",
-  "count": 104,
-  "description": "Nur aktivierte Lernbegriffe aus Moes Google-Vokabelbibliothek. Keine privaten Lernfortschritte.",
+  "updated": "2026-10-12",
+  "count": 165,
+  "description": "165 freigegebene Lernbegriffe aus Moes Google-Vokabelbibliothek; Seiten 190–191 ergänzt. Keine privaten Lernfortschritte.",
   "words": [
     {
       "id": "MOE-001",
@@ -968,6 +968,555 @@
       "alternatives": [
         "mum"
       ]
+    },
+    {
+      "id": "MOE-105",
+      "en": "her",
+      "de": "ihr",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-106",
+      "en": "family",
+      "de": "Familie",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-107",
+      "en": "with",
+      "de": "mit",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-108",
+      "en": "we're (= we are)",
+      "de": "wir sind",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-109",
+      "en": "garden",
+      "de": "Garten",
+      "topic": "Haus & Natur",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-110",
+      "en": "she's (= she is)",
+      "de": "sie ist",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-111",
+      "en": "I have",
+      "de": "ich habe; ich besitze",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-112",
+      "en": "no brothers",
+      "de": "keine Brüder",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-113",
+      "en": "me",
+      "de": "ich (im Beispielsatz); mich; mir",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-114",
+      "en": "our",
+      "de": "unser",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-115",
+      "en": "his",
+      "de": "sein",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-116",
+      "en": "name",
+      "de": "Name",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-117",
+      "en": "he's (= he is)",
+      "de": "er ist",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-118",
+      "en": "too",
+      "de": "auch",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-119",
+      "en": "friend",
+      "de": "Freund; Freundin",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-120",
+      "en": "a photo of",
+      "de": "ein Foto von",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-121",
+      "en": "game",
+      "de": "Spiel",
+      "topic": "Freizeit & Sport",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-122",
+      "en": "crazy",
+      "de": "verrückt",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-123",
+      "en": "kid",
+      "de": "Kind",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-124",
+      "en": "together",
+      "de": "zusammen",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-125",
+      "en": "everyone",
+      "de": "jeder; alle",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-126",
+      "en": "we live",
+      "de": "wir wohnen",
+      "topic": "Haus & Natur",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-127",
+      "en": "on the door",
+      "de": "an der Tür",
+      "topic": "Haus & Natur",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-128",
+      "en": "my brother and me",
+      "de": "mein Bruder und ich",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-129",
+      "en": "come in",
+      "de": "komm herein",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-130",
+      "en": "meet my family",
+      "de": "lerne meine Familie kennen",
+      "topic": "Familie",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-131",
+      "en": "to be",
+      "de": "sein",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-132",
+      "en": "you're (= you are)",
+      "de": "du bist; ihr seid; Sie sind",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 190,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-133",
+      "en": "I",
+      "de": "ich",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-134",
+      "en": "you",
+      "de": "du; ihr; Sie",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-135",
+      "en": "he",
+      "de": "er",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-136",
+      "en": "she",
+      "de": "sie (Einzahl)",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-137",
+      "en": "it",
+      "de": "es",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-138",
+      "en": "we",
+      "de": "wir",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-139",
+      "en": "they",
+      "de": "sie (Mehrzahl)",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-140",
+      "en": "table",
+      "de": "Tisch",
+      "topic": "Wohnen & Zimmer",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-141",
+      "en": "chair",
+      "de": "Stuhl",
+      "topic": "Wohnen & Zimmer",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-142",
+      "en": "box",
+      "de": "Box; Kiste",
+      "topic": "Wohnen & Zimmer",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-143",
+      "en": "mobile (phone)",
+      "de": "Handy; Mobiltelefon",
+      "topic": "Wohnen & Zimmer",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-144",
+      "en": "T-shirt",
+      "de": "T-Shirt",
+      "topic": "Kleidung & Aussehen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-145",
+      "en": "poster",
+      "de": "Poster",
+      "topic": "Wohnen & Zimmer",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-146",
+      "en": "book",
+      "de": "Buch; Heft",
+      "topic": "Schule & Lernen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-147",
+      "en": "bed",
+      "de": "Bett",
+      "topic": "Wohnen & Zimmer",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-148",
+      "en": "shelf (pl. shelves)",
+      "de": "Regal; Regalbrett (Mehrzahl: Regale)",
+      "topic": "Wohnen & Zimmer",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-149",
+      "en": "wardrobe",
+      "de": "Kleiderschrank",
+      "topic": "Wohnen & Zimmer",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-150",
+      "en": "trainer",
+      "de": "Turnschuh",
+      "topic": "Kleidung & Aussehen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-151",
+      "en": "carpet",
+      "de": "Teppich",
+      "topic": "Wohnen & Zimmer",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-152",
+      "en": "scarf (pl. scarves)",
+      "de": "Schal; Tuch (Mehrzahl: Schals/Tücher)",
+      "topic": "Kleidung & Aussehen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-153",
+      "en": "lamp",
+      "de": "Lampe",
+      "topic": "Wohnen & Zimmer",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-154",
+      "en": "alarm clock",
+      "de": "Wecker",
+      "topic": "Wohnen & Zimmer",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-155",
+      "en": "bedroom",
+      "de": "Schlafzimmer; Kinderzimmer",
+      "topic": "Wohnen & Zimmer",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-156",
+      "en": "Saturday",
+      "de": "Samstag",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-157",
+      "en": "at home",
+      "de": "zu Hause",
+      "topic": "Haus & Natur",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-158",
+      "en": "home",
+      "de": "Zuhause; Heim",
+      "topic": "Haus & Natur",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-159",
+      "en": "who",
+      "de": "wer",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-160",
+      "en": "It's me!",
+      "de": "Ich bin's!",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-161",
+      "en": "Are you ready?",
+      "de": "Bist du bereit?",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-162",
+      "en": "under",
+      "de": "unter",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-163",
+      "en": "I can't find ...",
+      "de": "ich kann ... nicht finden",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-164",
+      "en": "new",
+      "de": "neu",
+      "topic": "Alltag & Redewendungen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
+    },
+    {
+      "id": "MOE-165",
+      "en": "there is (= there's)",
+      "de": "da ist; es gibt",
+      "topic": "Grammatik & Pronomen",
+      "unit": "Unit 1",
+      "page": 191,
+      "alternatives": []
     }
   ]
 }
