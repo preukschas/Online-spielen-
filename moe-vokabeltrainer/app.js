@@ -23,7 +23,7 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 function choose(){
  let a=words.filter(w=>!$("topic").value||w.topic===$("topic").value);
  if(mode==="new")a=a.filter(w=>get(w.id).n===0);
- if(mode==="pages")a=a.filter(w=>w.page===190||w.page===191);
+ if(mode==="pages")a=a.filter(w=>Number(w.id.slice(4))>=105&&Number(w.id.slice(4))<=165);
  if(mode==="focus"){const b=a.filter(w=>{const s=get(w.id);return !mastered(s)&&(s.bad>0||(s.n>0&&s.due<=Date.now()));});if(b.length)a=b;else a=a.filter(w=>!mastered(get(w.id)));}
  a=shuffle(a);
  if(mode==="focus"||mode==="mixed")a.sort((x,y)=>{
@@ -66,7 +66,7 @@ function valid(w,input){
 }
 function log(w,yes,answer){
  let s={...get(w.id)};
- s.n++;if(yes){s.ok++;s.streak++;data.xp+=help?5:10;}else{s.bad++;s.streak=0;}
+ s.n++;if(yes){s.ok++;s.streak++;data.xp+=tries>0?0:help?5:10;}else{s.bad++;s.streak=0;}
  s.due=Date.now()+(yes?Math.min(14,Math.pow(2,s.streak-1))*86400000:0);
  data.stats[w.id]=s;
  data.history.unshift({id:w.id,date:new Date().toISOString(),ok:yes,answer:answer});
@@ -87,11 +87,12 @@ function feedback(ok,title,detail,solution){
 function lock(){
  $("answer").disabled=true;$("check").disabled=true;$("tip").disabled=true;$("skip").disabled=true;$("next").hidden=false;$("next").focus();
 }
-function finishWord(yes,ans,alreadyLogged){
- const w=round[cursor];if(!alreadyLogged)log(w,yes,ans);
- if(yes)correct++;else incorrect++;
+function finishWord(ans){
+ const w=round[cursor],firstTry=tries===0;
+ log(w,true,ans);
+ if(firstTry)correct++;else incorrect++;
  tries=99;lock();
- feedback(yes,yes?"✓ Richtig!":"Dieses Wort wiederholen",yes?"Sehr gut geschrieben.":"Das ist die richtige Schreibweise:",expected(w));
+ feedback(true,firstTry?"✓ Sofort richtig!":"✓ Jetzt richtig geschrieben!",firstTry?"Sehr gut!":"Dieses Wort war zunächst falsch und wird weiterhin wiederholt.",expected(w));
 }
 function showWord(){
  const w=round[cursor];if(!w){finishRound();return;}
@@ -114,7 +115,7 @@ function finishRound(){
  $("topicName").textContent="★ GESCHAFFT";
  $("roundLabel").textContent="Runde abgeschlossen";
  $("prompt").textContent=correct+" von "+round.length+" richtig";
- $("extra").textContent=incorrect+" Wörter werden beim Wiederholen verstärkt geübt.";
+ $("extra").textContent=incorrect+" Wörter brauchten eine Korrektur und werden beim Wiederholen verstärkt geübt.";
  const box=$("feedback");box.className="feedback ok";box.replaceChildren();
  const b=document.createElement("button");b.type="button";b.className="button";b.textContent="Neue Runde starten →";b.onclick=start;box.appendChild(b);
 }
@@ -127,14 +128,15 @@ $("answerForm").addEventListener("submit",e=>{
  e.preventDefault();if(tries===99||!round.length)return;
  const w=round[cursor],answer=$("answer").value.trim();
  if(!answer){feedback(false,"Noch keine Antwort","Schreibe zuerst deine Übersetzung.");return;}
- if(valid(w,answer)){finishWord(true,answer,false);return;}
+ if(valid(w,answer)){finishWord(answer);return;}
  log(w,false,answer);
- if(tries===0){tries=1;feedback(false,"Noch nicht ganz","Versuch es ein zweites Mal. Prüfe Buchstaben und Wortformen.");$("answer").select();}
- else{finishWord(false,answer,true);}
+ tries++;
+ feedback(false,"Noch nicht richtig",tries>=3?"Die Lösung lautet: "+expected(w)+". Bitte schreibe sie jetzt selbst korrekt in das Eingabefeld.":"Versuche es erneut. Erst die richtige Eingabe schaltet Weiter frei.");
+ $("answer").select();
 });
 $("tip").onclick=()=>{if(!round.length)return;help=true;feedback(true,"Kleiner Hinweis","Das Wort beginnt mit „"+expected(round[cursor]).slice(0,2)+"…“.");$("tip").disabled=true;};
-$("skip").onclick=()=>{if(round.length&&tries!==99)finishWord(false,"(Lösung aufgedeckt)",false);};
-$("next").onclick=()=>{cursor++;if(cursor<round.length)showWord();else finishRound();};
+$("skip").onclick=()=>{if(round.length&&tries!==99){help=true;feedback(false,"Lernhilfe – kein Überspringen","Schreibe die Lösung erst korrekt, um fortzufahren.",expected(round[cursor]));$("answer").focus();}};
+$("next").onclick=()=>{if(tries!==99||!round.length)return;cursor++;if(cursor<round.length)showWord();else finishRound();};
 document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{
  mode=b.dataset.mode;document.querySelectorAll("[data-mode]").forEach(x=>x.classList.toggle("active",x===b));
 });
