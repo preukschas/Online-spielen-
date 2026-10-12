@@ -55,7 +55,7 @@ window.ARENA_ZERO_PORTRAITS.status
 
 ## Test und Grenzen
 
-Die Spielregeln wurden mit **gemocktem DOM und Canvas** getestet (12/12 Testfälle erfolgreich, vgl. `tests/TESTPLAN.md`). Zusätzlich gibt es einen browserbasierten Integrations-Smoke-Test. **Ein vollständiger Spieltest auf einem realen iPad, eine visuelle Beurteilung jeder Pose und die öffentliche CDN-Auslieferung sind damit nicht automatisch bestätigt.** Die Figuren bleiben stilisierte 2D-Animationen mit echten Porträttexturen, keine fotorealistischen Motion-Capture-Modelle.
+Die Spielregeln wurden mit **gemocktem DOM und Canvas** getestet (13/13 Testfälle im erweiterten Lauf erfolgreich, vgl. `tests/TESTPLAN.md`). Zusätzlich gibt es einen browserbasierten Integrations-Smoke-Test. **Ein vollständiger Spieltest auf einem realen iPad, eine visuelle Beurteilung jeder Pose und die öffentliche CDN-Auslieferung sind damit nicht automatisch bestätigt.** Die Figuren bleiben stilisierte 2D-Animationen mit echten Porträttexturen, keine fotorealistischen Motion-Capture-Modelle.
 
 ## Versionshistorie und Rückweg
 
