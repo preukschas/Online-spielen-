@@ -20,6 +20,7 @@
 
 ### Oberfläche
 - Neue türkisfarbene Ausdaueranzeige.
+- Die Vier-Tasten-Touchsteuerung ermöglicht über **Ducken + Schlag/Tritt** auch schweren Schlag und tiefen Tritt.
 - Hilfetext um Q/Doppeltippen ergänzt.
 - Lesbare Diagnosedaten unter `window.ARENA_ZERO_DIAGNOSTICS()`.
 
