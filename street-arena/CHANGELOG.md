@@ -9,7 +9,7 @@
 - Reaktionsfähigere KI mit Bewegungsentscheidung, Angriffsmischung, Block, optionalem Ausweichen und Anti-Spam-Erkennung (je nach Schwierigkeitsgrad).
 - Eingabepuffer für aufeinanderfolgende Schläge; begrenzte bestätigte Kombos und abnehmende Kombowirkung.
 - Doppeltes Tippen einer Richtung oder Q = Ausweichschritt (Abklingzeit und Kosten).
-- Zeitlich eng begrenzter perfekter Block und darauf folgendes Konterfenster.
+- Zeitlich eng begrenzter perfekter Block und darauf folgendes Konterfenster; Ausdauerverlust beim Blocken und Guard-Break bei leerer Leiste.
 - Kämpfer-Stärken: Sergej (schwerer Schlag), Aki (Kombos), Moe (Luftangriffe), Domi (Konter).
 
 ### Animation & Inszenierung
