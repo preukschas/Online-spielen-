@@ -31,14 +31,15 @@ Die Seite `tests/smoke.html` lädt ARENA ZERO in einen gleichoriginären Frame, 
 2. **Luftkampf:** W + U / Touch-Sprung + Tritt in unmittelbarer Nähe zum Gegner. Der Tritt muss sichtbar ausschlagen, Schaden verursachen und sauber landen.
 3. **Kombos:** J → J → U in Reichweite, mit kurzen Pausen drücken. Eingaben sollen weder verloren gehen noch unbegrenzte Schlagserien auslösen.
 4. **Spam:** Nur J oder nur U mehrfach drücken. Gegen normale KI muss die Verteidigung mit der Zeit reagieren; der Ausdauerbalken soll sinken und wieder steigen.
-5. **Block und Konter:** Space früh drücken (normaler Block), dann unmittelbar vor einem sichtbaren Angriff drücken (perfekter Block); anschließend einen eigenen Treffer landen.
-6. **Ausweichen:** Q am Desktop; am Touchpad zweimal schnell dieselbe Richtung. Figur muss zurückweichen, nicht permanent unverwundbar sein.
-7. **Kämpfer-Unterschiede:** Sergejs schwere Schläge, Akis längere Ketten, Moes Lufttritt und Domis Konter jeweils testen.
-8. **K. o. / Verlust:** Beide Seiten mindestens einmal verlieren lassen. Sturz beginnt sichtbar, Figur liegt nach ca. 0,7 s ruhig am Boden, keine Idle-Bewegung, kein Zittern.
-9. **Touch:** Auf Hoch-/Querformat prüfen, ob alle notwendigen Tasten erreichbar sind und keine Überlagerung erfolgt.
-10. **Audio und Pausen:** Musik, Treffer, Spezialattacke, Stummtaste, Pause, Fortsetzen und Rückkehr zum Menü testen.
-11. **Leistung:** Auf iPad zehn Kämpfe starten, auf unbeabsichtigte Verzögerungen, Ruckeln, Speicher-/Bildausfälle achten.
-12. **Balance:** Einfach, Normal und Schwer mit jedem Kämpfer spielen; prüfen, ob Treffer nachvollziehbar und Schwierigkeitsunterschiede fair bleiben.
+5. **Touch-Kombination:** Auf iPad/Smartphone Ducken + JAB bzw. Ducken + KICK gedrückt halten: schwerer Schlag bzw. tiefer Tritt müssen ausgelöst werden.
+6. **Block und Konter:** Space früh drücken (normaler Block), dann unmittelbar vor einem sichtbaren Angriff drücken (perfekter Block); anschließend einen eigenen Treffer landen.
+7. **Ausweichen:** Q am Desktop; am Touchpad zweimal schnell dieselbe Richtung. Figur muss zurückweichen, nicht permanent unverwundbar sein.
+8. **Kämpfer-Unterschiede:** Sergejs schwere Schläge, Akis längere Ketten, Moes Lufttritt und Domis Konter jeweils testen.
+9. **K. o. / Verlust:** Beide Seiten mindestens einmal verlieren lassen. Sturz beginnt sichtbar, Figur liegt nach ca. 0,7 s ruhig am Boden, keine Idle-Bewegung, kein Zittern.
+10. **Touch:** Auf Hoch-/Querformat prüfen, ob alle notwendigen Tasten erreichbar sind und keine Überlagerung erfolgt.
+11. **Audio und Pausen:** Musik, Treffer, Spezialattacke, Stummtaste, Pause, Fortsetzen und Rückkehr zum Menü testen.
+12. **Leistung:** Auf iPad zehn Kämpfe starten, auf unbeabsichtigte Verzögerungen, Ruckeln, Speicher-/Bildausfälle achten.
+13. **Balance:** Einfach, Normal und Schwer mit jedem Kämpfer spielen; prüfen, ob Treffer nachvollziehbar und Schwierigkeitsunterschiede fair bleiben.
 
 ## D. Freigabekriterien
 
