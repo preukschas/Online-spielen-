@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "basePath": "./assets/",
   "cover": "title/arena-zero-cover.png",
   "fighters": {
@@ -16,5 +16,5 @@
     "domi-sergej": "vs/sergej-vs-domi.png",
     "moe-sergej": "vs/sergej-vs-moe.png"
   },
-  "status": "11 uploaded PNG files linked by Git blob and referenced by the game; two previously unknown UUID filenames assigned to cover and Aki card (visual verification pending)."
+  "status": "11 Asset-Verknüpfungen vorhanden; vier Kämpferporträts einschließlich der kanonischen Datei fighters/aki.png sind im aktuellen Git-Baum vorhanden. Die öffentliche Anzeige muss auf dem Endgerät geprüft werden."
 }
