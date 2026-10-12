@@ -631,7 +631,9 @@ function handleChoice(button,isCorrect){
    $('feedback').textContent='🧩 Drei Fehlversuche. Richtig ist: '+state.current.de+'. Das Wort wird wiederholt. Du darfst weitergehen.';
    state.index++;state.awaitingNext=true;$('nextBtn').classList.remove('hidden');$('nextBtn').disabled=false;
   }else{
-   const clue=state.quizErrors===1?'Versuch es erneut.':('Tipp: Die richtige deutsche Bedeutung beginnt mit „'+state.current.de.charAt(0)+'“.');
+   const clue=state.quizErrors===1
+    ?('Tipp 1/2: Die Bedeutung beginnt mit „'+state.current.de.charAt(0)+'“.')
+    :('Tipp 2/2: Die Bedeutung beginnt mit „'+state.current.de.slice(0,2)+'“ und hat '+state.current.de.length+' Zeichen.');
    $('feedback').textContent='❌ Versuch '+state.quizErrors+'/3. '+clue;
    state.awaitingNext=false;$('nextBtn').classList.add('hidden');$('nextBtn').disabled=true;
   }
