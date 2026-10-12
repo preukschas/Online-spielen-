@@ -1,5 +1,6 @@
 <!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#111525"><title>ARENA ZERO — 2D Classic Fighter</title><style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#070b13;color:white;font:600 15px system-ui,Arial;overflow:hidden;touch-action:none}canvas{display:block;width:100%;height:100%;touch-action:none}#game{position:fixed;inset:0}#hud{position:fixed;top:max(12px,env(safe-area-inset-top));left:4%;width:92%;display:none;align-items:flex-start;gap:12px;pointer-events:none;text-shadow:2px 3px 0 #000}#hud.on{display:flex}.side{flex:1;min-width:0}.side.right{text-align:right}.name{font-size:clamp(11px,2.1vw,23px);font-weight:1000;letter-spacing:.09em}.bar{height:clamp(14px,3vw,27px);border:2px solid #f5dca9;background:#361c27;box-shadow:0 3px 0 #000;overflow:hidden;transform:skewX(-9deg)}.fill{height:100%;width:100%;background:linear-gradient(#fff3ac,#ffac25 45%,#b63c27);transition:width .12s}.right .fill{margin-left:auto}.super{height:7px;margin-top:8px;background:#0b162e;border:1px solid #6d7a95}.super>i{display:block;height:100%;background:linear-gradient(90deg,#43c5ff,#d8ffff);width:0%}.time{text-align:center;font-size:clamp(30px,5.5vw,59px);color:#ffe79c;min-width:60px;font-weight:1000;line-height:1}.pips{font-size:17px;color:#f8d775;letter-spacing:4px;min-height:20px}#menu,#end,#pause{position:fixed;inset:0;z-index:10;background:linear-gradient(135deg,#07101bed,#241421ef);display:flex;align-items:center;justify-content:center;padding:18px}#end,#pause{display:none}.panel{max-width:750px;width:100%;max-height:96vh;overflow:auto;background:linear-gradient(120deg,#253146,#101524 58%,#2b202d);padding:clamp(20px,4vw,38px);border:2px solid #9e8b75;box-shadow:0 16px 60px #000e}h1{font-size:clamp(52px,12vw,112px);font-weight:1000;line-height:.85;letter-spacing:-.085em;font-style:italic;margin:12px 0 22px;text-shadow:4px 5px #771b25}h1 span{color:#ffbd62}.tag{font-size:11px;letter-spacing:.24em;color:#f9c46f}.lead{line-height:1.5;color:#c9d0e2;font-size:14px}h2{font-size:clamp(30px,7vw,54px);margin:8px 0}button,select{font:inherit}button{cursor:pointer}.choices{display:flex;gap:12px;margin:17px 0;flex-wrap:wrap}.pick{flex:1;min-width:160px;background:#151f30;border:2px solid #56647b;color:white;padding:17px;text-align:left}.pick.active{border-color:#ffd479;background:#394052}.pick b{display:block;font-size:20px}.pick small{color:#bfc9d9}.go{background:linear-gradient(#fff2b0,#eba145);color:#211525;border:1px solid #fff1af;padding:15px 24px;font-weight:1000;letter-spacing:.06em}.row{display:flex;gap:15px;flex-wrap:wrap;align-items:center;justify-content:space-between}select{padding:10px;background:#162338;color:white;border:1px solid #a5a7ab}.foot{font-size:12px;color:#bec8db;margin-top:18px;line-height:1.8}#top{position:fixed;right:12px;top:clamp(88px,14vh,118px);z-index:4;display:flex;gap:5px}#top button{padding:7px 11px;color:white;background:#0d1726b9;border:1px solid #8994a2}#banner{position:fixed;left:50%;top:37%;transform:translate(-50%,-50%);font-size:clamp(35px,10vw,105px);font-style:italic;font-weight:1000;letter-spacing:-.06em;color:#ffe3a4;text-shadow:4px 6px #86292a,8px 10px #060914;z-index:5;pointer-events:none;white-space:nowrap}#touch{position:fixed;bottom:max(13px,env(safe-area-inset-bottom));left:0;width:100%;z-index:7;display:none;justify-content:space-between;align-items:end;padding:0 3%;pointer-events:none}#touch.on{display:flex}.dpad,.attack{display:grid;gap:7px;pointer-events:auto}.dpad{grid-template-columns:repeat(3,clamp(43px,8.5vw,68px));grid-template-rows:repeat(2,clamp(43px,8.5vw,68px))}.attack{grid-template-columns:repeat(3,clamp(43px,9vw,72px));grid-template-rows:repeat(2,clamp(43px,9vw,72px))}.touchbtn{border:1px solid #bdd1e4a8;border-radius:8px;color:white;background:#203b60c7;touch-action:none;user-select:none;font-size:clamp(11px,2vw,16px);font-weight:1000;text-shadow:0 2px #000}.touchbtn:active,.touchbtn.down{background:#bd813f}.touchbtn.special{background:#90454fcf}.dpad .up{grid-column:2;grid-row:1}.dpad .left{grid-column:1;grid-row:2}.dpad .down{grid-column:2;grid-row:2}.dpad .right{grid-column:3;grid-row:2}#help{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);color:#d6ddedaa;font-size:11px;pointer-events:none;white-space:nowrap} @media(pointer:coarse),(max-width:760px){#help{display:none}}@media(max-height:450px){#touch{bottom:4px}.panel{padding:12px}h1{font-size:50px;margin:7px 0}.choices{margin:8px 0}.pick{padding:8px}.lead{font-size:12px}.foot{margin-top:9px}}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#070b13;color:white;font:600 15px system-ui,Arial;overflow:hidden;touch-action:none}canvas{display:block;width:100%;height:100%;touch-action:none}#game{position:fixed;inset:0}#hud{position:fixed;top:max(12px,env(safe-area-inset-top));left:4%;width:92%;display:none;align-items:flex-start;gap:12px;pointer-events:none;text-shadow:2px 3px 0 #000}#hud.on{display:flex}.side{flex:1;min-width:0}.side.right{text-align:right}.name{font-size:clamp(11px,2.1vw,23px);font-weight:1000;letter-spacing:.09em}.bar{height:clamp(14px,3vw,27px);border:2px solid #f5dca9;background:#361c27;box-shadow:0 3px 0 #000;overflow:hidden;transform:skewX(-9deg)}.fill{height:100%;width:100%;background:linear-gradient(#fff3ac,#ffac25 45%,#b63c27);transition:width .12s}.right .fill{margin-left:auto}.super{height:7px;margin-top:8px;background:#0b162e;border:1px solid #6d7a95}.super>i{display:block;height:100%;background:linear-gradient(90deg,#43c5ff,#d8ffff);width:0%}.time{text-align:center;font-size:clamp(30px,5.5vw,59px);color:#ffe79c;min-width:60px;font-weight:1000;line-height:1}.pips{font-size:17px;color:#f8d775;letter-spacing:4px;min-height:20px}#menu,#end,#pause{position:fixed;inset:0;z-index:10;background:linear-gradient(135deg,#07101bed,#241421ef);display:flex;align-items:center;justify-content:center;padding:18px}#end,#pause{display:none}.panel{max-width:750px;width:100%;max-height:96vh;overflow:auto;background:linear-gradient(120deg,#253146,#101524 58%,#2b202d);padding:clamp(20px,4vw,38px);border:2px solid #9e8b75;box-shadow:0 16px 60px #000e}h1{font-size:clamp(52px,12vw,112px);font-weight:1000;line-height:.85;letter-spacing:-.085em;font-style:italic;margin:12px 0 22px;text-shadow:4px 5px #771b25}h1 span{color:#ffbd62}.tag{font-size:11px;letter-spacing:.24em;color:#f9c46f}.lead{line-height:1.5;color:#c9d0e2;font-size:14px}h2{font-size:clamp(30px,7vw,54px);margin:8px 0}button,select{font:inherit}button{cursor:pointer}.choices{display:flex;gap:12px;margin:17px 0;flex-wrap:wrap}.pick{flex:1;min-width:160px;background:#151f30;border:2px solid #56647b;color:white;padding:17px;text-align:left}.pick.active{border-color:#ffd479;background:#394052}.pick b{display:block;font-size:20px}.pick small{color:#bfc9d9}.go{background:linear-gradient(#fff2b0,#eba145);color:#211525;border:1px solid #fff1af;padding:15px 24px;font-weight:1000;letter-spacing:.06em}.row{display:flex;gap:15px;flex-wrap:wrap;align-items:center;justify-content:space-between}select{padding:10px;background:#162338;color:white;border:1px solid #a5a7ab}.foot{font-size:12px;color:#bec8db;margin-top:18px;line-height:1.8}#top{position:fixed;right:12px;top:clamp(88px,14vh,118px);z-index:4;display:flex;gap:5px}#top button{padding:7px 11px;color:white;background:#0d1726b9;border:1px solid #8994a2}#banner{position:fixed;left:50%;top:37%;transform:translate(-50%,-50%);font-size:clamp(35px,10vw,105px);font-style:italic;font-weight:1000;letter-spacing:-.06em;color:#ffe3a4;text-shadow:4px 6px #86292a,8px 10px #060914;z-index:5;pointer-events:none;white-space:nowrap}.stamina{height:6px;background:#13202e;border:1px solid #58606a;margin-top:4px;overflow:hidden}.stamina i{display:block;width:100%;height:100%;background:linear-gradient(90deg,#3bc2ae,#dafef3);transition:width .12s}.side.right .stamina i{margin-left:auto}
+#touch{position:fixed;bottom:max(13px,env(safe-area-inset-bottom));left:0;width:100%;z-index:7;display:none;justify-content:space-between;align-items:end;padding:0 3%;pointer-events:none}#touch.on{display:flex}.dpad,.attack{display:grid;gap:7px;pointer-events:auto}.dpad{grid-template-columns:repeat(3,clamp(43px,8.5vw,68px));grid-template-rows:repeat(2,clamp(43px,8.5vw,68px))}.attack{grid-template-columns:repeat(3,clamp(43px,9vw,72px));grid-template-rows:repeat(2,clamp(43px,9vw,72px))}.touchbtn{border:1px solid #bdd1e4a8;border-radius:8px;color:white;background:#203b60c7;touch-action:none;user-select:none;font-size:clamp(11px,2vw,16px);font-weight:1000;text-shadow:0 2px #000}.touchbtn:active,.touchbtn.down{background:#bd813f}.touchbtn.special{background:#90454fcf}.dpad .up{grid-column:2;grid-row:1}.dpad .left{grid-column:1;grid-row:2}.dpad .down{grid-column:2;grid-row:2}.dpad .right{grid-column:3;grid-row:2}#help{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);color:#d6ddedaa;font-size:11px;pointer-events:none;white-space:nowrap} @media(pointer:coarse),(max-width:760px){#help{display:none}}@media(max-height:450px){#touch{bottom:4px}.panel{padding:12px}h1{font-size:50px;margin:7px 0}.choices{margin:8px 0}.pick{padding:8px}.lead{font-size:12px}.foot{margin-top:9px}}
 </style><style id="assets-style">
 #menu{background-image:linear-gradient(90deg,#08101cef,#121021ed),url('./assets/title/arena-zero-cover.png');background-position:center;background-size:cover}
 #menu.cover-loaded{background-image:linear-gradient(90deg,#08101caa,#1210218a),url('./assets/title/arena-zero-cover.png')}
@@ -28,7 +29,7 @@
 .attack [data-key="Space"]{grid-column:1;grid-row:2;border-radius:50%;background:#337d53df}
 .attack [data-key="KeyL"]{grid-column:2;grid-row:1;border-radius:50%;background:#a94152df}
 </style></head><body><canvas id="game"></canvas>
-<div id="hud"><div class="side"><div id="n1" class="name">KAITO STORM</div><div class="bar"><div class="fill" id="h1"></div></div><div class="super"><i id="e1"></i></div><div id="r1" class="pips"></div></div><div class="time" id="clock">90</div><div class="side right"><div id="n2" class="name">VEX SHADOW</div><div class="bar"><div class="fill" id="h2"></div></div><div class="super"><i id="e2"></i></div><div id="r2" class="pips"></div></div></div>
+<div id="hud"><div class="side"><div id="n1" class="name">KAITO STORM</div><div class="bar"><div class="fill" id="h1"></div></div><div class="super"><i id="e1"></i></div><div class="stamina"><i id="st1"></i></div><div id="r1" class="pips"></div></div><div class="time" id="clock">90</div><div class="side right"><div id="n2" class="name">VEX SHADOW</div><div class="bar"><div class="fill" id="h2"></div></div><div class="super"><i id="e2"></i></div><div class="stamina"><i id="st2"></i></div><div id="r2" class="pips"></div></div></div>
 <div id="top"><button id="sound">♫ AN</button><button id="paused">Ⅱ</button><button id="fullscreen">⛶</button></div><div id="banner"></div>
 <div id="menu"><div class="panel"><div class="tag">DMP GAMES · CLASSIC PS2-ERA ARCADE STYLE · 2D</div><h1>ARENA<br><span>ZERO</span></h1><div class="lead">Das klassische Kampfspiel von links nach rechts: zwei Gegner, eine Arena, präzise Schläge, Tritte, Sprünge, Blocken und Kombos. Keine 3D-Perspektive.</div><div class="choices"><button class="pick active" data-f="sergej"><span class="fighter-art"><img data-src="./assets/fighters/sergej.png" alt="SERGEJ"><span class="fighter-initial">S</span></span><span class="pickname"><b>SERGEJ</b><small>Kraft · Boxen</small></span></button><button class="pick" data-f="aki"><span class="fighter-art"><img data-src="./assets/fighters/B4C2F74E-3CAC-4E0D-ADA3-BC9079A52B9A.png" alt="AKI"><span class="fighter-initial">A</span></span><span class="pickname"><b>AKI</b><small>Tempo · Konter</small></span></button><button class="pick" data-f="moe"><span class="fighter-art"><img data-src="./assets/fighters/moe.png" alt="MOE"><span class="fighter-initial">M</span></span><span class="pickname"><b>MOE</b><small>Agil · Kickboxen</small></span></button><button class="pick" data-f="domi"><span class="fighter-art"><img data-src="./assets/fighters/domi.png" alt="DOMI"><span class="fighter-initial">D</span></span><span class="pickname"><b>DOMI</b><small>Ausdauer · Technik</small></span></button></div><div class="row"><label>KI-Schwierigkeit <select id="difficulty"><option value="easy">Einfach</option><option value="normal" selected>Normal</option><option value="hard">Schwer</option></select></label><button class="go" id="start">KAMPF STARTEN →</button></div><div class="foot">PC: A / D bewegen · W springen · S ducken · J Schlag · K Power · U Tritt · I Sweep · LEERTASTE Block · L Super · Q Ausweichen<br>iPad / Smartphone: Vier PS3-artige Aktionstasten · Zweimal Richtung = Ausweichen · Best of 3</div></div></div>
 <div id="versus"><img id="vsImage" alt="Versus-Grafik"><div class="vs-fallback" id="vsFallback">VS</div></div><div id="end"><div class="panel"><div class="tag">MATCH BEENDET</div><h2 id="resultText">SIEG!</h2><p id="resultDetail"></p><div class="row"><button class="go" id="retry">NOCHMAL KÄMPFEN</button><button class="go" id="toMenu">MENÜ</button></div></div></div>
@@ -156,7 +157,7 @@ function attack(f,type){
 function dodge(f){if(!f||mode!=='fight'||paused||delay>0||f.y<-8||f.stun>0||f.hp<=0||f.actionT>0||f.dodgeCD>0||f.stamina<17)return false;
  f.stamina-=17;f.dodgeT=.24;f.dodgeCD=.8;f.inv=Math.max(f.inv,.16);f.guard=false;f.buffer=null;f.vx=-f.face*490;return true}
 function effect(x,y,color,n=10){for(let i=0;i<n;i++){let a=Math.random()*Math.PI*2,v=80+Math.random()*190;particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:.22+Math.random()*.3,c:color})}}
-function knockout(g,f){g.hp=0;g.koT=.001;g.koDir=g.x>=f.x?1:-1;g.action='idle';g.actionT=0;g.buffer=null;g.guard=false;g.vy=0;g.stun=0;g.cool=9;g.vx=0;delay=2.2;announce('K.O.',1.55);effectSound('ko');effect(g.x,450+g.y,'#fff0ae',22);shake=10}
+function knockout(g,f){g.hp=0;g.koT=.001;g.koDir=g.x>=f.x?1:-1;g.action='idle';g.actionT=0;g.buffer=null;g.guard=false;g.duck=false;g.vy=0;g.stun=0;g.cool=9;g.vx=0;delay=2.2;announce('K.O.',1.55);effectSound('ko');effect(g.x,450+g.y,'#fff0ae',22);shake=10}
 function strike(f,g){
  if(f.attackHit||!moves[f.action]||g.hp<=0)return;
  const m=moves[f.action];f.attackHit=true;
@@ -250,7 +251,7 @@ function updateF(f,g,dt){
  if(f.stun>0)f.vx*=.85;
 }
 
-function sync(){if(!p1)return;$('h1').style.width=p1.hp+'%';$('h2').style.width=p2.hp+'%';$('e1').style.width=p1.power+'%';$('e2').style.width=p2.power+'%';$('n1').textContent=profiles[p1.id].name;$('n2').textContent=profiles[p2.id].name;$('clock').textContent=Math.max(0,Math.ceil(time));$('r1').textContent='◆'.repeat(p1.wins)+'◇'.repeat(2-p1.wins);$('r2').textContent='◆'.repeat(p2.wins)+'◇'.repeat(2-p2.wins)}
+function sync(){if(!p1)return;$('h1').style.width=p1.hp+'%';$('h2').style.width=p2.hp+'%';$('e1').style.width=p1.power+'%';$('e2').style.width=p2.power+'%';$('st1').style.width=Math.round(p1.stamina)+'%';$('st2').style.width=Math.round(p2.stamina)+'%';$('n1').textContent=profiles[p1.id].name;$('n2').textContent=profiles[p2.id].name;$('clock').textContent=Math.max(0,Math.ceil(time));$('r1').textContent='◆'.repeat(p1.wins)+'◇'.repeat(2-p1.wins);$('r2').textContent='◆'.repeat(p2.wins)+'◇'.repeat(2-p2.wins)}
 function endRound(){let win=p1.hp===p2.hp?(Math.random()<.5?p1:p2):p1.hp>p2.hp?p1:p2;win.wins++;sync();if(win.wins===2){mode='result';musicStop();effectSound('win');$('resultText').textContent=win===p1?'DU HAST GEWONNEN!':'KI GEWINNT!';$('resultDetail').textContent=profiles[win.id].name+' gewinnt mit '+win.wins+' Rundensiegen. Treffer erzielt: '+hits+'.';$('end').style.display='flex';$('touch').classList.remove('on')}else{round++;resetRound()}}
 function update(dt){
  if(vsDuration>0){vsDuration-=dt;if(vsDuration<=0)$('versus').classList.remove('visible')}
@@ -278,32 +279,41 @@ function background(){let sky=ctx.createLinearGradient(0,0,0,590);sky.addColorSt
 // Frame-based procedural 2D animations; all four fighters have distinct style and specials.
 function body(f){
 const cfg=profiles[f.id],x=f.x,y=520+f.y,face=f.face,act=f.action,t=f.actionT;
-const durations={jab:.27,heavy:.51,kick:.42,sweep:.58,special:.75};
+const durations={jab:.32,heavy:.57,kick:.47,sweep:.64,airJab:.33,airKick:.46,special:.82};
 const duration=durations[act]||.4;
-const phase=act!=='idle'&&t>0?Math.max(0,Math.min(1,1-t/duration)):0;
+const phase=act!=='idle'&&t>0?Math.max(0,Math.min(1,f.actionElapsed/duration)):0;
 const thrust=Math.sin(Math.PI*phase);
-const moving=Math.abs(f.vx)>14&&f.y===0;
-const step=moving?Math.sin(f.walk)*18:0;
 const jump=f.y<0,block=f.guard&&f.y===0,hit=f.stun>0,ko=f.hp<=0;
-const bob=moving?Math.abs(Math.sin(f.walk))*3:Math.sin(performance.now()*.0027+(f.ai?1:0))*3;
-const upper=act==='jab'||act==='heavy',lower=act==='kick'||act==='sweep';
-let punch=upper?thrust*(act==='heavy'?101:75):0,kick=lower?thrust*(act==='sweep'?120:103):0,lean=0,spin=0;
+const moving=Math.abs(f.vx)>14&&f.y===0&&!ko;
+const step=moving?Math.sin(f.walk)*18:0;
+const bob=ko?0:jump?0:f.landingT>0?Math.sin((1-f.landingT/.19)*Math.PI)*2:moving?Math.abs(Math.sin(f.walk))*4:Math.sin(performance.now()*.0024+(f.ai?1:0))*2;
+const upper=act==='jab'||act==='heavy'||act==='airJab',lower=act==='kick'||act==='sweep'||act==='airKick';
+let punch=upper?thrust*(act==='heavy'?106:act==='airJab'?91:79):0,kick=lower?thrust*(act==='sweep'?124:act==='airKick'?137:106):0,lean=0,spin=0;
 if(act==='special'){
 if(f.id==='sergej'){punch=thrust*145;lean=-.19*thrust}
 if(f.id==='aki'){punch=thrust*115;lean=-.10*thrust}
 if(f.id==='moe'){kick=thrust*150;spin=.35*thrust}
 if(f.id==='domi'){punch=thrust*84;lean=-.25*thrust}
 }
-if(hit)lean=.13*Math.sin(performance.now()*.036);
+if(hit&&!ko)lean=.20*Math.min(1,f.stun/.26);
+if(f.dodgeT>0)lean=-.20*Math.sin(Math.PI*f.dodgeT/.24);
+if(jump&&act==='airKick')lean=-.08*thrust;
 ctx.save();ctx.translate(x,y+bob);ctx.scale(face,1);
-ellipse(0,8,47,11,'#0b101ab0');
-if(ko){ctx.rotate(-1.35);ctx.translate(-59,20)}
-ctx.translate(0,f.duck?25:0);ctx.rotate(lean+spin);
+ellipse(0,8,ko?45:jump?33:47,ko?8:jump?7:11,'#0b101ab0');
+if(ko){const fall=Math.min(1,f.koT/.72),smooth=fall*fall*(3-2*fall);
+ const tilt=f.id==='sergej'?-1.42:f.id==='aki'?-1.34:f.id==='moe'?-1.49:-1.38;
+ ctx.rotate(tilt*smooth);
+}
+ctx.translate(0,ko?0:f.duck?25:f.landingT>0?11*Math.sin((f.landingT/.19)*Math.PI):0);
+ctx.rotate(ko?0:lean+spin);
 let main=f.flash>0?'#fff6d3':cfg.main,trim=cfg.trim;
 function seg(ax,ay,bx,by,w,col){ctx.strokeStyle='#08101c';ctx.lineWidth=w+5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();ctx.strokeStyle=col;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();}
-seg(-18,-106,-26-step,-58,25,'#222b3c');seg(-26-step,-58,-31-step*.7,-3,18,'#1b2230');
-seg(18,-106,24+kick+step,-58-kick*.3,25,main);seg(24+kick+step,-58-kick*.3,32+kick*1.1,-3-kick*.76,18,'#222b3c');
-rect(-46,-3,43,15,'#0c1421');rect(15+kick,-3-kick*.75,45,15,'#0c1421');
+const airborneBend=jump&&!ko?Math.min(26,Math.abs(f.y)*.13):0;
+seg(-18,-106,-26-step+airborneBend,-58-airborneBend,25,'#222b3c');
+seg(-26-step+airborneBend,-58-airborneBend,-31-step*.7+airborneBend*.9,-3-airborneBend*.9,18,'#1b2230');
+seg(18,-106,24+kick+step,-58-kick*.3-airborneBend*.45,25,main);
+seg(24+kick+step,-58-kick*.3-airborneBend*.45,32+kick*1.1,-3-kick*.76-airborneBend*.75,18,'#222b3c');
+rect(-46+airborneBend*.9,-3-airborneBend*.9,43,15,'#0c1421');rect(15+kick,-3-kick*.75-airborneBend*.75,45,15,'#0c1421');
 rect(-37,-202,74,113,main);rect(-37,-204,74,20,trim);rect(-37,-98,74,18,'#172030');
 ctx.save();ctx.fillStyle='rgba(255,255,255,.10)';ctx.beginPath();ctx.moveTo(-33,-186);ctx.lineTo(-14,-183);ctx.lineTo(-12,-101);ctx.lineTo(-29,-100);ctx.closePath();ctx.fill();ctx.fillStyle='rgba(0,0,0,.16)';ctx.beginPath();ctx.moveTo(19,-183);ctx.lineTo(35,-188);ctx.lineTo(35,-101);ctx.lineTo(24,-98);ctx.closePath();ctx.fill();ctx.restore();
 if(f.id==='sergej'){rect(-18,-172,36,36,'#11141d');rect(-12,-167,24,26,'#34373f')}
@@ -311,7 +321,9 @@ if(f.id==='aki'){rect(-38,-196,13,90,'#172339');rect(25,-196,13,90,'#172339')}
 if(f.id==='moe'){rect(-16,-177,32,60,'#6f4b2b');rect(-4,-170,8,44,'#ffd16b')}
 if(f.id==='domi'){rect(-16,-180,32,62,'#348c2b');rect(-3,-174,6,50,'#d7f77f')}
 let guardShift=block?-35:0;
-seg(-37,-181,-55,-149,22,main);seg(-55,-149,-29+guardShift,-164-(block?45:0),17,cfg.skin);ellipse(-28+guardShift,-164-(block?45:0),17,16,trim);
+seg(-37,-181,-55,-149-(hit?18:0),22,main);
+seg(-55,-149-(hit?18:0),-29+guardShift-(hit?22:0),-164-(block?45:0)-(hit?24:0),17,cfg.skin);
+ellipse(-28+guardShift-(hit?22:0),-164-(block?45:0)-(hit?24:0),17,16,trim);
 const elbowX=59+punch*.35,handX=38+punch;
 seg(38,-181,block?49:elbowX,block?-213:-154,22,main);
 seg(block?49:elbowX,block?-213:-154,block?28:handX,block?-222:-154-((act==='special')?12*thrust:0),17,cfg.skin);
@@ -347,10 +359,13 @@ else if(f.id==='aki'){ctx.moveTo(-80,-160);ctx.lineTo(75+punch,-162)}
 else if(f.id==='domi'){ctx.moveTo(-70,-170);ctx.lineTo(125,-170)}
 else ctx.arc(handX,-155,55,0,Math.PI*1.7);
 ctx.stroke();ctx.restore()}
+if(f.dodgeT>0){ctx.save();ctx.globalAlpha=.36;ctx.strokeStyle='#b9d7ff';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(-43,-103);ctx.lineTo(-84,-106);ctx.stroke();ctx.restore()}
 ctx.restore()}
 function render(){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#090e18';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.setTransform(scale,0,0,scale,OX+(Math.random()-.5)*shake*scale,OY+(Math.random()-.5)*shake*scale);background();if(!p1){p1=fighter('sergej',390,false);p2=fighter('aki',890,true)}body(p1);body(p2);for(let p of particles)ellipse(p.x,p.y,3+p.t*8,3+p.t*8,p.c);let shade=ctx.createRadialGradient(640,300,250,640,300,850);shade.addColorStop(0,'#0000');shade.addColorStop(1,'#01030ac9');rect(0,0,1280,720,shade)}
 function loop(now){let dt=Math.min(.033,(now-last)/1000||0);last=now;update(dt);render();requestAnimationFrame(loop)}requestAnimationFrame(loop);
 window.ARENA_ZERO_PORTRAITS={status:faceStatus,sourceFiles:artFaces};
+window.ARENA_ZERO_DIAGNOSTICS=()=>({version:'2.0',mode,round,time,player:p1?{character:p1.id,hp:p1.hp,stamina:p1.stamina,action:p1.action,y:p1.y,koTime:p1.koT,spam:p1.spam}:null,opponent:p2?{character:p2.id,hp:p2.hp,stamina:p2.stamina,action:p2.action,y:p2.y,koTime:p2.koT}:null,loadedFaces:{...faceStatus}});
+
 const actions={KeyJ:'jab',KeyK:'heavy',KeyU:'kick',KeyI:'sweep',KeyL:'special'};
 const taps=Object.create(null);
 function onPress(key){
