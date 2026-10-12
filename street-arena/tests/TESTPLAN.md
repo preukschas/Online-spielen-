@@ -19,6 +19,8 @@ Am 12.10.2026 wurde die veröffentlichungsnahe GitHub-Version mit einem JavaScri
 | 11 | Spiel- und Porträt-UI bleiben zugreifbar | ✔ |
 | 12 | Simuliertes Canvas-Frame wird gerendert | ✔ |
 
+**Erweiterte Abschlussprüfung:** Nach dem zusätzlichen Balancing- und Mobile-Update wurden 13 von 13 automatisierten Regressionstests erfolgreich ausgeführt. Ergänzend zu den oben aufgezählten Fällen wurden auch **Blockbruch durch verbrauchte Ausdauer**, **Ducken + Tritt als Tiefangriff** und der erneute stabile K.-o.-Zustand getestet.
+
 **Wichtige Einschränkung:** Die Tests prüfen Regeln und Renderer-Aufrufe; sie garantieren nicht die visuelle Qualität im echten Safari, 60-FPS-Laufzeit, die Korrektheit der Bildausschnitte oder das vollständige Balancing gegen menschliche Spieler.
 
 ## B. Automatischer Browser-Smoke-Test
