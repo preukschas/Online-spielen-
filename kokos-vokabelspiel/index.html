@@ -65,7 +65,7 @@ input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;user-sel
 <div style="color:var(--muted);margin-top:14px">Wie heißt auf Englisch?</div><div id="prompt" class="prompt">–</div><div id="choices" class="choices"></div><div id="feedback" class="feedback"></div>
 </section>
 
-<section id="unlock" class="panel hidden" style="text-align:center"><div style="font-size:34px">🐒🏆</div><h2>Nächstes Level frei!</h2><p>Action geschafft und 12 Vokabeln richtig beantwortet.</p><button id="continue" class="primary" type="button">Weiter</button></section>
+<section id="unlock" class="panel hidden" style="text-align:center"><div style="font-size:34px">🐒🏆</div><h2>Nächstes Level frei!</h2><p>Action geschafft und 12 Vokabeln bearbeitet. Falsch beantwortete Wörter bleiben ohne Lernpunkte.</p><button id="continue" class="primary" type="button">Weiter</button></section>
 </main>
 
 <script>
@@ -116,7 +116,36 @@ function words(){const a=[],seen=new Set();while(a.length<Math.min(12,vocab.leng
 function startLearn(){s.learnToken++;$('gamePanel').classList.add('hidden');$('overlay').classList.add('hidden');$('resultPanel').classList.add('hidden');$('learnPanel').classList.remove('hidden');$('nextLevel').textContent=s.level+1;const items=words().map((v,i)=>({de:v[0],en:v[1],done:false,id:i}));s.learn={items,queue:shuffle(items.slice()),done:0,current:null};question()}
 function question(){const L=s.learn;if(!L)return;if(L.done>=12){$('done').textContent='12';$('learnBar').style.width='100%';$('learnPanel').classList.add('hidden');$('unlock').classList.remove('hidden');return}if(!L.queue.length)L.queue=shuffle(L.items.filter(x=>!x.done));const c=L.queue.shift();L.current=c;$('prompt').textContent=c.de;$('done').textContent=L.done;$('learnBar').style.width=(L.done/12*100)+'%';$('feedback').textContent='';const pool=shuffle(vocab.filter(v=>v[1]!==c.en&&!moeSameFamily(v[1],c.en)).map(v=>v[1])),opts=shuffle([c.en,...pool.slice(0,3)]);$('choices').innerHTML='';opts.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='choice';b.textContent=o;b.addEventListener('click',()=>answer(o));$('choices').appendChild(b)})}
 function delayedQuestion(ms){const token=++s.learnToken;setTimeout(()=>{if(token===s.learnToken)question()},ms)}
-function answer(o){const L=s.learn,c=L&&L.current;if(!L||!c||c.done)return;if(o===c.en){[...$('choices').children].forEach(b=>b.disabled=true);c.done=true;L.done++;if(!c.errors)s.score+=100;$('feedback').textContent=c.errors?'✅ Jetzt richtig – weiter!':'✅ Richtig!';delayedQuestion(330);}else{c.errors=(c.errors||0)+1;[...$('choices').children].filter(b=>b.textContent===o).forEach(b=>{b.disabled=true;b.style.opacity='.4';});$('feedback').textContent=c.errors>=3?'❌ Noch nicht richtig. Die richtige Lösung ist '+c.en+' – wähle sie aus, bevor es weitergeht.':'❌ Noch nicht richtig. Versuch es erneut – dieselbe Frage bleibt.';}}
+function answer(o){
+ const L=s.learn,c=L&&L.current;
+ if(!L||!c||c.done)return;
+ if(o===c.en){
+  [...$('choices').children].forEach(b=>b.disabled=true);
+  c.done=true;L.done++;
+  if(!c.errors)s.score+=100;
+  $('feedback').textContent=c.errors?'✅ Jetzt richtig – der erste Fehler zählt weiter.':'✅ Richtig!';
+  delayedQuestion(330);
+  return;
+ }
+ c.errors=(c.errors||0)+1;
+ [...$('choices').children].filter(b=>b.textContent===o).forEach(b=>{b.disabled=true;b.style.opacity='.4';});
+ if(c.errors>=3){
+  [...$('choices').children].forEach(b=>b.disabled=true);
+  $('feedback').textContent='🧩 Drei Fehlversuche. Die Lösung lautet: '+c.en+'. Keine Lernpunkte – du darfst weitergehen.';
+  const next=document.createElement('button');
+  next.type='button';next.className='primary';next.textContent='Weiter →';
+  next.style.gridColumn='1 / -1';
+  next.onclick=()=>{if(c.done)return;c.done=true;L.done++;next.disabled=true;question();};
+  $('choices').replaceChildren(next);
+  return;
+ }
+ if(c.errors===1){
+  $('feedback').textContent='💡 Tipp 1/2: Die Antwort beginnt mit „'+c.en.charAt(0)+'“.';
+ }else{
+  const letters=[...c.en].filter(ch=>/[a-z]/i.test(ch)).length;
+  $('feedback').textContent='💡 Tipp 2/2: Die Antwort beginnt mit „'+c.en.slice(0,2)+'“ und hat '+letters+' Buchstaben. Beim nächsten Fehler wird die Lösung gezeigt.';
+ }
+}
 function hold(id,key){const b=$(id);const on=e=>{e.preventDefault();s.keys[key]=true;b.setPointerCapture?.(e.pointerId)};const off=e=>{e.preventDefault();s.keys[key]=false};b.addEventListener('pointerdown',on);['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,off))}
 hold('throw','f');
 const joy=$('joystick'),stick=$('stick');function setJoy(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,max=r.width*.34,dist=Math.hypot(dx,dy)||1,scale=Math.min(1,max/dist);dx*=scale;dy*=scale;s.joy.x=clamp(dx/max,-1,1);s.joy.y=clamp(dy/max,-1,1);s.joy.active=true;stick.style.transform='translate('+dx+'px,'+dy+'px)';joy.classList.add('active')}
