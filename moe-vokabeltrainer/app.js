@@ -66,7 +66,7 @@ function valid(w,input){
 }
 function log(w,yes,answer){
  let s={...get(w.id)};
- s.n++;if(yes){s.ok++;s.streak++;data.xp+=tries>0?0:help?5:10;}else{s.bad++;s.streak=0;}
+ s.n++;if(yes){s.ok++;s.streak++;data.xp+=tries>0||help?0:10;}else{s.bad++;s.streak=0;}
  s.due=Date.now()+(yes?Math.min(14,Math.pow(2,s.streak-1))*86400000:0);
  data.stats[w.id]=s;
  data.history.unshift({id:w.id,date:new Date().toISOString(),ok:yes,answer:answer});
@@ -95,7 +95,7 @@ function tipText(w,level){
  return "Tipp 2/2: "+visible+" — beim nächsten falschen Versuch wird die Lösung gezeigt.";
 }
 function finishWord(ans){
- const w=round[cursor],firstTry=tries===0;
+ const w=round[cursor],firstTry=tries===0&&!help;
  log(w,true,ans);
  if(firstTry)correct++;else incorrect++;
  tries=99;lock();
