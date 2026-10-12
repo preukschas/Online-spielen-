@@ -45,7 +45,7 @@ Weiterentwicklung der bestehenden ARENA-ZERO-Website **ohne Austausch von Startm
 
 Statische HTML/CSS/JavaScript-Anwendung, Canvas-2D, ohne Build-Schritt, externe Frameworks oder Browser-Plugins. Die Regeln sind im `index.html` in `moves`, `attack`, `strike`, `aiUpdate`, `updateF` und `body` zu finden.
 
-Aki wird derzeit unter `assets/fighters/B4C2F74E-3CAC-4E0D-ADA3-BC9079A52B9A.png` geladen, da dieser Dateiname im Repository tatsächlich vorhanden ist. Nicht ohne Anpassung der Verknüpfung umbenennen.
+Alle vier Porträts liegen unter kanonischen Namen in `assets/fighters/{sergej,aki,moe,domi}.png`. Akis ursprüngliche UUID-Datei verbleibt nur als technische Sicherung im Repository. Beim Austauschen den jeweiligen kanonischen Dateinamen beibehalten.
 
 Für die Diagnose im Browser:
 ```js
