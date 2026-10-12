@@ -385,7 +385,7 @@ ctx.restore()}
 function render(){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#090e18';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.setTransform(scale,0,0,scale,OX+(Math.random()-.5)*shake*scale,OY+(Math.random()-.5)*shake*scale);background();if(!p1){p1=fighter('sergej',390,false);p2=fighter('aki',890,true)}body(p1);body(p2);for(let p of particles)ellipse(p.x,p.y,3+p.t*8,3+p.t*8,p.c);let shade=ctx.createRadialGradient(640,300,250,640,300,850);shade.addColorStop(0,'#0000');shade.addColorStop(1,'#01030ac9');rect(0,0,1280,720,shade)}
 function loop(now){let dt=Math.min(.033,(now-last)/1000||0);last=now;update(dt);render();requestAnimationFrame(loop)}requestAnimationFrame(loop);
 window.ARENA_ZERO_PORTRAITS={status:faceStatus,sourceFiles:artFaces};
-window.ARENA_ZERO_DIAGNOSTICS=()=>({version:'2.0',mode,round,time,player:p1?{character:p1.id,hp:p1.hp,stamina:p1.stamina,action:p1.action,y:p1.y,koTime:p1.koT,spam:p1.spam,counterTime:p1.counterT}:null,opponent:p2?{character:p2.id,hp:p2.hp,stamina:p2.stamina,action:p2.action,y:p2.y,koTime:p2.koT}:null,loadedFaces:{...faceStatus}});
+window.ARENA_ZERO_DIAGNOSTICS=()=>({version:'2.0',mode,round,time,player:p1?{character:p1.id,hp:p1.hp,stamina:p1.stamina,action:p1.action,y:p1.y,koTime:p1.koT,spam:p1.spam,counterTime:p1.counterT,dodgeTime:p1.dodgeT,comboHits:p1.comboHits}:null,opponent:p2?{character:p2.id,hp:p2.hp,stamina:p2.stamina,action:p2.action,y:p2.y,koTime:p2.koT}:null,loadedFaces:{...faceStatus}});
 
 const actions={KeyJ:'jab',KeyK:'heavy',KeyU:'kick',KeyI:'sweep',KeyL:'special'};
 const taps=Object.create(null);
