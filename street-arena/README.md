@@ -37,7 +37,7 @@ Weiterentwicklung der bestehenden ARENA-ZERO-Website **ohne Austausch von Startm
 | L | Spezialangriff bei voller blauer Superanzeige |
 | Esc | Pause |
 
-**Tablet/Mobil:** virtuelles Richtungspad und Aktionstasten; zwei schnelle Tippimpulse in dieselbe Richtung lösen das Ausweichen aus. Die verfügbaren virtuellen Aktionstasten hängen von der Darstellung/Bildschirmgröße ab.
+**Tablet/Mobil:** virtuelles Richtungspad und vier Aktionstasten. **Ducken + Schlag** = schwerer Schlag, **Ducken + Tritt** = tiefer Tritt. Zwei schnelle Tippimpulse in dieselbe Richtung lösen das Ausweichen aus. Die verfügbaren virtuellen Aktionstasten hängen von der Darstellung/Bildschirmgröße ab.
 
 **Anzeigen:** Gelb/Rot = Trefferpunkte, Blau = Spezialenergie, Türkis = Ausdauer.
 
