@@ -27,7 +27,7 @@
 
 ### Qualitätssicherung
 - JavaScript-Syntaxprüfung nach den Änderungen erfolgreich.
-- 12/12 funktionale Tests in simuliertem DOM/Canvas bestanden (kein echter Endgeräte-Ersatz).
+- 13/13 funktionale Tests in simuliertem DOM/Canvas im erweiterten Abschlusslauf bestanden (kein echter Endgeräte-Ersatz).
 - Browser-Smoke-Test unter `tests/smoke.html`.
 - Dokumentation der manuellen Abnahmeschritte unter `tests/TESTPLAN.md`.
 
