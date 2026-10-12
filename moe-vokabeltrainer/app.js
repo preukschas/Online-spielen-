@@ -23,6 +23,7 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 function choose(){
  let a=words.filter(w=>!$("topic").value||w.topic===$("topic").value);
  if(mode==="new")a=a.filter(w=>get(w.id).n===0);
+ if(mode==="pages")a=a.filter(w=>w.page===190||w.page===191);
  if(mode==="focus"){const b=a.filter(w=>{const s=get(w.id);return !mastered(s)&&(s.bad>0||(s.n>0&&s.due<=Date.now()));});if(b.length)a=b;else a=a.filter(w=>!mastered(get(w.id)));}
  a=shuffle(a);
  if(mode==="focus"||mode==="mixed")a.sort((x,y)=>{
@@ -34,13 +35,17 @@ function choose(){
  return mode==="all"?a:a.slice(0,10);
 }
 function expected(w){
- let s=w.en.replace(/\s*\((sg|pl)\)/ig,"").replace(/\(around\)/ig,"around").trim();
- return s;
+ return w.en.replace(/\s*\(=\s*[^)]*\)/ig,"").replace(/\s*\(pl\.?\s*[^)]*\)/ig,"").replace(/\s*\((sg|pl)\)/ig,"").replace(/\(around\)/ig,"around").replace(/\s*\(phone\)/ig,"").trim();
 }
 function norm(s){return String(s).trim().toLowerCase().replace(/[’‘]/g,"'").replace(/\.{3,}|…/g," ").replace(/[.,!?;:/()]/g," ").replace(/\s+/g," ").trim();}
 function valid(w,input){
  const out=norm(input),wanted=norm(expected(w));
  if(out===wanted)return true;
+ const parenthetical=w.en.match(/\(=\s*([^)]+)\)/i);
+ if(parenthetical&&norm(parenthetical[1])===out)return true;
+ const plural=w.en.match(/\(pl\.?\s*([^)]+)\)/i);
+ if(plural&&norm(plural[1])===out)return true;
+ if(/\(phone\)/i.test(w.en)&&norm(expected(w)+" phone")===out)return true;
  const aliases={
   "MOE-001":["im from","i am from"],
   "MOE-010":["that is"],
@@ -91,11 +96,11 @@ function finishWord(yes,ans,alreadyLogged){
 function showWord(){
  const w=round[cursor];if(!w){finishRound();return;}
  tries=0;help=false;ended=false;
- $("roundLabel").textContent=mode==="all"?"Große Challenge":mode==="new"?"Ungeübte Wörter":mode==="focus"?"Schwierige Wörter":"Gemischte Runde";
+ $("roundLabel").textContent=mode==="all"?"Große Challenge":mode==="pages"?"Neue Seiten 190–191":mode==="new"?"Ungeübte Wörter":mode==="focus"?"Schwierige Wörter":"Gemischte Runde";
  $("counter").textContent=(cursor+1)+" / "+round.length;
  $("fill").style.width=Math.round(cursor*100/round.length)+"%";
  $("meter").setAttribute("aria-valuenow",Math.round(cursor*100/round.length));
- $("topicName").textContent="✦ "+w.topic+" · "+w.id+" · "+(w.unit||"Unit 1");
+ $("topicName").textContent="✦ "+w.topic+" · "+w.id+" · "+(w.page?"Buchseite "+w.page:(w.unit||"Unit 1"));
  $("prompt").textContent=w.de;
  $("extra").textContent=w.en.includes("…")||w.en.includes("...")?"Bei den Punkten (…) reicht der Satzanfang.":"Schreibe die englische Übersetzung vollständig.";
  $("answer").value="";$("answer").disabled=false;$("check").disabled=false;$("tip").disabled=false;$("skip").disabled=false;$("next").hidden=true;
