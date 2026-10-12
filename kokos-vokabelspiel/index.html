@@ -37,6 +37,7 @@ input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;user-sel
 <h2 style="margin:5px 0">Kokosnuss-Chaos</h2>
 <p style="font-size:13px;margin:6px 0 10px">60 Sekunden Punkte sammeln. Triff verrückte Schwimmer, halte deine Combo und erwische die goldene Banane.</p>
 <button id="start" class="primary" type="button">Runde starten</button>
+<button id="practiceTestNow" class="mini" type="button" style="margin-top:8px">📖 Auf aktuellen Test üben (61 Wörter)</button>
 </div></div>
 </div>
 
@@ -55,7 +56,7 @@ input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;user-sel
 <section id="resultPanel" class="panel hidden" aria-live="polite">
 <div style="text-align:center"><div style="font-size:34px">🌴🥥✨</div><h2 style="margin:3px 0">Runde geschafft!</h2><p style="margin:4px 0;color:var(--muted)">Jetzt kommen die 12 Vokabeln.</p></div>
 <div class="resultGrid"><div><b id="resultScore">0</b><small>Punkte</small></div><div><b id="resultHits">0</b><small>Treffer</small></div><div><b id="resultCombo">1</b><small>Beste Combo</small></div></div>
-<div style="text-align:center"><button id="startLearning" class="primary" type="button">12 Vokabeln starten</button></div>
+<div style="text-align:center"><button id="testFocusBtn" class="mini" type="button" style="margin-bottom:8px">📖 Aktuellen Test üben: AUS</button><div><button id="startLearning" class="primary" type="button">12 Vokabeln starten</button></div></div>
 </section>
 
 <section id="learnPanel" class="panel hidden" aria-live="polite">
@@ -80,8 +81,10 @@ let nextId=1;
 let s={level:1,time:60,score:0,levelStartScore:0,hits:0,combo:1,maxCombo:1,comboTime:0,running:false,paused:false,last:0,raf:0,roundToken:0,player:{x:90,y:330},aim:{x:560,y:270},keys:{l:false,r:false,u:false,d:false,f:false},joy:{x:0,y:0,active:false},balls:[],targets:[],dead:[],parts:[],texts:[],spawn:0,cool:0,charge:0,rapid:0,tornadoQueue:[],tornadoActive:false,tornadoCooldown:0,phase:'warmup',learn:null,learnToken:0};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+let testFocus=false;
+const testVocab=[["ihr","her"],["Familie","family"],["mit","with"],["wir sind","we're (= we are)"],["Garten","garden"],["sie ist","she's (= she is)"],["ich habe; ich besitze","I have"],["keine Brüder","no brothers"],["ich (im Beispielsatz); mich; mir","me"],["unser","our"],["sein","his"],["Name","name"],["er ist","he's (= he is)"],["auch","too"],["Freund; Freundin","friend"],["ein Foto von","a photo of"],["Spiel","game"],["verrückt","crazy"],["Kind","kid"],["zusammen","together"],["jeder; alle","everyone"],["wir wohnen","we live"],["an der Tür","on the door"],["mein Bruder und ich","my brother and me"],["komm herein","come in"],["lerne meine Familie kennen","meet my family"],["sein","to be"],["du bist; ihr seid; Sie sind","you're (= you are)"],["ich","I"],["du; ihr; Sie","you"],["er","he"],["sie (Einzahl)","she"],["es","it"],["wir","we"],["sie (Mehrzahl)","they"],["Tisch","table"],["Stuhl","chair"],["Box; Kiste","box"],["Handy; Mobiltelefon","mobile (phone)"],["T-Shirt","T-shirt"],["Poster","poster"],["Buch; Heft","book"],["Bett","bed"],["Regal; Regalbrett (Mehrzahl: Regale)","shelf (pl. shelves)"],["Kleiderschrank","wardrobe"],["Turnschuh","trainer"],["Teppich","carpet"],["Schal; Tuch (Mehrzahl: Schals/Tücher)","scarf (pl. scarves)"],["Lampe","lamp"],["Wecker","alarm clock"],["Schlafzimmer; Kinderzimmer","bedroom"],["Samstag","Saturday"],["zu Hause","at home"],["Zuhause; Heim","home"],["wer","who"],["Ich bin's!","It's me!"],["Bist du bereit?","Are you ready?"],["unter","under"],["ich kann ... nicht finden","I can't find ..."],["neu","new"],["da ist; es gibt","there is (= there's)"]];
 let learnDeck=shuffle(vocab.slice()),learnCursor=0,lastLearnWord='';
-function nextLearnWord(){if(learnCursor>=learnDeck.length){learnDeck=shuffle(vocab.slice());learnCursor=0;if(learnDeck.length>1&&learnDeck[0][1]===lastLearnWord)[learnDeck[0],learnDeck[1]]=[learnDeck[1],learnDeck[0]];}const v=learnDeck[learnCursor++];lastLearnWord=v[1];return v;}
+function nextLearnWord(){if(learnCursor>=learnDeck.length){learnDeck=shuffle((testFocus?testVocab:vocab).slice());learnCursor=0;if(learnDeck.length>1&&learnDeck[0][1]===lastLearnWord)[learnDeck[0],learnDeck[1]]=[learnDeck[1],learnDeck[0]];}const v=learnDeck[learnCursor++];lastLearnWord=v[1];return v;}
 function phaseInfo(){if(s.time>42)return{key:'warmup',label:'Locker rein',mult:1};if(s.time>15)return{key:'flow',label:'Jetzt läuft’s!',mult:1.22};return{key:'frenzy',label:'🔥 Kokos-Finale!',mult:1.55}}
 function hud(){const p=phaseInfo();s.phase=p.key;$('level').textContent=s.level;$('time').textContent=Math.max(0,Math.ceil(s.time));$('score').textContent=s.score;$('hits').textContent=s.hits;$('combo').textContent=s.combo;$('phase').textContent=p.label;$('phase').classList.toggle('frenzy',p.key==='frenzy');$('chargeBar').style.width=clamp(s.charge,0,100)+'%';$('special').disabled=s.charge<100||!s.running||s.paused||s.tornadoActive||s.tornadoCooldown>0;$('special').classList.toggle('ready',s.charge>=100);$('powerline').textContent=s.rapid>0?'🍌 Bananenrausch: Schnellwurf '+Math.ceil(s.rapid)+'s':''}
 function resetRound(){cancelAnimationFrame(s.raf);s.roundToken++;s.time=60;s.running=false;s.paused=false;s.last=0;s.score=s.levelStartScore;s.hits=0;s.combo=1;s.maxCombo=1;s.comboTime=0;s.charge=0;s.spawn=120;s.cool=0;s.rapid=0;s.tornadoQueue=[];s.tornadoActive=false;s.tornadoCooldown=0;s.joy={x:0,y:0,active:false};s.balls=[];s.targets=[];s.dead=[];s.parts=[];s.texts=[];s.player.x=90;s.aim={x:560,y:270};Object.keys(s.keys).forEach(k=>s.keys[k]=false);$('gamePanel').classList.remove('hidden');$('resultPanel').classList.add('hidden');$('learnPanel').classList.add('hidden');$('unlock').classList.add('hidden');$('overlay').classList.remove('hidden');$('pause').textContent='Pause';hud();draw()}
@@ -108,16 +111,18 @@ function loop(t){if(!s.running)return;if(s.paused){s.raf=requestAnimationFrame(l
 function start(){if(s.running)return;$('overlay').classList.add('hidden');s.running=true;s.paused=false;s.last=0;root.focus({preventScroll:true});hud();s.raf=requestAnimationFrame(loop)}
 function finishRound(){if(!s.running)return;s.running=false;cancelAnimationFrame(s.raf);hud();$('resultScore').textContent=s.score-s.levelStartScore;$('resultHits').textContent=s.hits;$('resultCombo').textContent='x'+s.maxCombo;$('gamePanel').classList.add('hidden');$('resultPanel').classList.remove('hidden')}
 function words(){const a=[],seen=new Set();while(a.length<Math.min(12,vocab.length)){const v=nextLearnWord(),id=v[1];if(seen.has(id))continue;seen.add(id);a.push(v)}return a}
-function startLearn(){s.learnToken++;$('resultPanel').classList.add('hidden');$('learnPanel').classList.remove('hidden');$('nextLevel').textContent=s.level+1;const items=words().map((v,i)=>({de:v[0],en:v[1],done:false,id:i}));s.learn={items,queue:shuffle(items.slice()),done:0,current:null};question()}
+function startLearn(){s.learnToken++;$('gamePanel').classList.add('hidden');$('overlay').classList.add('hidden');$('resultPanel').classList.add('hidden');$('learnPanel').classList.remove('hidden');$('nextLevel').textContent=s.level+1;const items=words().map((v,i)=>({de:v[0],en:v[1],done:false,id:i}));s.learn={items,queue:shuffle(items.slice()),done:0,current:null};question()}
 function question(){const L=s.learn;if(!L)return;if(L.done>=12){$('done').textContent='12';$('learnBar').style.width='100%';$('learnPanel').classList.add('hidden');$('unlock').classList.remove('hidden');return}if(!L.queue.length)L.queue=shuffle(L.items.filter(x=>!x.done));const c=L.queue.shift();L.current=c;$('prompt').textContent=c.de;$('done').textContent=L.done;$('learnBar').style.width=(L.done/12*100)+'%';$('feedback').textContent='';const pool=shuffle(vocab.filter(v=>v[1]!==c.en&&!moeSameFamily(v[1],c.en)).map(v=>v[1])),opts=shuffle([c.en,...pool.slice(0,3)]);$('choices').innerHTML='';opts.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='choice';b.textContent=o;b.addEventListener('click',()=>answer(o));$('choices').appendChild(b)})}
 function delayedQuestion(ms){const token=++s.learnToken;setTimeout(()=>{if(token===s.learnToken)question()},ms)}
-function answer(o){const L=s.learn,c=L&&L.current;if(!L||!c||c.done)return;[...$('choices').children].forEach(b=>b.disabled=true);if(o===c.en){c.done=true;L.done++;s.score+=100;$('feedback').textContent='✅ Richtig!';delayedQuestion(330)}else{L.queue.push(c);$('feedback').textContent='❌ '+c.en+' — kommt später wieder.';delayedQuestion(760)}}
+function answer(o){const L=s.learn,c=L&&L.current;if(!L||!c||c.done)return;if(o===c.en){[...$('choices').children].forEach(b=>b.disabled=true);c.done=true;L.done++;if(!c.errors)s.score+=100;$('feedback').textContent=c.errors?'✅ Jetzt richtig – weiter!':'✅ Richtig!';delayedQuestion(330);}else{c.errors=(c.errors||0)+1;[...$('choices').children].filter(b=>b.textContent===o).forEach(b=>{b.disabled=true;b.style.opacity='.4';});$('feedback').textContent=c.errors>=3?'❌ Noch nicht richtig. Die richtige Lösung ist '+c.en+' – wähle sie aus, bevor es weitergeht.':'❌ Noch nicht richtig. Versuch es erneut – dieselbe Frage bleibt.';}}
 function hold(id,key){const b=$(id);const on=e=>{e.preventDefault();s.keys[key]=true;b.setPointerCapture?.(e.pointerId)};const off=e=>{e.preventDefault();s.keys[key]=false};b.addEventListener('pointerdown',on);['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,off))}
 hold('throw','f');
 const joy=$('joystick'),stick=$('stick');function setJoy(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,max=r.width*.34,dist=Math.hypot(dx,dy)||1,scale=Math.min(1,max/dist);dx*=scale;dy*=scale;s.joy.x=clamp(dx/max,-1,1);s.joy.y=clamp(dy/max,-1,1);s.joy.active=true;stick.style.transform='translate('+dx+'px,'+dy+'px)';joy.classList.add('active')}
 function releaseJoy(){s.joy.x=0;s.joy.y=0;s.joy.active=false;stick.style.transform='translate(0,0)';joy.classList.remove('active')}
 joy.addEventListener('pointerdown',e=>{e.preventDefault();joy.setPointerCapture?.(e.pointerId);setJoy(e)});joy.addEventListener('pointermove',e=>{if(s.joy.active)setJoy(e)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>joy.addEventListener(ev,e=>{e.preventDefault();releaseJoy()}));
-$('special').addEventListener('click',tornado);$('start').addEventListener('click',start);$('restart').addEventListener('click',()=>{s.learnToken++;resetRound()});$('pause').addEventListener('click',()=>{if(!s.running)return;s.paused=!s.paused;$('pause').textContent=s.paused?'Weiter':'Pause';s.last=0;hud()});$('startLearning').addEventListener('click',startLearn);$('continue').addEventListener('click',()=>{s.level++;s.levelStartScore=s.score;s.learn=null;s.learnToken++;resetRound();start()});
+$('special').addEventListener('click',tornado);$('start').addEventListener('click',start);$('restart').addEventListener('click',()=>{s.learnToken++;resetRound()});$('pause').addEventListener('click',()=>{if(!s.running)return;s.paused=!s.paused;$('pause').textContent=s.paused?'Weiter':'Pause';s.last=0;hud()});$('testFocusBtn').addEventListener('click',()=>{testFocus=!testFocus;moeRebuildDeck();$('testFocusBtn').textContent='📖 Aktuellen Test üben: '+(testFocus?'AN':'AUS');});
+$('practiceTestNow').addEventListener('click',()=>{testFocus=true;moeRebuildDeck();$('testFocusBtn').textContent='📖 Aktuellen Test üben: AN';startLearn();});
+$('startLearning').addEventListener('click',startLearn);$('continue').addEventListener('click',()=>{s.level++;s.levelStartScore=s.score;s.learn=null;s.learnToken++;resetRound();start()});
 function canvasAim(e){const r=cv.getBoundingClientRect();s.aim.x=clamp((e.clientX-r.left)*W/r.width,300,742);s.aim.y=clamp((e.clientY-r.top)*H/r.height,195,405);draw()}cv.addEventListener('pointerdown',e=>{e.preventDefault();cv.setPointerCapture?.(e.pointerId);canvasAim(e)});cv.addEventListener('pointermove',e=>{if(e.buttons||e.pressure>0)canvasAim(e)});
 root.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT','BUTTON'].includes(e.target.tagName))return;const k=e.key.toLowerCase();let handled=false;if(e.key==='ArrowLeft'||k==='a'){s.keys.l=true;handled=true}if(e.key==='ArrowRight'||k==='d'){s.keys.r=true;handled=true}if(e.key==='ArrowUp'||k==='w'){s.keys.u=true;handled=true}if(e.key==='ArrowDown'||k==='s'){s.keys.d=true;handled=true}if(e.code==='Space'){s.keys.f=true;handled=true}if(k==='e'){tornado();handled=true}if(handled)e.preventDefault()});
 root.addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(e.key==='ArrowLeft'||k==='a')s.keys.l=false;if(e.key==='ArrowRight'||k==='d')s.keys.r=false;if(e.key==='ArrowUp'||k==='w')s.keys.u=false;if(e.key==='ArrowDown'||k==='s')s.keys.d=false;if(e.code==='Space')s.keys.f=false});
@@ -126,24 +131,25 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){Object.key
 const MOE_CENTRAL_URL="https://preukschas.github.io/Online-spielen-/shared/moe-vocab.json";
 function moeKey(value){return String(value||'').toLowerCase().replace(/…/g,'...').replace(/\(=.+?\)|\(pl\)|\(pl only\)/g,'').replace(/[^a-z0-9']+/g,' ').trim();}
 function moeSameFamily(a,b){const families=[['mum','mother'],['dad','father']];const x=moeKey(a),y=moeKey(b);return families.some(words=>words.includes(x)&&words.includes(y));}
-function moeRebuildDeck(){learnDeck=shuffle(vocab.slice());learnCursor=0;lastLearnWord='';}
+function moeRebuildDeck(){learnDeck=shuffle((testFocus?testVocab:vocab).slice());learnCursor=0;lastLearnWord='';}
 async function moeRefreshVocabulary(){
  try{
   const reply=await fetch(MOE_CENTRAL_URL,{cache:'no-store'});
   if(!reply.ok)return;
   const data=await reply.json();
   if(data.schema!==1||!Array.isArray(data.words)||data.words.length<12)return;
-  const next=[],seen=new Set();
+  const next=[],newTests=[],seen=new Set();
   for(const row of data.words){
    if(!row||!row.en||!row.de)continue;
    // Nur die 165 aktiven Vokabeln bis einschließlich Schulbuchseite 191.
    const approvedId=Number(String(row.id||'').replace(/^MOE-/,''));
    if(!Number.isInteger(approvedId)||approvedId<1||approvedId>165)continue;
    const key=moeKey(row.en);if(seen.has(key))continue;seen.add(key);
-   next.push([String(row.de),String(row.en)]);
+   const word=[String(row.de),String(row.en)];next.push(word);if(approvedId>=105)newTests.push(word);
   }
   if(next.length<12)return;
   vocab.splice(0,vocab.length,...next);
+  if(newTests.length===61)testVocab.splice(0,testVocab.length,...newTests);
   if(!s.learn)moeRebuildDeck();
  }catch(_error){/* Offline die integrierte Wortliste benutzen. */}
 }
