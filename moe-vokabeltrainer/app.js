@@ -87,6 +87,13 @@ function feedback(ok,title,detail,solution){
 function lock(){
  $("answer").disabled=true;$("check").disabled=true;$("tip").disabled=true;$("skip").disabled=true;$("next").hidden=false;$("next").focus();
 }
+function tipText(w,level){
+ const a=expected(w);
+ const letters=[...a].filter(x=>/[A-Za-z]/.test(x)).length;
+ if(level===1)return "Tipp 1/2: Das englische Wort beginnt mit „"+a.charAt(0)+"“ und hat "+letters+" Buchstaben (ohne Leerzeichen).";
+ const visible=[...a].map((ch,i)=>!/[A-Za-z]/.test(ch)||i<2||i===a.length-1?ch:"_").join("");
+ return "Tipp 2/2: "+visible+" — beim nächsten falschen Versuch wird die Lösung gezeigt.";
+}
 function finishWord(ans){
  const w=round[cursor],firstTry=tries===0;
  log(w,true,ans);
@@ -131,11 +138,16 @@ $("answerForm").addEventListener("submit",e=>{
  if(valid(w,answer)){finishWord(answer);return;}
  log(w,false,answer);
  tries++;
- feedback(false,"Noch nicht richtig",tries>=3?"Die Lösung lautet: "+expected(w)+". Bitte schreibe sie jetzt selbst korrekt in das Eingabefeld.":"Versuche es erneut. Erst die richtige Eingabe schaltet Weiter frei.");
- $("answer").select();
+ if(tries>=3){
+  incorrect++;tries=99;lock();
+  feedback(false,"Drei Fehlversuche – Lösung", "Die Antwort zählt als falsch und wird erneut geübt. Du darfst jetzt weitergehen.",expected(w));
+ }else{
+  feedback(false,"Noch nicht richtig – Versuch "+tries+"/3",tipText(w,tries));
+  $("answer").select();
+ }
 });
-$("tip").onclick=()=>{if(!round.length)return;help=true;feedback(true,"Kleiner Hinweis","Das Wort beginnt mit „"+expected(round[cursor]).slice(0,2)+"…“.");$("tip").disabled=true;};
-$("skip").onclick=()=>{if(round.length&&tries!==99){help=true;feedback(false,"Lernhilfe – kein Überspringen","Schreibe die Lösung erst korrekt, um fortzufahren.",expected(round[cursor]));$("answer").focus();}};
+$("tip").onclick=()=>{if(!round.length||tries===99)return;help=true;feedback(false,"Lerntipp",tipText(round[cursor],Math.max(1,Math.min(2,tries||1))));$("tip").disabled=true;};
+$("skip").onclick=()=>{if(!round.length||tries===99)return;help=true;feedback(false,"Lernhilfe",tipText(round[cursor],Math.max(1,Math.min(2,tries||1))));$("answer").focus();};
 $("next").onclick=()=>{if(tries!==99||!round.length)return;cursor++;if(cursor<round.length)showWord();else finishRound();};
 document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{
  mode=b.dataset.mode;document.querySelectorAll("[data-mode]").forEach(x=>x.classList.toggle("active",x===b));
