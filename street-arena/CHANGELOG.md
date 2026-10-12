@@ -20,6 +20,7 @@
 
 ### Oberfläche
 - Neue türkisfarbene Ausdaueranzeige.
+- Die kanonische Datei `assets/fighters/aki.png` ist wiederhergestellt und im Spiel sowie Manifest einheitlich hinterlegt.
 - Die Vier-Tasten-Touchsteuerung ermöglicht über **Ducken + Schlag/Tritt** auch schweren Schlag und tiefen Tritt.
 - Hilfetext um Q/Doppeltippen ergänzt.
 - Lesbare Diagnosedaten unter `window.ARENA_ZERO_DIAGNOSTICS()`.
