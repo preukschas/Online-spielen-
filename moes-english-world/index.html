@@ -251,7 +251,8 @@ input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;user-sel
     <button type="button" class="choiceSet" data-set="w"><strong>👋 Seiten 186–187</strong><span class="small">32 Pflicht-Einträge</span></button>
     <button type="button" class="choiceSet" data-set="p"><strong>🌳 Seite 188</strong><span class="small">28 Einträge</span></button>
     <button type="button" class="choiceSet" data-set="g"><strong>🚲 Seite 189</strong><span class="small">30 Formen</span></button>
-    <button type="button" class="choiceSet" data-set="a"><strong>🏆 Alles gemischt</strong><span class="small">90 Pflicht-Einträge</span></button>
+    <button type="button" class="choiceSet" data-set="a"><strong>🏆 Alles gemischt</strong><span class="small">165 aktive Vokabeln</span></button>
+    <button type="button" class="choiceSet" data-set="test"><strong>📖 Auf aktuellen Test üben</strong><span class="small">Nur die 61 neuen Wörter · Seiten 190–191</span></button>
   </div>
   <fieldset class="options"><legend><strong>Rundenlänge</strong></legend><label><input type="radio" name="len" value="12" checked> 12 Wörter</label><label><input type="radio" name="len" value="20"> 20 Wörter</label><label><input type="radio" name="len" value="all"> komplett</label></fieldset>
   <div class="profilePanel">
@@ -397,7 +398,68 @@ g|brother|Bruder|
 g|aunt|Tante|
 g|uncle|Onkel|
 g|grandmother|Großmutter|
-g|grandfather|Großvater|`;
+g|grandfather|Großvater|
+t|her|ihr|her
+t|family|Familie|family
+t|with|mit|with
+t|we're (= we are)|wir sind|we're~we are
+t|garden|Garten|garden
+t|she's (= she is)|sie ist|she's~she is
+t|I have|ich habe; ich besitze|I have
+t|no brothers|keine Brüder|no brothers
+t|me|ich (im Beispielsatz); mich; mir|me
+t|our|unser|our
+t|his|sein|his
+t|name|Name|name
+t|he's (= he is)|er ist|he's~he is
+t|too|auch|too
+t|friend|Freund; Freundin|friend
+t|a photo of|ein Foto von|a photo of
+t|game|Spiel|game
+t|crazy|verrückt|crazy
+t|kid|Kind|kid
+t|together|zusammen|together
+t|everyone|jeder; alle|everyone
+t|we live|wir wohnen|we live
+t|on the door|an der Tür|on the door
+t|my brother and me|mein Bruder und ich|my brother and me
+t|come in|komm herein|come in
+t|meet my family|lerne meine Familie kennen|meet my family
+t|to be|sein|to be
+t|you're (= you are)|du bist; ihr seid; Sie sind|you're~you are
+t|I|ich|I
+t|you|du; ihr; Sie|you
+t|he|er|he
+t|she|sie (Einzahl)|she
+t|it|es|it
+t|we|wir|we
+t|they|sie (Mehrzahl)|they
+t|table|Tisch|table
+t|chair|Stuhl|chair
+t|box|Box; Kiste|box
+t|mobile (phone)|Handy; Mobiltelefon|mobile~mobile phone
+t|T-shirt|T-Shirt|T-shirt
+t|poster|Poster|poster
+t|book|Buch; Heft|book
+t|bed|Bett|bed
+t|shelf (pl. shelves)|Regal; Regalbrett (Mehrzahl: Regale)|shelf~shelves
+t|wardrobe|Kleiderschrank|wardrobe
+t|trainer|Turnschuh|trainer
+t|carpet|Teppich|carpet
+t|scarf (pl. scarves)|Schal; Tuch (Mehrzahl: Schals/Tücher)|scarf~scarves
+t|lamp|Lampe|lamp
+t|alarm clock|Wecker|alarm clock
+t|bedroom|Schlafzimmer; Kinderzimmer|bedroom
+t|Saturday|Samstag|Saturday
+t|at home|zu Hause|at home
+t|home|Zuhause; Heim|home
+t|who|wer|who
+t|It's me!|Ich bin's!|It's me!
+t|Are you ready?|Bist du bereit?|Are you ready?
+t|under|unter|under
+t|I can't find ...|ich kann ... nicht finden|I can't find ...
+t|new|neu|new
+t|there is (= there's)|da ist; es gibt|there is~there's`;
 const vocab=raw.trim().split('\n').map((line,id)=>{const [group,book,de,alts]=line.split('|');return{id,group,book,de,answers:alts?alts.split('~'):[book]};});
 const byId=new Map(vocab.map(v=>[v.id,v]));
 const PROFILE_KEY='moeEnglishProfileV5',ROUND_KEY='moeEnglishActiveRoundV5',DAY=86400000,RELEARN_DELAY=10*60*1000,BASE_INTERVALS=[0,DAY,3*DAY,7*DAY,14*DAY,30*DAY,60*DAY];
@@ -498,7 +560,7 @@ function learningStatusText(){const s=learningSummary();return '<span class="due
 function books(names){const set=new Set(names);return vocab.filter(v=>set.has(v.book));}
 const sportBooks=['sport','tennis','I can play football.','fan','boy','cool','number','bus','here','red','blue','green','one','two','three','four','five'];
 const zooBooks=['animal','bat','dog','pet','cat','people (pl only)','nice','here','something','I spy with my little eye ...','brown','black','white','one','two','three'];
-function pool(set){if(set==='a'||set==='smart')return vocab.slice();if(set==='sport')return books(sportBooks);if(set==='zoo')return books(zooBooks);return vocab.filter(v=>v.group===set);}
+function pool(set){if(set==='test')return vocab.filter(v=>v.group==='t'||v.page===190||v.page===191);if(set==='a'||set==='smart')return vocab.slice();if(set==='sport')return books(sportBooks);if(set==='zoo')return books(zooBooks);return vocab.filter(v=>v.group===set);}
 function getLevel(points){const size=150,level=Math.floor(points/size)+1,within=points%size,names=['Starter','Wortjäger','English Explorer','Vokabel-Profi','Greenwich Hero','English Champion'];return{level,name:names[Math.min(level-1,names.length-1)],pct:Math.round(within/size*100),left:size-within};}
 function weekKey(d=new Date()){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);return dateKey(x);}function ensureWeekly(){const k=weekKey();if(profile.weekly.key!==k)profile.weekly={key:k,tasks:0,writing:0,sessions:0,rewarded:false};}
 function weeklyComplete(){ensureWeekly();return profile.weekly.tasks>=30&&profile.weekly.writing>=15&&profile.weekly.sessions>=3;}
@@ -528,9 +590,9 @@ function openCrate(){if(crateOpened)return;crateOpened=true;profile.cratesOpened
 function triggerRareEvent(forced=''){const choices=['double','secret','crate'],kind=forced||choices[Math.floor(Math.random()*choices.length)];if(kind==='double'){profile.bonus.doubleTasks=Math.max(profile.bonus.doubleTasks,3);showToast('✨ Golden Word! Die nächsten 3 Aufgaben geben Doppelsterne.');confetti(18);}else if(kind==='secret'){const name='Goldenes Wort '+(profile.secretStickers.length+1);if(!profile.secretStickers.includes(name))profile.secretStickers.push(name);showToast('✨ Geheimer Sticker gefunden: '+name);confetti(20);}else queueOverlay(showCrate);saveJSON(PROFILE_KEY,profile);updateProfileUI();return kind;}
 function currentQuestionTime(){const live=state.questionStartedAt?Date.now()-state.questionStartedAt:0;return Math.max(0,(Number(state.questionElapsedMs)||0)+live);}
 function pauseQuestionTimer(){if(state.questionStartedAt){state.questionElapsedMs=Math.min(120000,currentQuestionTime());state.questionStartedAt=0;}}
-function serialiseState(){return{set:state.set,source:state.source.map(v=>v.id),quiz:state.quiz.map(v=>v.id),spell:state.spell.map(v=>v.id),retry:state.retry.map(v=>v.id),phase:state.phase,index:state.index,current:state.current?state.current.id:null,score:state.score,mistakes:state.mistakes,recognized:state.recognized,written:state.written,wrong:[...state.wrong],retryNeeded:[...state.retryNeeded],attempts:state.attempts,writeHadError:state.writeHadError,awaitingNext:state.awaitingNext,combo:state.combo,maxCombo:state.maxCombo,hintLevel:state.hintLevel,currentErrors:state.currentErrors,bossPlayed:state.bossPlayed,elapsedMs:Math.min(120000,currentQuestionTime()),draft:['spell','retry'].includes(state.phase)?$('writeInput').value:(state.draft||'')};}
+function serialiseState(){return{set:state.set,source:state.source.map(v=>v.id),quiz:state.quiz.map(v=>v.id),spell:state.spell.map(v=>v.id),retry:state.retry.map(v=>v.id),phase:state.phase,index:state.index,current:state.current?state.current.id:null,score:state.score,mistakes:state.mistakes,quizWrongThisQuestion:!!state.quizWrongThisQuestion,recognized:state.recognized,written:state.written,wrong:[...state.wrong],retryNeeded:[...state.retryNeeded],attempts:state.attempts,writeHadError:state.writeHadError,awaitingNext:state.awaitingNext,combo:state.combo,maxCombo:state.maxCombo,hintLevel:state.hintLevel,currentErrors:state.currentErrors,bossPlayed:state.bossPlayed,elapsedMs:Math.min(120000,currentQuestionTime()),draft:['spell','retry'].includes(state.phase)?$('writeInput').value:(state.draft||'')};}
 function saveRound(){if(['quiz','spell','retry'].includes(state.phase)&&state.source.length)saveJSON(ROUND_KEY,serialiseState());else removeStored(ROUND_KEY);renderResume();}
-function restoreRound(){let r=loadJSON(ROUND_KEY);if(!r){const old=loadJSON('moeEnglishActiveRoundV3');if(old)r=old;}if(!r||!Array.isArray(r.source)||!r.source.length||!['quiz','spell','retry'].includes(r.phase))return false;const mapUnique=(a,allowed=null)=>{const seen=new Set(),out=[];for(const rawId of (Array.isArray(a)?a:[])){const id=Number(rawId),v=byId.get(id);if(!v||seen.has(id)||(allowed&&!allowed.has(id)))continue;seen.add(id);out.push(v);}return out;},source=mapUnique(r.source);if(!source.length)return false;const allowed=new Set(source.map(v=>v.id));let quiz=mapUnique(r.quiz,allowed),spell=mapUnique(r.spell,allowed),retry=mapUnique(r.retry,allowed);if(quiz.length!==source.length)quiz=source.slice();if(spell.length!==source.length)spell=source.slice();if(r.phase==='retry'&&!retry.length)r.phase='spell';const list=r.phase==='quiz'?quiz:r.phase==='spell'?spell:retry,maxIndex=Math.max(0,list.length),index=Math.max(0,Math.min(maxIndex,Math.floor(finiteNonNeg(r.index,maxIndex)))),cleanIds=a=>new Set((Array.isArray(a)?a:[]).map(Number).filter(id=>allowed.has(id)));state=Object.assign(state,{set:typeof r.set==='string'?r.set:'g',source,quiz,spell,retry,phase:r.phase,index,current:r.current!=null&&allowed.has(Number(r.current))?byId.get(Number(r.current)):null,score:Math.min(12*source.length,finiteNonNeg(r.score,12*source.length)),mistakes:finiteNonNeg(r.mistakes,1e6),recognized:Math.min(source.length,finiteNonNeg(r.recognized,source.length)),written:Math.min(source.length,finiteNonNeg(r.written,source.length)),wrong:cleanIds(r.wrong),retryNeeded:cleanIds(r.retryNeeded),locked:false,attempts:finiteNonNeg(r.attempts,1e6),rewarded:false,writeHadError:!!r.writeHadError,awaitingNext:!!r.awaitingNext,combo:finiteNonNeg(r.combo,3*source.length),maxCombo:finiteNonNeg(r.maxCombo,3*source.length),questionStartedAt:0,questionElapsedMs:Math.min(120000,finiteNonNeg(r.elapsedMs,120000)),nextReadyAt:0,hintLevel:Math.max(0,Math.min(3,Math.floor(finiteNonNeg(r.hintLevel,3)))),currentErrors:Math.min(100,finiteNonNeg(r.currentErrors,100)),bossPlayed:!!r.bossPlayed,draft:String(r.draft||'').slice(0,100)});return true;}
+function restoreRound(){let r=loadJSON(ROUND_KEY);if(!r){const old=loadJSON('moeEnglishActiveRoundV3');if(old)r=old;}if(!r||!Array.isArray(r.source)||!r.source.length||!['quiz','spell','retry'].includes(r.phase))return false;const mapUnique=(a,allowed=null)=>{const seen=new Set(),out=[];for(const rawId of (Array.isArray(a)?a:[])){const id=Number(rawId),v=byId.get(id);if(!v||seen.has(id)||(allowed&&!allowed.has(id)))continue;seen.add(id);out.push(v);}return out;},source=mapUnique(r.source);if(!source.length)return false;const allowed=new Set(source.map(v=>v.id));let quiz=mapUnique(r.quiz,allowed),spell=mapUnique(r.spell,allowed),retry=mapUnique(r.retry,allowed);if(quiz.length!==source.length)quiz=source.slice();if(spell.length!==source.length)spell=source.slice();if(r.phase==='retry'&&!retry.length)r.phase='spell';const list=r.phase==='quiz'?quiz:r.phase==='spell'?spell:retry,maxIndex=Math.max(0,list.length),index=Math.max(0,Math.min(maxIndex,Math.floor(finiteNonNeg(r.index,maxIndex)))),cleanIds=a=>new Set((Array.isArray(a)?a:[]).map(Number).filter(id=>allowed.has(id)));state=Object.assign(state,{quizWrongThisQuestion:!!r.quizWrongThisQuestion,set:typeof r.set==='string'?r.set:'g',source,quiz,spell,retry,phase:r.phase,index,current:r.current!=null&&allowed.has(Number(r.current))?byId.get(Number(r.current)):null,score:Math.min(12*source.length,finiteNonNeg(r.score,12*source.length)),mistakes:finiteNonNeg(r.mistakes,1e6),recognized:Math.min(source.length,finiteNonNeg(r.recognized,source.length)),written:Math.min(source.length,finiteNonNeg(r.written,source.length)),wrong:cleanIds(r.wrong),retryNeeded:cleanIds(r.retryNeeded),locked:false,attempts:finiteNonNeg(r.attempts,1e6),rewarded:false,writeHadError:!!r.writeHadError,awaitingNext:!!r.awaitingNext,combo:finiteNonNeg(r.combo,3*source.length),maxCombo:finiteNonNeg(r.maxCombo,3*source.length),questionStartedAt:0,questionElapsedMs:Math.min(120000,finiteNonNeg(r.elapsedMs,120000)),nextReadyAt:0,hintLevel:Math.max(0,Math.min(3,Math.floor(finiteNonNeg(r.hintLevel,3)))),currentErrors:Math.min(100,finiteNonNeg(r.currentErrors,100)),bossPlayed:!!r.bossPlayed,draft:String(r.draft||'').slice(0,100)});return true;}
 function renderResume(){const active=['quiz','spell','retry'].includes(state.phase)&&state.source.length;if(!active){$('resumePanel').classList.add('hidden');return;}$('resumePanel').classList.remove('hidden');const labels={quiz:'Bedeutung',spell:'Rechtschreibung',retry:'Wiederholung'};const total=state.phase==='retry'?Math.max(1,state.retry.length):state.source.length;$('resumeText').textContent=labels[state.phase]+' · '+Math.min(state.index+1,total)+' von '+total+' · bisher '+state.score+' ⭐';}
 function updatePhaseSteps(){const order=['quiz','spell','retry'],idx=order.indexOf(state.phase);document.querySelectorAll('.phaseStep').forEach((el,i)=>{el.classList.toggle('active',state.phase!=='done'&&i===idx);el.classList.toggle('done',state.phase==='done'||(idx>=0&&i<idx));});}function updateStats(){$('score').textContent=state.score;$('mistakes').textContent=state.mistakes;updateComboUI();const n=Math.max(1,state.source.length);let p=0;if(state.phase==='quiz')p=state.index/n*45;else if(state.phase==='spell')p=45+state.index/n*45;else if(state.phase==='retry')p=90+(state.retry.length?state.index/state.retry.length*9:9);else if(state.phase==='done')p=100;const progressValue=Math.max(0,Math.min(100,p));$('progress').style.width=progressValue+'%';$('progressTrack').setAttribute('aria-valuenow',String(Math.round(progressValue)));updatePhaseSteps();updateProfileUI();}
 function showScreen(name){$('menuScreen').classList.toggle('hidden',name!=='menu');$('gameScreen').classList.toggle('hidden',name!=='game');$('resultScreen').classList.toggle('hidden',name!=='result');}
@@ -539,8 +601,29 @@ function moeMeaningsOverlap(a,b){const meaning=new Set(moeMeaningParts(a));retur
 function makeOptions(item){const out=[{text:item.de,correct:true,id:item.id}],seen=new Set([item.de]);for(const v of shuffle(state.source.length?state.source:vocab)){if(v.id===item.id||seen.has(v.de)||moeMeaningsOverlap(item.de,v.de)||(moeFamilyAnswers(item.book)||[]).includes(moeKey(v.book)))continue;seen.add(v.de);out.push({text:v.de,correct:false,id:v.id});if(out.length===4)break;}if(out.length<4)for(const v of shuffle(vocab)){if(v.id!==item.id&&!seen.has(v.de)&&!moeMeaningsOverlap(item.de,v.de)&&!(moeFamilyAnswers(item.book)||[]).includes(moeKey(v.book))){seen.add(v.de);out.push({text:v.de,correct:false,id:v.id});if(out.length===4)break;}}return shuffle(out);}
 function clearFeedback(preserveLearning=false){state.locked=false;state.awaitingNext=false;state.nextReadyAt=0;$('feedback').textContent='';$('feedback').className='feedback';$('correction').classList.add('hidden');$('nextBtn').classList.add('hidden');$('nextBtn').disabled=true;$('writeInput').disabled=false;$('retryHint').classList.add('hidden');$('hintText').classList.add('hidden');$('hintText').textContent='';$('hintBtn').disabled=false;if(!preserveLearning){state.hintLevel=0;state.currentErrors=0;state.draft='';}setWritingButton('check');}
 function setWritingButton(mode){const b=$('checkBtn');b.dataset.mode=mode;b.textContent=mode==='next'?'Weiter ➜':'✓ Prüfen';b.disabled=mode==='next'?false:!normalize($('writeInput').value);}
-function showQuiz(resuming=false){if(state.index>=state.quiz.length){state.phase='spell';state.index=0;state.questionElapsedMs=0;showSpelling();return;}state.phase='quiz';state.current=state.quiz[state.index];clearFeedback();$('choiceArea').classList.remove('hidden');$('writeArea').classList.add('hidden');$('level').textContent='🎯 Runde 1 · Bedeutung';$('hint').textContent='Wähle die richtige deutsche Bedeutung.';$('counter').textContent=(state.index+1)+' / '+state.source.length;$('prompt').textContent='Was bedeutet:';$('question').textContent=state.current.book;$('choiceArea').innerHTML='';makeOptions(state.current).forEach(opt=>{const b=document.createElement('button');b.type='button';b.className='answer';b.textContent=opt.text;quizOptionMap.set(b,{id:opt.id,correct:opt.correct});b.onclick=()=>handleChoice(b,opt.correct);$('choiceArea').appendChild(b);});if(!resuming)state.questionElapsedMs=0;state.questionStartedAt=Date.now();animateQuestion();saveRound();updateStats();}
-function handleChoice(button,isCorrect){if(state.locked)return;state.locked=true;state.attempts++;const ms=currentQuestionTime();[...$('choiceArea').querySelectorAll('button')].forEach(b=>{b.disabled=true;if(quizOptionMap.get(b)?.id===state.current.id)b.classList.add('correct');});rememberQuiz(state.current,isCorrect,ms);if(isCorrect){state.recognized++;gainCombo();award(2,true);$('feedback').textContent=state.combo>=3?'🔥 Richtig! '+state.combo+' in Folge · +2 ⭐':'✅ Richtig! +2 ⭐';$('feedback').className='feedback good';}else{state.mistakes++;resetCombo();state.wrong.add(state.current.id);state.retryNeeded.add(state.current.id);button.classList.add('wrong');award(0,true,false);$('feedback').textContent='❌ Falsch. Richtig ist: '+state.current.de;$('feedback').className='feedback bad';}state.index++;state.awaitingNext=true;$('nextBtn').classList.remove('hidden');$('nextBtn').disabled=false;saveRound();updateStats();}
+function showQuiz(resuming=false){if(!resuming)state.quizWrongThisQuestion=false;if(state.index>=state.quiz.length){state.phase='spell';state.index=0;state.questionElapsedMs=0;showSpelling();return;}state.phase='quiz';state.current=state.quiz[state.index];clearFeedback();$('choiceArea').classList.remove('hidden');$('writeArea').classList.add('hidden');$('level').textContent='🎯 Runde 1 · Bedeutung';$('hint').textContent='Wähle die richtige deutsche Bedeutung.';$('counter').textContent=(state.index+1)+' / '+state.source.length;$('prompt').textContent='Was bedeutet:';$('question').textContent=state.current.book;$('choiceArea').innerHTML='';makeOptions(state.current).forEach(opt=>{const b=document.createElement('button');b.type='button';b.className='answer';b.textContent=opt.text;quizOptionMap.set(b,{id:opt.id,correct:opt.correct});b.onclick=()=>handleChoice(b,opt.correct);$('choiceArea').appendChild(b);});if(!resuming)state.questionElapsedMs=0;state.questionStartedAt=Date.now();animateQuestion();saveRound();updateStats();}
+function handleChoice(button,isCorrect){
+ if(state.locked||button.disabled)return;
+ state.attempts++;
+ const ms=currentQuestionTime();
+ if(!isCorrect){
+  state.quizWrongThisQuestion=true;
+  state.mistakes++;resetCombo();state.wrong.add(state.current.id);state.retryNeeded.add(state.current.id);
+  rememberQuiz(state.current,false,ms);button.classList.add('wrong');button.disabled=true;
+  $('feedback').textContent='❌ Noch nicht richtig. Wähle die passende Bedeutung – erst dann geht es weiter.';
+  $('feedback').className='feedback bad';
+  state.awaitingNext=false;$('nextBtn').classList.add('hidden');$('nextBtn').disabled=true;
+  saveRound();updateStats();return;
+ }
+ state.locked=true;
+ [...$('choiceArea').querySelectorAll('button')].forEach(b=>{b.disabled=true;if(quizOptionMap.get(b)?.id===state.current.id)b.classList.add('correct');});
+ if(!state.quizWrongThisQuestion){rememberQuiz(state.current,true,ms);state.recognized++;gainCombo();award(2,true);}
+ $('feedback').textContent=state.quizWrongThisQuestion?'✅ Jetzt richtig. Der erste Fehler bleibt im Lernstand.':'✅ Richtig! +2 ⭐';
+ $('feedback').className='feedback good';
+ state.index++;state.awaitingNext=true;
+ $('nextBtn').classList.remove('hidden');$('nextBtn').disabled=false;
+ saveRound();updateStats();
+}
 function hintFor(item,level){const ans=normalize(item.answers[0]);if(level===1){const words=ans.split(' ');return 'Start: '+words.map(w=>(w[0]||'')+'… ('+w.replace(/[^A-Za-z]/g,'').length+')').join('  ');}if(level===2)return ans.split('').map((c,i)=>/\s|[.!?']/ .test(c)?c:(i%3===0?c:'_')).join(' ');const n=Math.max(1,Math.ceil(ans.length/2));return ans.slice(0,n)+'…';}
 function useHint(){if(!state.current||!['spell','retry'].includes(state.phase)||state.locked||state.awaitingNext||state.hintLevel>=3)return;state.hintLevel++;if(state.phase==='spell')state.retryNeeded.add(state.current.id);$('hintText').textContent='Hinweis '+state.hintLevel+': '+hintFor(state.current,state.hintLevel);$('hintText').classList.remove('hidden');getMemory(state.current.id).hints++;if(state.hintLevel>=3)$('hintBtn').disabled=true;saveJSON(PROFILE_KEY,profile);saveRound();}
 function restoreWritingClues(){if(state.hintLevel>0){$('hintText').textContent='Hinweis '+state.hintLevel+': '+hintFor(state.current,state.hintLevel);$('hintText').classList.remove('hidden');}if(state.currentErrors>0){const lv=Math.max(1,Math.min(3,Math.max(state.hintLevel,state.currentErrors)));$('correction').innerHTML=state.currentErrors<=2?'💡 '+escapeHtml(hintFor(state.current,lv)):'Richtig ist: <b>'+state.current.answers.map(escapeHtml).join(' / ')+'</b>';$('correction').classList.remove('hidden');$('retryHint').classList.remove('hidden');}}function showSpelling(resuming=false){if(state.index>=state.spell.length){prepareRetry();return;}state.phase='spell';state.current=state.spell[state.index];if(!resuming){state.writeHadError=false;state.draft='';state.questionElapsedMs=0;}$('writeInput').value=resuming?(state.draft||''):'';clearFeedback(resuming);$('choiceArea').classList.add('hidden');$('writeArea').classList.remove('hidden');$('level').textContent='✍️ Runde 2 · Rechtschreibung';$('hint').textContent='Du musst die Lösung vollständig richtig schreiben.';$('counter').textContent=(state.index+1)+' / '+state.source.length;$('prompt').textContent='Schreibe auf Englisch:';$('question').textContent=state.current.de;if(resuming)restoreWritingClues();if(state.hintLevel>=3)$('hintBtn').disabled=true;setWritingButton('check');state.questionStartedAt=Date.now();saveRound();updateStats();setTimeout(()=>$('writeInput').focus(),40);}
@@ -578,6 +661,7 @@ function selfTest(){const germany=vocab.find(v=>v.book==='Germany'),thats=vocab.
 /* Freigegebene Google-Vokabeln nachladen, vorhandene Wort-IDs beibehalten. */
 const MOE_CENTRAL_URL="https://preukschas.github.io/Online-spielen-/shared/moe-vocab.json";
 function moeKey(value){return String(value||'').toLowerCase().replace(/…/g,'...').replace(/\(=.+?\)|\(pl\)|\(pl only\)|\(to\)/g,'').replace(/[^a-z0-9']+/g,' ').trim();}
+function moeWordAnswers(word){const raw=String(word).replace(/…/g,'...'),base=raw.replace(/\s*\(=\s*[^)]*\)/g,'').replace(/\s*\(pl\.?\s*[^)]*\)/g,'').replace(/\s*\(phone\)/g,'').trim(),result=[base],full=raw.match(/\(=\s*([^)]+)\)/),plural=raw.match(/\(pl\.?\s*([^)]+)\)/);if(full)result.push(full[1]);if(plural)result.push(plural[1]);if(/\(phone\)/.test(raw))result.push(base+' phone');return [...new Set(result)];}
 function moeFamilyAnswers(word){const key=moeKey(word);if(key==='mum'||key==='mother')return ['mum','mother'];if(key==='dad'||key==='father')return ['dad','father'];return null;}
 async function moeRefreshVocabulary(){
  try{
@@ -594,11 +678,11 @@ async function moeRefreshVocabulary(){
    if(!Number.isInteger(approvedId)||approvedId<1||approvedId>165)continue;
    const key=moeKey(row.en);if(seen.has(key))continue;seen.add(key);
    const existing=original.get(key);
-   if(existing){existing.de=String(row.de);const family=moeFamilyAnswers(row.en);if(family)existing.answers=family;next.push(existing);}
+   if(existing){existing.de=String(row.de);existing.page=approvedId>=105?(approvedId<=132?190:191):0;const family=moeFamilyAnswers(row.en);if(family)existing.answers=family;next.push(existing);}
    else{
     const number=Number(String(row.id||'').replace(/^MOE-/,''));
     if(!Number.isInteger(number)||number<1||number>100000)continue;
-    const item={id:1000+number,group:'g',book:String(row.en),de:String(row.de),answers:moeFamilyAnswers(row.en)||[String(row.en).replace(/…/g,'...')]};
+    const item={id:1000+number,group:number>=105?'t':'g',page:number>=105?(number<=132?190:191):0,book:String(row.en),de:String(row.de),answers:moeFamilyAnswers(row.en)||moeWordAnswers(row.en)};
     next.push(item);
    }
   }
