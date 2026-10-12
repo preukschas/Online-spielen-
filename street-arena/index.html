@@ -40,6 +40,32 @@ const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('
 if(!ctx){alert('Canvas wird von diesem Browser nicht unterstützt.');return}
 let W=1280,H=720,scale=1,OX=0,OY=0,mode='menu',paused=false,selected='sergej',difficulty='normal',round=1,time=90,delay=0,notice='',noticeT=0,shake=0,hits=0,combo=0,comboT=0,sfx=true,audio=null,last=performance.now(),particles=[],p1,p2;
 const profiles={sergej:{name:'SERGEJ',main:'#262936',trim:'#dc6954',skin:'#d4a47c',hair:'#15151a',speed:260,damage:1.15},aki:{name:'AKI',main:'#242c40',trim:'#4ebdf2',skin:'#e3bb98',hair:'#553d30',speed:315,damage:.94},moe:{name:'MOE',main:'#b16c39',trim:'#ffce5e',skin:'#dfb391',hair:'#2d2422',speed:320,damage:.90},domi:{name:'DOMI',main:'#4aaf28',trim:'#b8fb63',skin:'#cc9c7b',hair:'#372720',speed:280,damage:1.04}};
+// Individuell zugeschnittene Charakter-Gesichter, direkt aus den echten Karten.
+// Quellkoordinaten beziehen sich auf die 1086x1448-PNG-Charakterbögen.
+const artFaces=Object.freeze({
+ sergej:{src:'./assets/fighters/sergej.png',crop:[578,65,238,255]},
+ aki:{src:'./assets/fighters/B4C2F74E-3CAC-4E0D-ADA3-BC9079A52B9A.png',crop:[555,198,187,230]},
+ moe:{src:'./assets/fighters/moe.png',crop:[545,198,196,230]},
+ domi:{src:'./assets/fighters/domi.png',crop:[576,4,254,265]}
+});
+const liveFaces=Object.create(null),faceStatus=Object.create(null);
+Object.entries(artFaces).forEach(([id,spec])=>{
+ const art=new Image();faceStatus[id]='loading';
+ art.onload=()=>{
+  try{
+   const buffer=document.createElement('canvas');buffer.width=192;buffer.height=224;
+   const g=buffer.getContext('2d');
+   if(!g){faceStatus[id]='canvas-error';return}
+   const qx=art.naturalWidth/1086,qy=art.naturalHeight/1448;
+   const [sx,sy,sw,sh]=spec.crop;
+   g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+   g.drawImage(art,sx*qx,sy*qy,sw*qx,sh*qy,0,0,192,224);
+   liveFaces[id]=buffer;faceStatus[id]='loaded';
+  }catch(e){faceStatus[id]='crop-error'}
+ };
+ art.onerror=()=>{faceStatus[id]='missing-image'};
+ art.src=spec.src+'?face-v=20261012-3';
+});
 function fighter(id,x,ai){return{id,x,y:0,vx:0,vy:0,face:ai?-1:1,hp:100,power:0,wins:0,ai,action:'idle',actionT:0,cool:0,stun:0,guard:false,duck:false,inv:0,attackHit:false,flash:0,walk:0,think:0}}
 function resize(){let d=Math.min(devicePixelRatio||1,2);canvas.width=Math.floor(innerWidth*d);canvas.height=Math.floor(innerHeight*d);scale=Math.min(canvas.width/W,canvas.height/H);OX=(canvas.width-W*scale)/2;OY=(canvas.height-H*scale)/2}window.addEventListener('resize',resize);resize();
 function announce(t,sec=1.2){notice=t;noticeT=sec;$('banner').textContent=t}
@@ -123,6 +149,7 @@ seg(-18,-106,-26-step,-58,25,'#222b3c');seg(-26-step,-58,-31-step*.7,-3,18,'#1b2
 seg(18,-106,24+kick+step,-58-kick*.3,25,main);seg(24+kick+step,-58-kick*.3,32+kick*1.1,-3-kick*.76,18,'#222b3c');
 rect(-46,-3,43,15,'#0c1421');rect(15+kick,-3-kick*.75,45,15,'#0c1421');
 rect(-37,-202,74,113,main);rect(-37,-204,74,20,trim);rect(-37,-98,74,18,'#172030');
+ctx.save();ctx.fillStyle='rgba(255,255,255,.10)';ctx.beginPath();ctx.moveTo(-33,-186);ctx.lineTo(-14,-183);ctx.lineTo(-12,-101);ctx.lineTo(-29,-100);ctx.closePath();ctx.fill();ctx.fillStyle='rgba(0,0,0,.16)';ctx.beginPath();ctx.moveTo(19,-183);ctx.lineTo(35,-188);ctx.lineTo(35,-101);ctx.lineTo(24,-98);ctx.closePath();ctx.fill();ctx.restore();
 if(f.id==='sergej'){rect(-18,-172,36,36,'#11141d');rect(-12,-167,24,26,'#34373f')}
 if(f.id==='aki'){rect(-38,-196,13,90,'#172339');rect(25,-196,13,90,'#172339')}
 if(f.id==='moe'){rect(-16,-177,32,60,'#6f4b2b');rect(-4,-170,8,44,'#ffd16b')}
@@ -133,12 +160,30 @@ const elbowX=59+punch*.35,handX=38+punch;
 seg(38,-181,block?49:elbowX,block?-213:-154,22,main);
 seg(block?49:elbowX,block?-213:-154,block?28:handX,block?-222:-154-((act==='special')?12*thrust:0),17,cfg.skin);
 ellipse(block?28:handX,block?-222:-154-((act==='special')?12*thrust:0),18,18,trim);
-rect(-12,-232,24,29,cfg.skin);ellipse(0,-254,34,40,cfg.skin);
-if(f.id==='sergej'){ellipse(0,-274,29,12,cfg.hair);rect(-20,-265,18,9,'#0a111c');rect(3,-265,18,9,'#0a111c')}
-if(f.id==='aki'){ctx.fillStyle=cfg.hair;ctx.beginPath();ctx.moveTo(-37,-269);ctx.lineTo(-11,-296);ctx.lineTo(13,-284);ctx.lineTo(33,-250);ctx.lineTo(-29,-241);ctx.fill()}
-if(f.id==='moe'){ellipse(0,-274,33,19,cfg.hair);rect(-26,-274,52,17,cfg.hair)}
-if(f.id==='domi'){ellipse(0,-272,33,17,cfg.hair);rect(22,-270,12,38,cfg.hair);ctx.fillStyle=cfg.hair;ctx.beginPath();ctx.moveTo(-12,-239);ctx.lineTo(0,-215);ctx.lineTo(13,-239);ctx.closePath();ctx.fill()}
-if(f.id!=='sergej'){ellipse(-12,-254,3,3,'#222');ellipse(12,-254,3,3,'#222')}
+// Gesicht und Hals sind anatomisch an die animierte Körperpose gekoppelt.
+rect(-13,-233,26,33,cfg.skin);
+if(f.id==='domi'){ellipse(-19,-280,22,19,cfg.hair);ellipse(26,-280,14,16,cfg.hair)}
+ellipse(0,-256,34,41,'#0d1421');
+ellipse(0,-257,32,39,cfg.skin);
+const faceArt=liveFaces[f.id];
+if(faceArt){
+ ctx.save();ctx.beginPath();ctx.ellipse(0,-256,31.5,38.5,0,0,Math.PI*2);ctx.clip();
+ ctx.drawImage(faceArt,-32,-295,64,78);
+ // Gedämpfte Lichtkante: Bild und Spielfigur wirken nicht aufgeklebt.
+ const edge=ctx.createLinearGradient(-34,-284,38,-232);
+ edge.addColorStop(0,'rgba(0,0,0,.22)');edge.addColorStop(.45,'rgba(0,0,0,0)');edge.addColorStop(1,'rgba(0,0,0,.24)');
+ ctx.fillStyle=edge;ctx.fillRect(-34,-298,68,86);ctx.restore();
+ ctx.strokeStyle='rgba(11,16,27,.65)';ctx.lineWidth=2;
+ ctx.beginPath();ctx.ellipse(0,-256,32,39,0,0,Math.PI*2);ctx.stroke();
+} else {
+ // Ohne geladenes Bild bleiben die Spielfiguren vollständig spielbar.
+ if(f.id==='sergej'){ellipse(0,-274,29,12,cfg.hair);rect(-20,-265,18,9,'#0a111c');rect(3,-265,18,9,'#0a111c')}
+ if(f.id==='aki'){ctx.fillStyle=cfg.hair;ctx.beginPath();ctx.moveTo(-37,-269);ctx.lineTo(-11,-296);ctx.lineTo(13,-284);ctx.lineTo(33,-250);ctx.lineTo(-29,-241);ctx.fill()}
+ if(f.id==='moe'){ellipse(0,-274,33,19,cfg.hair);rect(-26,-274,52,17,cfg.hair)}
+ if(f.id==='domi'){ellipse(0,-272,33,17,cfg.hair);rect(22,-270,12,38,cfg.hair);ctx.fillStyle=cfg.hair;ctx.beginPath();ctx.moveTo(-12,-239);ctx.lineTo(0,-215);ctx.lineTo(13,-239);ctx.closePath();ctx.fill()}
+ if(f.id!=='sergej'){ellipse(-12,-254,3,3,'#222');ellipse(12,-254,3,3,'#222')}
+}
+
 if(act==='special'){
 ctx.save();ctx.globalAlpha=.55;ctx.strokeStyle=trim;ctx.lineWidth=5;ctx.beginPath();
 if(f.id==='moe')ctx.arc(25+kick*.5,-130,70,0,Math.PI*2);
@@ -149,6 +194,7 @@ ctx.stroke();ctx.restore()}
 ctx.restore()}
 function render(){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#090e18';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.setTransform(scale,0,0,scale,OX+(Math.random()-.5)*shake*scale,OY+(Math.random()-.5)*shake*scale);background();if(!p1){p1=fighter('sergej',390,false);p2=fighter('aki',890,true)}body(p1);body(p2);for(let p of particles)ellipse(p.x,p.y,3+p.t*8,3+p.t*8,p.c);let shade=ctx.createRadialGradient(640,300,250,640,300,850);shade.addColorStop(0,'#0000');shade.addColorStop(1,'#01030ac9');rect(0,0,1280,720,shade)}
 function loop(now){let dt=Math.min(.033,(now-last)/1000||0);last=now;update(dt);render();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+window.ARENA_ZERO_PORTRAITS={status:faceStatus,sourceFiles:artFaces};
 const actions={KeyJ:'jab',KeyK:'heavy',KeyU:'kick',KeyI:'sweep',KeyL:'special'};
 window.addEventListener('keydown',e=>{if(['Space','KeyW','KeyS','KeyA','KeyD'].includes(e.code))e.preventDefault();if(e.code==='Escape'){togglePause();return}if(!keys.has(e.code)&&actions[e.code])attack(p1,actions[e.code]);keys.add(e.code)});
 window.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',()=>keys.clear());document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='fight'&&!paused)togglePause()});
