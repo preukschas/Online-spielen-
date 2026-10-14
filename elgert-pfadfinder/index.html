@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#103c32">
+<title>Elgerts Pfadfinder-Abenteuer · Wald, Feuer & Freundschaft</title>
+<meta name="description" content="Ein interaktives Pfadfinderspiel: den Wald erwandern, Freundinnen und Freunde finden, ein Lagerfeuer vorbereiten und gemeinsam tanzen.">
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f8f4dc;background:#071a1a}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#254d3b,#0c292a 65%,#071a1a);padding:12px}
+button,input{font:inherit}button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.shell{max-width:1280px;margin:0 auto}.header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 4px 10px}.logo{display:flex;align-items:center;gap:10px;font-size:clamp(15px,2.2vw,23px);font-weight:900;letter-spacing:-.03em}.logo span:first-child{font-size:34px}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.24em;color:#b2d4b2;display:block;margin-bottom:2px}.headerRight{display:flex;align-items:center;gap:7px}.smallBtn{background:#ffffff1a;border:1px solid #ffffff33;border-radius:14px;color:#fff;padding:9px 12px;font-weight:700;white-space:nowrap;font-size:13px}.smallBtn:hover,.smallBtn:focus-visible{background:#ffffff33}.stage{position:relative;height:min(72vh,720px);min-height:460px;max-height:720px;border:2px solid #b4ad704d;border-radius:23px;overflow:hidden;box-shadow:0 26px 70px #0007, inset 0 0 0 3px #0003;background:#28583e;touch-action:none}canvas{display:block;width:100%;height:100%;touch-action:none}.vignette{pointer-events:none;position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,transparent 41%,#071a18a3 100%);z-index:1}.hud{position:absolute;inset:0;z-index:2;pointer-events:none}.statRow{position:absolute;left:14px;top:13px;display:flex;flex-direction:column;gap:8px;max-width:min(73%,480px)}.mission{background:#0b2924de;border:1px solid #d6e8bd66;border-radius:16px;padding:12px 16px;box-shadow:0 8px 18px #0003;backdrop-filter:blur(8px)}.mission strong{font-size:14px;letter-spacing:.03em;display:block;color:#ffd88b}.mission p{font-size:12px;margin:3px 0 0;color:#ebf4dd;line-height:1.35}.stats{display:flex;gap:7px;flex-wrap:wrap}.pill{font-size:13px;background:#14372fe0;border:1px solid #e2deb54d;border-radius:50px;padding:7px 11px;font-weight:800}.map{position:absolute;right:15px;top:13px;background:#102d2de0;border:1px solid #cfdabc80;border-radius:16px;padding:9px;width:164px;box-shadow:0 5px 20px #0003}.mapTitle{font-size:10px;font-weight:800;letter-spacing:.15em;color:#f3dab4;text-align:center}.map canvas{width:142px;height:96px;border-radius:9px;margin-top:6px}.guide{position:absolute;right:15px;bottom:20px;max-width:215px;background:#0a2923d9;border:1px solid #ebdbaa70;border-radius:14px;padding:9px 12px;color:#fdf4d6;font-size:13px;line-height:1.3;text-align:center;box-shadow:0 4px 18px #0003}.guide strong{color:#ffd576}.actionPrompt{position:absolute;left:50%;bottom:17px;transform:translateX(-50%);background:#fff2cf;border:2px solid #bd8335;color:#563a20;border-radius:14px;padding:10px 18px;font-weight:900;font-size:14px;white-space:nowrap;box-shadow:0 6px 30px #0005;opacity:0;transition:opacity .12s}.actionPrompt.visible{opacity:1}.toast{position:absolute;z-index:6;top:31%;left:50%;transform:translateX(-50%) translateY(-12px);min-width:230px;max-width:80%;background:#fff6d5;color:#35503e;border:2px solid #bda361;border-radius:17px;font-weight:850;text-align:center;padding:13px 20px;box-shadow:0 13px 30px #0007;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.touchPad{display:none;position:absolute;z-index:3;left:16px;bottom:17px;right:16px;justify-content:space-between;align-items:end;pointer-events:none}.joystick{width:125px;height:125px;border-radius:50%;background:#f7f0cd33;border:2px solid #fff5d266;position:relative;pointer-events:auto;touch-action:none;box-shadow:inset 0 5px 15px #0004}.nub{width:57px;height:57px;border-radius:50%;background:linear-gradient(140deg,#fff3c0,#ddbc76);border:3px solid #fff9dc;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 4px 8px #0006}.touchAction{pointer-events:auto;border:3px solid #fff4c6;background:linear-gradient(145deg,#fdce66,#de923c);border-radius:50%;width:100px;height:100px;color:#47300e;font-weight:1000;box-shadow:0 8px 20px #0008;font-size:13px}.foot{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:10px 3px;color:#b4c8b6;font-size:12px}.foot strong{color:#ffdf9b}.hidden{display:none!important}.modalWrap{position:absolute;z-index:10;inset:0;display:flex;align-items:center;justify-content:center;background:#031b1acc;backdrop-filter:blur(5px);padding:14px;overflow:auto}.card{width:min(535px,100%);border:2px solid #e9c578aa;border-radius:25px;padding:clamp(17px,3vw,28px);background:linear-gradient(150deg,#1c4b3e,#133a35 67%,#0d302c);color:#f7efcd;box-shadow:0 25px 60px #0009;max-height:100%;overflow-y:auto}.card:focus{outline:none}.mascot{font-size:48px;line-height:1.12;text-align:center;margin:0 auto 6px}.card h1,.card h2{text-align:center;color:#ffdc96;line-height:1.06;margin:8px 0 10px;font-weight:1000;font-size:clamp(22px,3.2vw,34px)}.card p{font-size:15px;line-height:1.5;color:#e2f0df;margin:8px 0}.card .lead{text-align:center;font-weight:650}.nameLabel{font-size:13px;display:block;margin:14px 0 5px;color:#d7e7cb}.nameInput{width:100%;border-radius:12px;border:2px solid #d6ce9d;background:#eff5e4;padding:11px 14px;color:#233e32;font-weight:800;outline-offset:2px}.listBits{display:grid;gap:8px;margin:14px 0}.bit{display:flex;gap:10px;align-items:center;background:#ffffff10;border-radius:10px;padding:9px 11px;font-size:14px}.primary{width:100%;background:linear-gradient(160deg,#ffdc81,#f2a94f);border:2px solid #fff1c9;border-radius:14px;color:#3c341f;font-size:17px;font-weight:1000;padding:13px;box-shadow:0 4px 0 #b77d2d}.primary:active{transform:translateY(3px);box-shadow:0 1px 0 #b77d2d}.secondary{border:1px solid #d8e8c47a;background:#ffffff1a;padding:10px 12px;border-radius:11px;color:#fff;font-weight:750}.answerGrid{display:grid;gap:10px;margin:20px 0 14px}.answer{background:#ffffff14;border:2px solid #c5dbbd80;color:#fffbe3;border-radius:14px;text-align:left;padding:13px 15px;font-weight:750}.answer:hover,.answer:focus-visible{background:#ffffff27;border-color:#ffdb87}.hint{min-height:27px;text-align:center;color:#ffd28a;font-weight:750;font-size:14px}.progress{display:flex;gap:6px;justify-content:center;margin:10px 0 15px}.dot{width:34px;height:7px;background:#6b8167;border-radius:10px}.dot.done{background:#f5c66b}.danceUI{z-index:5;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(590px,calc(100% - 26px));background:#10332fe8;border:2px solid #f5d184b8;border-radius:20px;padding:16px;box-shadow:0 15px 60px #0009;text-align:center;backdrop-filter:blur(6px)}.danceTitle{font-size:clamp(18px,2.4vw,27px);color:#ffdf9f;font-weight:1000}.danceUI p{font-size:13px;margin:5px 0}.danceTarget{font-size:45px;margin:6px 0 0;line-height:1.2;text-shadow:0 4px 8px #0005}.danceTargetLabel{font-size:16px;font-weight:950;color:#fff9d4}.moves{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:13px}.move{background:#ffe2a0;border:2px solid #fff1c5;border-radius:14px;color:#4a3a1f;padding:8px 1px;font-size:25px;min-height:70px}.move small{display:block;font-size:11px;font-weight:900}.move:active{transform:scale(.94)}.danceMeter{height:10px;background:#344e42;border-radius:10px;margin:11px 0 3px;overflow:hidden}.danceFill{height:100%;background:linear-gradient(90deg,#80df9e,#f9cf63);width:0%;transition:width .22s}.danceFeedback{font-size:12px;color:#fff0b4;font-weight:750;min-height:19px}.danceUI .keyHelp{opacity:.8;font-size:11px}.results{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin:18px 0}.resultPill{border:1px solid #f1db9a86;background:#ffffff12;border-radius:25px;padding:8px 13px;font-weight:850}.confetti{font-size:36px;letter-spacing:.15em;text-align:center}.sparkles{position:absolute;z-index:4;inset:0;pointer-events:none;overflow:hidden}.sparkle{position:absolute;bottom:20%;font-size:26px;animation:fly 3s linear forwards;opacity:0}@keyframes fly{5%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateY(-290px) rotate(45deg)}}@media (pointer:coarse){.touchPad{display:flex}.guide{bottom:142px;right:14px;max-width:176px}.actionPrompt{bottom:6px;font-size:12px;display:none}}@media(max-width:650px){body{padding:5px}.header{margin:3px 4px 7px}.logo{gap:4px;font-size:16px}.logo span:first-child{font-size:25px}.eyebrow{font-size:9px}.smallBtn{padding:7px;font-size:11px}.stage{height:calc(100dvh - 107px);min-height:480px;border-radius:14px}.statRow{top:8px;left:8px;max-width:74%;gap:5px}.mission{padding:8px 10px;border-radius:11px}.mission strong{font-size:11px}.mission p{font-size:10px}.pill{font-size:11px;padding:5px 7px}.map{top:8px;right:8px;width:104px;padding:5px}.mapTitle{font-size:8px}.map canvas{width:92px;height:61px}.guide{font-size:11px}.foot{font-size:10px}.joystick{width:112px;height:112px}.touchAction{width:86px;height:86px}.danceUI{padding:11px}.moves{gap:5px}.move{font-size:22px;min-height:65px}}@media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="header">
+ <div class="logo"><span aria-hidden="true">⚜️</span><div><span class="eyebrow">Pfadfinder-Spezial</span>WALD · FEUER · FREUNDSCHAFT</div></div>
+ <div class="headerRight"><button class="smallBtn" id="soundBtn" type="button" aria-pressed="false">🔇 Ton aus</button><button class="smallBtn" id="restartBtn" type="button">↻ Neustart</button></div>
+</header>
+<main class="stage" id="stage" aria-label="Pfadfinder-Abenteuerspiel">
+ <canvas id="game" aria-label="Spielfeld mit Wald, Wanderweg und Lager"></canvas><div class="vignette"></div>
+ <div class="hud"><div class="statRow"><div class="mission"><strong id="missionTitle">🌲 1/3 · GEMEINSAM WANDERN</strong><p id="missionText">Erkunde den Wald. Finde deine Gruppe und sammle trockenes Holz.</p></div><div class="stats"><div class="pill" id="woodStat">🪵 0/5</div><div class="pill" id="friendStat">🤝 0/3</div><div class="pill" id="fireStat">🔥 aus</div></div></div><div class="map"><div class="mapTitle">🧭 WALDKARTE</div><canvas id="mini"></canvas></div><div class="guide" id="guide"><strong>➜</strong> Folge dem Wanderweg!</div><div class="actionPrompt" id="actionPrompt">E / Leertaste · Interagieren</div></div>
+ <div class="touchPad"><div class="joystick" id="joystick" role="group" aria-label="Virtueller Joystick zur Bewegung"><div class="nub" id="nub"></div></div><button class="touchAction" id="touchAction" type="button">✨<br>AKTION</button></div>
+ <div class="toast" id="toast" role="status" aria-live="polite"></div><div class="sparkles" id="sparkles"></div>
+ <div class="danceUI hidden" id="danceUI"><div class="danceTitle">🎶 Alle tanzen ums Lagerfeuer!</div><p id="danceName">Folge der Bewegung und bring die Gruppe in Schwung.</p><div class="danceMeter"><div class="danceFill" id="danceFill"></div></div><div id="danceCount" class="keyHelp">Schritt 1 von 12</div><div id="danceTarget" class="danceTarget">👏</div><div id="danceTargetLabel" class="danceTargetLabel">Klatschen</div><div class="moves">
+ <button class="move" type="button" data-move="clap">👏<small>1 · Klatschen</small></button><button class="move" type="button" data-move="turn">🌀<small>2 · Drehen</small></button><button class="move" type="button" data-move="wave">🙌<small>3 · Arme hoch</small></button><button class="move" type="button" data-move="step">👣<small>4 · Schritt</small></button>
+ </div><div class="danceFeedback" id="danceFeedback">Gemeinsam macht jeder Schritt Spaß!</div><div class="keyHelp">Tippen oder Tasten 1–4 drücken</div></div>
+ <div class="modalWrap" id="modal"><section class="card" id="modalCard" tabindex="-1"><div id="modalBody"></div></section></div>
+</main>
+<div class="foot"><span>← ↑ ↓ → oder WASD bewegen · E / Leertaste helfen · auf dem Handy Joystick nutzen</span><span><strong>Pfadfinder-Ehrenwort:</strong> Niemand bleibt zurück. ♡</span></div>
+</div>
+<script>
+(function(){
+"use strict";
+const el=id=>document.getElementById(id);
+const stage=el("stage"), canvas=el("game"), ctx=canvas.getContext("2d");
+const mini=el("mini"), mc=mini.getContext("2d");
+const modal=el("modal"), modalBody=el("modalBody");
+const WORLD={w:2310,h:1610}, CAMP={x:1980,y:1260}, START={x:190,y:233};
+const trail=[[190,233],[380,305],[555,387],[735,456],[965,575],[1165,715],[1380,829],[1570,985],[1740,1091],[1900,1190],[1980,1260]];
+const woods=[[379,336],[518,419],[798,507],[996,632],[1198,758],[1494,956],[1763,1135]];
+const names=["Nele","Finn","Sam"];
+const friends=[{x:686,y:480,name:"Nele",story:"Nele hat den Weg gefunden und zeigt euch einen schönen Aussichtspunkt."},{x:1260,y:769,name:"Finn",story:"Finn hat die Trinkflaschen sortiert. Jetzt geht ihr zusammen weiter."},{x:1652,y:1047,name:"Sam",story:"Sam kennt ein Lied fürs Lagerfeuer und läuft mit euch mit."}];
+const beats=["clap","clap","step","turn","wave","wave","step","clap","turn","step","wave","clap"];
+const labels={clap:["👏","Klatschen"],turn:["🌀","Drehen"],wave:["🙌","Arme hoch"],step:["👣","Schritt"]};
+let vw=1000,vh=600,dpr=1,camera={x:0,y:0},now=0,last=0,audioOn=false,audio=null,active=false,toastTimer=0,lastSaved=0,shimmer=0,firePulse=0,joy={x:0,y:0},keys=new Set();
+function fresh(){return {name:"Elgert",x:START.x,y:START.y,wood:[],joined:[],phase:"forest",fireStep:0,danceStep:0,started:false};}
+let g=fresh();
+try{const stored=JSON.parse(localStorage.getItem("pfadfinder-elgert-v1")||"null");if(stored&&Array.isArray(stored.wood)&&Array.isArray(stored.joined)&&["forest","fire","dance","win"].includes(stored.phase)){g=Object.assign(fresh(),stored);g.x=Math.max(40,Math.min(WORLD.w-40,Number(g.x)||START.x));g.y=Math.max(40,Math.min(WORLD.h-40,Number(g.y)||START.y));}}catch(e){}
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const seeded=n=>{let v=Math.sin(n*168.97+3.57)*47326.142;return v-Math.floor(v);};
+function pointSeg(x,y,ax,ay,bx,by){let dx=bx-ax,dy=by-ay,t=clamp(((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(x-(ax+t*dx),y-(ay+t*dy));}
+function onTrail(x,y){for(let i=1;i<trail.length;i++)if(pointSeg(x,y,...trail[i-1],...trail[i])<120)return true;return false;}
+const trees=[];
+for(let i=0;i<560;i++){let x=30+seeded(i+230)*2250,y=25+seeded(i+659)*1560,r=17+seeded(i+431)*17;if(onTrail(x,y)||Math.hypot(x-CAMP.x,y-CAMP.y)<210||Math.hypot(x-START.x,y-START.y)<165||Math.hypot(x-1200,y-300)<170)continue;trees.push({x,y,r,t:seeded(i+91)});}
+const flowers=Array.from({length:490},(_,i)=>({x:seeded(i+1000)*WORLD.w,y:seeded(i+3990)*WORLD.h,t:seeded(i+5000)}));
+let escorts=friends.map((f,i)=>({x:f.x,y:f.y,angle:i}));
+function save(){try{localStorage.setItem("pfadfinder-elgert-v1",JSON.stringify(g));}catch(e){}}
+function resize(){const r=stage.getBoundingClientRect();dpr=Math.min(window.devicePixelRatio||1,2);vw=Math.max(200,r.width);vh=Math.max(240,r.height);canvas.width=Math.round(vw*dpr);canvas.height=Math.round(vh*dpr);canvas.style.width="100%";canvas.style.height="100%";ctx.setTransform(dpr,0,0,dpr,0,0);mini.width=284;mini.height=192;}
+window.addEventListener("resize",resize);resize();
+function toast(message){const t=el("toast");t.textContent=message;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2600);}
+function btnSound(){audioOn=!audioOn;el("soundBtn").textContent=audioOn?"🔊 Ton an":"🔇 Ton aus";el("soundBtn").setAttribute("aria-pressed",String(audioOn));if(audioOn)tone(440,.06);}
+function tone(freq=440,duration=.11){if(!audioOn)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();if(audio.state==="suspended")audio.resume();const o=audio.createOscillator(),gain=audio.createGain();o.type="sine";o.frequency.setValueAtTime(freq,audio.currentTime);gain.gain.setValueAtTime(.055,audio.currentTime);gain.gain.exponentialRampToValueAtTime(.0002,audio.currentTime+duration);o.connect(gain);gain.connect(audio.destination);o.start();o.stop(audio.currentTime+duration+.01);}catch(e){}}
+el("soundBtn").addEventListener("click",btnSound);
+el("restartBtn").addEventListener("click",()=>{if(confirm("Möchtest du das Abenteuer wirklich von vorne beginnen?")){g=fresh();escorts=friends.map(f=>({x:f.x,y:f.y}));save();showStart();updateHud();}});
+function show(html){modalBody.innerHTML=html;modal.classList.remove("hidden");el("modalCard").focus({preventScroll:true});active=false;}
+function hide(){modal.classList.add("hidden");active=true;}
+function escaped(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function showStart(){
+ el("danceUI").classList.add("hidden");
+ show('<div class="mascot">🌲⚜️🔥</div><div class="eyebrow" style="text-align:center">Ein echtes Abenteuer zusammen</div><h1>Das Geheimnis des<br>Freundschaftsfeuers</h1><p class="lead">Wandere durch den Schwarzwald, erkunde die Natur, finde deine Freunde und tanze am gemeinsamen Lagerfeuer!</p><label class="nameLabel" for="playerName">Wie heißt deine Pfadfinderfigur?</label><input class="nameInput" id="playerName" maxlength="20" value="'+escaped(g.name)+'" autocomplete="off"><div class="listBits"><div class="bit">🥾 <span><b>Wandern:</b> Erkunde den Wald und finde den Weg.</span></div><div class="bit">🤝 <span><b>Zusammenhalt:</b> Alle drei Freunde kommen mit.</span></div><div class="bit">🔥 <span><b>Lagerfeuer:</b> Baut zusammen ein sicheres Feuer.</span></div><div class="bit">💃 <span><b>Tanzen:</b> Tanzt im Kreis bis zum großen Finale.</span></div></div><button type="button" class="primary" id="beginBtn">'+(g.started?"Abenteuer fortsetzen →":"Auf ins Abenteuer →")+'</button>');
+ el("beginBtn").addEventListener("click",()=>{g.name=el("playerName").value.trim().slice(0,20)||"Elgert";g.started=true;save();hide();updateHud();toast("Los geht’s, "+g.name+"! ⚜️");});
+}
+function updateHud(){
+ const num=g.joined.length;
+ el("woodStat").textContent="🪵 "+g.wood.length+"/5";
+ el("friendStat").textContent="🤝 "+num+"/3";
+ el("fireStat").textContent="🔥 "+((g.phase==="dance"||g.phase==="win")?"brennt":"aus");
+ if(g.phase==="forest"){el("missionTitle").textContent="🌲 1/3 · GEMEINSAM WANDERN";el("missionText").textContent=g.wood.length>=5&&num>=3?"Großartig! Alle sind zusammen. Findet die Lagerfeuerstelle am Ende des Weges.":"Erkundet den Wald, sammelt 5 Holzstücke und findet alle 3 Freunde.";}
+ else if(g.phase==="fire"){el("missionTitle").textContent="🔥 2/3 · LAGERFEUER";el("missionText").textContent="Bereitet die Feuerstelle zusammen mit eurer Gruppe vor.";}
+ else if(g.phase==="dance"){el("missionTitle").textContent="🎶 3/3 · LAGERFEUER-TANZ";el("missionText").textContent="Alle zusammen: 12 Tanzschritte am Feuer!";}
+ else {el("missionTitle").textContent="🏅 ZIEL ERREICHT";el("missionText").textContent="Wandern, Zusammenhalt, Lagerfeuer und Tanzen – alles gemeinsam geschafft!";}
+}
+function target(){if(g.phase!=="forest")return CAMP;const options=[];woods.forEach((p,i)=>{if(!g.wood.includes(i))options.push({x:p[0],y:p[1],type:"wood"});});friends.forEach((f,i)=>{if(!g.joined.includes(i))options.push({x:f.x,y:f.y,type:"friend"});});if(!options.length||g.wood.length>=5&&g.joined.length>=3)return CAMP;options.sort((a,b)=>dist(a,g)-dist(b,g));return options[0];}
+function closestAction(){
+ if(g.phase!=="forest")return null;
+ const actions=[];
+ woods.forEach((p,i)=>{if(!g.wood.includes(i))actions.push({x:p[0],y:p[1],type:"wood",i,label:"🪵 Holz aufheben"});});
+ friends.forEach((f,i)=>{if(!g.joined.includes(i))actions.push({x:f.x,y:f.y,type:"friend",i,label:"🤝 "+f.name+" ansprechen"});});
+ actions.push({x:CAMP.x,y:CAMP.y,type:"camp",label:"🔥 Lagerfeuerstelle"});
+ actions.sort((a,b)=>dist(a,g)-dist(b,g));
+ return actions.length&&dist(actions[0],g)<83?actions[0]:null;
+}
+function act(){
+ if(!active||g.phase!=="forest")return;
+ const a=closestAction();
+ if(!a){toast("Folge dem Weg und erkunde den Wald! 🧭");return;}
+ if(a.type==="wood"){g.wood.push(a.i);tone(650);toast("🪵 Trockenes Holz gesammelt! ("+g.wood.length+"/5)");}
+ if(a.type==="friend"){g.joined.push(a.i);tone(520,.16);toast("🤝 "+a.name||"");toast(friends[a.i].story);}
+ if(a.type==="camp"){if(g.wood.length<5||g.joined.length<3){toast("Ihr braucht noch "+Math.max(0,5-g.wood.length)+" Holzstücke und "+Math.max(0,3-g.joined.length)+" Freunde.");return;}g.phase="fire";g.fireStep=0;fireDialog();}
+ save();updateHud();
+ if(g.wood.length>=5&&g.joined.length>=3&&g.phase==="forest")setTimeout(()=>toast("🌟 Alle zusammen! Auf zur Feuerstelle am Wegende."),1000);
+}
+const fireSteps=[
+ {title:"Die Feuerstelle vorbereiten",q:"Wo soll eure Gruppe das Lagerfeuer machen?",opts:["Mitten im trockenen Laub","Auf einer erlaubten, sicheren Feuerstelle","Unter tiefhängenden Ästen"],answer:1,info:"Genau! Nur dort, wo Feuer erlaubt ist, mit Abstand zu trockenem Bewuchs."},
+ {title:"Gemeinsam anpacken",q:"Wie baut ihr das Lagerfeuer am besten auf?",opts:["Alle helfen: Holz sortieren und bereitlegen","Das Feuer unbeaufsichtigt lassen","Brennende Äste im Wald verteilen"],answer:0,info:"Stark! Alle machen mit. Eine erwachsene Aufsicht kümmert sich ums Entzünden."},
+ {title:"Aufeinander achten",q:"Was gehört immer zu einem sicheren Lagerfeuer?",opts:["Das Feuer allein zurücklassen","Wasser zum Löschen bereithalten und dabeibleiben","Möglichst viel Holz auf einmal"],answer:1,info:"Richtig! Wasser steht bereit. Am Ende wird das Feuer vollständig gelöscht."}
+];
+function fireDialog(){
+ updateHud();
+ const q=fireSteps[g.fireStep];
+ if(!q){g.phase="dance";g.danceStep=0;save();updateHud();danceIntro();return;}
+ let opts=q.opts.map((s,i)=>'<button type="button" class="answer" data-choice="'+i+'">'+["🌿","⚜️","✨"][i]+' '+escaped(s)+'</button>').join("");
+ show('<div class="mascot">🔥🤝🪵</div><div class="eyebrow" style="text-align:center">Lagerfeuer · Schritt '+(g.fireStep+1)+' von 3</div><h2>'+q.title+'</h2><p class="lead">'+q.q+'</p><div class="progress">'+fireSteps.map((_,i)=>'<div class="dot '+(i<g.fireStep?"done":"")+'"></div>').join("")+'</div><div class="answerGrid">'+opts+'</div><div id="answerFeedback" class="hint">Wähle die passende Antwort.</div>');
+ modalBody.querySelectorAll("[data-choice]").forEach(b=>b.addEventListener("click",()=>{
+  if(Number(b.dataset.choice)===q.answer){tone(740,.16);el("answerFeedback").textContent=q.info;modalBody.querySelectorAll("[data-choice]").forEach(n=>n.disabled=true);setTimeout(()=>{g.fireStep++;save();fireDialog();},850);}
+  else {tone(210,.15);el("answerFeedback").textContent="Fast! Denkt an die Sicherheit und den Zusammenhalt.";}
+ }));
+}
+function danceIntro(){show('<div class="mascot">🔥🎶💃</div><h2>Das Freundschaftsfeuer brennt!</h2><p class="lead">'+escaped(g.name)+', Nele, Finn und Sam haben es gemeinsam geschafft. Jetzt tanzen alle vier im Kreis!</p><p class="lead">Folge den 12 Bewegungen: <b>👏 Klatschen · 🌀 Drehen · 🙌 Arme hoch · 👣 Schritt</b>.</p><div class="listBits"><div class="bit">✨ Jede richtige Bewegung lässt euer Gemeinschaftsfeuer heller strahlen.</div><div class="bit">🎵 Mit dem Ton-Knopf kannst du Spielklänge einschalten.</div></div><button class="primary" id="danceBegin">🎶 Tanz starten!</button>');el("danceBegin").addEventListener("click",()=>{hide();el("danceUI").classList.remove("hidden");updateDance();toast("Jetzt gemeinsam tanzen!");});}
+function updateDance(){
+ el("danceFill").style.width=(g.danceStep/12*100)+"%";
+ el("danceCount").textContent="Schritt "+Math.min(12,g.danceStep+1)+" von 12";
+ const key=beats[g.danceStep]||"clap";el("danceTarget").textContent=labels[key][0];el("danceTargetLabel").textContent=labels[key][1];
+ el("danceName").textContent=g.name+", Nele, Finn und Sam tanzen miteinander.";
+}
+function sparkBurst(){const holder=el("sparkles");["✨","⭐","🌟","💛"].forEach((v,i)=>{const n=document.createElement("span");n.className="sparkle";n.textContent=v;n.style.left=(32+seeded(g.danceStep*11+i)*40)+"%";n.style.animationDelay=(i*.11)+"s";holder.appendChild(n);setTimeout(()=>n.remove(),3300);});}
+function danceMove(move){
+ if(g.phase!=="dance"||!modal.classList.contains("hidden"))return;
+ if(beats[g.danceStep]!==move){el("danceFeedback").textContent="Fast! Probier die angezeigte Bewegung. ♡";tone(290,.05);return;}
+ g.danceStep++;firePulse=1.4;shimmer=1;tone(390+g.danceStep*42,.14);el("danceFeedback").textContent=["Super, alle machen mit!","Das klappt als Team!","Weiter so, "+g.name+"!","Wie schön ihr zusammen tanzt!"][g.danceStep%4];
+ if(g.danceStep%3===0)sparkBurst();
+ if(g.danceStep>=beats.length){g.phase="win";el("danceUI").classList.add("hidden");save();updateHud();setTimeout(victory,500);return;}
+ save();updateDance();
+}
+el("danceUI").querySelectorAll("[data-move]").forEach(b=>b.addEventListener("click",()=>danceMove(b.dataset.move)));
+function victory(){
+ sparkBurst();sparkBurst();
+ show('<div class="confetti">🌟 🏕️ 🌟</div><div class="mascot">🏅</div><h1>Pfadfinder-Herz aus Gold!</h1><p class="lead">Geschafft, '+escaped(g.name)+'! Ihr habt den Wald erkundet, seid gemeinsam gewandert und habt einen wunderschönen Abend am Lagerfeuer verbracht.</p><div class="results"><div class="resultPill">🥾 Wald erkundet</div><div class="resultPill">🤝 3 Freunde dabei</div><div class="resultPill">🔥 Lagerfeuer gebaut</div><div class="resultPill">💃 12 Tanzschritte</div></div><p class="lead" style="color:#ffde97"><b>Eure größte Stärke: guter Zusammenhalt!</b></p><button class="primary" id="again">🌲 Noch ein Waldabenteuer!</button><button class="secondary" id="danceAgain" style="width:100%;margin-top:10px">🎶 Noch einmal tanzen</button>');
+ el("again").addEventListener("click",()=>{g=fresh();escorts=friends.map(f=>({x:f.x,y:f.y}));save();showStart();updateHud();});
+ el("danceAgain").addEventListener("click",()=>{g.phase="dance";g.danceStep=0;save();hide();el("danceUI").classList.remove("hidden");updateHud();updateDance();});
+}
+function circle(x,y,r,col){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();}
+function line(points,width,col,dash){ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);ctx.lineWidth=width;ctx.strokeStyle=col;ctx.lineJoin="round";ctx.lineCap="round";ctx.setLineDash(dash||[]);ctx.stroke();ctx.setLineDash([]);}
+function tree(t){let {x,y,r}=t;circle(x+5,y+13,r+6,"#081c156a");circle(x,y+8,r*.23,"#584b2a");circle(x-7,y-5,r*.88,t.t<.33?"#18482f":t.t<.65?"#1f5e3c":"#287044");circle(x+8,y-9,r*.8,t.t<.5?"#296d3f":"#1b563a");circle(x,y-15,r*.76,"#387e49");circle(x-6,y-20,r*.18,"#ffffff17");}
+function mapToScreen(x,y){return {x:(x-camera.x)*zoom(),y:(y-camera.y)*zoom()};}
+function zoom(){return vw<650? .84 : Math.min(1.2,Math.max(.91,vw/1100));}
+function drawPerson(x,y,color,name,me=false,phase=0){
+ ctx.save();ctx.translate(x,y);
+ const bob=Math.sin(now/195+phase)*3;
+ circle(0,10,17,"#09221766");ctx.translate(0,bob);
+ const feet=Math.sin(now/125+phase)*3;
+ ctx.fillStyle="#263a38";ctx.fillRect(-12,10+feet,9,13);ctx.fillRect(3,10-feet,9,13);
+ circle(-15,3,9,"#b0844e");circle(0,1,18,color);circle(0,-17,14,"#f7c890");circle(0,-25,15,"#f0cb7a");ctx.fillStyle="#8b5d32";ctx.fillRect(-11,-30,22,5);
+ circle(-4,-17,1.5,"#452f29");circle(5,-17,1.5,"#452f29");
+ if(me){circle(9,1,7,"#f1a95d");circle(9,1,4,"#e2d18f");}
+ ctx.fillStyle="#0e322ac9";ctx.font="bold 13px system-ui";ctx.textAlign="center";ctx.fillText(name,0,-49);ctx.fillStyle="#fff1c8";ctx.fillText(name,0,-51);
+ ctx.restore();
+}
+function drawFire(x,y,burning){
+ circle(x,y+16,65,"#0006");
+ for(let i=0;i<11;i++){let a=i*Math.PI*2/11;circle(x+Math.cos(a)*52,y+Math.sin(a)*32+4,13,i%2?"#a4a395":"#7b8e7b");}
+ ctx.save();ctx.translate(x,y+8);
+ ctx.save();ctx.rotate(.25);ctx.fillStyle="#6f4127";ctx.fillRect(-37,-8,74,17);ctx.restore();
+ ctx.save();ctx.rotate(-.31);ctx.fillStyle="#9a5c32";ctx.fillRect(-37,-7,74,15);ctx.restore();
+ if(burning){let p=Math.sin(now/180)*5+firePulse*9;circle(0,-10,43+p,"#e9a33338");for(let i=0;i<3;i++){let shift=(i-1)*18;ctx.fillStyle=i===1?"#ffe281":i===2?"#f3a941":"#ff6d32";ctx.beginPath();ctx.moveTo(shift-15,1);ctx.quadraticCurveTo(shift-25,-30-p,shift+3,-61-p);ctx.quadraticCurveTo(shift+32,-30,shift+14,1);ctx.fill();}for(let i=0;i<6;i++){let px=Math.sin(i*2.3+now/480)*33,py=-62-(now/20+i*32)%120;circle(px,py,2+seeded(i)*2,"#ffd480");}}
+ ctx.restore();
+}
+function render(){
+ ctx.clearRect(0,0,vw,vh);ctx.save();const z=zoom();
+ camera.x=clamp(g.x-vw/(z*2),0,Math.max(0,WORLD.w-vw/z));camera.y=clamp(g.y-vh/(z*2),0,Math.max(0,WORLD.h-vh/z));
+ ctx.scale(z,z);ctx.translate(-camera.x,-camera.y);
+ ctx.fillStyle="#2b6145";ctx.fillRect(0,0,WORLD.w,WORLD.h);
+ for(const f of flowers){if(f.x<camera.x-35||f.x>camera.x+vw/z+35||f.y<camera.y-35||f.y>camera.y+vh/z+35)continue;circle(f.x,f.y,1+f.t*2,f.t<.35?"#81a46b":f.t<.68?"#d0b76e":"#b5d1a0");}
+ // Ferns and moss
+ for(let i=0;i<120;i++){let x=seeded(i+897)*WORLD.w,y=seeded(i+668)*WORLD.h;if(x<camera.x-30||x>camera.x+vw/z+30||y<camera.y-30||y>camera.y+vh/z+30)continue;ctx.fillStyle="#1e513d";ctx.beginPath();ctx.ellipse(x,y,15,8,i,0,Math.PI*2);ctx.fill();}
+ line(trail,120,"#19492f");line(trail,87,"#765d3c");line(trail,72,"#ac8d61");line(trail,56,"#bea475");line(trail,3,"#e3cda356",[2,27]);
+ // Mossy creek on the forest edge
+ ctx.beginPath();ctx.ellipse(1160,274,163,116,-.2,0,Math.PI*2);ctx.fillStyle="#143e42";ctx.fill();
+ ctx.beginPath();ctx.ellipse(1170,268,140,95,-.2,0,Math.PI*2);ctx.fillStyle="#3a9190";ctx.fill();
+ for(let i=0;i<8;i++){let x=1090+seeded(900+i)*160,y=215+seeded(200+i)*90;circle(x,y,4,"#d2e9c6a6");}
+ // Trail details
+ for(let i=0;i<85;i++){let seg=i%(trail.length-1),a=trail[seg],b=trail[seg+1],t=seeded(i+80);let x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t,c=(seeded(i+540)-.5)*45;circle(x+c,y-c,2+seeded(i+12)*3,"#dfc69a");}
+ trees.filter(t=>t.x>camera.x-60&&t.x<camera.x+vw/z+60&&t.y>camera.y-60&&t.y<camera.y+vh/z+60).sort((a,b)=>a.y-b.y).forEach(tree);
+ // Sign at start
+ ctx.fillStyle="#69452b";ctx.fillRect(210,146,9,59);ctx.fillStyle="#f2d99c";ctx.fillRect(174,140,84,28);ctx.fillStyle="#345242";ctx.font="bold 13px system-ui";ctx.textAlign="center";ctx.fillText("WALDWEG →",216,159);
+ // Supplies
+ woods.forEach((p,i)=>{if(g.wood.includes(i))return;circle(p[0],p[1]+8,21,"#071f125c");ctx.save();ctx.translate(...p);ctx.rotate(.4);ctx.fillStyle="#9b592e";ctx.fillRect(-23,-7,46,12);ctx.fillStyle="#c28a48";ctx.fillRect(-23,-7,10,12);ctx.restore();circle(p[0],p[1]-28,9,"#ffdf85");ctx.fillStyle="#473720";ctx.textAlign="center";ctx.font="bold 15px system-ui";ctx.fillText("+",p[0],p[1]-23);});
+ // Campsite
+ circle(CAMP.x,CAMP.y,177,"#bdb68019");
+ ctx.beginPath();ctx.moveTo(CAMP.x+64,CAMP.y-14);ctx.lineTo(CAMP.x+165,CAMP.y-125);ctx.lineTo(CAMP.x+174,CAMP.y+58);ctx.closePath();ctx.fillStyle="#dcaa54";ctx.fill();
+ ctx.beginPath();ctx.moveTo(CAMP.x+165,CAMP.y-125);ctx.lineTo(CAMP.x+232,CAMP.y-15);ctx.lineTo(CAMP.x+174,CAMP.y+58);ctx.closePath();ctx.fillStyle="#a66e37";ctx.fill();
+ ctx.beginPath();ctx.moveTo(CAMP.x+174,CAMP.y+58);ctx.lineTo(CAMP.x+157,CAMP.y+3);ctx.lineTo(CAMP.x+195,CAMP.y+12);ctx.closePath();ctx.fillStyle="#39392d";ctx.fill();
+ ctx.fillStyle="#e6c58b";ctx.font="bold 18px system-ui";ctx.textAlign="center";ctx.fillText("🏕️ Zeltlager",CAMP.x+128,CAMP.y-150);
+ const burning=g.phase==="dance"||g.phase==="win";drawFire(CAMP.x,CAMP.y,burning);
+ // Characters
+ if(g.phase==="forest"){
+  friends.forEach((f,i)=>{if(!g.joined.includes(i))drawPerson(f.x,f.y,["#d18d54","#4f91a0","#a287c4"][i],f.name,false,i);});
+  friends.forEach((f,i)=>{if(g.joined.includes(i))drawPerson(escorts[i].x,escorts[i].y,["#d18d54","#4f91a0","#a287c4"][i],f.name,false,i);});
+  drawPerson(g.x,g.y,"#79ac6a",g.name,true,0);
+ }else{
+  const dance=burning?Math.sin(now/240)*15:0;
+  drawPerson(CAMP.x-110,CAMP.y-100+(burning?dance:0),"#79ac6a",g.name,true,0);
+  drawPerson(CAMP.x+85,CAMP.y-105+(burning?-dance:0),"#d18d54","Nele",false,1);
+  drawPerson(CAMP.x-117,CAMP.y+90+(burning?-dance:0),"#4f91a0","Finn",false,2);
+  drawPerson(CAMP.x+108,CAMP.y+95+(burning?dance:0),"#a287c4","Sam",false,3);
+ }
+ ctx.restore();
+ if(g.phase==="forest"&&!modal.classList.contains("hidden")){
+  const t=target(),p=mapToScreen(t.x,t.y),cx=vw/2,cy=vh/2,dx=p.x-cx,dy=p.y-cy,angle=Math.atan2(dy,dx);
+  if(Math.hypot(dx,dy)>120){let ex=cx+Math.cos(angle)*Math.min(vw*.34,160),ey=cy+Math.sin(angle)*Math.min(vh*.31,120);ctx.save();ctx.translate(ex,ey);ctx.rotate(angle);ctx.fillStyle="#ffe6a0";ctx.strokeStyle="#533e20";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(22,0);ctx.lineTo(-12,-12);ctx.lineTo(-7,0);ctx.lineTo(-12,12);ctx.closePath();ctx.stroke();ctx.fill();ctx.restore();}
+ }
+ firePulse=Math.max(0,firePulse-.025);shimmer=Math.max(0,shimmer-.012);
+ drawMini();
+}
+function drawMini(){
+ const w=mini.width,h=mini.height;mc.fillStyle="#2e624a";mc.fillRect(0,0,w,h);
+ const pts=trail.map(p=>[p[0]/WORLD.w*w,p[1]/WORLD.h*h]);mc.lineJoin="round";mc.lineCap="round";
+ mc.beginPath();mc.moveTo(...pts[0]);pts.slice(1).forEach(p=>mc.lineTo(...p));mc.strokeStyle="#d2b383";mc.lineWidth=8;mc.stroke();
+ woods.forEach((p,i)=>{if(!g.wood.includes(i)){mc.fillStyle="#ecca79";mc.fillRect(p[0]/WORLD.w*w-2,p[1]/WORLD.h*h-2,4,4);}});
+ friends.forEach((f,i)=>{if(!g.joined.includes(i)){mc.fillStyle="#f7a0a0";mc.beginPath();mc.arc(f.x/WORLD.w*w,f.y/WORLD.h*h,4,0,7);mc.fill();}});
+ mc.fillStyle="#ee8c45";mc.beginPath();mc.arc(CAMP.x/WORLD.w*w,CAMP.y/WORLD.h*h,5,0,7);mc.fill();
+ mc.fillStyle="#e8fff2";mc.strokeStyle="#203e30";mc.lineWidth=2;mc.beginPath();mc.arc(g.x/WORLD.w*w,g.y/WORLD.h*h,6,0,7);mc.fill();mc.stroke();
+}
+function isBlocked(x,y){if(x<20||y<20||x>WORLD.w-20||y>WORLD.h-20)return true;if(trees.some(t=>Math.hypot(x-t.x,y-t.y)<t.r*.7+14))return true;if(Math.hypot(x-1160,y-274)<125)return true;return false;}
+function update(dt){
+ if(!active||!modal.classList.contains("hidden"))return;
+ if(g.phase==="forest"){
+  let vx=(keys.has("arrowright")||keys.has("d")?1:0)-(keys.has("arrowleft")||keys.has("a")?1:0)+joy.x;
+  let vy=(keys.has("arrowdown")||keys.has("s")?1:0)-(keys.has("arrowup")||keys.has("w")?1:0)+joy.y;
+  let length=Math.hypot(vx,vy);if(length>1){vx/=length;vy/=length;}
+  const speed=240*dt,nx=g.x+vx*speed,ny=g.y+vy*speed;
+  if(!isBlocked(nx,g.y))g.x=nx;
+  if(!isBlocked(g.x,ny))g.y=ny;
+  g.joined.forEach((i,order)=>{
+   const ch=escorts[i],before=order===0?g:escorts[g.joined[order-1]];
+   const delta=dist(ch,before),rate=clamp((delta-47)/60,0,1);
+   if(delta>53){ch.x+=(before.x-ch.x)*Math.min(1,dt*5*rate);ch.y+=(before.y-ch.y)*Math.min(1,dt*5*rate);}
+  });
+  const a=closestAction(),prompt=el("actionPrompt");
+  prompt.classList.toggle("visible",!!a);
+  if(a)prompt.textContent="E / Leertaste · "+a.label;
+  const t=target(),d=Math.round(dist(g,t)/10);
+  el("guide").innerHTML="<strong>🧭 Nächstes Ziel</strong><br>"+(g.wood.length>=5&&g.joined.length>=3?"Lagerfeuerstelle":"Entdecke Wald & Freunde")+" · ca. "+d+" m";
+ }else if(g.phase==="dance")el("guide").innerHTML="<strong>💃 Zusammenhalt</strong><br>Jeder tanzt mit!";
+ else el("guide").innerHTML="<strong>🌟 Pfadfinder-Glück</strong><br>Eine tolle Gruppe!";
+ if(performance.now()-lastSaved>5000){lastSaved=performance.now();save();}
+}
+function frame(t){now=t;let dt=Math.min(.04,(t-last)/1000||.016);last=t;update(dt);render();requestAnimationFrame(frame);}
+window.addEventListener("keydown",e=>{
+ const k=e.key.toLowerCase();
+ if(["arrowup","arrowdown","arrowleft","arrowright"," ","w","a","s","d"].includes(k))e.preventDefault();
+ if(document.activeElement&&document.activeElement.tagName==="INPUT")return;
+ keys.add(k);
+ if((k==="e"||k===" ")&&!e.repeat)act();
+ if(g.phase==="dance"&&["1","2","3","4"].includes(k)&&!e.repeat)danceMove(["clap","turn","wave","step"][Number(k)-1]);
+});
+window.addEventListener("keyup",e=>keys.delete(e.key.toLowerCase()));
+window.addEventListener("blur",()=>{keys.clear();joy.x=0;joy.y=0;resetNub();});
+el("touchAction").addEventListener("click",act);
+let joyPointer=null;
+function resetNub(){el("nub").style.left="50%";el("nub").style.top="50%";}
+const stick=el("joystick");
+stick.addEventListener("pointerdown",e=>{e.preventDefault();joyPointer=e.pointerId;stick.setPointerCapture(e.pointerId);moveJoy(e);});
+stick.addEventListener("pointermove",e=>{if(joyPointer===e.pointerId)moveJoy(e);});
+function moveJoy(e){const r=stick.getBoundingClientRect(),x=(e.clientX-r.left-r.width/2)/(r.width*.34),y=(e.clientY-r.top-r.height/2)/(r.height*.34),d=Math.max(1,Math.hypot(x,y));joy.x=x/d;joy.y=y/d;el("nub").style.left=(50+joy.x*33)+"%";el("nub").style.top=(50+joy.y*33)+"%";}
+["pointerup","pointercancel","lostpointercapture"].forEach(ev=>stick.addEventListener(ev,()=>{joyPointer=null;joy.x=0;joy.y=0;resetNub();}));
+stage.addEventListener("contextmenu",e=>e.preventDefault());
+updateHud();
+if(g.phase==="fire")fireDialog();else if(g.phase==="win")victory();else if(g.phase==="dance")danceIntro();else showStart();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
