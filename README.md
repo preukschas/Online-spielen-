@@ -56,6 +56,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Spielewelt | City Racer – Open World 3D (Ari) | `/city-racer-open-world/` | `preukschas/DMP-Games` → `projects/city-racer-open-world/` (3D-Demo 1.2; KI-Rennen, Autos/Motorrad, Wohnhaus mit Küche/WC, Bergen, Arcade-Krimi mit Polizeifahndung, Zug, Flughafen nach Frankreich, iPad/PC, Eltern-PIN) |
 | Spielewelt | City Life – Open World | `/city-life-open-world/` | `preukschas/DMP-Games` → `projects/city-life-open-world/` (V5.6 3D) |
 | Spielewelt | Bett Battle | `/bett-battle/` | `preukschas/DMP-Games` → `projects/bett-battle/` (Final 1.0) |
+| Specials | Edelgards Pfadfinder-Abenteuer | `/edelgards-pfadfinder-abenteuer/` | `preukschas/DMP-Games` → `projects/edelgards-pfadfinder-abenteuer/` (V1.1, fünf Etappen, Lagerfeuer & Tanz, ohne PIN) |
 | Specials | Franz – Meister der Fuge | `/franz-fliesenleger/` | `preukschas/DMP-Games` → `projects/franz-fliesenleger/` (V1.0) |
 | Specials | Elli – Ein schöner Tag | `/elli-ein-schoener-tag/` | `preukschas/DMP-Games` → `projects/elli-ein-schoener-tag/` (Test 1.3 RC1) |
 | Specials | Leons Geschenk-Jagd | `/leon-geburtstag/` | `preukschas/DMP-Games` → `projects/leon-geburtstag/` |
@@ -71,10 +72,9 @@ Einmaleins Space ist ein eigenständiges Lernspiel. Die Weltraum-Abwehr innerhal
 5. Dateien in diesem Repository werden nicht als eigenständige Spielvariante weiterentwickelt.
 6. Alle veröffentlichten Spiele laden den gemeinsamen `game-interaction-guard.css`; Machine City nutzt ihn seit V0.8 ebenfalls direkt in der Split-Fassung. Damit wird versehentliches Textmarkieren/Long-Press auf Touch-Geräten verhindert, während Eingabefelder auswählbar bleiben.
 
-## Stand
+## Stand (14.10.2026)
 
-- Alle vierundzwanzig vorhandenen Browser-Spiele sind auf der Startseite verlinkt.
-- Lernwelt: vierzehn Spiele ohne Eltern-PIN.
-- Spielewelt: sieben Spiele mit gemeinsamer PIN-Prüfung auch beim direkten URL-Aufruf.
-- Specials: Leons Geschenk-Jagd, Franz – Meister der Fuge und Elli – Ein schöner Tag frei zugänglich ohne PIN und ohne Zeitsperre.
-- Die Spielinhalte stammen aus den jeweiligen Entwicklungsfassungen; Spaß-Games tragen zusätzlich die zentrale PIN-Einbindung.
+- Die Startseite enthält 34 Spiele: 17 Lernspiele, 10 Spiele der PIN-geschützten Spielewelt sowie 7 frei zugängliche Specials.
+- **Edelgards Pfadfinder-Abenteuer** ist als Special ohne Eltern-PIN unter `/edelgards-pfadfinder-abenteuer/` verlinkt.
+- Spiele aus der Spielewelt nutzen die gemeinsame PIN-Prüfung auch beim direkten URL-Aufruf; die Specials sind ohne PIN und ohne Zeitsperre erreichbar.
+- Der maßgebliche Quellstand liegt jeweils im privaten Entwicklungsrepository; diese öffentliche Fassung dient als Veröffentlichungsspiegel.
