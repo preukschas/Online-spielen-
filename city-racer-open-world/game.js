@@ -77,9 +77,10 @@ const crimeState={wanted:0,seconds:0,punchWait:0,attackTime:0,arrestTime:0};
 const rail={x:-351,stations:[{name:'Hauptbahnhof CITY',z:-190},{name:'Walddorf',z:248}],train:null,onboard:false,tickets:0,phase:0,dir:1,stop:0,locked:false,gates:[],gateClosed:false};
 const airports=[
   {name:'CITY INTERNATIONAL',country:'Deutschland',gate:{x:735,z:-120},terminal:{x:735,z:-172},runway:{x:935,z:-220},parkX:835},
-  {name:'RIVIÈRE AÉROPORT',country:'Frankreich',gate:{x:1510,z:-120},terminal:{x:1510,z:-172},runway:{x:1420,z:-220},parkX:1480}
+  {name:'RIVIÈRE AÉROPORT',country:'Frankreich',gate:{x:2820,z:-120},terminal:{x:2820,z:-172},runway:{x:3000,z:-220},parkX:2960}
 ];
 const flight={plane:null,tickets:0,side:0,stop:0,phase:'parked',phaseTime:0,progress:0,onboard:false};
+const france={built:false,x:3500,z:0,w:2600,d:1250,bridges:[-105,150,375],roadsZ:[-105,150,375],roadsX:[2600,3020,3400,3800,4200,4600],rental:null,deliveries:0,activeJob:false,deliveryTarget:null,landmarks:[],ground:null};
 const law={suspect:null,arrestTimer:0,prisoner:null};
 const prison={x:262.5,z:-262.5,w:65,d:65};
 const station={x:262.5,z:157.5,pumps:[{x:242,z:143},{x:262,z:143},{x:282,z:143}]};
@@ -355,6 +356,7 @@ function airportAction(){
 }
 function updateFlight(dt){
   if(!flight.plane)return;
+  if(flight.side===1&&!france.built)createFranceRegion();
   if(flight.phase==='parked'){
     flight.phaseTime+=dt;
     flight.plane.position.set(airports[flight.stop].parkX,0,-220);
@@ -365,9 +367,10 @@ function updateFlight(dt){
       if(flight.onboard){toast('🛫 Start! Wir fliegen nach '+airports[1-flight.stop].country+'.',4);}
     }
   }else{
-    flight.progress=Math.min(1,flight.progress+dt/29);
+    flight.progress=Math.min(1,flight.progress+dt/35);
+    if(flight.stop===0&&flight.progress>.40&&!france.built)createFranceRegion();
     const a=airports[flight.stop],b=airports[1-flight.stop],t=flight.progress;
-    flight.plane.position.set(a.parkX+(b.parkX-a.parkX)*t,Math.sin(Math.PI*t)*118,-220);
+    flight.plane.position.set(a.parkX+(b.parkX-a.parkX)*t,Math.sin(Math.PI*t)*148,-220);
     flight.plane.rotation.y=flight.stop===0?0:Math.PI;
     flight.plane.rotation.z=(flight.stop===0?1:-1)*.11*Math.cos(Math.PI*t);
     if(t>=1){
@@ -377,8 +380,8 @@ function updateFlight(dt){
         flight.onboard=false;flight.side=flight.stop;
         player.x=airports[flight.side].gate.x;player.z=airports[flight.side].gate.z;
         player.y=0;player.vertical=0;avatar.group.visible=true;avatar.group.position.set(player.x,0,player.z);
-        player.cameraYaw=0;save();renderHUD();
-        toast('🛬 Angekommen in '+airports[flight.side].country+'! Willkommen am Flughafen.',5);
+        player.cameraYaw=flight.side===1?Math.PI/2:0;player.camPitch=.12;save();renderHUD();
+        toast(flight.side===1?'🇫🇷 Bienvenue en France! Neue, genauso große Landschaft: Dörfer, Weinberge, Fluss, Château!':'🇩🇪 Willkommen zurück in CITY!',5);
       }
     }
   }
@@ -388,7 +391,7 @@ function updateFlight(dt){
   }
 }
 function createAirports(){
-  airports.forEach((a,i)=>{
+  airports.slice(0,1).forEach((a,i)=>{
     const {x,z}=a.terminal,runway=a.runway;
     box(scene,365,.08,110,'#546167',runway.x,.02,runway.z);
     box(scene,270,.11,48,'#343d44',runway.x,.10,runway.z);
@@ -418,18 +421,274 @@ function createAirports(){
     solids.push({x,z:z-3,w:88,d:36});
   });
   box(scene,410,.10,18,'#43545b',560,.07,-105);
-  box(scene,280,.10,18,'#455561',1530,.07,-105);
-  box(scene,18,.1,340,'#53616a',1620,.06,30);
-  for(let i=0;i<8;i++){
-    const xx=1590+(i%3)*25,zz=-42+Math.floor(i/3)*80;
-    const h=8+(i%3)*4;
-    box(scene,20,h,18,i%2?'#dec8b0':'#d4bcb3',xx,h/2,zz);
-    box(scene,23,1,20,'#ae745e',xx,h+.6,zz);
-    box(scene,3,4,.16,'#517f99',xx-5,4,zz-9.1);
-    solids.push({x:xx,z:zz,w:20,d:18});
-  }
-  sign('BIENVENUE EN FRANCE',1580,8,180,38,'#f4efdf','#325f7d');
+
 }
+
+/* France is a second, separately sized 2,600 × 1,250 3D region.
+   Built just once during descent or when a previously saved French session loads.
+   Shared geometry and instanced field/trees keep the iPad draw-call budget sensible.
+*/
+function riverX(z){return 3605+35*Math.sin(z/133);}
+function riverCollision(x,z,radius=1){
+  if(france.bridges.some(b=>Math.abs(z-b)<13-radius*.15))return false;
+  return Math.abs(x-riverX(z))<23+radius;
+}
+function franceInstanced(color,w,h,d,positions){
+  if(!positions.length)return;
+  const mesh=new THREE.InstancedMesh(new THREE.BoxGeometry(w,h,d),material(color),positions.length);
+  const obj=new THREE.Object3D();
+  for(let i=0;i<positions.length;i++){
+    const p=positions[i];obj.position.set(p.x,p.y,p.z);
+    obj.rotation.y=p.yaw||0;obj.scale.set(p.sx||1,p.sy||1,p.sz||1);
+    obj.updateMatrix();mesh.setMatrixAt(i,obj.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate=true;
+  mesh.frustumCulled=false;
+  scene.add(mesh);
+  return mesh;
+}
+function frenchVilla(x,z,w=19,d=17,roof='#ac745f',walls='#ead8bd'){
+  const height=6+Math.floor(rng()*2)*2;
+  box(scene,w,height,d,walls,x,height/2,z);
+  // Distinctive Provençal pitched red-tile roof, shutters and veranda.
+  const half=(w+3)/2;
+  const left=box(scene,half,.55,d+3,roof,x-half/2+.3,height+1.1,z);
+  const right=box(scene,half,.55,d+3,roof,x+half/2-.3,height+1.1,z);
+  left.rotation.z=-.29;right.rotation.z=.29;
+  for(const side of [-1,1]){
+    box(scene,2.8,2.7,.17,'#76a9b6',x+side*w*.27,3.9,z-d/2-.19);
+    box(scene,.42,2.8,.22,'#496b7f',x+side*w*.27-1.7,3.9,z-d/2-.3);
+    box(scene,.42,2.8,.22,'#496b7f',x+side*w*.27+1.7,3.9,z-d/2-.3);
+  }
+  box(scene,2.8,4,.17,'#966c52',x,2.1,z-d/2-.22);
+  box(scene,6,.25,3.6,'#beab8a',x,.18,z-d/2-1.6);
+  solids.push({x,z,w,d});
+}
+function frenchVillage(name,x,z,count){
+  const warm=['#f1e0c5','#e5d5c0','#dbbda3','#e9cbbb','#f0dccd'];
+  const roofs=['#aa7762','#b96955','#896c61'];
+  // Small pedestrian square and a fountain.
+  box(scene,70,.18,65,'#c2b49d',x,.10,z);
+  cyl(scene,4,.55,'#8eabae',x,.35,z);
+  cyl(scene,2.2,2.1,'#a3c4c6',x,1.1,z);
+  cyl(scene,.42,4,'#d0d1c6',x,3,z);
+  for(let i=0;i<count;i++){
+    const ang=2*Math.PI*i/count;
+    const px=x+Math.cos(ang)*(47+Math.floor(i%3)*18);
+    const pz=z+Math.sin(ang)*(44+Math.floor(i%4)*19);
+    frenchVilla(px,pz,15+(i%3)*3,14+(i%2)*3,roofs[i%roofs.length],warm[i%warm.length]);
+  }
+  sign(name,x,9,z-36,34,'#f5e9c7','#54735d');
+  france.landmarks.push({name,x,z});
+}
+function frenchTreesAndFields(){
+  // Vast vineyard plots on the west and south of Rivière. Instanced objects
+  // are efficiently drawn with just a few geometry/material batches.
+  const vines=[],lavender=[],cypresses=[],trunks=[],oliveTrees=[];
+  const plots=[
+    {x:2590,z:310,cols:23,rows:16,dx:11,dz:13},
+    {x:3140,z:388,cols:25,rows:12,dx:11,dz:14},
+    {x:3930,z:410,cols:26,rows:12,dx:12,dz:13},
+    {x:4270,z:395,cols:18,rows:13,dx:12,dz:13},
+    {x:2380,z:-375,cols:20,rows:13,dx:12,dz:13}
+  ];
+  for(const plot of plots){
+    box(scene,plot.cols*plot.dx+8,.12,plot.rows*plot.dz+8,'#b7a184',plot.x+plot.cols*plot.dx/2,.02,plot.z+plot.rows*plot.dz/2);
+    for(let row=0;row<plot.rows;row++)for(let col=0;col<plot.cols;col++){
+      const x=plot.x+col*plot.dx,z=plot.z+row*plot.dz;
+      if(x>3400&&x<3655)continue;
+      const p={x,y:.8,z};(row%4===0?lavender:vines).push(p);
+    }
+  }
+  const forestZones=[
+    {x:4535,z:-350,w:175,d:160,n:54},
+    {x:4550,z:280,w:160,d:115,n:35},
+    {x:2370,z:150,w:130,d:165,n:28},
+    {x:3235,z:-485,w:225,d:92,n:28}
+  ];
+  for(const forest of forestZones)for(let k=0;k<forest.n;k++){
+    const x=forest.x+(rng()-.5)*forest.w,z=forest.z+(rng()-.5)*forest.d;
+    if(france.roadsZ.some(r=>Math.abs(z-r)<16)||france.roadsX.some(r=>Math.abs(x-r)<15)||Math.abs(x-riverX(z))<38)continue;
+    cypresses.push({x,y:6+rng()*2,z,sx:.7+rng()*.45,sy:.8+rng()*.6,sz:.7+rng()*.45});
+    trunks.push({x,y:2,z});
+    if(k%5===0)obstacles.push({x,z,r:1.5});
+  }
+  for(let i=0;i<74;i++){
+    const x=2350+rng()*2250,z=-550+rng()*1040;
+    if(Math.abs(x-riverX(z))<40||france.roadsZ.some(r=>Math.abs(z-r)<25)||france.roadsX.some(r=>Math.abs(x-r)<23))continue;
+    oliveTrees.push({x,y:3.2,z});
+    trunks.push({x,y:1.7,z});
+  }
+  franceInstanced('#49764e',3.3,1.5,2.5,vines);
+  franceInstanced('#9881ae',3.1,1.1,2.8,lavender);
+  franceInstanced('#436d51',3.7,11,3.7,cypresses);
+  franceInstanced('#547754',7,6.2,7,oliveTrees);
+  franceInstanced('#775f4c',.7,3.4,.7,trunks);
+}
+function frenchLandmarks(){
+  // Stone château, chapel, market stalls and a hilltop viewpoint.
+  const castleX=4260,castleZ=-360;
+  box(scene,108,.18,100,'#c1b39c',castleX,.10,castleZ);
+  box(scene,74,16,40,'#e5d6b5',castleX,8.2,castleZ);
+  box(scene,81,1.5,45,'#9c6c58',castleX,17,castleZ);
+  for(const side of [-1,1]){
+    cyl(scene,7,23,'#c6b89d',castleX+side*38,11.6,castleZ-10);
+    const roof=new THREE.Mesh(new THREE.ConeGeometry(9,9,10),material('#8d6b63'));
+    roof.position.set(castleX+side*38,27,castleZ-10);scene.add(roof);
+    for(let n=0;n<3;n++)box(scene,3,5,.25,'#5e7887',castleX+side*26,5+n*5,castleZ-20.2);
+  }
+  solids.push({x:castleX,z:castleZ,w:75,d:40});
+  sign('CHÂTEAU DE RIVIÈRE',castleX,23,castleZ-23,37,'#fff8df','#72584d');
+  france.landmarks.push({name:'Château',x:castleX,z:castleZ});
+  const chapelX=3990,chapelZ=270;
+  box(scene,24,13,33,'#e8d9bf',chapelX,6.5,chapelZ);
+  box(scene,26,1.0,35,'#ab705d',chapelX,13.7,chapelZ);
+  box(scene,8,25,8,'#e0d3be',chapelX,12.5,chapelZ-16);
+  const steeple=new THREE.Mesh(new THREE.ConeGeometry(7,9,6),material('#96705e'));
+  steeple.position.set(chapelX,29,chapelZ-16);scene.add(steeple);
+  sign('ÉGLISE',chapelX,18,chapelZ-17,15,'#fff5d3','#67735e');
+  solids.push({x:chapelX,z:chapelZ,w:24,d:33});
+  france.landmarks.push({name:'Église',x:chapelX,z:chapelZ});
+  // Market near the eastern village.
+  const marketX=4140,marketZ=115;
+  for(let i=0;i<5;i++){
+    const xx=marketX+(i-2)*13;
+    box(scene,9,1.0,6,'#a38162',xx,.62,marketZ);
+    box(scene,10,.35,7,i%2?'#b26f59':'#6c9b85',xx,4.1,marketZ);
+    for(const sid of [-1,1])for(const zd of [-1,1])
+      box(scene,.25,4,.25,'#e0d9c4',xx+sid*4.5,2.0,marketZ+zd*3);
+  }
+  sign('MARCHÉ PROVENÇAL',marketX,6.8,marketZ-11,38,'#fff6df','#6a7963');
+  france.landmarks.push({name:'Marché',x:marketX,z:marketZ});
+  for(const m of [
+    {x:4685,z:-455,r:75,h:70},
+    {x:4640,z:490,r:96,h:95},
+    {x:2310,z:-480,r:80,h:62}
+  ]){
+    const hill=new THREE.Mesh(new THREE.ConeGeometry(m.r,m.h,10,3),material('#899883'));
+    hill.position.set(m.x,m.h/2,m.z);scene.add(hill);
+    mountainBases.push({x:m.x,z:m.z,r:m.r*.7});
+  }
+  sign('FRANCE – RÉGION RIVIÈRE',3215,10,100,39,'#f9e8be','#415f62');
+}
+function createFranceRegion(){
+  if(france.built)return;
+  france.built=true;
+  france.ground=box(scene,france.w,.5,france.d,'#9aab76',france.x,-.43,0);
+  box(scene,2550,.15,155,'#c3af8f',france.x,.01,515);
+  // Country-wide riverside with three driveable road bridges.
+  const riverPieces=[],riverBanks=[];
+  for(let z=-600;z<=600;z+=22){
+    const center=riverX(z);
+    riverPieces.push({x:center,y:.13,z,yaw:Math.atan2(riverX(z+11)-riverX(z-11),22)});
+    riverBanks.push({x:center-28,y:.05,z},{x:center+28,y:.05,z});
+  }
+  franceInstanced('#4495af',45,.12,23,riverPieces);
+  franceInstanced('#a5b391',8,.15,23,riverBanks);
+  // Road markings use instancing to keep mobile draw calls low.
+  const horizontalDashes=[],verticalDashes=[];
+  // Real drivable asphalt roads, crossing via bridges above the river.
+  for(const z of france.roadsZ){
+    box(scene,2430,.14,19,'#596365',3500,.10,z);
+    box(scene,2430,.15,2.1,'#c9bbaa',3500,.12,z-10.3);
+    box(scene,2430,.15,2.1,'#c9bbaa',3500,.12,z+10.3);
+    box(scene,94,.24,21,'#778186',riverX(z),.33,z);
+    for(let k=-1150;k<=1150;k+=24){
+      if(Math.abs(k+3500-riverX(z))<47)continue;
+      horizontalDashes.push({x:3500+k,y:.20,z});
+    }
+  }
+  for(const x of france.roadsX){
+    box(scene,17,.14,960,'#596365',x,.10,-5);
+    for(let z=-450;z<460;z+=25)
+      if(!france.roadsZ.some(r=>Math.abs(r-z)<24))
+        verticalDashes.push({x,y:.20,z});
+  }
+  franceInstanced('#e1e1cf',10,.18,.42,horizontalDashes);
+  franceInstanced('#e1e1cf',.4,.16,9,verticalDashes);
+  for(const b of france.bridges){
+    const bx=riverX(b);
+    for(const bank of [-1,1]){
+      box(scene,94,1.3,.75,'#d1d5cd',bx,1.0,b+bank*10.8);
+      box(scene,94,.25,.7,'#e9e7dc',bx,1.84,b+bank*10.8);
+    }
+  }
+  frenchTreesAndFields();
+  frenchVillage('VILLAGE DES VIGNES',3220,64,9);
+  frenchVillage('RIVIÈRE CENTRE',4080,76,12);
+  frenchVillage('SAINT-LAURENT',4550,-35,8);
+  frenchLandmarks();
+  // Country-specific airport: identical ticket/boarding functionality, but distinct scenery.
+  createFrenchAirport();
+  france.rental=addHeroCar(2874,-104,'#477e98','Rivière Mietwagen',0,false,false,true);
+  sign('VOITURE DE LOCATION',2885,5,-94,24,'#fff3dd','#336878');
+  france.jobMarker=marker(2884,-80,'#bfffa8');
+  france.targetMarker=marker(4100,150,'#b6f97d');
+  france.targetMarker.visible=false;
+  for(const [i,pos] of [
+    [0,[2840,-85]],[1,[2860,-95]],[2,[2885,-80]],[3,[2910,-105]],[4,[2945,-103]],
+    [5,[3170,65]],[6,[3220,150]],[7,[3800,150]],[8,[4080,80]],
+    [9,[4260,-360]],[10,[4550,100]]
+  ]){
+    const p=sphere(scene,.72,'#f6cc55',pos[0],1.4,pos[1]);
+    p.scale.set(1,.20,1);
+    collectibles.push({x:pos[0],z:pos[1],obj:p,taken:false,phase:20+i});
+  }
+  france.landmarks.push({name:'Aéroport Rivière',x:airports[1].gate.x,z:airports[1].gate.z});
+}
+function createFrenchAirport(){
+  const a=airports[1],{x,z}=a.terminal,runway=a.runway;
+  box(scene,430,.12,112,'#9c9f9c',runway.x,.08,runway.z);
+  box(scene,300,.15,50,'#454f54',runway.x,.16,runway.z);
+  for(let xx=runway.x-135;xx<=runway.x+135;xx+=26)
+    box(scene,12,.17,.72,'#f6eee0',xx,.25,runway.z);
+  for(const side of [-1,1]){
+    for(let xx=runway.x-135;xx<runway.x+135;xx+=22)
+      box(scene,1.8,.25,.40,'#ffe8ac',xx,.27,runway.z+side*23);
+  }
+  box(scene,110,.25,58,'#b2aaa0',x,.11,z);
+  box(scene,93,11,38,'#dbcbb9',x,5.5,z);
+  box(scene,100,.85,44,'#765e56',x,11.55,z);
+  const glass=new THREE.MeshStandardMaterial({color:'#80b5c5',roughness:.2,metalness:.13,transparent:true,opacity:.49});
+  box(scene,79,7,.2,null,x,5,z+19.2,glass);
+  for(let i=-3;i<=3;i++)box(scene,.4,7,.25,'#eaded2',x+i*11,5,z+19.3);
+  const towerX=x+43;
+  cyl(scene,4.3,25,'#b7ad9f',towerX,12.5,z-12);
+  box(scene,14,3.9,14,'#456277',towerX,27.1,z-12);
+  box(scene,15,.7,15,'#566c79',towerX,29.4,z-12);
+  sign('RIVIÈRE – FRANCE',x,14.1,z+20,38,'#ffecd2','#506b79');
+  box(scene,3.4,4,2.3,'#3964a3',a.gate.x,2,a.gate.z-4);
+  box(scene,2.2,1.1,.12,'#a2e1e9',a.gate.x,2.4,a.gate.z-5.2);
+  sign('BILLETS / FLUGTICKETS',a.gate.x,5.2,a.gate.z-7,24,'#fff3d5','#385a79');
+  box(scene,260,.13,18,'#636961',a.gate.x+130,.11,-105);
+  solids.push({x,z:z-3,w:93,d:38});
+  for(let i=0;i<4;i++){
+    const traveler=makeHuman(i%2?'#9f786b':'#637f83');
+    traveler.group.position.set(x-30+i*15,0,z+29);
+    scene.add(traveler.group);
+  }
+  sign('BIENVENUE EN FRANCE',x+14,8,-52,35,'#fff5c9','#567560');
+}
+function startFrenchDelivery(){
+  if(france.activeJob){toast('📦 Bringe zuerst dein französisches Paket zum Markt!',3);return;}
+  france.activeJob=true;france.targetMarker.visible=true;
+  toast('🇫🇷 Paket übernommen! Fahre zum grünen Marktmarker. Belohnung: 200 €.',4);renderHUD();
+}
+function finishFrenchDelivery(){
+  if(!france.activeJob)return;
+  france.activeJob=false;france.targetMarker.visible=false;
+  france.deliveries++;state.cash+=200;save();renderHUD();
+  toast('🇫🇷 Livraison réussie! +200 € Spielgeld.',5);
+}
+function franceAction(){
+  if(!france.built||player.x<2200)return false;
+  if(!player.car&&near(player,{x:2884,z:-80},10)){startFrenchDelivery();return true;}
+  if(france.activeJob&&!player.car&&near(player,{x:4100,z:150},20)){
+    finishFrenchDelivery();return true;
+  }
+  return false;
+}
+
 function createTrafficLights(){
   // Signals switch in two alternating phases: red really stops approaching cars.
   for(const cross of [[0,0],[-105,0],[105,0],[0,-105],[0,105]]){
@@ -848,7 +1107,7 @@ const personal=addHeroCar(157,21,'#c74237','Veloce GT',950,state.owned,true,fals
 personal.group.visible=state.owned; // Showroom preview is already inside. Purchased car appears outside.
 const npcRace=createCar('#46bee6',true);scene.add(npcRace.group);npcRace.group.visible=false;
 function collectiblesCreate(){
-  const locs=[[-16,-70],[40,-109],[-175,-110],[-95,74],[105,115],[175,-105],[-213,140],[0,206],[-178,0],[104,-209],[207,28],[-3,-206],[1510,-108],[1545,-70],[1610,160],[1550,180],[1625,210]];
+  const locs=[[-16,-70],[40,-109],[-175,-110],[-95,74],[105,115],[175,-105],[-213,140],[0,206],[-178,0],[104,-209],[207,28],[-3,-206]];
   locs.forEach(([x,z],i)=>{
     const s=sphere(scene,.72,'#f6cc55',x,1.4,z);
     s.scale.set(1,.20,1);collectibles.push({x,z,obj:s,taken:false,phase:i});
@@ -977,7 +1236,8 @@ function createMountains(){
   solids.push({x:-38,z:-450,w:12,d:10});
 }
 function initialise(){
-  buildCity();createNPCs();createTraffic();createBicycles();collectiblesCreate();createPoliceAndHeli();createRobberyEvent();addMotorbike();
+  buildCity();
+  if(flight.side===1)createFranceRegion();createNPCs();createTraffic();createBicycles();collectiblesCreate();createPoliceAndHeli();createRobberyEvent();addMotorbike();
   buildHouse();
   avatar.group.position.set(player.x,0,player.z);
   camera.position.set(player.x,8,player.z+15);
@@ -991,11 +1251,15 @@ function renderHUD(){
   $('wanted').textContent=crimeState.wanted?'🚓 Fahndung '+crimeState.wanted+'/3':'🟢 Keine Fahndung';
   const goal=airports[flight.side].gate;
   const distance=Math.hypot(goal.x-player.x,goal.z-player.z);
+  const bearing=(goal.x>player.x+20?'→ Osten':goal.x<player.x-20?'← Westen':goal.z<player.z?'↑ Norden':'↓ Süden');
   $('navigation').textContent=flight.onboard?'✈️ '+airports[1-flight.stop].country+' · im Flug':
-    '✈️ Flughafen '+airports[flight.side].country+': '+Math.round(distance)+' m '+(goal.x>player.x+20?'→ Osten':goal.x<player.x-20?'← Westen':goal.z<player.z?'↑ Norden':'↓ Süden');
+    flight.side===1?'🇫🇷 RIVIÈRE · Landschaft: '+france.w+' × '+france.d+' m · Flughafen '+Math.round(distance)+' m '+bearing:
+    '🇩🇪 CITY · Flughafen '+Math.round(distance)+' m '+bearing;
   document.body.classList.toggle('driving',!!player.car);
   document.body.classList.toggle('wanted',crimeState.wanted>0);
   if(flight.onboard){$('mission').textContent='✈️ Flug nach '+airports[1-flight.stop].country+' · '+Math.round(flight.progress*100)+' % Strecke';}
+  else if(flight.side===1&&france.activeJob){$('mission').textContent='🇫🇷 Französischer Lieferjob: Folge dem grünen Marker zum Markt in Rivière. +200 € Spielgeld.';}
+  else if(flight.side===1){$('mission').textContent='🇫🇷 Bonjour! Erkunde 2.600 × 1.250 m Landschaft mit Weinbergen, Fluss, Brücken, Dörfern und Château. Gratis-Mietwagen neben dem Flughafen.';}
   else if(rail.onboard){$('mission').textContent='🚆 Zugreise nach '+rail.stations[1-rail.stop].name+' · Ticket eingelöst';}
   else if(race){
     $('mission').textContent='🏁 Rennen! Checkpoint '+(race.index+1)+'/'+race.points.length+
@@ -1290,6 +1554,7 @@ function interact(){
   if(!playing||showModal||crimeState.arrestTime>0)return;
   if(rail.onboard||flight.onboard)return;
   if(airportAction())return;
+  if(!player.car&&franceAction())return;
   if(!player.car&&trainAction())return;
   if(nearPump()){openFuelMenu(player.car);return;}
   if(!player.car&&homeAction())return;
@@ -1307,7 +1572,9 @@ function interact(){
 }
 function wallCollision(x,z,radius=.65,isVehicle=false){
   // Enlarged vehicle bounds: cars MUST stay outside every building including shop doors.
-  if(x< -680+radius||x>1920-radius||Math.abs(z)>620-radius)return true;
+  if(x< -680+radius||x>4800-radius||Math.abs(z)>620-radius)return true;
+  if(x>1920-radius&&x<2200+radius)return true;
+  if(france.built&&x>=2200&&x<=4800&&riverCollision(x,z,radius))return true;
   if(isVehicle&&crossingCollision(x,z,radius))return true;
   if(isVehicle)for(const o of obstacles){if(Math.hypot(x-o.x,z-o.z)<o.r+radius)return true;}
   for(const hill of mountainBases){if(Math.hypot(x-hill.x,z-hill.z)<hill.r+radius)return true;}
@@ -1431,6 +1698,7 @@ function updateMission(dt){
     // Pickups are intentionally collected with the interaction button, not merely by walking over them.
   }
   if(!rail.onboard&&!flight.onboard&&state.job&&near(player,targets[state.jobTarget],7.5))finishJob();
+  if(france.activeJob&&!player.car&&near(player,{x:4100,z:150},18))finishFrenchDelivery();
   if(race){
     race.elapsed+=dt;
     const aiDist=Math.min(raceTotal,race.elapsed*11.1);
@@ -1480,10 +1748,20 @@ function updateCamera(dt){
 }
 function drawMap(){
   const c=$('minimap').getContext('2d'),W=176,scale=.32;
+  const onFrance=player.x>=2200 || (flight.side===1&&!flight.onboard);
   c.clearRect(0,0,W,W);c.save();c.beginPath();c.arc(88,88,86,0,Math.PI*2);c.clip();
-  c.fillStyle='#789276';c.fillRect(0,0,W,W);
+  c.fillStyle=onFrance?'#91a879':'#789276';c.fillRect(0,0,W,W);
   c.translate(88,88);
-  for(const r of roads){
+  if(onFrance){
+    c.fillStyle='#497f9a';
+    for(let z=-600;z<=600;z+=10)
+      c.fillRect((riverX(z)-player.x)*scale-6,(z-player.z)*scale-2,12,4);
+    c.fillStyle='#5c666a';
+    for(const r of france.roadsX)c.fillRect((r-player.x)*scale-3,-88,6,176);
+    for(const r of france.roadsZ)c.fillRect(-88,(r-player.z)*scale-3,176,6);
+    c.fillStyle='#d6c5a2';
+    for(const bridge of france.bridges)c.fillRect((riverX(bridge)-player.x)*scale-14,(bridge-player.z)*scale-3,28,6);
+  }else for(const r of roads){
     c.fillStyle='#3b4c56';
     c.fillRect((r-player.x)*scale-3,-88,6,176);
     c.fillRect(-88,(r-player.z)*scale-3,176,6);
@@ -1494,6 +1772,8 @@ function drawMap(){
     ...rail.stations.map(st=>({x:rail.x+14,z:st.z,color:'#fce7a1'})),
     {x:rail.x,z:0,color:rail.gateClosed?'#fa4141':'#e8e4ad'},
     ...airports.map(a=>({x:a.gate.x,z:a.gate.z,color:'#9bdcfb'})),
+    ...(onFrance?france.landmarks.map(l=>({x:l.x,z:l.z,color:'#ffec9c'})):[]),
+    ...(onFrance&&france.activeJob?[{x:4100,z:150,color:'#64ff99'}]:[]),
     {x:station.x,z:station.z,color:'#36eea9'},
     {x:-27,z:21,color:'#fce277'},
     {x:0,z:-30,color:'#63dcff'},
@@ -1511,7 +1791,13 @@ function drawMap(){
 }
 function hint(){
   let text='';
-  if(!player.car&&insideHome()){
+  if(france.built&&flight.side===1&&!player.car&&near(player,{x:2884,z:-80},13)){
+    text='📦 E / AKTION: Französischen Lieferjob starten';
+  }
+  else if(france.activeJob&&near(player,{x:4100,z:150},22)){
+    text='🇫🇷 E / AKTION: Paket am französischen Markt abgeben';
+  }
+  else if(!player.car&&insideHome()){
     if(near(player,{x:home.x-8,z:home.z+11},6))text='🍳 E / AKTION: Küche benutzen';
     else if(near(player,{x:home.x+13,z:home.z+3},6))text='🚽 E / AKTION: WC benutzen';
     else if(near(player,{x:home.x+11,z:home.z-10.5},6))text='🛏️ E / AKTION: Schlafen';
@@ -1547,7 +1833,10 @@ function updateDay(dt){
   const daylight=.65+.35*Math.max(0,Math.sin(day*Math.PI*2));
   ambient.intensity=1.25+daylight*.85;
   sun.intensity=1.3+daylight*.85;
-  const sky=new THREE.Color('#8aafc8').lerp(new THREE.Color('#cbd5d7'),Math.max(0,1-daylight)*.55);
+  const french=player.x>=2200||(flight.onboard&&flight.stop===0&&flight.progress>.68);
+  const sky=new THREE.Color(french?'#b4cad4':'#8aafc8').lerp(new THREE.Color(french?'#e0d4ca':'#cbd5d7'),Math.max(0,1-daylight)*.55);
+  scene.fog.near=french?245:200;
+  scene.fog.far=french?800:570;
   scene.background.copy(sky);scene.fog.color.copy(sky);
 }
 function tick(t){
@@ -1617,7 +1906,7 @@ function setupControls(){
   }
   $('closeModal').addEventListener('click',closeModal);
   $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal();});
-  $('help').addEventListener('click',()=>openModal('🎮 Steuerung & Ziele','iPad: linker Joystick bewegt den Menschen bzw. lenkt das Auto. Gas und Bremse im Auto rechts. Wische rechts über die Stadt, um dich umzusehen. PC: WASD, E Aktion, F Ein-/Aussteigen, V Perspektive, Leertaste springen, Shift sprinten, R Rennen am blauen Marker. Der goldene Wagen ist kostenlos geliehen. Jobs bringen 350 €, Rennen bis 650 €. Der rote Sportwagen kostet 950 €. NEU: Flughafen im Osten (der Wegweiser zeigt die Entfernung). Flugticket am Terminal für 100 € kaufen, beim stehenden Flugzeug mit AKTION einsteigen und nach Frankreich fliegen. Rückflüge brauchen ebenfalls ein Ticket. Der Bahnübergang liegt westlich der City: Bei herannahendem Zug schließen Schranken automatisch – davor halten! NEU: Dein eigenes Wohnhaus liegt im Südwesten (Küche mit Toast, WC und Bett). Das rote Motorrad steht neben dem Haus, kostenlos fahren mit F. G = Schlagen, H = Spielfiguren berauben bzw. Einbruch an einer fremden Tür, E = Wertsachen mitnehmen. Alles nur im Spiel ohne Blut; die Polizei fahndet bei Straftaten. Berge mit Aussichtspunkt liegen nördlich der Stadt.',[{label:'Alles klar!',primary:true,run:()=>{}}]));
+  $('help').addEventListener('click',()=>openModal('🎮 Steuerung & Ziele','iPad: linker Joystick bewegt den Menschen bzw. lenkt das Auto. Gas und Bremse im Auto rechts. Wische rechts über die Stadt, um dich umzusehen. PC: WASD, E Aktion, F Ein-/Aussteigen, V Perspektive, Leertaste springen, Shift sprinten, R Rennen am blauen Marker. Der goldene Wagen ist kostenlos geliehen. Jobs bringen 350 €, Rennen bis 650 €. Der rote Sportwagen kostet 950 €. NEU: Flughafen im Osten (der Wegweiser zeigt die Entfernung). Flugticket am Terminal für 100 € kaufen, beim stehenden Flugzeug mit AKTION einsteigen und nach Frankreich fliegen. Rückflüge brauchen ebenfalls ein Ticket. Der Bahnübergang liegt westlich der City: Bei herannahendem Zug schließen Schranken automatisch – davor halten! NEU: Dein eigenes Wohnhaus liegt im Südwesten (Küche mit Toast, WC und Bett). Das rote Motorrad steht neben dem Haus, kostenlos fahren mit F. G = Schlagen, H = Spielfiguren berauben bzw. Einbruch an einer fremden Tür, E = Wertsachen mitnehmen. Alles nur im Spiel ohne Blut; die Polizei fahndet bei Straftaten. Berge mit Aussichtspunkt liegen nördlich der Stadt. NEU VERSION 1.3: Nach dem Flug landest du in einer eigenen französischen Landschaft, die mit 2.600 × 1.250 Metern genauso groß ist wie die CITY-Region. Entdecke das Flusstal mit Brücken, Weinberge, Lavendelfelder, drei französische Dörfer, einen Markt, ein Château, Wälder und Hügel. Am französischen Flughafen steht ein kostenloser Mietwagen. Beim grünen Paket-Symbol am Flughafen gibt es einen französischen Lieferjob mit 200 € Belohnung. Für Rückflug nach Deutschland brauchst du am französischen Automaten erneut ein Flugticket für 100 €. Beide Länder werden im Spielstand gemerkt.',[{label:'Alles klar!',primary:true,run:()=>{}}]));
   $('fullscreen').addEventListener('click',()=>{const e=document.documentElement;if(document.fullscreenElement)document.exitFullscreen();else if(e.requestFullscreen)e.requestFullscreen().catch(()=>toast('Vollbild nicht verfügbar'));});
   $('start').addEventListener('click',()=>{$('veil').style.display='none';playing=true;lastFrame=performance.now();toast('Willkommen in City Racer! Folge dem gelben Marker.',4);});
   const area=$('stick');let pointer=null;
