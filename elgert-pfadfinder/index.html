@@ -84,7 +84,7 @@ function updateHud(){
  else if(g.phase==="dance"){el("missionTitle").textContent="🎶 3/3 · LAGERFEUER-TANZ";el("missionText").textContent="Alle zusammen: 12 Tanzschritte am Feuer!";}
  else {el("missionTitle").textContent="🏅 ZIEL ERREICHT";el("missionText").textContent="Wandern, Zusammenhalt, Lagerfeuer und Tanzen – alles gemeinsam geschafft!";}
 }
-function target(){if(g.phase!=="forest")return CAMP;const options=[];woods.forEach((p,i)=>{if(!g.wood.includes(i))options.push({x:p[0],y:p[1],type:"wood"});});friends.forEach((f,i)=>{if(!g.joined.includes(i))options.push({x:f.x,y:f.y,type:"friend"});});if(!options.length||g.wood.length>=5&&g.joined.length>=3)return CAMP;options.sort((a,b)=>dist(a,g)-dist(b,g));return options[0];}
+function target(){if(g.phase!=="forest")return CAMP;const options=[];if(g.wood.length<5)woods.forEach((p,i)=>{if(!g.wood.includes(i))options.push({x:p[0],y:p[1],type:"wood"});});if(g.joined.length<3)friends.forEach((f,i)=>{if(!g.joined.includes(i))options.push({x:f.x,y:f.y,type:"friend"});});if(!options.length||g.wood.length>=5&&g.joined.length>=3)return CAMP;options.sort((a,b)=>dist(a,g)-dist(b,g));return options[0];}
 function closestAction(){
  if(g.phase!=="forest")return null;
  const actions=[];
@@ -99,7 +99,7 @@ function act(){
  const a=closestAction();
  if(!a){toast("Folge dem Weg und erkunde den Wald! 🧭");return;}
  if(a.type==="wood"){g.wood.push(a.i);tone(650);toast("🪵 Trockenes Holz gesammelt! ("+g.wood.length+"/5)");}
- if(a.type==="friend"){g.joined.push(a.i);tone(520,.16);toast("🤝 "+a.name||"");toast(friends[a.i].story);}
+ if(a.type==="friend"){g.joined.push(a.i);tone(520,.16);toast("🤝 "+friends[a.i].name+" ist dabei! "+friends[a.i].story);}
  if(a.type==="camp"){if(g.wood.length<5||g.joined.length<3){toast("Ihr braucht noch "+Math.max(0,5-g.wood.length)+" Holzstücke und "+Math.max(0,3-g.joined.length)+" Freunde.");return;}g.phase="fire";g.fireStep=0;fireDialog();}
  save();updateHud();
  if(g.wood.length>=5&&g.joined.length>=3&&g.phase==="forest")setTimeout(()=>toast("🌟 Alle zusammen! Auf zur Feuerstelle am Wegende."),1000);
