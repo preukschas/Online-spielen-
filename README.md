@@ -54,7 +54,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 | Spielewelt | Micha auf'm Wasen | `/micha-wasen-run/` | `preukschas/DMP-Games` → `projects/micha-wasen-run/` (V0.1) |
 | Spielewelt | Ronja Race | `/ronja-race/` | `preukschas/DMP-Games` → `projects/ronja-race/` (V0.5.1 Touch-/Swipe-Hotfix) |
 | Spielewelt | City Racer – Open World 3D (Ari) | `/city-racer-open-world/` | `preukschas/DMP-Games` → `projects/city-racer-open-world/` (3D-Demo 1.3; volle französische Spielwelt 2600×1250, Dörfer, Lavendelfelder, Weinberge, Château, Fluss, Mietwagen, Flüge; KI-Rennen, Autos/Motorrad, Wohnhaus mit Küche/WC, Bergen, Arcade-Krimi mit Polizeifahndung, Zug, Flughafen nach Frankreich, iPad/PC, Eltern-PIN) |
-| Spielewelt | City Life – Open World | `/city-life-open-world/` | `preukschas/DMP-Games` → `projects/city-life-open-world/` (V5.6 3D) |
+| Spielewelt | City Life – Open World | `/city-life-open-world/` | `preukschas/DMP-Games` → `projects/city-life-open-world/` (V5.7 final) |
 | Spielewelt | Bett Battle | `/bett-battle/` | `preukschas/DMP-Games` → `projects/bett-battle/` (Final 1.0) |
 | Specials | Edelgards Pfadfinder-Abenteuer | `/edelgards-pfadfinder-abenteuer/` | `preukschas/DMP-Games` → `projects/edelgards-pfadfinder-abenteuer/` (V1.2, fünf Etappen, Lagerfeuer & Tanz, automatisches Speichern, ohne PIN) |
 | Specials | Franz – Meister der Fuge | `/franz-fliesenleger/` | `preukschas/DMP-Games` → `projects/franz-fliesenleger/` (V1.0) |
