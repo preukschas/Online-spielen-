@@ -16,7 +16,21 @@ const ui={
 };
 
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
-const MAX_PIXEL_RATIO=2.75;renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,MAX_PIXEL_RATIO));
+const MAX_PIXEL_RATIO=2.75;
+const cityQuality={mode:'auto',ratio:Math.min(window.devicePixelRatio||1,2),fps:60,frames:0,elapsed:0};
+function setCityQuality(mode){
+ if(!['auto','high','balanced','battery'].includes(mode))return false;
+ cityQuality.mode=mode;const dpr=window.devicePixelRatio||1;
+ cityQuality.ratio=Math.min(dpr,mode==='high'?MAX_PIXEL_RATIO:mode==='balanced'?1.5:mode==='battery'?1:Math.min(2,dpr));
+ renderer.setPixelRatio(cityQuality.ratio);try{localStorage.setItem('city-life-quality',mode)}catch(_){}return true
+}
+try{setCityQuality(localStorage.getItem('city-life-quality')||'auto')}catch(_){setCityQuality('auto')}
+function adaptCityQuality(dt){
+ cityQuality.elapsed+=dt;cityQuality.frames++;if(cityQuality.elapsed<3)return;
+ const fps=cityQuality.frames/cityQuality.elapsed;cityQuality.fps=Math.round(fps);cityQuality.elapsed=0;cityQuality.frames=0;if(cityQuality.mode!=='auto')return;
+ const dpr=window.devicePixelRatio||1,next=fps<35?Math.max(.8,cityQuality.ratio-.2):fps>55?Math.min(dpr,2,cityQuality.ratio+.1):cityQuality.ratio;
+ if(Math.abs(next-cityQuality.ratio)>.04){cityQuality.ratio=next;renderer.setPixelRatio(next)}
+}
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -52,7 +66,7 @@ function setupDynamicLights(){
 
 const WORLD_W=620,WORLD_D=420,ROAD_W=24.4,SIDEWALK=4.0;
 const roadsX=[65,185,307,431,555],roadsZ=[52,157,264,369];
-const keys=new Set(),buildingMeshes=[],solidBoxes=[],cars=[],traffic=[],npcs=[],police=[],effects=[],pickups=[],climbables=[],streetLamps=[],lampLightPool=[],staticColliders=[],trafficLights=[],roadblocks=[],boats=[],helicopters=[],raceOpponents=[],windowMats=[],roadSurfaceMats=[],shopLightMats=[],doorSystems=[],verticalAccess=[],climbSurfaces=[],physicsProps=[];
+const keys=new Set(),buildingMeshes=[],solidBoxes=[],cars=[],traffic=[],npcs=[],police=[],effects=[],pickups=[],climbables=[],streetLamps=[],lampLightPool=[],staticColliders=[],trafficLights=[],roadblocks=[],boats=[],helicopters=[],raceOpponents=[],windowMats=[],roadSurfaceMats=[],shopLightMats=[],doorSystems=[],verticalAccess=[],climbSurfaces=[],physicsProps=[],vehicleDebris=[],districtLandmarks=[];
 const interiors={},customBuildings=[];
 const raycaster=new THREE.Raycaster();
 const centerNdc=new THREE.Vector2(0,0);
@@ -113,8 +127,7 @@ function damageStage(hp){if(hp<=0)return 5;if(hp<=20)return 4;if(hp<=40)return 3
 function damageLabel(hp){return ['Intakt','Leichte Schäden','Beschädigt','Schwer beschädigt','Kritisch','Totalschaden'][damageStage(hp)]}
 
 function resize(){
- const r=stage.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,MAX_PIXEL_RATIO);
- renderer.setPixelRatio(dpr);renderer.setSize(Math.max(1,r.width),Math.max(1,r.height),false);
+ const r=stage.getBoundingClientRect();renderer.setPixelRatio(cityQuality.ratio);renderer.setSize(Math.max(1,r.width),Math.max(1,r.height),false);
  camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix()
 }
 new ResizeObserver(resize).observe(stage);resize();
@@ -218,10 +231,37 @@ function vehicleDynamicHit(c,x,z){
  for(const other of cars){
   if(other===c||!other.mesh.visible)continue;
   if((other.interiorId||null)!==(c.interiorId||null))continue;
+  if(Math.abs((other.y||0)-(c.y||0))>2.4)continue;
   const min=vehicleRadius(c)+vehicleRadius(other);
   if(dist2(x,z,other.x,other.z)<min)return{type:'vehicle',other,hardness:.82}
  }
  return null
+}
+function populateBreakableFurniture(){
+ for(let i=0;i<20;i++){
+  const x=roadsX[i%roadsX.length]+(i%2?1:-1)*(ROAD_W/2+2.5),z=86+(i*23)%246;
+  if(roadsZ.some(r=>Math.abs(r-z)<18))continue;
+  // Do not spawn roadside obstacles on top of existing solid geometry.
+  const obstacleRadius=i%3===0?.9:.30;
+  if(staticColliders.some(col=>col.solid&&!col.interiorId&&colliderOverlaps(col,x,z,obstacleRadius+.35)))continue;
+  if(buildings.some(b=>{if(b.type==='park')return false;const q=structureRect(b);return x>q.x-2&&x<q.x+q.w+2&&z>q.z-2&&z<q.z+q.d+2}))continue;
+  const group=new THREE.Group(),isBarrier=i%3===0;
+  if(isBarrier){addBox(0,.45,0,1.8,.75,.25,0xc75138,.7,.05,group);addBox(0,.5,-.15,1.5,.14,.06,0xe9e7de,.7,.03,group)}
+  else{addBox(0,.50,0,.34,1,.34,0xd6ad48,.7,.10,group);addBox(0,.91,0,.35,.11,.35,0xe8e8df,.4,.2,group)}
+  group.position.set(x,0,z);scene.add(group);
+  addCircleCollider(x,z,isBarrier?.9:.30,isBarrier?'barrier':'bollard',{hardness:.42,breakable:true,breakSpeed:isBarrier?30:22,mesh:group})
+ }
+ // Zusätzliche zerstörbare Straßenschilder und Bushaltestellen.
+ for(let i=0;i<8;i++){
+  const x=70+i*67,z=roadsZ[(i+2)%roadsZ.length]+(i%2?18:-18),g=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.055,.075,2.1,8),mat(0x7d8589,.55,.45));pole.position.y=1.05;g.add(pole);addBox(0,1.88,0,.72,.52,.10,0x4f7ca1,.52,.22,g);g.position.set(x,0,z);scene.add(g);
+  addCircleCollider(x,z,.32,'trafficSign',{hardness:.30,breakable:true,breakSpeed:20,mesh:g})
+ }
+ for(const x of [170,420]){
+  const z=247,g=new THREE.Group();addBox(0,1.25,0,4.4,.16,.18,0x59656b,.48,.45,g);for(const dx of [-2.05,2.05])addBox(dx,1.25,0,.12,2.5,.12,0x59656b,.48,.45,g);
+  const glass=addBox(0,1.30,.08,3.9,2.1,.055,0x8bb5c5,.18,.05,g);glass.material.transparent=true;glass.material.opacity=.42;g.position.set(x,0,z);scene.add(g);
+  addBoxCollider(x,z,4.1,.35,'busShelter',{hardness:.28,breakable:true,breakSpeed:28,mesh:g})
+ }
 }
 function breakStaticCollider(col,c,impact){
  if(!col||!col.breakable||impact<col.breakSpeed)return false;
@@ -628,7 +668,7 @@ function updatePlayerAvatar(dt){
   playerAvatar.visible=!state.firstPerson&&!isBike;
   firstPersonBody.visible=false;
   if(playerAvatar.visible){
-   playerAvatar.position.set(c.x,.18,c.z);playerAvatar.rotation.set(0,-c.a+Math.PI/2,0);
+   playerAvatar.position.set(c.x,.18+(c.y||0),c.z);playerAvatar.rotation.set(0,-c.a+Math.PI/2,0);
    u.legL.rotation.z=-1.05;u.legR.rotation.z=1.05;u.armL.rotation.z=.66;u.armR.rotation.z=-.66;
    u.torso.rotation.z=0;playerAvatar.scale.set(.78,.78,.78)
   }
@@ -759,7 +799,7 @@ function makeCarMesh(name,policeCar=false){
 }
 function addCar(name,x,z,a=0,opt={}){
  const sp=vehicleSpecs[name],mesh=makeCarMesh(name,!!opt.police);mesh.position.set(x,0,z);mesh.rotation.y=-a;scene.add(mesh);
- const car={id:opt.id||('car-'+cars.length+'-'+name.replace(/\s+/g,'-')),name,spec:sp,mesh,x,z,a,speed:0,hp:100,lastDamage:-99,locked:!!opt.locked,forSale:!!opt.forSale,owned:!!opt.owned,stolen:false,price:opt.price||sp.price,police:!!opt.police,ai:!!opt.ai,axis:opt.axis||null,dir:opt.dir||1,interiorId:opt.interiorId||null,skidCd:0,visualRoll:0,visualPitch:0,raceAI:!!opt.raceAI,raceIndex:0,raceFinished:false,raceFinishTime:null};cars.push(car);return car
+ const car={id:opt.id||('car-'+cars.length+'-'+name.replace(/\s+/g,'-')),name,spec:{...sp},mesh,x,z,y:0,a,speed:0,hp:100,lastDamage:-99,locked:!!opt.locked,forSale:!!opt.forSale,owned:!!opt.owned,stolen:false,price:opt.price||sp.price,police:!!opt.police,ai:!!opt.ai,axis:opt.axis||null,dir:opt.dir||1,interiorId:opt.interiorId||null,skidCd:0,visualRoll:0,visualPitch:0,raceAI:!!opt.raceAI,raceIndex:0,raceFinished:false,raceFinishTime:null,tireHP:[100,100,100,100],flatTires:[false,false,false,false],flatTire:false,tuning:{},detachedParts:{frontBumper:false,rearBumper:false,hood:false},garageStored:false};cars.push(car);return car
 }
 function addShowroomCar(buildingId,name,dx,dz){
  const r=interiors[buildingId];if(!r)return null;
@@ -880,7 +920,7 @@ function loadPersistentState(){
 function saveGame(){
  try{
   const ownedCarIds=[...new Set(cars.filter(c=>c.owned).map(c=>c.id))];
-  const data={money:Math.round(state.money),inventory:[...new Set(state.inventory)],x:state.mode==='outside'?state.x:undefined,z:state.mode==='outside'?state.z:undefined,yaw:state.yaw,bestRace:state.race.best,ownedCarIds,collected:pickups.filter(p=>p.collected).map(p=>p.id),customBuildings:customBuildings.map(b=>({id:b.id,x:b.x,z:b.z,w:b.w,d:b.d,name:b.name,type:b.type,color:b.color,door:b.door,windowStyle:b.windowStyle||'normal',rotation:b.rotation||0}))};
+  const data={money:Math.round(state.money),inventory:[...new Set(state.inventory)],x:state.mode==='outside'?state.x:undefined,z:state.mode==='outside'?state.z:undefined,yaw:state.yaw,bestRace:state.race.best,ownedCarIds,tuning:Object.fromEntries(cars.filter(c=>c.owned&&c.tuning).map(c=>[c.id,c.tuning])),carStatus:Object.fromEntries(cars.filter(c=>c.owned).map(c=>[c.id,{hp:c.hp,tireHP:c.tireHP,flatTires:c.flatTires,garageStored:c.garageStored}])),collected:pickups.filter(p=>p.collected).map(p=>p.id),customBuildings:customBuildings.map(b=>({id:b.id,x:b.x,z:b.z,w:b.w,d:b.d,name:b.name,type:b.type,color:b.color,door:b.door,windowStyle:b.windowStyle||'normal',rotation:b.rotation||0}))};
   localStorage.setItem(SAVE_KEY,JSON.stringify(data));savedData=data
  }catch(_){}
 }
@@ -889,6 +929,8 @@ function restoreOwnedCars(){
  const legacy=new Set(Array.isArray(savedData.ownedModels)?savedData.ownedModels:[]);
  for(const c of cars){
   if(ids.has(c.id)||(legacy.has(c.name)&&c.forSale)){c.locked=false;c.forSale=false;c.owned=true}
+  const upgrades=savedData.tuning?.[c.id];if(upgrades){c.tuning={...upgrades};if(upgrades.engine){c.spec.max*=1.12;c.spec.acc*=1.15}if(upgrades.suspension)c.spec.turn*=1.12;if(upgrades.paint&&c.mesh.userData.body){c.mesh.userData.baseColor=0x27a5a0;c.mesh.userData.body.material.color.setHex(0x27a5a0)}if(upgrades.rims)(c.mesh.userData.wheels||[]).forEach(w=>{if(w.material){w.material=w.material.clone();w.material.color.setHex(0xd5b86e);w.material.metalness=.62}})}
+  const status=savedData.carStatus?.[c.id];if(status){c.hp=Number.isFinite(status.hp)?clamp(status.hp,0,100):100;c.tireHP=Array.isArray(status.tireHP)?status.tireHP.slice(0,4):[100,100,100,100];while(c.tireHP.length<4)c.tireHP.push(100);c.flatTires=Array.isArray(status.flatTires)?status.flatTires.slice(0,4).map(Boolean):[false,false,false,false];while(c.flatTires.length<4)c.flatTires.push(false);c.garageStored=!!status.garageStored;c.mesh.visible=!c.garageStored;syncTireState(c);applyDamageVisual(c,true)}
  }
 }
 function spawnPickups(){
@@ -951,7 +993,7 @@ function updateRaceAI(c,dt){
  c.a+=clamp(delta,-c.spec.turn*dt*.75,c.spec.turn*dt*.75);
  const ms=c.speed/3.6,dx=Math.cos(c.a)*ms*dt,dz=Math.sin(c.a)*ms*dt,hit=vehicleSweep(c,dx,dz);
  if(hit){c.speed*=hit.type==='vehicle'?.70:.45;c.a+=(Math.random()-.5)*.12}
- c.mesh.position.set(c.x,0,c.z);c.mesh.rotation.y=-c.a;
+ c.y=vehicleRoadY57(c);c.mesh.position.set(c.x,c.y,c.z);c.mesh.rotation.y=-c.a;
  if(dist2(c.x,c.z,cp[0],cp[1])<8){c.raceIndex++;if(c.raceIndex>=state.race.checkpoints.length){c.raceFinished=true;c.raceFinishTime=state.race.time;c.speed*=.65}}
 }
 function raceProgress(entity,index){
@@ -1090,8 +1132,46 @@ function updatePhysicsProps(dt){
   if(speed>2)p.mesh.rotation.y+=dt*clamp(speed*.12,-2,2)
  }
 }
+function bridgeElevation57(x,z,a=0){
+ // Ost-West-Fahrbahn der Straße z=264 wird über x=307 angehoben; Nord-Süd-Verkehr bleibt darunter.
+ if(state.mode==='interior'||Math.abs(z-264)>ROAD_W/2-1||Math.abs(Math.sin(a))>.62)return 0;
+ const d=Math.abs(x-307);if(d>=42)return 0;if(d<=20)return 5.2;return 5.2*(42-d)/22
+}
+function vehicleRoadY57(c,x=c.x,z=c.z,a=c.a){return bridgeElevation57(x,z,a)}
+function buildDistrictLandmarks57(){
+ const defs=[
+  ['ALTSTADT',62,25,0x7c6756],['PARK & WOHNEN',118,148,0x5f8064],['INNENSTADT',307,112,0x596f83],
+  ['GEWERBEPARK',515,118,0x75664f],['BAHNHOF & BUSINESS',186,342,0x66737c],['HAFEN & INDUSTRIE',500,363,0x526a70]
+ ];
+ for(const [name,x,z,color] of defs){
+  const g=new THREE.Group(),pole=addBox(0,1.35,0,.16,2.7,.16,0x4c5559,.62,.42,g),board=addBox(0,2.5,0,4.8,1.05,.18,color,.72,.12,g);const label=makeLabel(name,4.4);label.position.set(0,2.5,-.13);g.add(label);g.position.set(x,0,z);scene.add(g);districtLandmarks.push({name,x,z,group:g})
+ }
+}
+function buildCityStructures57(){
+ // Echte höhengetrennte Kreuzung: Ost-West-Brücke über die Nord-Süd-Straße bei (307,264).
+ const bridge=new THREE.Group();scene.add(bridge);
+ const z=264;
+ for(let x=266;x<=348;x+=3){
+  const y=bridgeElevation57(x,z,0),deck=addBox(x,y-.14,z,3.2,.28,ROAD_W-1.6,0x4b5357,.88,.06,bridge);deck.receiveShadow=true;
+  if(y>1.2&&Math.abs(x-307)>19){for(const side of [-1,1])addBox(x,y*.5,z+side*(ROAD_W*.46),.24,y,.24,0x737d82,.82,.10,bridge)}
+  for(const side of [-1,1])addBox(x,y+.34,z+side*(ROAD_W*.47),3.1,.56,.16,0x8d9599,.72,.16,bridge)
+ }
+ // Unterführung der Nord-Süd-Achse bleibt auf Höhe 0; Stützwände und Beleuchtung machen die Ebene lesbar.
+ for(const side of [-1,1])addBox(307+side*(ROAD_W/2+1.0),2.5,264,.7,5.0,34,0x777f83,.92,.04,bridge);
+ for(const zz of [252,258,264,270,276]){const lamp=addBox(307,4.45,zz,9.5,.10,.12,0xd7d5c8,.35,.05,bridge);lamp.material.emissive=new THREE.Color(0xffdc92);lamp.material.emissiveIntensity=2.1}
+ const under=makeLabel('UNTERFÜHRUNG',5.2);under.position.set(307,4.2,247);bridge.add(under);
+
+ // Befahrbarer Tunnel an der östlichen Nord-Süd-Achse x=555.
+ const tunnel=new THREE.Group();scene.add(tunnel);
+ for(let zz=184;zz<=226;zz+=3.5){
+  for(const side of [-1,1])addBox(555+side*(ROAD_W/2+.55),2.9,zz,.65,5.8,3.7,0x60696d,.96,.03,tunnel);
+  addBox(555,5.75,zz,ROAD_W+1.8,.36,3.7,0x596267,.94,.03,tunnel)
+ }
+ for(const zz of [188,198,208,218,224]){const l=addBox(555,5.45,zz,7.5,.08,.12,0xe4ddc7,.35,.04,tunnel);l.material.emissive=new THREE.Color(0xffd78a);l.material.emissiveIntensity=2.0}
+ const tl=makeLabel('CITY TUNNEL',5.0);tl.position.set(555,6.6,182);tunnel.add(tl)
+}
 function setupWorld(){
- loadPersistentState();setupHeldWeapons();buildGround();setupWeatherFX();buildings.forEach(makeBuilding);populateTrees();populateProps();populatePhysicsProps();buildTrafficLights();buildClimbables();buildInteriors();spawnNPCs();spawnCars();spawnPolice();buildHarbor();setupHelicopters();spawnPickups();setupRace();restoreOwnedCars()
+ loadPersistentState();setupHeldWeapons();buildGround();setupWeatherFX();buildings.forEach(makeBuilding);populateTrees();populateProps();populatePhysicsProps();populateBreakableFurniture();buildCityStructures57();buildDistrictLandmarks57();buildTrafficLights();buildClimbables();buildInteriors();spawnNPCs();spawnCars();spawnPolice();buildHarbor();setupHelicopters();spawnPickups();setupRace();restoreOwnedCars()
 }
 setupWorld();setupCockpitAndMirrors();setupPlayerAvatar();
 
@@ -1172,7 +1252,7 @@ function openBuilding(b){
  }else if(b.type==='job')row.appendChild(pbtn('📦 Arbeiten · +120 €',()=>{state.money+=120;log('Schicht beendet: +120 €.');saveGame();hud()},true));
  else if(b.type==='garage')row.appendChild(pbtn('🔧 Fahrzeug reparieren · 500 €',()=>{
   if(!state.vehicle)return toast('Mit Fahrzeug in die Werkstatt fahren');if(state.money<500)return toast('Zu wenig Geld');
-  state.money-=500;state.vehicle.hp=100;applyDamageVisual(state.vehicle,true);log('Fahrzeug repariert.');saveGame();hud()
+  state.money-=500;state.vehicle.hp=100;repairTires(state.vehicle);restoreDetachedParts(state.vehicle);applyDamageVisual(state.vehicle,true);log('Fahrzeug repariert.');saveGame();hud()
  },true));
  else if(b.type==='home')row.appendChild(pbtn('🛏️ Ausruhen',()=>{state.hp=100;state.heat=Math.max(0,state.heat-10);saveGame();hud();toast('Ausgeruht')},true));
  else if(b.type==='dealer'){const m=document.createElement('span');m.className='muted';m.textContent='Gehe zu einem Showroom-Fahrzeug. E = kaufen/klauen, F = einsteigen. Mit E an der markierten Ausfahrt fährst du wieder hinaus.';row.appendChild(m)}
@@ -1231,6 +1311,28 @@ function spawnCrashFX(c,amount){
   effects.push({mesh:spark,ttl:.22+Math.random()*.28,velocity:new THREE.Vector3((Math.random()-.5)*5,2+Math.random()*4,(Math.random()-.5)*5),gravity:9.5,fade:true})
  }
 }
+function syncTireState(c){
+ const wheels=c.mesh.userData.wheels||[];c.flatTires=c.flatTires||[false,false,false,false];c.tireHP=c.tireHP||[100,100,100,100];
+ c.flatTire=c.flatTires.some(Boolean);
+ wheels.forEach((w,i)=>{if(!w.userData.baseScale)w.userData.baseScale=w.scale.clone();if(u.base?.wheelPos?.[i])w.position.copy(u.base.wheelPos[i]);const flat=!!c.flatTires[i];w.scale.copy(w.userData.baseScale);if(flat){w.scale.z*=.58;w.scale.x*=1.08;w.position.y=Math.max(.22,w.position.y-.07)}});
+}
+function damageTire(c,index,amount=100){
+ if(!c||c.spec.type==='bike')return;if(c.tuning?.tires)amount*=.58;index=clamp(index|0,0,3);c.tireHP=c.tireHP||[100,100,100,100];c.flatTires=c.flatTires||[false,false,false,false];
+ c.tireHP[index]=clamp(c.tireHP[index]-amount,0,100);if(c.tireHP[index]<=18&&!c.flatTires[index]){c.flatTires[index]=true;toast('🛞 Reifen '+(index+1)+' platt');}
+ syncTireState(c)
+}
+function repairTires(c){if(!c)return;c.tireHP=[100,100,100,100];c.flatTires=[false,false,false,false];c.flatTire=false;const u=c.mesh.userData;if(u.base?.wheelPos)(u.wheels||[]).forEach((w,i)=>{if(u.base.wheelPos[i])w.position.copy(u.base.wheelPos[i])});syncTireState(c)}
+function spawnDetachedPart(c,key){
+ const source=c.mesh.userData[key];if(!source||!source.parent||c.detachedParts?.[key])return;
+ c.detachedParts=c.detachedParts||{};c.detachedParts[key]=true;c.mesh.updateMatrixWorld(true);
+ const clone=source.clone();clone.material=source.material?.clone?source.material.clone():source.material;
+ const wp=source.getWorldPosition(new THREE.Vector3()),wq=source.getWorldQuaternion(new THREE.Quaternion());clone.position.copy(wp);clone.quaternion.copy(wq);source.visible=false;scene.add(clone);
+ vehicleDebris.push({mesh:clone,vx:Math.cos(c.a)*(2+Math.abs(c.speed)/35)+(Math.random()-.5)*2,vz:Math.sin(c.a)*(2+Math.abs(c.speed)/35)+(Math.random()-.5)*2,vy:2.8+Math.random()*2,spin:(Math.random()-.5)*5,ttl:22});
+}
+function restoreDetachedParts(c){if(!c)return;const u=c.mesh.userData;for(const k of ['frontBumper','rearBumper','hood'])if(u[k])u[k].visible=true;c.detachedParts={frontBumper:false,rearBumper:false,hood:false}}
+function updateVehicleDebris(dt){
+ for(let i=vehicleDebris.length-1;i>=0;i--){const d=vehicleDebris[i];d.ttl-=dt;d.vy-=9.5*dt;d.mesh.position.x+=d.vx*dt;d.mesh.position.z+=d.vz*dt;d.mesh.position.y=Math.max(.10,d.mesh.position.y+d.vy*dt);if(d.mesh.position.y<=.101){d.vy*=-.18;d.vx*=.92;d.vz*=.92}d.mesh.rotation.x+=d.spin*dt;d.mesh.rotation.z+=d.spin*.7*dt;if(d.ttl<=0){scene.remove(d.mesh);d.mesh.geometry?.dispose?.();if(d.mesh.material?.dispose)d.mesh.material.dispose();vehicleDebris.splice(i,1)}}
+}
 function ensureDamageParts(c){
  const u=c.mesh.userData;if(u.damageReady)return;u.damageReady=true;
  u.base={
@@ -1254,14 +1356,14 @@ function ensureDamageParts(c){
 }
 function applyDamageVisual(c,force=false){
  if(!c||!c.mesh)return;ensureDamageParts(c);
- const u=c.mesh.userData,stage=damageStage(c.hp);if(!force&&u.damageStage===stage)return;u.damageStage=stage;const b=u.base;
+ const u=c.mesh.userData,stage=damageStage(c.hp);syncTireState(c);if(!force&&u.damageStage===stage)return;u.damageStage=stage;const b=u.base;
  const body=u.body,hood=u.hood,cabin=u.cabin,wheels=u.wheels||[];
  if(body&&b.bodyPos){body.position.copy(b.bodyPos);body.scale.copy(b.bodyScale);body.rotation.copy(b.bodyRot);body.scale.x=Math.max(.91,1-stage*.014);body.position.x-=stage*.025;body.rotation.z=stage>=4?.025*(stage-3):0;body.rotation.y=stage>=3?.012*(stage-2):0;if(body.material){body.material.roughness=clamp(.40+stage*.095,.4,.92);body.material.color.setHex(u.baseColor||c.spec.color)}}
  if(hood&&b.hoodPos){hood.position.copy(b.hoodPos);hood.scale.copy(b.hoodScale);hood.rotation.copy(b.hoodRot);hood.position.x-=stage*.045;hood.scale.x=Math.max(.72,1-stage*.055);hood.rotation.z=stage>=2?.045*stage:0;hood.rotation.y=stage>=4?.05:0}
  if(cabin&&b.cabinPos){cabin.position.copy(b.cabinPos);cabin.scale.copy(b.cabinScale);cabin.rotation.copy(b.cabinRot);cabin.rotation.z=stage>=3?-.018*(stage-2):0;cabin.position.y-=stage>=5?.06:0;if(cabin.material)cabin.material.roughness=stage>=3?.60:.22}
  wheels.forEach((w,i)=>{if(b.wheelRots[i])w.rotation.copy(b.wheelRots[i]);if(b.wheelPos[i])w.position.copy(b.wheelPos[i]);if(stage>=3&&i===0)w.rotation.z+=.12;if(stage>=4&&i===1)w.rotation.z-=.18;if(stage>=5&&i===2){w.rotation.z+=.34;w.position.y-=.08}});
- if(u.frontBumper&&b.frontBumperPos){u.frontBumper.position.copy(b.frontBumperPos);u.frontBumper.rotation.copy(b.frontBumperRot);u.frontBumper.position.x-=stage*.055;if(stage>=3)u.frontBumper.rotation.z=.06*(stage-2);if(stage>=5)u.frontBumper.position.y-=.22}
- if(u.rearBumper&&b.rearBumperPos){u.rearBumper.position.copy(b.rearBumperPos);u.rearBumper.rotation.copy(b.rearBumperRot);if(stage>=4)u.rearBumper.rotation.z=-.05*(stage-3)}
+ if(u.frontBumper&&u.frontBumper.parent===c.mesh&&b.frontBumperPos){u.frontBumper.position.copy(b.frontBumperPos);u.frontBumper.rotation.copy(b.frontBumperRot);u.frontBumper.position.x-=stage*.055;if(stage>=3)u.frontBumper.rotation.z=.06*(stage-2);if(stage>=5)u.frontBumper.position.y-=.22}
+ if(u.rearBumper&&u.rearBumper.parent===c.mesh&&b.rearBumperPos){u.rearBumper.position.copy(b.rearBumperPos);u.rearBumper.rotation.copy(b.rearBumperRot);if(stage>=4)u.rearBumper.rotation.z=-.05*(stage-3)}
  (u.cracks||[]).forEach((line,i)=>{line.visible=stage>=i+2;line.material.opacity=stage>=4?.96:.72});
  if(u.panelCrack)u.panelCrack.visible=stage>=3;
  u.damageMarks.forEach((m,i)=>m.visible=stage>=i+1);
@@ -1277,7 +1379,18 @@ function updateVehicleDamageFX(dt){
 }
 function vehicleDamage(c,amount){
  if(amount>3)oneShotSound('crash',clamp(amount/8,.7,3));
- const now=performance.now()/1000;if(now-c.lastDamage<.42)return;c.lastDamage=now;const before=damageStage(c.hp);c.hp=clamp(c.hp-amount,0,100);const after=damageStage(c.hp);applyDamageVisual(c);spawnCrashFX(c,amount);
+ const now=performance.now()/1000;if(now-c.lastDamage<.42)return;c.lastDamage=now;
+ const before=damageStage(c.hp);c.hp=clamp(c.hp-amount,0,100);const after=damageStage(c.hp);
+ if(c.spec.type!=='bike'){
+  if(c.hp<62&&!c.flatTires?.[0])damageTire(c,0,100);
+  if(c.hp<42&&!c.flatTires?.[3])damageTire(c,3,100);
+  if(c.hp<24&&!c.flatTires?.[1])damageTire(c,1,100);
+ }
+ c.detachedParts=c.detachedParts||{};
+ if(c.hp<30&&!c.detachedParts.frontBumper)spawnDetachedPart(c,'frontBumper');
+ if(c.hp<17&&!c.detachedParts.rearBumper)spawnDetachedPart(c,'rearBumper');
+ if(c.hp<8&&!c.detachedParts.hood)spawnDetachedPart(c,'hood');
+ applyDamageVisual(c);spawnCrashFX(c,amount);
  if(c===state.vehicle)state.cameraShake=Math.max(state.cameraShake,clamp(amount*.008,.045,.22));
  if(after>before)toast(damageLabel(c.hp));if(c.hp<=0){c.speed=0;if(c===state.vehicle)state.speedKmh=0}
 }
@@ -1293,13 +1406,13 @@ function updateVehicle(dt){
  const c=state.vehicle;if(!c)return;
  const up=keys.has('w')||keys.has('ArrowUp'),down=keys.has('s')||keys.has('ArrowDown'),left=keys.has('a')||keys.has('ArrowLeft'),right=keys.has('d')||keys.has('ArrowRight');
  const steer=(right?1:0)-(left?1:0),isBike=c.spec.type==='bike',ds=damageStage(c.hp),speedFactor=[1,.96,.86,.70,.48,0][ds],accFactor=[1,.98,.90,.76,.55,0][ds];
- const road=state.mode==='interior'||isRoadSurface(c.x,c.z),wetGrip=state.mode==='outside'?weatherGrip():1,surfaceCap=(road?1:.62)*(wetGrip<1?.94:1),surfaceGrip=(road?1:.72)*wetGrip;
- const rawCap=(state.mode==='interior'?Math.min(38,c.spec.max):c.spec.max)*surfaceCap,speedCap=rawCap*speedFactor;
+ const road=state.mode==='interior'||isRoadSurface(c.x,c.z),wetGrip=state.mode==='outside'?weatherGrip():1,flatCount=(c.flatTires||[]).filter(Boolean).length,tireGrip=Math.max(.34,1-flatCount*.18),surfaceCap=(road?1:.62)*(wetGrip<1?.94:1),surfaceGrip=(road?1:.72)*wetGrip*tireGrip*(c.tuning?.tires?1.10:1);
+ const rawCap=(state.mode==='interior'?Math.min(38,c.spec.max):c.spec.max)*surfaceCap*Math.max(.38,1-flatCount*.20),speedCap=rawCap*speedFactor;
  const abs=Math.abs(c.speed);
 
  if(c.hp<=0)c.speed*=Math.pow(.88,dt*60);
  else{
-  const brakePower=(road?145:105)*(wetGrip<1?.78:1);
+  const brakePower=(road?145:105)*(wetGrip<1?.78:1)*(c.tuning?.brakes?1.25:1)*Math.max(.55,1-flatCount*.12);
   if(up){
    if(c.speed<-5)c.speed+=brakePower*dt;
    else c.speed+=c.spec.acc*accFactor*dt
@@ -1320,6 +1433,7 @@ function updateVehicle(dt){
   const handbrakeBoost=state.handbrake&&Math.abs(c.speed)>25?(isBike?1.18:1.58):1;
   c.a+=steer*c.spec.turn*dt*moving*speedSteer*surfaceGrip*handbrakeBoost*(c.speed>=0?1:-1);
   if(state.handbrake&&steer&&Math.abs(c.speed)>38)c.speed*=Math.pow(.974,dt*60);
+  if(flatCount&&Math.abs(c.speed)>12){const left=(c.flatTires?.[0]?1:0)+(c.flatTires?.[2]?1:0),right=(c.flatTires?.[1]?1:0)+(c.flatTires?.[3]?1:0),pull=(right-left)*.075+(right===left?.035:0);c.a+=dt*pull*Math.sign(c.speed)}
   if(ds>=4&&Math.abs(c.speed)>25)c.a+=Math.sin(performance.now()*.004)*.00075*(ds-3)
  }
 
@@ -1345,11 +1459,11 @@ function updateVehicle(dt){
 
  c.skidCd=Math.max(0,c.skidCd-dt);
  if(state.handbrake&&road&&Math.abs(c.speed)>35&&c.skidCd<=0){spawnSkidMarks(c);c.skidCd=.075}
- const rollTarget=-steer*clamp(Math.abs(c.speed)/(isBike?75:110),0,1)*(isBike?.48:(state.handbrake?.075:.045));
+ const suspensionFactor=c.tuning?.suspension?.72:1,rollTarget=-steer*clamp(Math.abs(c.speed)/(isBike?75:110),0,1)*(isBike?.48:(state.handbrake?.075:.045))*suspensionFactor;
  const pitchTarget=(down&&c.speed>8?.030:up&&c.speed>5?-.014:0);
  c.visualRoll+=(rollTarget-c.visualRoll)*clamp(dt*8,0,1);c.visualPitch+=(pitchTarget-c.visualPitch)*clamp(dt*7,0,1);
  if(c.mesh.userData.rider)c.mesh.userData.rider.visible=c===state.vehicle||c.raceAI;
- c.mesh.position.set(c.x,0,c.z);c.mesh.rotation.y=-c.a;c.mesh.rotation.z=c.visualRoll;c.mesh.rotation.x=c.visualPitch;
+ c.y=vehicleRoadY57(c);c.mesh.position.set(c.x,c.y,c.z);c.mesh.rotation.y=-c.a;c.mesh.rotation.z=c.visualRoll;c.mesh.rotation.x=c.visualPitch;
  state.x=c.x;state.z=c.z;state.yaw=c.a;state.speedKmh=c.speed
 }
 function supportHeightAt(x,z){
@@ -1392,7 +1506,7 @@ function updateTraffic(dt){
   const ms=c.speed/3.6;
   if(c.axis==='h'){c.x+=c.dir*ms*dt;if(c.x>WORLD_W+8)c.x=-8;if(c.x<-8)c.x=WORLD_W+8;c.a=c.dir>0?0:Math.PI}
   else{c.z+=c.dir*ms*dt;if(c.z>WORLD_D+8)c.z=-8;if(c.z<-8)c.z=WORLD_D+8;c.a=c.dir>0?Math.PI/2:-Math.PI/2}
-  c.mesh.position.set(c.x,0,c.z);c.mesh.rotation.y=-c.a;
+  c.y=vehicleRoadY57(c);c.mesh.position.set(c.x,c.y,c.z);c.mesh.rotation.y=-c.a;
   if(state.vehicle&&state.mode==='outside'&&dist2(c.x,c.z,state.vehicle.x,state.vehicle.z)<2.4){
    const impact=Math.min(18,4+(Math.abs(c.speed)+Math.abs(state.vehicle.speed||0))*.035);vehicleDamage(state.vehicle,impact);vehicleDamage(c,impact*.58);state.vehicle.speed*=.72;c.speed*=.82
   }
@@ -1464,7 +1578,7 @@ function updatePolice(dt){
   const ms=p.speed/3.6,nx=p.x+Math.cos(a)*ms*dt,nz=p.z+Math.sin(a)*ms*dt;
   if(!vehicleStaticHit(p,nx,nz,a)){p.x=nx;p.z=nz}
   else if(!blocked(nx,p.z,1)){p.x=nx}else if(!blocked(p.x,nz,1)){p.z=nz}
-  p.mesh.position.set(p.x,0,p.z);p.mesh.rotation.y=-a;
+  p.y=vehicleRoadY57(p);p.mesh.position.set(p.x,p.y,p.z);p.mesh.rotation.y=-a;
   if(dist2(p.x,p.z,state.x,state.z)<2.6){
    if(state.vehicle){vehicleDamage(state.vehicle,4.4+state.wantedStars*.55);vehicleDamage(p,2.2);state.vehicle.speed*=.91;p.speed*=.80}
    else state.hp=Math.max(0,state.hp-(1.0+state.wantedStars*.45)*dt)
@@ -1554,9 +1668,9 @@ function updateCarLights(day){
  const fx=Math.cos(c.a),fz=Math.sin(c.a),lx=-Math.sin(c.a),lz=Math.cos(c.a),front=dim.length*.46;
  const leftBroken=stage>=4,rightBroken=stage>=5;
  const baseX=c.x+fx*front,baseZ=c.z+fz*front;
- carHeadLightL.position.set(baseX+lx*dim.width*.26,.72,baseZ+lz*dim.width*.26);
- carHeadLightR.position.set(baseX-lx*dim.width*.26,.72,baseZ-lz*dim.width*.26);
- carHeadTarget.position.set(c.x+fx*36,.55,c.z+fz*36);
+ const cy=c.y||0;carHeadLightL.position.set(baseX+lx*dim.width*.26,.72+cy,baseZ+lz*dim.width*.26);
+ carHeadLightR.position.set(baseX-lx*dim.width*.26,.72+cy,baseZ-lz*dim.width*.26);
+ carHeadTarget.position.set(c.x+fx*36,.55+cy,c.z+fz*36);
  carHeadLightL.intensity=leftBroken?0:92*f;carHeadLightR.intensity=rightBroken?0:92*f
 }
 function toggleFlashlight(){
@@ -1628,8 +1742,8 @@ function setupCockpitAndMirrors(){
 }
 function setMirrorCamera(cam,c,angle,side=0){
  const ca=Math.cos(c.a),sa=Math.sin(c.a),lx=-sa,lz=ca;
- cam.position.set(c.x+lx*side,1.42,c.z+lz*side);
- const lookA=c.a+angle;cam.lookAt(c.x+Math.cos(lookA)*28+lx*side,1.18,c.z+Math.sin(lookA)*28+lz*side);cam.updateMatrixWorld()
+ cam.position.set(c.x+lx*side,1.42+(c.y||0),c.z+lz*side);
+ const lookA=c.a+angle;cam.lookAt(c.x+Math.cos(lookA)*28+lx*side,1.18+(c.y||0),c.z+Math.sin(lookA)*28+lz*side);cam.updateMatrixWorld()
 }
 function updateCockpit(){
  if(!cockpit)return;
@@ -1677,9 +1791,9 @@ function updateCamera(){
   else{const behind=new THREE.Vector3(b.x-Math.cos(b.a)*7,4.0,b.z-Math.sin(b.a)*7);camera.position.lerp(behind,.12);camera.lookAt(b.x,.8,b.z)}
  }else if(state.vehicle){
   const c=state.vehicle;if(state.firstPerson){
-   const pos=new THREE.Vector3(c.x,1.35,c.z).add(new THREE.Vector3(Math.cos(c.a)*.45,0,Math.sin(c.a)*.45));camera.position.lerp(pos,.35);state.yaw=c.a+state._lookOffsetYaw;const d=cameraDir();camera.lookAt(camera.position.clone().add(d))
+   const pos=new THREE.Vector3(c.x,1.35+(c.y||0),c.z).add(new THREE.Vector3(Math.cos(c.a)*.45,0,Math.sin(c.a)*.45));camera.position.lerp(pos,.35);state.yaw=c.a+state._lookOffsetYaw;const d=cameraDir();camera.lookAt(camera.position.clone().add(d))
   }else{
-   const behind=new THREE.Vector3(c.x-Math.cos(c.a)*7.3,3.9,c.z-Math.sin(c.a)*7.3);camera.position.lerp(behind,.12);camera.lookAt(c.x,1.0,c.z)
+   const behind=new THREE.Vector3(c.x-Math.cos(c.a)*7.3,3.9+(c.y||0),c.z-Math.sin(c.a)*7.3);camera.position.lerp(behind,.12);camera.lookAt(c.x,1.0+(c.y||0),c.z)
   }
  }else if(state.firstPerson){
   camera.position.set(state.x,1.72+state.baseY+state.jumpY,state.z);const d=cameraDir();camera.lookAt(camera.position.clone().add(d))
@@ -1794,11 +1908,19 @@ function runSelfTest(){
  check('Erweitertes Klettern',climbSurfaces.some(c=>c.kind==='ladder')&&climbSurfaces.some(c=>c.kind==='container'));
  check('Erweiterter Baumodus',typeof toggleBuildMode==='function'&&typeof placeBuildPreview==='function'&&BUILD_TYPES.length>=3);
  check('Physikalische Stadtobjekte',physicsProps.length>=20&&physicsProps.some(p=>p.type==='cart')&&physicsProps.some(p=>p.type==='bin'));
+ check('Zerstörbare Stadtobjekte 5.7',staticColliders.some(c=>c.type==='trafficSign'&&c.breakable)&&staticColliders.some(c=>c.type==='busShelter'&&c.breakable));
+ check('Vier-Reifen-Schadensmodell',cars.every(c=>Array.isArray(c.tireHP)&&c.tireHP.length===4&&Array.isArray(c.flatTires)&&c.flatTires.length===4));
+ check('Abtrennbare Fahrzeugteile',typeof spawnDetachedPart==='function'&&typeof updateVehicleDebris==='function');
+ check('Physische Stadtviertel-Markierungen',districtLandmarks.length>=6);
+ check('Funktionale Brückenhöhe',bridgeElevation57(307,264,0)>5&&bridgeElevation57(307,264,Math.PI/2)===0);
+ check('Tunnel/Unterführung vorhanden',typeof buildCityStructures57==='function');
+ check('Garage/Tuning API 5.7',typeof garageRepairCost57==='function'&&typeof tuneOwnedCar57==='function'&&typeof storeGarageCar57==='function'&&typeof recallGarageCar57==='function');
+ check('Adaptive Grafikqualität 5.8',typeof setCityQuality==='function'&&typeof adaptCityQuality==='function'&&cityQuality.ratio>0);
  check('CITY GYM vorhanden',!!buildingById('gym')&&!!interiors.gym);
  check('Hochauflösender Renderer',MAX_PIXEL_RATIO>=2.75&&renderer.getPixelRatio()<=MAX_PIXEL_RATIO);
  check('Hochauflösende Spiegel',!!mirrorSystem&&mirrorSystem.rearTarget.width===512&&mirrorSystem.leftTarget.width===320);
  check('Detailliertes Lenkrad',!!cockpit&&!!cockpit.userData.wheel&&cockpit.userData.wheel.children.length>=5);
- const failed=results.filter(r=>!r.ok);window.CityLifeDiagnostics={version:'5.6',results,passed:results.length-failed.length,failed:failed.length};
+ const failed=results.filter(r=>!r.ok);window.CityLifeDiagnostics={version:'5.7',results,passed:results.length-failed.length,failed:failed.length};
  log('🧪 Selbsttest: '+(results.length-failed.length)+'/'+results.length+' bestanden.');
  if(failed.length)console.warn('City Life Selbsttest fehlgeschlagen',failed);else console.info('City Life Selbsttest bestanden',results);
  return window.CityLifeDiagnostics
@@ -1832,10 +1954,57 @@ hd.addEventListener('pointerup',()=>state.heliDown=false);hd.addEventListener('p
 document.getElementById('sprintBtn').onclick=()=>{state.sprint=!state.sprint;toast(state.sprint?'Sprint an':'Sprint aus')};document.getElementById('resetBtn').onclick=resetGame;document.getElementById('viewBtn').onclick=toggleView;document.getElementById('fullscreenBtn').onclick=toggleFullscreen;
 
 function loop(now){
- const dt=Math.min(.033,(now-last)/1000||.016);last=now;state.sprayCd=Math.max(0,state.sprayCd-dt);state.shootCd=Math.max(0,state.shootCd-dt);state.punchCd=Math.max(0,state.punchCd-dt);
- state.cameraShake=Math.max(0,state.cameraShake-dt*.72);if(state.aircraft)updateHelicopter(dt);else if(state.boat)updateBoat(dt);else if(state.vehicle)updateVehicle(dt);else updateFoot(dt);updateTrafficLights(dt);updateTraffic(dt);updateNPCs(dt);updateDoors(dt);updatePolice(dt);updatePoliceHelicopter(dt);updateWeather(dt);updateLighting(dt);updatePickups(dt);updateRace(dt);updateVehicleDamageFX(dt);updatePhysicsProps(dt);updateBuildPreview();updatePlayerAvatar(dt);updateCamera();updateHeldWeapons(dt);updateEffects(dt);updateAudio(dt);if(!state.vehicle&&!state.boat&&!state.aircraft&&(keys.has('w')||keys.has('a')||keys.has('s')||keys.has('d')||keys.has('ArrowUp')||keys.has('ArrowDown'))){footstepClock+=dt*(state.sprint?1.7:1);if(footstepClock>.42){footstepClock=0;oneShotSound('step',state.sprint?1.2:.8)}}else footstepClock=0;saveTimer+=dt;if(saveTimer>5){saveTimer=0;saveGame()}hud();renderMainScene();requestAnimationFrame(loop)
+ const dt=Math.min(.033,(now-last)/1000||.016);last=now;adaptCityQuality(dt);state.sprayCd=Math.max(0,state.sprayCd-dt);state.shootCd=Math.max(0,state.shootCd-dt);state.punchCd=Math.max(0,state.punchCd-dt);
+ state.cameraShake=Math.max(0,state.cameraShake-dt*.72);if(state.aircraft)updateHelicopter(dt);else if(state.boat)updateBoat(dt);else if(state.vehicle)updateVehicle(dt);else updateFoot(dt);updateTrafficLights(dt);updateTraffic(dt);updateNPCs(dt);updateDoors(dt);updatePolice(dt);updatePoliceHelicopter(dt);updateWeather(dt);updateLighting(dt);updatePickups(dt);updateRace(dt);updateVehicleDamageFX(dt);updateVehicleDebris(dt);updatePhysicsProps(dt);updateBuildPreview();updatePlayerAvatar(dt);updateCamera();updateHeldWeapons(dt);updateEffects(dt);updateAudio(dt);if(!state.vehicle&&!state.boat&&!state.aircraft&&(keys.has('w')||keys.has('a')||keys.has('s')||keys.has('d')||keys.has('ArrowUp')||keys.has('ArrowDown'))){footstepClock+=dt*(state.sprint?1.7:1);if(footstepClock>.42){footstepClock=0;oneShotSound('step',state.sprint?1.2:.8)}}else footstepClock=0;saveTimer+=dt;if(saveTimer>5){saveTimer=0;saveGame()}hud();renderMainScene();requestAnimationFrame(loop)
 }
-log('🌆 City Life 5.6: Gym, höhere Auflösung und neues Lenkrad gestartet.');
+log('🌆 City Life 5.7: Stadt-Handy, GPS, Garage, Tuning und neue Bauwerke gestartet.');
 log('🚗 Ein freier City Sedan steht nahe dem Start. Mit F einsteigen.');
+// Integration API for City Life 5.7 smartphone, garage, tuning, map and GPS.
+function garageBuilding57(){return buildingById('garage')}
+function nearGarage57(max=55){
+ const b=garageBuilding57();if(!b)return false;const p=b._pedDoor||b.door||[b.x+b.w/2,b.z+b.d/2];return dist2(state.x,state.z,p[0],p[1])<=max
+}
+function garageRepairCost57(c){
+ if(!c)return 0;const flat=(c.flatTires||[]).filter(Boolean).length,parts=Object.values(c.detachedParts||{}).filter(Boolean).length;
+ return Math.max(180,Math.round((100-c.hp)*7+flat*140+parts*160))
+}
+function repairOwnedCar57(c){
+ if(!c||!c.owned)return false;const eligible=c.garageStored||(state.vehicle===c&&nearGarage57());if(!eligible)return false;
+ const cost=garageRepairCost57(c);if(state.money<cost)return false;state.money-=cost;c.hp=100;repairTires(c);restoreDetachedParts(c);c.loosePart=false;applyDamageVisual(c,true);saveGame();hud();toast('🔧 Fahrzeug vollständig repariert · '+cost+' €');return true
+}
+function tuneOwnedCar57(c,part){
+ if(!c||!c.owned)return false;const eligible=c.garageStored||(state.vehicle===c&&nearGarage57());if(!eligible)return false;
+ const costs={engine:320,brakes:180,tires:160,paint:120,rims:130,suspension:210};if(!costs[part]||state.money<costs[part])return false;c.tuning=c.tuning||{};if(c.tuning[part])return false;
+ state.money-=costs[part];c.tuning[part]=true;
+ if(part==='tires')repairTires(c);
+ if(part==='engine')c.spec={...c.spec,max:c.spec.max*1.12,acc:c.spec.acc*1.15};
+ if(part==='suspension')c.spec={...c.spec,turn:c.spec.turn*1.12};
+ if(part==='paint'&&c.mesh.userData.body){c.mesh.userData.baseColor=0x27a5a0;c.mesh.userData.body.material.color.setHex(0x27a5a0);if(c.mesh.userData.hood)c.mesh.userData.hood.material.color.setHex(0x27a5a0)}
+ if(part==='rims')(c.mesh.userData.wheels||[]).forEach(w=>{if(w.material){w.material=w.material.clone();w.material.color.setHex(0xd5b86e);w.material.metalness=.68;w.material.roughness=.30}});
+ saveGame();hud();toast('🔧 Tuning: '+part);return true
+}
+function storeGarageCar57(id){
+ const c=cars.find(v=>v.id===id);if(!c||!c.owned||state.vehicle!==c||state.mode!=='outside'||!nearGarage57())return false;
+ state.vehicle=null;state.speedKmh=0;c.speed=0;c.garageStored=true;c.mesh.visible=false;if(c.mesh.userData.rider)c.mesh.userData.rider.visible=false;saveGame();hud();toast('🏠 Fahrzeug in der Garage eingelagert');return true
+}
+function recallGarageCar57(id){
+ const c=cars.find(v=>v.id===id);if(!c||!c.owned||state.mode!=='outside'||state.vehicle||state.boat||state.aircraft||!nearGarage57())return false;
+ c.garageStored=false;c.x=431;c.z=101;c.y=0;c.a=Math.PI/2;c.speed=0;c.interiorId=null;c.mesh.position.set(c.x,0,c.z);c.mesh.rotation.set(0,-c.a,0);c.mesh.visible=true;saveGame();toast('🚗 Fahrzeug am MOTORWERK bereitgestellt');return true
+}
+window.CityLife57={
+ quality:()=>({...cityQuality}),setQuality:setCityQuality,
+ snapshot:()=>({
+  x:state.x,z:state.z,mode:state.mode,money:state.money,vehicleId:state.vehicle?.id||null,nearGarage:nearGarage57(),roadsX:[...roadsX],roadsZ:[...roadsZ],worldW:WORLD_W,worldD:WORLD_D,
+  buildings:buildings.filter(b=>b.type!=='park').map(b=>({id:b.id,name:b.name||b.id,x:b.door?.[0]??b.x+b.w/2,z:b.door?.[1]??b.z+b.d/2,type:b.type})),
+  districts:districtLandmarks.map(d=>({name:d.name,x:d.x,z:d.z})),
+  cars:cars.filter(c=>!c.ai&&!c.police&&!c.raceAI).map(c=>({id:c.id,name:c.name,owned:c.owned,x:c.x,z:c.z,hp:c.hp,interiorId:c.interiorId,garageStored:!!c.garageStored,flatCount:(c.flatTires||[]).filter(Boolean).length,tireHP:[...(c.tireHP||[])],tuning:{...(c.tuning||{})},repairCost:garageRepairCost57(c)}))
+ }),
+ tune:(id,part)=>tuneOwnedCar57(cars.find(v=>v.id===id),part),
+ recall:id=>recallGarageCar57(id),
+ store:id=>storeGarageCar57(id),
+ repair:id=>repairOwnedCar57(cars.find(v=>v.id===id)),
+ releaseControls:()=>{keys.clear();state.sprint=false;state.handbrake=false;state.heliUp=false;state.heliDown=false},
+ notify:message=>toast(message)
+};
 hud();requestAnimationFrame(loop);
 })();
