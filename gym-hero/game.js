@@ -253,7 +253,7 @@ function check(){
  state.quizTimer=setTimeout(()=>{if(state.quiz)showQuestion()},leveled?1600:1250);
 }
 $('check').addEventListener('click',check);
-$('answer').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();check()}if(e.key==='Escape'){e.preventDefault();closeQuiz()}});
+$('answer').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();check()}if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeQuiz()}});
 $('leaveQuiz').addEventListener('click',closeQuiz);
 $('startBtn').addEventListener('click',begin);
 $('pauseBtn').addEventListener('click',()=>{if(state.quiz)return;if(state.paused)resume();else pause()});
