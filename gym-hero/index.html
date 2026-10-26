@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#091721">
+<meta name="description" content="GYM HERO 3D – Frei durchs Fitnessstudio laufen, Matheaufgaben lösen und sichtbar stärker werden!">
+<title>GYM HERO 3D · DMP Lernwelt</title>
+<link rel="stylesheet" href="../game-interaction-guard.css">
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#f7fcff;background:#08131d;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}button,input{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #86fff0;outline-offset:3px}
+#game{position:fixed;inset:0;background:radial-gradient(circle,#304a5a,#0b1420)}#game canvas{display:block;width:100%;height:100%;outline:0}
+#hud{position:fixed;top:16px;left:18px;display:flex;gap:10px;align-items:flex-start;pointer-events:none;z-index:3;flex-wrap:wrap;max-width:calc(100vw - 175px)}
+.panel{border:1px solid #9cc7d033;border-radius:16px;background:linear-gradient(135deg,#09202fec,#122435e8);backdrop-filter:blur(12px);box-shadow:0 10px 26px #0006;padding:11px 15px}
+.logo{font-size:19px;font-weight:1000;letter-spacing:-.06em;line-height:1.2;color:white}.logo b{color:#77eed3}.logo small{display:block;margin-top:5px;color:#aecbd4;font-weight:800;font-size:10px;letter-spacing:.12em}
+.stat{min-width:108px}.stat .lab{font-size:10px;font-weight:900;letter-spacing:.11em;color:#9fbec8}.stat .val{font-size:23px;font-weight:950;font-variant-numeric:tabular-nums}.bar{height:6px;margin-top:7px;border-radius:5px;background:#35505d;overflow:hidden}.bar>i{display:block;height:100%;width:10%;background:linear-gradient(90deg,#20dbac,#c5ff89);transition:width .3s}
+#topright{position:fixed;top:16px;right:16px;display:flex;gap:8px;z-index:4}button.mini{border:1px solid #81b7c055;background:#0b2335dd;border-radius:13px;padding:10px 12px;color:white;font-weight:900;min-height:44px}
+#prompt{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:14px 18px;text-align:center;border:1px solid #7ac2bb77;border-radius:16px;background:#091f30ec;box-shadow:0 14px 45px #0008;min-width:min(420px,95vw);z-index:3;pointer-events:none;display:none;font-size:16px;font-weight:800}
+#prompt strong{color:#86f6da}#prompt small{display:block;font-size:12px;color:#b7d0dc;margin-top:5px}
+#tip{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#071825c9;border:1px solid #a1d0d033;border-radius:12px;color:#c5dce3;padding:9px 15px;font-size:12px;text-align:center;white-space:nowrap;pointer-events:none;z-index:3}
+#toast{position:fixed;top:109px;left:50%;transform:translateX(-50%) translateY(-12px);opacity:0;transition:opacity .22s,transform .22s;pointer-events:none;padding:12px 18px;background:#102b3cef;border:1px solid #63e8b8;border-radius:13px;color:#9ff6cc;font-size:18px;font-weight:950;text-align:center;z-index:7;max-width:90vw}#toast.show{opacity:1;transform:translateX(-50%)}
+#aim{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:17px;color:#effff077;text-shadow:0 1px 5px black;pointer-events:none}
+.back{color:#a9f5e2;text-decoration:none;font-weight:850;font-size:13px}
+.overlay{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,#153b51db,#040e17f2);padding:16px;overflow-y:auto}
+.overlay.hidden{display:none}.dialog{max-width:620px;width:100%;padding:clamp(20px,4vw,34px);border-radius:24px;border:1px solid #8ef9e350;background:linear-gradient(142deg,#173a4eea,#0b1e30f8);box-shadow:0 30px 100px #000b}.eyebrow{font-size:12px;letter-spacing:.16em;font-weight:1000;color:#70ebc8}h1{font-size:clamp(42px,9vw,76px);line-height:1;margin:12px 0 13px;letter-spacing:-.075em;font-weight:1000}h1 em{font-style:normal;color:#6aebc7}h2{font-size:clamp(24px,4vw,34px);margin:7px 0 12px;letter-spacing:-.05em}p{color:#c7dee5;line-height:1.6;margin:12px 0}.badges{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.badges span{background:#28546988;border:1px solid #73e7c842;border-radius:100px;padding:7px 10px;font-size:12px;font-weight:800}
+.btn{border:0;border-radius:13px;padding:15px 20px;background:linear-gradient(110deg,#69ebc5,#d4f681);color:#072922;font-weight:1000;min-height:50px;box-shadow:0 8px 24px #18ae9060}.btn.ghost{background:#274c60;color:white;box-shadow:none;border:1px solid #79bdd077}.buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;align-items:center}
+.controls{font-size:13px;background:#081e2b99;padding:13px;border-radius:12px;border:1px solid #7db1be44;color:#d4e5eb}.controls strong{color:#8bf1d3}
+#quiz .dialog{max-width:490px}#taskType{color:#8df1d0;font-size:12px;font-weight:950;letter-spacing:.13em}#problem{font-size:clamp(48px,10vw,74px);font-weight:1000;text-align:center;letter-spacing:-.035em;margin:12px 0 18px}.answerRow{display:flex;gap:9px}#answer{width:100%;min-width:0;font-size:32px;font-weight:950;text-align:center;min-height:62px;background:#051926;color:#fff;border:2px solid #8ad2cb;border-radius:12px}#check{min-width:105px}#feedback{min-height:29px;font-size:14px;font-weight:850;color:#aee7d5;margin:12px 0 0}#feedback.wrong{color:#ffabac}
+#smallHelp{font-size:12px;color:#afc8d2}#quiz .buttons{margin-top:10px}
+@media(max-width:770px){#hud{top:9px;left:8px;gap:5px;max-width:calc(100vw - 104px)}.panel{padding:8px}.logo{font-size:13px}.stat{min-width:64px}.stat .val{font-size:16px}.stat .lab{font-size:8px}#topright{top:9px;right:8px}.mini{font-size:11px;padding:7px!important}#tip{font-size:10px;bottom:8px;white-space:normal;width:max-content;max-width:95vw}#prompt{bottom:55px;min-width:0;width:95vw}#toast{top:80px}}
+</style>
+</head>
+<body>
+<div id="game" aria-label="Frei begehbares 3D-Fitnessstudio"></div>
+<div id="hud">
+  <div class="panel logo">🏋️ GYM <b>HERO</b><small>3D · MATHEPOWER</small></div>
+  <div class="panel stat"><div class="lab">💪 STÄRKE</div><div class="val" id="strength">10</div><div class="bar"><i id="strengthBar"></i></div></div>
+  <div class="panel stat"><div class="lab">⭐ LEVEL</div><div class="val" id="level">1</div></div>
+  <div class="panel stat"><div class="lab">🪙 MÜNZEN</div><div class="val" id="coins">0</div></div>
+</div>
+<div id="topright"><button type="button" class="mini" id="full" title="Vollbild">⛶</button><button type="button" class="mini" id="pauseBtn">☰ Menü</button></div>
+<div id="aim">＋</div>
+<div id="prompt" aria-live="polite"></div>
+<div id="tip">WASD: Laufen · Maus: Kamera · Shift: Sprint · E: Trainieren · Esc: Menü</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<section id="start" class="overlay" aria-modal="true" role="dialog">
+ <div class="dialog">
+  <div class="eyebrow">DMP GAMES · LERNWELT · VERSION 0.1</div>
+  <h1>GYM <em>HERO</em> 💪</h1>
+  <p>Willkommen im 3D-Fitnessstudio! Laufe frei durch den Raum, suche ein Trainingsgerät und löse Matheaufgaben. <b>Richtig = +10 Stärke, falsch = −5 Stärke.</b> Deine Figur bekommt sichtbar größere Muskeln!</p>
+  <div class="badges"><span>🏃 Frei herumlaufen</span><span>🧠 Mathetraining</span><span>🏋️ 4 Geräte</span><span>⭐ Levelsystem</span><span>💾 Speichert automatisch</span></div>
+  <div class="controls"><strong>STEUERUNG</strong><br>W A S D – Laufen &nbsp; · &nbsp; Maus ziehen – Kamera drehen<br>Shift – Sprint &nbsp; · &nbsp; E – Gerät benutzen &nbsp; · &nbsp; Mausrad – Zoom &nbsp; · &nbsp; Esc – Menü</div>
+  <div class="buttons"><button class="btn" id="startBtn">🎮 Spiel starten</button><a class="back" href="../">← DMP-Spielzentrale</a></div>
+  <p id="loadmsg" style="font-size:13px;margin-bottom:0">3D-Welt wird vorbereitet …</p>
+ </div>
+</section>
+<section id="quiz" class="overlay hidden" aria-modal="true" role="dialog" aria-labelledby="quizTitle">
+ <div class="dialog">
+  <div id="taskType">TRAININGSSTATION</div><h2 id="quizTitle">Mathe macht stark!</h2>
+  <div id="problem">6 × 4 = ?</div>
+  <div class="answerRow"><input type="number" inputmode="numeric" id="answer" placeholder="?" autocomplete="off" aria-label="Ergebnis eingeben"><button class="btn" id="check">Prüfen ✓</button></div>
+  <div id="feedback" role="status"></div><p id="smallHelp">Gib deine Antwort ein und drücke Enter.</p>
+  <div class="buttons"><button class="btn ghost" id="leaveQuiz">Training verlassen</button></div>
+ </div>
+</section>
+<section id="pause" class="overlay hidden" aria-modal="true" role="dialog" aria-labelledby="pauseTitle">
+ <div class="dialog"><div class="eyebrow">PAUSE</div><h2 id="pauseTitle">Kurze Verschnaufpause? 🥤</h2><p>Deine Stärke und Münzen bleiben gespeichert. Trainiere weiter und schaffe neue Rekorde.</p>
+ <div class="buttons"><button class="btn" id="resume">▶ Weitertrainieren</button><button class="btn ghost" id="helpReset">Fortschritt zurücksetzen</button><a class="back" href="../">← Spielzentrale</a></div>
+ </div>
+</section>
+<script type="module" src="./game.js?v=1"></script>
+</body></html>
