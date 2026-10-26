@@ -34,6 +34,7 @@ Der PIN-Schutz ist für die praktische Nutzung mit Kindern gedacht:
 
 | Bereich | Spiel | Öffentlicher Pfad | Entwicklungsquelle |
 |---|---|---|---|
+| Lernwelt | GYM HERO 3D | `/gym-hero/` | `preukschas/Lernspiele--bei-DMP` → `projects/gym-hero/` (3D-Gym, WASD + drehbare Kamera, vier Mathe-Trainingsstationen, Stärke- und Levelsystem) |
 | Lernwelt | Aki – English Lab (Klasse 6, Unit 1) | `/aki-vokabeltrainer/` | `preukschas/Lernspiele--bei-DMP` → `projects/aki-vokabeltrainer/` (97 Wörter, adaptiver Schreibtrainer, Browser-Speicherung) |
 | Lernwelt | Moe's English World | `/moes-english-world/` | `preukschas/Lernspiele--bei-DMP` → `projects/moes-english-world/` |
 | Lernwelt | Europa-Express | `/europa-express/` | `preukschas/Lernspiele--bei-DMP` → `projects/europa-express/` |
@@ -78,3 +79,9 @@ Einmaleins Space ist ein eigenständiges Lernspiel. Die Weltraum-Abwehr innerhal
 - **Edelgards Pfadfinder-Abenteuer** ist als Special ohne Eltern-PIN unter `/edelgards-pfadfinder-abenteuer/` verlinkt.
 - Spiele aus der Spielewelt nutzen die gemeinsame PIN-Prüfung auch beim direkten URL-Aufruf; die Specials sind ohne PIN und ohne Zeitsperre erreichbar.
 - Der maßgebliche Quellstand liegt jeweils im privaten Entwicklungsrepository; diese öffentliche Fassung dient als Veröffentlichungsspiegel.
+
+## Neue Veröffentlichung (26.10.2026)
+
+- **GYM HERO 3D** als PC-orientiertes WebGL-Browserspiel in der frei zugänglichen Lernwelt ergänzt.
+- Es gibt einen eigenständigen Godot-PC-Prototyp. Die öffentliche DMP-Version ist eine separate Browserumsetzung auf Basis von Three.js.
+- Der Browser-Spielstand bleibt lokal im Browser gespeichert. Eine laufende 3D-Prüfung über GitHub Pages war zum Veröffentlichungszeitpunkt nicht möglich.
