@@ -186,7 +186,7 @@ for(const s of [-1,1]){
  box(hip,.35,.21,.65,shoes,0,-1.08,-.13);
  legGroups.push({pivot:hip,s});
 }
-const shadowCircle=mesh(player,new T.CircleGeometry(.62,32),new T.MeshBasicMaterial({color:0x020a0d,transparent:true,opacity:.22,depthWrite:false}),0,.047,0,false);shadowCircle.rotation.x=-Math.PI/2;
+const shadowCircle=mesh(scene,new T.CircleGeometry(.62,32),new T.MeshBasicMaterial({color:0x020a0d,transparent:true,opacity:.22,depthWrite:false}),0,.047,0,false);shadowCircle.rotation.x=-Math.PI/2;
 const SAVEKEY='dmp-gym-hero-3d-v1';
 let strength=10,coins=0,correct=0,wrong=0;
 try{const v=JSON.parse(localStorage.getItem(SAVEKEY)||'null');if(v&&typeof v==='object'){strength=Math.max(0,Math.min(50000,Number(v.strength)||0));coins=Math.max(0,Number(v.coins)||0);correct=Math.max(0,Number(v.correct)||0);wrong=Math.max(0,Number(v.wrong)||0)}}catch(e){}
@@ -200,7 +200,7 @@ function updateStats(){
  for(const arm of armGroups){arm.pivot.position.x=arm.s*(.66+(size-1)*.12);arm.upper.scale.x=arm.upper.scale.z=Math.min(1.8,size);arm.fore.scale.x=arm.fore.scale.z=Math.min(1.5,1+(size-1)*.75)}
 }
 updateStats();
-const state={playing:false,quiz:false,paused:false,yaw:0,pitch:.3,dist:6.6,keys:new Set(),drag:false,px:0,py:0,t:0,steps:0,nearest:null,question:null,lock:false,quizTimer:null,shake:0,celebrate:0};
+const state={playing:false,quiz:false,paused:false,yaw:0,pitch:.3,dist:6.6,keys:new Set(),drag:false,px:0,py:0,t:0,steps:0,vy:0,grounded:true,nearest:null,question:null,lock:false,quizTimer:null,shake:0,celebrate:0};
 let toastTimer;
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),1400)}
 function hideAll(){for(const id of ['start','pause','quiz'])$(id).classList.add('hidden')}
@@ -269,6 +269,7 @@ window.addEventListener('keydown',e=>{
  if(state.quiz||!state.playing||state.paused)return;
  state.keys.add(e.code);
  if(e.code==='KeyE'&&!e.repeat)openQuiz();
+ if(e.code==='Space'&&!e.repeat&&state.grounded){state.vy=8.1;state.grounded=false;}
 });
 window.addEventListener('keyup',e=>state.keys.delete(e.code));
 window.addEventListener('blur',()=>state.keys.clear());
@@ -296,6 +297,11 @@ function collide(x,z){
 const clock=new T.Clock();let nearestLast=null;
 function step(dt){
  if(!state.playing||state.paused||state.quiz){state.steps*=Math.max(0,1-dt*7);return}
+ if(!state.grounded){
+  state.vy-=21*dt;
+  player.position.y+=state.vy*dt;
+  if(player.position.y<=0){player.position.y=0;state.vy=0;state.grounded=true;}
+ }
  if(state.keys.has('ArrowLeft'))state.yaw+=dt*1.8;
  if(state.keys.has('ArrowRight'))state.yaw-=dt*1.8;
  if(state.keys.has('ArrowUp'))state.pitch=Math.min(.9,state.pitch+dt*.7);
@@ -325,8 +331,8 @@ function step(dt){
  const moving=len>0;
  const stride=Math.sin(state.steps)*Math.min(1,len);
  const relax=state.celebrate>0?Math.sin((1.25-state.celebrate)*13):0;
- for(const leg of legGroups)leg.pivot.rotation.x=moving?leg.s*stride*.6:0;
- for(const arm of armGroups)arm.pivot.rotation.x=moving?-arm.s*stride*.45:relax*.6;
+ for(const leg of legGroups)leg.pivot.rotation.x=state.grounded?(moving?leg.s*stride*.6:0):.38+leg.s*.12;
+ for(const arm of armGroups)arm.pivot.rotation.x=state.grounded?(moving?-arm.s*stride*.45:relax*.6):.9;
  playerVisual.position.y=moving?Math.abs(Math.sin(state.steps))*.045:Math.sin(state.t*2)*.014;
  playerVisual.rotation.z=state.shake>0?Math.sin(state.t*55)*.08:0;
 }
@@ -336,12 +342,16 @@ function renderFrame(){
  state.shake=Math.max(0,state.shake-dt);
  state.celebrate=Math.max(0,state.celebrate-dt);
  step(dt);
+ shadowCircle.position.set(player.position.x,.047,player.position.z);
+ shadowCircle.scale.setScalar(1+player.position.y*.18);
+ shadowCircle.material.opacity=.22/(1+player.position.y*.55);
  for(const s of stations){s.marker.position.y=2.75+Math.sin(state.t*2.8+s.x)*.17;s.ring.rotation.z=state.t*.23;if(s===state.nearest)s.ring.scale.setScalar(1.12+Math.sin(state.t*5)*.06);else s.ring.scale.setScalar(1)}
- const focus=new T.Vector3(player.position.x,1.55,player.position.z);
+ const cameraRise=player.position.y*.45;
+ const focus=new T.Vector3(player.position.x,1.55+cameraRise,player.position.z);
  const horizontal=state.dist*Math.cos(state.pitch);
  const desired=new T.Vector3(
    player.position.x+Math.sin(state.yaw)*horizontal,
-   1.55+Math.sin(state.pitch)*state.dist,
+   1.55+cameraRise+Math.sin(state.pitch)*state.dist,
    player.position.z+Math.cos(state.yaw)*horizontal
  );
  // Limit camera to gym bounds, so it stays inside the building.
